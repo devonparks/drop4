@@ -67,6 +67,8 @@ export function HomeScreen() {
             <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => {}} />
           </View>
         </View>
+        {/* Version label */}
+        <Text style={styles.version}>V1.0</Text>
       </View>
     </ScreenBackground>
   );
@@ -170,5 +172,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     gap: 10,
+  },
+  version: {
+    position: 'absolute',
+    bottom: 4,
+    left: 12,
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.2)',
   },
 });

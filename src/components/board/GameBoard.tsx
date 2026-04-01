@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -97,9 +97,11 @@ function WinHighlight({ delay }: { delay: number }) {
 interface GameBoardProps {
   onColumnPress: (col: number) => void;
   disabled?: boolean;
+  currentPlayerColor?: 'red' | 'yellow';
 }
 
-export function GameBoard({ onColumnPress, disabled }: GameBoardProps) {
+export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' }: GameBoardProps) {
+  const [hoveredCol, setHoveredCol] = React.useState<number | null>(null);
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
   const moveCount = useGameStore(s => s.moveCount);
@@ -131,8 +133,19 @@ export function GameBoard({ onColumnPress, disabled }: GameBoardProps) {
     return new Set(winCells.map(([c, r]) => `${c}-${r}`));
   }, [winCells]);
 
+  const indicatorColor = currentPlayerColor === 'red' ? colors.pieceRed : colors.pieceYellow;
+
   return (
     <View style={styles.boardOuter}>
+      {/* Column drop indicator arrow */}
+      {hoveredCol !== null && !disabled && (
+        <View style={[styles.dropIndicator, {
+          left: BOARD_PADDING + hoveredCol * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2 - 8,
+        }]}>
+          <Text style={[styles.dropArrow, { color: indicatorColor }]}>{'▼'}</Text>
+        </View>
+      )}
+
       {/* Board frame with gradient */}
       <LinearGradient
         colors={['#2a5bce', '#1a3a8a', '#0d2060']}
@@ -183,7 +196,10 @@ export function GameBoard({ onColumnPress, disabled }: GameBoardProps) {
           {Array.from({ length: COLS }).map((_, col) => (
             <Pressable
               key={col}
-              onPress={() => onColumnPress(col)}
+              onPress={() => { setHoveredCol(null); onColumnPress(col); }}
+              onPressIn={() => setHoveredCol(col)}
+              onHoverIn={() => setHoveredCol(col)}
+              onHoverOut={() => setHoveredCol(null)}
               style={styles.colTarget}
             />
           ))}
@@ -203,6 +219,17 @@ const styles = StyleSheet.create({
   boardOuter: {
     alignItems: 'center',
     marginTop: 8,
+    position: 'relative',
+  },
+  dropIndicator: {
+    position: 'absolute',
+    top: -18,
+    zIndex: 10,
+  },
+  dropArrow: {
+    fontSize: 16,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   boardFrame: {
     width: BOARD_WIDTH,

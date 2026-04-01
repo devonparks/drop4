@@ -185,6 +185,7 @@ export function GameScreen({ navigation }: Props) {
         <GameBoard
           onColumnPress={handleColumnPress}
           disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1)}
+          currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
         />
 
         {/* Bottom controls */}
