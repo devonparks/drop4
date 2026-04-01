@@ -4,13 +4,13 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'f
 
 // Firebase config — will be populated with real values
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT.firebaseapp.com',
-  projectId: 'YOUR_PROJECT',
-  storageBucket: 'YOUR_PROJECT.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
-  measurementId: 'YOUR_MEASUREMENT_ID',
+  apiKey: 'AIzaSyAtn-XmLO-evmR9OwbPw21fQqMLQIUPClk',
+  authDomain: 'drop4-c45bf.firebaseapp.com',
+  projectId: 'drop4-c45bf',
+  storageBucket: 'drop4-c45bf.firebasestorage.app',
+  messagingSenderId: '748865259564',
+  appId: '1:748865259564:web:e6d12ae3acb17152be989',
+  measurementId: 'G-9PMKJF4GKF',
 };
 
 // Initialize Firebase (singleton)
