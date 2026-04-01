@@ -16,6 +16,7 @@ import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
 import { AI_THINK_DELAY, COIN_REWARDS } from '../engine/constants';
 import { haptics } from '../services/haptics';
+import { playSound, playRandomVoice } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -44,6 +45,7 @@ export function GameScreen({ navigation }: Props) {
     if (aiTimerRef.current) return;
 
     setAiThinking(true);
+    playRandomVoice('thinking');
     const thinkTime = AI_THINK_DELAY[difficulty];
 
     aiTimerRef.current = setTimeout(() => {
@@ -53,6 +55,7 @@ export function GameScreen({ navigation }: Props) {
       const aiCol = getAIMove(currentBoard, difficulty);
       dropPiece(aiCol);
       haptics.drop();
+      playSound('drop');
       setAiThinking(false);
     }, thinkTime);
 
@@ -72,14 +75,20 @@ export function GameScreen({ navigation }: Props) {
       addCoins(reward);
       addXp(reward);
       haptics.win();
+      playSound('win');
+      playSound('coin');
+      playRandomVoice('lose'); // AI says "you win / good game"
     }
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
       haptics.error();
+      playSound('lose');
+      playRandomVoice('win'); // AI says "I win!"
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
       addCoins(10);
+      playSound('coin');
     }
     if (status === 'playing') {
       hasAwardedRef.current = false;
@@ -91,6 +100,7 @@ export function GameScreen({ navigation }: Props) {
     if (isVsAi && currentPlayer !== 1) return;
     dropPiece(col);
     haptics.drop();
+    playSound('drop');
   }, [status, isAiThinking, currentPlayer, isVsAi]);
 
   const handleRematch = () => {

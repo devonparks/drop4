@@ -1,8 +1,8 @@
 import { Audio } from 'expo-av';
-import { Platform } from 'react-native';
 
 // Sound references
-let sounds: Record<string, Audio.Sound | null> = {
+const sounds: Record<string, Audio.Sound | null> = {
+  // UI SFX
   tap: null,
   drop: null,
   win: null,
@@ -10,15 +10,22 @@ let sounds: Record<string, Audio.Sound | null> = {
   coin: null,
   whoosh: null,
   click: null,
+  // AI Voice Lines
+  voice_nice_move: null,
+  voice_my_turn: null,
+  voice_you_win: null,
+  voice_i_win: null,
+  voice_thinking: null,
+  voice_good_game: null,
+  voice_oh_no: null,
+  voice_bring_it: null,
 };
 
 let isInitialized = false;
 let isMuted = false;
 
-// Initialize audio system
 export async function initAudio() {
   if (isInitialized) return;
-
   try {
     await Audio.setAudioModeAsync({
       playsInSilentModeIOS: true,
@@ -31,57 +38,67 @@ export async function initAudio() {
   }
 }
 
-// Preload a sound file
 async function loadSound(name: string, source: any): Promise<void> {
   try {
     const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: false });
     sounds[name] = sound;
   } catch (e) {
-    // Sound file may not exist yet - fail silently
-    console.warn(`Failed to load sound "${name}":`, e);
+    // Fail silently
   }
 }
 
-// Preload all sounds at app startup
 export async function preloadSounds() {
   await initAudio();
 
-  // These will be loaded when actual sound files are added to assets/sounds/
-  // For now, the play function handles missing sounds gracefully
-  const soundFiles: Record<string, any> = {};
+  const soundFiles: Record<string, any> = {
+    // UI SFX
+    tap: require('../assets/sounds/tap.wav'),
+    drop: require('../assets/sounds/drop.wav'),
+    win: require('../assets/sounds/win.wav'),
+    lose: require('../assets/sounds/lose.wav'),
+    coin: require('../assets/sounds/coin.wav'),
+    whoosh: require('../assets/sounds/whoosh.wav'),
+    click: require('../assets/sounds/click.wav'),
+    // AI Voice Lines
+    voice_nice_move: require('../assets/sounds/voice_nice_move.wav'),
+    voice_my_turn: require('../assets/sounds/voice_my_turn.wav'),
+    voice_you_win: require('../assets/sounds/voice_you_win.wav'),
+    voice_i_win: require('../assets/sounds/voice_i_win.wav'),
+    voice_thinking: require('../assets/sounds/voice_thinking.wav'),
+    voice_good_game: require('../assets/sounds/voice_good_game.wav'),
+    voice_oh_no: require('../assets/sounds/voice_oh_no.wav'),
+    voice_bring_it: require('../assets/sounds/voice_bring_it.wav'),
+  };
 
-  try {
-    // Attempt to require sound files — they may not exist yet
-    // soundFiles.tap = require('../assets/sounds/tap.mp3');
-    // soundFiles.drop = require('../assets/sounds/drop.mp3');
-    // soundFiles.win = require('../assets/sounds/win.mp3');
-    // soundFiles.lose = require('../assets/sounds/lose.mp3');
-    // soundFiles.coin = require('../assets/sounds/coin.mp3');
-    // soundFiles.whoosh = require('../assets/sounds/whoosh.mp3');
-    // soundFiles.click = require('../assets/sounds/click.mp3');
-  } catch (e) {
-    // Expected when sound files aren't present yet
-  }
-
-  for (const [name, source] of Object.entries(soundFiles)) {
-    await loadSound(name, source);
-  }
+  await Promise.all(
+    Object.entries(soundFiles).map(([name, source]) => loadSound(name, source))
+  );
 }
 
-// Play a sound by name
 export async function playSound(name: keyof typeof sounds) {
   if (isMuted || !sounds[name]) return;
-
   try {
     const sound = sounds[name]!;
     await sound.setPositionAsync(0);
     await sound.playAsync();
   } catch (e) {
-    // Fail silently — missing sounds shouldn't crash the game
+    // Fail silently
   }
 }
 
-// Toggle mute
+// Play a random voice line from a category
+export async function playRandomVoice(category: 'thinking' | 'win' | 'lose' | 'taunt') {
+  const voiceMap: Record<string, string[]> = {
+    thinking: ['voice_thinking', 'voice_my_turn'],
+    win: ['voice_i_win'],
+    lose: ['voice_you_win', 'voice_good_game'],
+    taunt: ['voice_nice_move', 'voice_oh_no', 'voice_bring_it'],
+  };
+  const options = voiceMap[category];
+  const pick = options[Math.floor(Math.random() * options.length)];
+  await playSound(pick as keyof typeof sounds);
+}
+
 export function toggleMute(): boolean {
   isMuted = !isMuted;
   return isMuted;
@@ -91,12 +108,8 @@ export function getMuted(): boolean {
   return isMuted;
 }
 
-// Cleanup
 export async function unloadSounds() {
   for (const sound of Object.values(sounds)) {
-    if (sound) {
-      await sound.unloadAsync();
-    }
+    if (sound) await sound.unloadAsync();
   }
-  sounds = { tap: null, drop: null, win: null, lose: null, coin: null, whoosh: null, click: null };
 }
