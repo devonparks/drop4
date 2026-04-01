@@ -4,16 +4,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
   FadeInDown,
+  FadeInUp,
+  SlideInDown,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withSequence,
   withDelay,
-  runOnJS,
+  withRepeat,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { GameBoard } from '../components/board/GameBoard';
+import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { useGameStore, ROWS, COLS } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -27,79 +32,24 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Game'>;
 };
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BOARD_PADDING = 16;
-const BOARD_WIDTH = Math.min(SCREEN_WIDTH - BOARD_PADDING * 2, 400);
-const CELL_SIZE = Math.floor((BOARD_WIDTH - 16) / COLS);
-const PIECE_SIZE = CELL_SIZE - 8;
-
-// Animated piece component
-function AnimatedPiece({ col, row, player, isNew }: {
-  col: number; row: number; player: 1 | 2; isNew: boolean;
-}) {
-  const translateY = useSharedValue(isNew ? -CELL_SIZE * (ROWS + 1) : 0);
-  const scale = useSharedValue(isNew ? 0.8 : 1);
-
-  useEffect(() => {
-    if (isNew) {
-      translateY.value = withSpring(0, { damping: 12, stiffness: 200, mass: 0.8 });
-      scale.value = withSequence(
-        withSpring(1.1, { damping: 15, stiffness: 300 }),
-        withSpring(1, { damping: 12, stiffness: 200 })
-      );
-    }
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  const pieceColor = player === 1 ? colors.pieceRed : colors.pieceYellow;
-  const pieceGlow = player === 1 ? colors.pieceRedGlow : colors.pieceYellowGlow;
-  const pieceDark = player === 1 ? colors.pieceRedDark : colors.pieceYellowDark;
-
-  return (
-    <Animated.View
-      style={[
-        styles.piece,
-        {
-          left: col * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8,
-          top: row * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8,
-          width: PIECE_SIZE,
-          height: PIECE_SIZE,
-          backgroundColor: pieceColor,
-          borderColor: pieceDark,
-          shadowColor: pieceGlow,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
-}
-
 export function GameScreen({ navigation }: Props) {
   const {
     board, currentPlayer, status, winner, winCells,
     moveCount, difficulty, isAiThinking, isVsAi,
     dropPiece, setAiThinking, newGame, scores,
   } = useGameStore();
-  const { addCoins, addXp } = useShopStore();
+  const { coins, addCoins, addXp } = useShopStore();
   const insets = useSafeAreaInsets();
-  const [lastDrop, setLastDrop] = useState<{ col: number; row: number } | null>(null);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Track the most recently dropped piece for animation
-  const [animatedPieces, setAnimatedPieces] = useState<Set<string>>(new Set());
+  // Best of 3 series tracking
+  const [seriesGame, setSeriesGame] = useState(1);
+  const totalGames = 3;
 
-  // AI move logic
+  // AI move logic — fixed: no dependency on isAiThinking
   useEffect(() => {
     if (!isVsAi || currentPlayer !== 2 || status !== 'playing') return;
-
-    // Prevent double-firing
     if (aiTimerRef.current) return;
 
     setAiThinking(true);
@@ -110,8 +60,6 @@ export function GameScreen({ navigation }: Props) {
       const currentBoard = useGameStore.getState().board;
       const currentMoveCount = useGameStore.getState().moveCount;
       const aiCol = getAIMove(currentBoard, difficulty);
-      const key = `${aiCol}-${currentMoveCount}`;
-      setAnimatedPieces(prev => new Set(prev).add(key));
       dropPiece(aiCol);
       haptics.drop();
       setAiThinking(false);
@@ -134,6 +82,14 @@ export function GameScreen({ navigation }: Props) {
       addXp(reward);
       haptics.win();
     }
+    if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
+      hasAwardedRef.current = true;
+      haptics.error();
+    }
+    if (status === 'draw' && !hasAwardedRef.current) {
+      hasAwardedRef.current = true;
+      addCoins(10);
+    }
     if (status === 'playing') {
       hasAwardedRef.current = false;
     }
@@ -142,158 +98,119 @@ export function GameScreen({ navigation }: Props) {
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
     if (isVsAi && currentPlayer !== 1) return;
-
-    const key = `${col}-${moveCount}`;
-    setAnimatedPieces(prev => new Set(prev).add(key));
-    const success = dropPiece(col);
-    if (success) {
-      haptics.drop();
-    }
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
+    dropPiece(col);
+    haptics.drop();
+  }, [status, isAiThinking, currentPlayer, isVsAi]);
 
   const handleRematch = () => {
-    setAnimatedPieces(new Set());
+    setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
     newGame(difficulty, isVsAi);
   };
 
-  const playerLabel = currentPlayer === 1 ? 'You' : (isVsAi ? 'Bot' : 'P2');
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  // Turn / status text
   const turnText = status === 'playing'
-    ? (isAiThinking ? 'Thinking...' : `${playerLabel}'s Turn`)
+    ? (isAiThinking ? 'Thinking...' : (currentPlayer === 1 ? 'Your Turn' : (isVsAi ? 'Bot Turn' : 'Player 2')))
     : status === 'won'
-    ? (winner === 1 ? 'You Win!' : (isVsAi ? 'Bot Wins!' : 'Player 2 Wins!'))
+    ? (winner === 1 ? 'You Win!' : (isVsAi ? 'Bot Wins!' : 'P2 Wins!'))
     : 'Draw!';
+
+  const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
   return (
     <ScreenBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* HUD */}
-        <View style={styles.hud}>
-          {/* Player 1 (You) */}
-          <View style={styles.hudPlayer}>
-            <View style={[styles.hudAvatar, { borderColor: colors.pieceRed }]}>
-              <Text style={styles.hudAvatarEmoji}>😎</Text>
-            </View>
-            <View>
-              <Text style={styles.hudName}>You</Text>
-              <Text style={[styles.hudPiece, { color: colors.pieceRed }]}>🔴 {scores.player1}</Text>
-            </View>
+      <View style={[styles.container, { paddingTop: insets.top + 4 }]}>
+
+        {/* HUD Row */}
+        <View style={styles.hudRow}>
+          <PlayerHUD
+            name="You"
+            avatar="😎"
+            level={useShopStore.getState().level}
+            pieceColor="red"
+            score={scores.player1}
+            isActive={currentPlayer === 1 && status === 'playing'}
+            side="left"
+          />
+
+          {/* Center: Turn indicator */}
+          <View style={styles.turnCenter}>
+            <Text style={[
+              styles.turnText,
+              status === 'won' && winner === 1 && { color: colors.green },
+              status === 'won' && winner === 2 && { color: colors.pieceRed },
+            ]}>
+              {turnText}
+            </Text>
+            <Text style={styles.vsText}>vs {diffLabel} Bot</Text>
           </View>
 
-          {/* Turn indicator */}
-          <View style={styles.hudCenter}>
-            <Text style={styles.turnText}>{turnText}</Text>
-            <Text style={styles.diffText}>vs {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot</Text>
-          </View>
-
-          {/* Player 2 / Bot */}
-          <View style={[styles.hudPlayer, { flexDirection: 'row-reverse' }]}>
-            <View style={[styles.hudAvatar, { borderColor: colors.pieceYellow }]}>
-              <Text style={styles.hudAvatarEmoji}>{isVsAi ? '🤖' : '😎'}</Text>
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.hudName}>{isVsAi ? 'Bot' : 'P2'}</Text>
-              <Text style={[styles.hudPiece, { color: colors.pieceYellow }]}>🟡 {scores.player2}</Text>
-            </View>
-          </View>
+          <PlayerHUD
+            name={isVsAi ? `${diffLabel} Bot` : 'Player 2'}
+            avatar={isVsAi ? '🤖' : '😎'}
+            level={isVsAi ? 16 : useShopStore.getState().level}
+            pieceColor="yellow"
+            score={scores.player2}
+            isActive={currentPlayer === 2 && status === 'playing'}
+            side="right"
+          />
         </View>
 
-        {/* Score dots */}
+        {/* Score dots (best of 5) */}
         <View style={styles.scoreDots}>
-          {[...Array(5)].map((_, i) => (
-            <View
-              key={`p1-${i}`}
-              style={[styles.dot, i < scores.player1 && { backgroundColor: colors.pieceRed }]}
-            />
-          ))}
-          <View style={styles.dotSpacer} />
-          {[...Array(5)].map((_, i) => (
-            <View
-              key={`p2-${i}`}
-              style={[styles.dot, i < scores.player2 && { backgroundColor: colors.pieceYellow }]}
-            />
-          ))}
-        </View>
-
-        {/* Board */}
-        <Animated.View entering={FadeIn.delay(200)} style={styles.boardContainer}>
-          <View style={[styles.board, { width: CELL_SIZE * COLS + 16 }]}>
-            {/* Grid holes */}
-            {Array.from({ length: COLS }).map((_, col) =>
-              Array.from({ length: ROWS }).map((_, row) => (
-                <View
-                  key={`hole-${col}-${row}`}
-                  style={[
-                    styles.hole,
-                    {
-                      left: col * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8,
-                      top: row * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8,
-                      width: PIECE_SIZE,
-                      height: PIECE_SIZE,
-                    },
-                  ]}
-                />
-              ))
-            )}
-
-            {/* Pieces */}
-            {Array.from({ length: COLS }).map((_, col) =>
-              Array.from({ length: ROWS }).map((_, row) => {
-                const cell = board[col][row];
-                if (cell === 0) return null;
-                const key = `piece-${col}-${row}`;
-                return (
-                  <AnimatedPiece
-                    key={key}
-                    col={col}
-                    row={row}
-                    player={cell}
-                    isNew={animatedPieces.has(`${col}-${moveCount - 1}`) || animatedPieces.size < 3}
-                  />
-                );
-              })
-            )}
-
-            {/* Win highlight */}
-            {winCells && winCells.map(([col, row], i) => (
-              <Animated.View
-                key={`win-${i}`}
-                entering={FadeIn.delay(i * 100)}
-                style={[
-                  styles.winHighlight,
-                  {
-                    left: col * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8 - 4,
-                    top: row * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2 + 8 - 4,
-                    width: PIECE_SIZE + 8,
-                    height: PIECE_SIZE + 8,
-                  },
-                ]}
-              />
-            ))}
-
-            {/* Column touch targets */}
-            {Array.from({ length: COLS }).map((_, col) => (
-              <Pressable
-                key={`col-${col}`}
-                onPress={() => handleColumnPress(col)}
-                style={[
-                  styles.colTarget,
-                  {
-                    left: col * CELL_SIZE + 8,
-                    width: CELL_SIZE,
-                    height: CELL_SIZE * ROWS,
-                  },
-                ]}
-              />
+          <View style={styles.dotsGroup}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <View key={`p1-${i}`} style={[styles.dot,
+                i < scores.player1 && { backgroundColor: colors.pieceRed }
+              ]} />
             ))}
           </View>
-        </Animated.View>
+          <View style={styles.dotSpacer}>
+            <View style={styles.dotLine} />
+          </View>
+          <View style={styles.dotsGroup}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <View key={`p2-${i}`} style={[styles.dot,
+                i < scores.player2 && { backgroundColor: colors.pieceYellow }
+              ]} />
+            ))}
+          </View>
+        </View>
+
+        {/* Game Board */}
+        <GameBoard
+          onColumnPress={handleColumnPress}
+          disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1)}
+        />
 
         {/* Bottom controls */}
-        <View style={styles.bottomBar}>
-          <View style={styles.moveInfo}>
-            <Text style={styles.moveLabel}>Move {Math.ceil(moveCount / 2) || 1}</Text>
+        <Animated.View entering={FadeInUp.delay(300)} style={styles.controls}>
+          {/* Hint button */}
+          <Pressable onPress={() => haptics.tap()} style={styles.controlBtn}>
+            <Text style={styles.controlIcon}>💡</Text>
+            <Text style={styles.controlLabel}>Hint</Text>
+          </Pressable>
+
+          {/* Move counter */}
+          <View style={styles.moveCounter}>
+            <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
           </View>
-        </View>
+
+          {/* Undo button */}
+          <Pressable onPress={() => haptics.tap()} style={styles.controlBtn}>
+            <Text style={styles.controlIcon}>↩️</Text>
+            <Text style={styles.controlLabel}>Undo</Text>
+          </Pressable>
+
+          {/* Menu button */}
+          <Pressable onPress={handleBack} style={styles.controlBtn}>
+            <Text style={styles.controlIcon}>☰</Text>
+            <Text style={styles.controlLabel}>Menu</Text>
+          </Pressable>
+        </Animated.View>
 
         {/* Emote bar */}
         <View style={styles.emoteBar}>
@@ -308,32 +225,73 @@ export function GameScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Game over overlay */}
+        {/* ========== GAME OVER OVERLAY ========== */}
         {(status === 'won' || status === 'draw') && (
-          <Animated.View entering={FadeIn} style={styles.gameOverOverlay}>
-            <View style={styles.gameOverCard}>
-              <Text style={styles.gameOverTitle}>
-                {status === 'won' ? (winner === 1 ? '🎉 Victory!' : '😞 Defeat') : '🤝 Draw'}
-              </Text>
-              {status === 'won' && winner === 1 && (
-                <Text style={styles.coinReward}>
-                  +{COIN_REWARDS[difficulty]} 🪙
+          <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
+            <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.gameOverCard}>
+              {/* Result header */}
+              <LinearGradient
+                colors={
+                  status === 'won' && winner === 1
+                    ? ['#27ae3d', '#1e8a30']
+                    : status === 'won' && winner === 2
+                    ? ['#e74c3c', '#c0392b']
+                    : ['#3498db', '#2980b9']
+                }
+                style={styles.resultHeader}
+              >
+                <Text style={styles.resultEmoji}>
+                  {status === 'won' ? (winner === 1 ? '🎉' : '😞') : '🤝'}
                 </Text>
-              )}
-              <View style={styles.gameOverButtons}>
-                <GlossyButton
-                  label="Rematch"
-                  variant="orange"
-                  onPress={handleRematch}
-                />
-                <GlossyButton
-                  label="Back"
-                  variant="navy"
-                  onPress={() => navigation.goBack()}
-                  style={{ marginTop: 10 }}
-                />
+                <Text style={styles.resultTitle}>
+                  {status === 'won' ? (winner === 1 ? 'VICTORY!' : 'DEFEAT') : 'DRAW'}
+                </Text>
+              </LinearGradient>
+
+              {/* Stats */}
+              <View style={styles.resultBody}>
+                {/* Coin reward */}
+                {status === 'won' && winner === 1 && (
+                  <Animated.View entering={FadeInDown.delay(400)} style={styles.rewardRow}>
+                    <Text style={styles.rewardLabel}>Coins earned</Text>
+                    <Text style={styles.rewardValue}>+{COIN_REWARDS[difficulty]} 🪙</Text>
+                  </Animated.View>
+                )}
+                {status === 'draw' && (
+                  <Animated.View entering={FadeInDown.delay(400)} style={styles.rewardRow}>
+                    <Text style={styles.rewardLabel}>Draw bonus</Text>
+                    <Text style={styles.rewardValue}>+10 🪙</Text>
+                  </Animated.View>
+                )}
+
+                {/* Move count */}
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Moves</Text>
+                  <Text style={styles.statValue}>{moveCount}</Text>
+                </View>
+
+                {/* Series score */}
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Series</Text>
+                  <Text style={styles.statValue}>{scores.player1} - {scores.player2}</Text>
+                </View>
+
+                {/* Buttons */}
+                <View style={styles.resultButtons}>
+                  <GlossyButton
+                    label="REMATCH"
+                    variant="orange"
+                    onPress={handleRematch}
+                  />
+                  <GlossyButton
+                    label="HOME"
+                    variant="navy"
+                    onPress={handleBack}
+                    style={{ marginTop: 10 }}
+                  />
+                </View>
               </View>
-            </View>
+            </Animated.View>
           </Animated.View>
         )}
       </View>
@@ -346,189 +304,197 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  hud: {
+  hudRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 4,
   },
-  hudPlayer: {
-    flexDirection: 'row',
+  turnCenter: {
     alignItems: 'center',
-    gap: 8,
-  },
-  hudAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hudAvatarEmoji: {
-    fontSize: 22,
-  },
-  hudName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 13,
-    color: '#ffffff',
-  },
-  hudPiece: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-  },
-  hudCenter: {
-    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
   },
   turnText: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
     fontSize: 18,
     color: '#ffffff',
+    textAlign: 'center',
   },
-  diffText: {
+  vsText: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
   },
   scoreDots: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
+    marginBottom: 6,
+  },
+  dotsGroup: {
+    flexDirection: 'row',
+    gap: 5,
   },
   dot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   dotSpacer: {
-    width: 20,
-  },
-  boardContainer: {
-    alignItems: 'center',
-  },
-  board: {
-    backgroundColor: colors.boardBlue,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: colors.boardFrame,
-    position: 'relative',
-    paddingBottom: 8,
-    paddingTop: 8,
-    height: CELL_SIZE * ROWS + 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  hole: {
-    position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: colors.boardHole,
-  },
-  piece: {
-    position: 'absolute',
-    borderRadius: 999,
-    borderWidth: 3,
-    shadowOpacity: 0.5,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  winHighlight: {
-    position: 'absolute',
-    borderRadius: 999,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    shadowColor: '#ffffff',
-    shadowOpacity: 0.8,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 12,
-  },
-  colTarget: {
-    position: 'absolute',
-    top: 0,
-  },
-  bottomBar: {
-    flexDirection: 'row',
+    width: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    gap: 12,
   },
-  moveInfo: {
+  dotLine: {
+    width: 12,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 1,
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
     backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 20,
-    paddingHorizontal: 20,
+    borderRadius: 24,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  moveLabel: {
+  controlBtn: {
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  controlIcon: {
+    fontSize: 18,
+  },
+  controlLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  moveCounter: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  moveText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
     fontSize: 14,
     color: '#ffffff',
   },
   emoteBar: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 12,
   },
   emoteBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(26,37,86,0.8)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   emoteText: {
-    fontSize: 24,
+    fontSize: 22,
   },
-  gameOverOverlay: {
+  // Game Over
+  overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100,
   },
   gameOverCard: {
-    backgroundColor: colors.surface,
+    width: '85%',
+    maxWidth: 340,
     borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    width: '80%',
-    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
   },
-  gameOverTitle: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 32,
-    color: '#ffffff',
+  resultHeader: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  resultEmoji: {
+    fontSize: 48,
     marginBottom: 8,
   },
-  coinReward: {
+  resultTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 28,
+    color: '#ffffff',
+    letterSpacing: 2,
+  },
+  resultBody: {
+    padding: 20,
+  },
+  rewardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,209,102,0.1)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,209,102,0.2)',
+  },
+  rewardLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  rewardValue: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.coinGold,
-    marginBottom: 20,
   },
-  gameOverButtons: {
-    width: '100%',
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  statLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  statValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  resultButtons: {
+    marginTop: 16,
   },
 });

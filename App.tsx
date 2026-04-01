@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/colors';
+import { preloadSounds } from './src/services/audio';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +24,8 @@ export default function App() {
           'Fredoka': require('./src/assets/fonts/Fredoka.ttf'),
           'Outfit': require('./src/assets/fonts/Outfit.ttf'),
         });
+        // Preload sound effects
+        await preloadSounds();
       } catch (e) {
         console.warn('Font loading error:', e);
       } finally {

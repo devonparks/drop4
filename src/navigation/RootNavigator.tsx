@@ -3,11 +3,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MainTabs } from './MainTabs';
 import { PlayScreen } from '../screens/PlayScreen';
 import { GameScreen } from '../screens/GameScreen';
+import { LocalPlayScreen } from '../screens/LocalPlayScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
   Play: undefined;
   Game: undefined;
+  LocalPlay: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -24,12 +26,13 @@ export function RootNavigator() {
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Play" component={PlayScreen} />
+      <Stack.Screen name="LocalPlay" component={LocalPlayScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}
         options={{
           animation: 'fade',
-          gestureEnabled: false, // Don't accidentally swipe back mid-game
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>

@@ -27,7 +27,7 @@ export function PlayScreen({ navigation }: Props) {
 
   return (
     <ScreenBackground>
-      <View style={{ paddingTop: insets.top }}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           coins={coins}
           gems={gems}
@@ -35,61 +35,61 @@ export function PlayScreen({ navigation }: Props) {
           showBack
           onBackPress={() => navigation.goBack()}
         />
-      </View>
 
-      <View style={styles.content}>
-        <Animated.Text
-          entering={FadeInDown.delay(100).springify()}
-          style={styles.title}
-        >
-          PLAY
-        </Animated.Text>
+        <View style={styles.mainContent}>
+          <Animated.Text
+            entering={FadeInDown.delay(100).springify()}
+            style={styles.title}
+          >
+            PLAY
+          </Animated.Text>
 
-        {/* Character */}
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.characterWrap}>
-          <Text style={styles.characterEmoji}>🧑🏾</Text>
-        </Animated.View>
-
-        {/* Difficulty buttons */}
-        <View style={styles.buttonsWrap}>
-          <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <GlossyButton
-              label="EASY"
-              subtitle="Casual & Fun"
-              variant="green"
-              iconRight="⭐"
-              onPress={() => startGame('easy')}
-            />
+          {/* Character */}
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.characterWrap}>
+            <Text style={styles.characterEmoji}>🧑🏾</Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(400).springify()}>
-            <GlossyButton
-              label="MEDIUM"
-              subtitle="Think Ahead"
-              variant="orange"
-              iconRight="⭐⭐"
-              onPress={() => startGame('medium')}
-            />
-          </Animated.View>
+          {/* Difficulty buttons */}
+          <View style={styles.buttonsWrap}>
+            <Animated.View entering={FadeInDown.delay(280).springify()}>
+              <GlossyButton
+                label="EASY"
+                subtitle="Casual & Fun"
+                variant="green"
+                iconRight="⭐"
+                onPress={() => startGame('easy')}
+              />
+            </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(500).springify()}>
-            <GlossyButton
-              label="HARD"
-              subtitle="No Mercy"
-              variant="red"
-              iconRight="⭐⭐⭐"
-              onPress={() => startGame('hard')}
-            />
-          </Animated.View>
+            <Animated.View entering={FadeInDown.delay(360).springify()}>
+              <GlossyButton
+                label="MEDIUM"
+                subtitle="Think Ahead"
+                variant="orange"
+                iconRight="⭐⭐"
+                onPress={() => startGame('medium')}
+              />
+            </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(600).springify()}>
-            <GlossyButton
-              label="Custom Game"
-              variant="navy"
-              icon="🔧"
-              onPress={() => {}}
-            />
-          </Animated.View>
+            <Animated.View entering={FadeInDown.delay(440).springify()}>
+              <GlossyButton
+                label="HARD"
+                subtitle="No Mercy"
+                variant="red"
+                iconRight="⭐⭐⭐"
+                onPress={() => startGame('hard')}
+              />
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(520).springify()}>
+              <GlossyButton
+                label="Custom Game"
+                variant="navy"
+                icon="🔧"
+                onPress={() => {}}
+              />
+            </Animated.View>
+          </View>
         </View>
       </View>
     </ScreenBackground>
@@ -97,31 +97,35 @@ export function PlayScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: {
+  container: {
+    flex: 1,
+  },
+  mainContent: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingBottom: 16,
   },
   title: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
     fontSize: 36,
     color: '#ffffff',
-    marginTop: 8,
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    letterSpacing: 3,
   },
   characterWrap: {
-    alignItems: 'center',
-    marginVertical: 12,
+    marginVertical: 8,
   },
   characterEmoji: {
-    fontSize: 120,
+    fontSize: 100,
   },
   buttonsWrap: {
     width: '100%',
     maxWidth: 340,
-    gap: 14,
+    gap: 12,
   },
 });
