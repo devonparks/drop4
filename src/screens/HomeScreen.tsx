@@ -1,7 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { View, Text, StyleSheet } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -12,12 +10,9 @@ import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
-  const insets = useSafeAreaInsets();
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -25,17 +20,11 @@ export function HomeScreen() {
 
   return (
     <ScreenBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Top Bar */}
-        <TopBar
-          coins={coins}
-          gems={gems}
-          level={level}
-          onProfilePress={() => {}}
-        />
+      <View style={styles.container}>
+        <TopBar coins={coins} gems={gems} level={level} onProfilePress={() => {}} />
 
         {/* Season & Daily Challenges */}
-        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statusBar}>
+        <View style={styles.statusBar}>
           <LinearGradient
             colors={['rgba(0,100,0,0.35)', 'rgba(0,80,0,0.2)']}
             style={styles.seasonPill}
@@ -63,57 +52,19 @@ export function HomeScreen() {
               <Text style={styles.badgeText}>3</Text>
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
-        {/* Main Content — fills remaining space */}
+        {/* Main Content */}
         <View style={styles.mainContent}>
-          {/* Logo */}
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <Drop4Logo size="large" />
-          </Animated.View>
+          <Drop4Logo size="large" />
 
-          {/* Character placeholder */}
-          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.characterWrap}>
-            <Text style={styles.characterEmoji}>🧑🏾</Text>
-          </Animated.View>
+          <Text style={styles.characterEmoji}>🧑🏾</Text>
 
-          {/* Menu Buttons */}
           <View style={styles.buttonsWrap}>
-            <Animated.View entering={FadeInDown.delay(350).springify()}>
-              <GlossyButton
-                label="PLAY"
-                variant="orange"
-                iconRight="▶"
-                onPress={() => navigateTo('Play')}
-              />
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(420).springify()}>
-              <GlossyButton
-                label="CAREER"
-                variant="purple"
-                iconRight="🏆"
-                onPress={() => {}}
-              />
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(490).springify()}>
-              <GlossyButton
-                label="MULTIPLAYER"
-                variant="teal"
-                iconRight="👥"
-                onPress={() => navigateTo('LocalPlay')}
-              />
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(560).springify()}>
-              <GlossyButton
-                label="SHOP"
-                variant="gold"
-                iconRight="🛍"
-                onPress={() => {}}
-              />
-            </Animated.View>
+            <GlossyButton label="PLAY" variant="orange" iconRight="▶" onPress={() => navigateTo('Play')} />
+            <GlossyButton label="CAREER" variant="purple" iconRight="🏆" onPress={() => {}} />
+            <GlossyButton label="MULTIPLAYER" variant="teal" iconRight="👥" onPress={() => navigateTo('LocalPlay')} />
+            <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => {}} />
           </View>
         </View>
       </View>
@@ -142,9 +93,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(39,174,61,0.3)',
   },
-  pillIcon: {
-    fontSize: 18,
-  },
+  pillIcon: { fontSize: 18 },
   seasonLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
@@ -212,17 +161,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 8,
-  },
-  characterWrap: {
-    marginVertical: 4,
+    gap: 6,
   },
   characterEmoji: {
-    fontSize: 80,
+    fontSize: 72,
   },
   buttonsWrap: {
     width: '100%',
     maxWidth: 340,
-    gap: 11,
+    gap: 10,
   },
 });

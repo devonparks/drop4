@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
@@ -14,7 +14,8 @@ function TabIcon({ icon, label, focused }: { icon: string; label: string; focuse
     <View style={styles.tabItem}>
       <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
-      {/* Notification badge example for Inbox */}
+      {focused && <View style={styles.activeIndicator} />}
+      {/* Notification badge for Inbox */}
       {label === 'Inbox' && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>2</Text>
@@ -92,26 +93,30 @@ export function MainTabs() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.bgDark,
+    backgroundColor: 'rgba(8,10,30,0.95)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    height: 70,
-    paddingBottom: 8,
-    paddingTop: 8,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    height: 65,
+    paddingBottom: 6,
+    paddingTop: 6,
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    ...(Platform.OS === 'web' ? {
+      backdropFilter: 'blur(20px)',
+    } as any : {}),
   },
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    minWidth: 50,
   },
   tabIcon: {
-    fontSize: 22,
-    opacity: 0.5,
+    fontSize: 20,
+    opacity: 0.4,
   },
   tabIconActive: {
     opacity: 1,
@@ -119,23 +124,34 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 10,
-    color: colors.textMuted,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.3)',
     marginTop: 2,
   },
   tabLabelActive: {
     color: colors.orange,
   },
+  activeIndicator: {
+    position: 'absolute',
+    top: -8,
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.orange,
+  },
   badge: {
     position: 'absolute',
     top: -4,
-    right: -10,
+    right: -8,
     backgroundColor: colors.red,
     borderRadius: 8,
-    width: 16,
+    minWidth: 16,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(8,10,30,0.95)',
   },
   badgeText: {
     fontFamily: fonts.body,

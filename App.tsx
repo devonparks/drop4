@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
 
@@ -50,6 +51,7 @@ export default function App() {
   }
 
   return (
+    <PhoneFrame>
     <GestureHandlerRootView style={styles.container} onLayout={onLayoutRootView}>
       <StatusBar style="light" />
       <NavigationContainer
@@ -74,6 +76,7 @@ export default function App() {
         <RootNavigator />
       </NavigationContainer>
     </GestureHandlerRootView>
+    </PhoneFrame>
   );
 }
 
