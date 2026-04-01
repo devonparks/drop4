@@ -1,17 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Pressable, Dimensions, Platform } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
-  FadeInUp,
   SlideInDown,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  withDelay,
-  withRepeat,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -39,7 +31,6 @@ export function GameScreen({ navigation }: Props) {
     dropPiece, setAiThinking, newGame, scores,
   } = useGameStore();
   const { coins, addCoins, addXp } = useShopStore();
-  const insets = useSafeAreaInsets();
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -122,7 +113,7 @@ export function GameScreen({ navigation }: Props) {
 
   return (
     <ScreenBackground>
-      <View style={[styles.container, { paddingTop: insets.top + 4 }]}>
+      <View style={styles.container}>
 
         {/* HUD Row */}
         <View style={styles.hudRow}>
@@ -187,7 +178,7 @@ export function GameScreen({ navigation }: Props) {
         />
 
         {/* Bottom controls */}
-        <Animated.View entering={FadeInUp.delay(300)} style={styles.controls}>
+        <View style={styles.controls}>
           {/* Hint button */}
           <Pressable onPress={() => haptics.tap()} style={styles.controlBtn}>
             <Text style={styles.controlIcon}>💡</Text>
@@ -210,7 +201,7 @@ export function GameScreen({ navigation }: Props) {
             <Text style={styles.controlIcon}>☰</Text>
             <Text style={styles.controlLabel}>Menu</Text>
           </Pressable>
-        </Animated.View>
+        </View>
 
         {/* Emote bar */}
         <View style={styles.emoteBar}>
