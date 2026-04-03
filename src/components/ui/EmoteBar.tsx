@@ -1,43 +1,89 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 
+// Character face images for game emote buttons (Clash Royale style)
+const FACE_IMAGES = {
+  happy: require('../../assets/images/characters/player_avatar.png'),
+  surprised: require('../../assets/images/characters/player_emote_idle.png'),
+  thumbsup: require('../../assets/images/characters/player_avatar.png'),
+  angry: require('../../assets/images/characters/player_emote_idle.png'),
+};
+
 interface EmoteConfig {
   id: EmoteId;
   name: string;
   icon: string;
+  faceKey?: keyof typeof FACE_IMAGES;
   unlocked: boolean;
 }
 
 const EMOTES: EmoteConfig[] = [
-  { id: 'thumbsup', name: 'Thumbs Up', icon: '👍', unlocked: true },
-  { id: 'wave', name: 'Wave', icon: '👋', unlocked: true },
-  { id: 'happy', name: 'Happy', icon: '😄', unlocked: true },
+  { id: 'happy', name: 'Happy', icon: '😄', faceKey: 'happy', unlocked: true },
+  { id: 'thumbsup', name: 'Nice!', icon: '👍', faceKey: 'surprised', unlocked: true },
+  { id: 'wave', name: 'GG', icon: '👋', faceKey: 'thumbsup', unlocked: true },
+  { id: 'angry', name: 'Angry', icon: '😤', faceKey: 'angry', unlocked: true },
   { id: 'dab', name: 'Dab', icon: '🕺', unlocked: true },
   { id: 'dance', name: 'Dance', icon: '💃', unlocked: false },
   { id: 'celebrate', name: 'Celebrate', icon: '🎉', unlocked: false },
   { id: 'sad', name: 'Sad', icon: '😢', unlocked: false },
-  { id: 'angry', name: 'Angry', icon: '😤', unlocked: false },
 ];
 
 interface EmoteBarProps {
   onEmotePress: (emoteId: EmoteId) => void;
   activeEmote?: EmoteId | null;
-  variant?: 'lobby' | 'game'; // lobby = large buttons, game = compact
+  variant?: 'lobby' | 'game';
 }
 
 export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: EmoteBarProps) {
-  const isLobby = variant === 'lobby';
+  const isGame = variant === 'game';
 
+  // Game variant: show first 4 emotes as character face circles (Clash Royale style)
+  if (isGame) {
+    const gameEmotes = EMOTES.slice(0, 4);
+
+    return (
+      <View style={styles.gameContainer}>
+        {gameEmotes.map(emote => {
+          const isActive = activeEmote === emote.id;
+
+          return (
+            <Pressable
+              key={emote.id}
+              onPress={() => {
+                haptics.tap();
+                playSound('click');
+                onEmotePress(emote.id);
+              }}
+              style={[styles.gameFaceBtn, isActive && styles.gameFaceBtnActive]}
+            >
+              {emote.faceKey && FACE_IMAGES[emote.faceKey] ? (
+                <Image
+                  source={FACE_IMAGES[emote.faceKey]}
+                  style={styles.faceImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.gameFaceEmoji}>{emote.icon}</Text>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
+
+  // Lobby variant: large buttons with labels
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.container, isLobby ? styles.lobbyContainer : styles.gameContainer]}
+      contentContainerStyle={styles.lobbyContainer}
     >
       {EMOTES.map(emote => {
         const isActive = activeEmote === emote.id;
@@ -53,22 +99,17 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
               onEmotePress(emote.id);
             }}
             style={[
-              isLobby ? styles.lobbyBtn : styles.gameBtn,
+              styles.lobbyBtn,
               isActive && styles.activeBtn,
               isLocked && styles.lockedBtn,
             ]}
           >
-            <Text style={[
-              isLobby ? styles.lobbyIcon : styles.gameIcon,
-              isLocked && { opacity: 0.3 },
-            ]}>
+            <Text style={[styles.lobbyIcon, isLocked && { opacity: 0.3 }]}>
               {emote.icon}
             </Text>
-            {isLobby && (
-              <Text style={[styles.emoteName, isActive && styles.activeText]}>
-                {emote.name}
-              </Text>
-            )}
+            <Text style={[styles.emoteName, isActive && styles.activeText]}>
+              {emote.name}
+            </Text>
             {isLocked && (
               <View style={styles.lockOverlay}>
                 <Text style={styles.lockIcon}>🔒</Text>
@@ -82,18 +123,47 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 8,
+  // Game variant — Clash Royale style face circles
+  gameContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'center',
+    paddingVertical: 8,
   },
+  gameFaceBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    overflow: 'hidden',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  gameFaceBtnActive: {
+    borderColor: colors.orange,
+    shadowColor: colors.orange,
+    shadowOpacity: 0.5,
+  },
+  faceImage: {
+    width: '100%',
+    height: '100%',
+  },
+  gameFaceEmoji: {
+    fontSize: 26,
+  },
+  // Lobby variant
   lobbyContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    gap: 8,
   },
-  gameContainer: {
-    paddingHorizontal: 8,
-    gap: 6,
-  },
-  // Lobby style (large buttons with labels)
   lobbyBtn: {
     width: 72,
     height: 80,
@@ -117,22 +187,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  // Game style (compact circles)
-  gameBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(26,37,86,0.8)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  gameIcon: {
-    fontSize: 22,
-  },
-  // States
   activeBtn: {
     borderColor: colors.orange,
     backgroundColor: 'rgba(255,140,0,0.15)',

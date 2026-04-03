@@ -18,6 +18,18 @@ const VARIANTS = {
   gold: {
     colors: ['#1a1508', '#2d250e', '#3d3010', '#4a3a12'] as const,
   },
+  bronze: {
+    colors: ['#1a0f08', '#2d1a0e', '#3d2510', '#4a2e12'] as const,
+  },
+  silver: {
+    colors: ['#0f1218', '#1a2030', '#253040', '#304050'] as const,
+  },
+  diamond: {
+    colors: ['#081020', '#0e1a38', '#142550', '#1a3068'] as const,
+  },
+  darkmatter: {
+    colors: ['#0a0008', '#150010', '#200018', '#2a0020'] as const,
+  },
 };
 
 export function ScreenBackground({ children, style, variant = 'default' }: ScreenBackgroundProps) {
