@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Difficulty } from '../stores/gameStore';
 import { fonts, weight } from '../theme/typography';
@@ -36,7 +37,7 @@ export function PlayScreen({ navigation }: Props) {
         <View style={styles.mainContent}>
           <Text style={styles.title}>PLAY</Text>
 
-          <Text style={styles.characterEmoji}>🧑🏾</Text>
+          <CharacterAvatar size="xlarge" variant="player" />
 
           <View style={styles.buttonsWrap}>
             <GlossyButton label="EASY" subtitle="Casual & Fun" variant="green" iconRight="⭐" onPress={() => startGame('easy')} />

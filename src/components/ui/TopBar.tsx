@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
+import { CharacterAvatar } from './CharacterAvatar';
 
 interface TopBarProps {
   coins: number;
@@ -69,7 +70,7 @@ export function TopBar({
           style={styles.avatarRing}
         >
           <View style={styles.avatarInner}>
-            <Text style={styles.avatarEmoji}>😎</Text>
+            <CharacterAvatar size="small" variant="player" />
           </View>
         </LinearGradient>
         <View style={styles.levelBadge}>

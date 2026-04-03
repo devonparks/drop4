@@ -11,6 +11,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
+import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useGameStore, ROWS, COLS } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -129,7 +130,7 @@ export function GameScreen({ navigation }: Props) {
         <View style={styles.hudRow}>
           <PlayerHUD
             name="You"
-            avatar="😎"
+            avatar={<CharacterAvatar size="medium" variant="player" />}
             level={useShopStore.getState().level}
             pieceColor="red"
             score={scores.player1}
@@ -151,7 +152,10 @@ export function GameScreen({ navigation }: Props) {
 
           <PlayerHUD
             name={isVsAi ? `${diffLabel} Bot` : 'Player 2'}
-            avatar={isVsAi ? '🤖' : '😎'}
+            avatar={isVsAi
+              ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
+              : <CharacterAvatar size="medium" variant="player" />
+            }
             level={isVsAi ? 16 : useShopStore.getState().level}
             pieceColor="yellow"
             score={scores.player2}

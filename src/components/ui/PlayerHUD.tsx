@@ -7,7 +7,7 @@ import { fonts, weight } from '../../theme/typography';
 
 interface PlayerHUDProps {
   name: string;
-  avatar: string;
+  avatar: string | React.ReactNode;
   level: number;
   pieceColor: 'red' | 'yellow';
   score: number;
@@ -55,7 +55,10 @@ export function PlayerHUD({ name, avatar, level, pieceColor, score, isActive, si
           colors={isActive ? ['#2a2a4a', '#1a1a3a'] : ['#1a1a2a', '#101020']}
           style={styles.avatarInner}
         >
-          <Text style={styles.avatarEmoji}>{avatar}</Text>
+          {typeof avatar === 'string'
+            ? <Text style={styles.avatarEmoji}>{avatar}</Text>
+            : avatar
+          }
         </LinearGradient>
 
         {/* Level badge */}

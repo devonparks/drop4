@@ -6,6 +6,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Drop4Logo } from '../components/ui/Drop4Logo';
+import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -58,7 +59,7 @@ export function HomeScreen() {
         <View style={styles.mainContent}>
           <Drop4Logo size="large" />
 
-          <Text style={styles.characterEmoji}>🧑🏾</Text>
+          <CharacterAvatar size="large" variant="player" />
 
           <View style={styles.buttonsWrap}>
             <GlossyButton label="PLAY" variant="orange" iconRight="▶" onPress={() => navigateTo('Play')} />
