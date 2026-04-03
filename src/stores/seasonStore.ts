@@ -1,0 +1,62 @@
+import { create } from 'zustand';
+
+export interface SeasonReward {
+  tier: number;
+  freeReward: { type: string; name: string; icon: string } | null;
+  premiumReward: { type: string; name: string; icon: string } | null;
+}
+
+interface SeasonState {
+  seasonNumber: number;
+  seasonName: string;
+  currentTier: number;
+  maxTier: number;
+  xp: number;
+  xpPerTier: number;
+  hasPremium: boolean;
+  rewards: SeasonReward[];
+
+  // Actions
+  addSeasonXp: (amount: number) => void;
+  claimReward: (tier: number) => void;
+}
+
+const SEASON_REWARDS: SeasonReward[] = [
+  { tier: 1, freeReward: { type: 'coins', name: '100 Coins', icon: '🪙' }, premiumReward: { type: 'skin', name: 'Chrome Pieces', icon: '🔴' } },
+  { tier: 2, freeReward: { type: 'coins', name: '200 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Wood Board', icon: '🎨' } },
+  { tier: 3, freeReward: null, premiumReward: { type: 'emote', name: 'Dance Emote', icon: '💃' } },
+  { tier: 4, freeReward: { type: 'coins', name: '300 Coins', icon: '🪙' }, premiumReward: { type: 'effect', name: 'Spark Drop', icon: '✨' } },
+  { tier: 5, freeReward: { type: 'skin', name: 'Fire & Ice', icon: '🔥' }, premiumReward: { type: 'board', name: 'Neon Board', icon: '🎨' } },
+  { tier: 6, freeReward: { type: 'coins', name: '500 Coins', icon: '🪙' }, premiumReward: { type: 'skin', name: 'Neon Pieces', icon: '💜' } },
+  { tier: 7, freeReward: null, premiumReward: { type: 'emote', name: 'Crown Pose', icon: '👑' } },
+  { tier: 8, freeReward: { type: 'coins', name: '1000 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Galaxy Board', icon: '🌌' } },
+];
+
+export const useSeasonStore = create<SeasonState>((set, get) => ({
+  seasonNumber: 1,
+  seasonName: 'Season 1: Origins',
+  currentTier: 0,
+  maxTier: 8,
+  xp: 0,
+  xpPerTier: 500,
+  hasPremium: false,
+  rewards: SEASON_REWARDS,
+
+  addSeasonXp: (amount) => {
+    const state = get();
+    let newXp = state.xp + amount;
+    let newTier = state.currentTier;
+
+    while (newXp >= state.xpPerTier && newTier < state.maxTier) {
+      newXp -= state.xpPerTier;
+      newTier++;
+    }
+
+    set({ xp: newXp, currentTier: newTier });
+  },
+
+  claimReward: (tier) => {
+    // In a real app this would update the shop store owned items
+    // For now just marks the tier as claimed
+  },
+}));

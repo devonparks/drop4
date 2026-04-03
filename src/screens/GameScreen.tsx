@@ -74,7 +74,8 @@ export function GameScreen({ navigation }: Props) {
     if (status === 'won' && winner === 1 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
       const reward = COIN_REWARDS[difficulty];
-      addCoins(reward);
+      const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
+      addCoins(reward + streakBonus);
       addXp(reward);
       haptics.win();
       playSound('win');
@@ -271,28 +272,44 @@ export function GameScreen({ navigation }: Props) {
               <View style={styles.resultBody}>
                 {/* Coin reward */}
                 {status === 'won' && winner === 1 && (
-                  <Animated.View entering={FadeInDown.delay(400)} style={styles.rewardRow}>
+                  <View style={styles.rewardRow}>
                     <Text style={styles.rewardLabel}>Coins earned</Text>
                     <Text style={styles.rewardValue}>+{COIN_REWARDS[difficulty]} 🪙</Text>
-                  </Animated.View>
+                  </View>
+                )}
+                {status === 'won' && winner === 1 && useGameStore.getState().winStreak > 1 && (
+                  <View style={[styles.rewardRow, { borderColor: 'rgba(255,140,0,0.3)', backgroundColor: 'rgba(255,140,0,0.08)' }]}>
+                    <Text style={styles.rewardLabel}>🔥 Streak Bonus (x{useGameStore.getState().winStreak})</Text>
+                    <Text style={[styles.rewardValue, { color: colors.orange }]}>
+                      +{Math.min(useGameStore.getState().winStreak * 10, 50)} 🪙
+                    </Text>
+                  </View>
                 )}
                 {status === 'draw' && (
-                  <Animated.View entering={FadeInDown.delay(400)} style={styles.rewardRow}>
+                  <View style={styles.rewardRow}>
                     <Text style={styles.rewardLabel}>Draw bonus</Text>
                     <Text style={styles.rewardValue}>+10 🪙</Text>
-                  </Animated.View>
+                  </View>
                 )}
 
-                {/* Move count */}
+                {/* Detailed stats */}
                 <View style={styles.statRow}>
                   <Text style={styles.statLabel}>Moves</Text>
                   <Text style={styles.statValue}>{moveCount}</Text>
                 </View>
-
-                {/* Series score */}
                 <View style={styles.statRow}>
                   <Text style={styles.statLabel}>Series</Text>
                   <Text style={styles.statValue}>{scores.player1} - {scores.player2}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Win Streak</Text>
+                  <Text style={[styles.statValue, useGameStore.getState().winStreak > 0 && { color: colors.orange }]}>
+                    {useGameStore.getState().winStreak > 0 ? `🔥 ${useGameStore.getState().winStreak}` : '0'}
+                  </Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Best Streak</Text>
+                  <Text style={styles.statValue}>{useGameStore.getState().bestStreak}</Text>
                 </View>
 
                 {/* Buttons */}

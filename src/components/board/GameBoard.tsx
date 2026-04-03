@@ -175,6 +175,10 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                 const isNew = newPieceMoves.current.has(key) && moveCount === prevMoveCount;
                 const isWin = winSet.has(key);
 
+                // Ghost piece: show translucent piece where it would land
+                const isGhost = !disabled && hoveredCol === col && cell === 0 &&
+                  row === (() => { for (let r = ROWS - 1; r >= 0; r--) { if (board[col][r] === 0) return r; } return -1; })();
+
                 return (
                   <View key={key} style={styles.cellWrap}>
                     {/* Hole */}
@@ -186,6 +190,13 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                           isNew={isNew}
                           skinColors={pieceSkin}
                         />
+                      )}
+                      {/* Ghost piece preview */}
+                      {isGhost && (
+                        <View style={[styles.ghostPiece, {
+                          backgroundColor: currentPlayerColor === 'red'
+                            ? pieceSkin.p1.main : pieceSkin.p2.main,
+                        }]} />
                       )}
                     </View>
 
@@ -292,6 +303,12 @@ const styles = StyleSheet.create({
     // Inset shadow for depth
     borderWidth: 2,
     borderColor: '#071030',
+  },
+  ghostPiece: {
+    width: PIECE_SIZE,
+    height: PIECE_SIZE,
+    borderRadius: PIECE_SIZE / 2,
+    opacity: 0.25,
   },
   piece: {
     width: PIECE_SIZE,

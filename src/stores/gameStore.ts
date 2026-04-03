@@ -17,6 +17,10 @@ interface GameState {
   isAiThinking: boolean;
   scores: { player1: number; player2: number };
   isVsAi: boolean;
+  winStreak: number;
+  bestStreak: number;
+  totalGamesPlayed: number;
+  lastMoveCol: number | null;
 
   // Move history for undo
   moveHistory: { board: Board; currentPlayer: Player; moveCount: number }[];
@@ -93,6 +97,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   isAiThinking: false,
   scores: { player1: 0, player2: 0 },
   isVsAi: true,
+  winStreak: 0,
+  bestStreak: 0,
+  totalGamesPlayed: 0,
+  lastMoveCol: null,
   moveHistory: [],
 
   newGame: (difficulty, vsAi) => set({
@@ -105,6 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     difficulty,
     isAiThinking: false,
     isVsAi: vsAi,
+    lastMoveCol: null,
     moveHistory: [],
   }),
 
@@ -130,6 +139,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const scores = { ...get().scores };
       if (currentPlayer === 1) scores.player1++;
       else scores.player2++;
+      const newStreak = currentPlayer === 1 ? get().winStreak + 1 : 0;
       set({
         board: newBoard,
         status: 'won',
@@ -137,6 +147,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         winCells,
         moveCount: moveCount + 1,
         scores,
+        lastMoveCol: col,
+        winStreak: newStreak,
+        bestStreak: Math.max(newStreak, get().bestStreak),
+        totalGamesPlayed: get().totalGamesPlayed + 1,
         moveHistory: [...moveHistory, historyEntry],
       });
       return true;
@@ -147,6 +161,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         board: newBoard,
         status: 'draw',
         moveCount: moveCount + 1,
+        lastMoveCol: col,
+        winStreak: 0,
+        totalGamesPlayed: get().totalGamesPlayed + 1,
         moveHistory: [...moveHistory, historyEntry],
       });
       return true;
@@ -156,6 +173,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       board: newBoard,
       currentPlayer: currentPlayer === 1 ? 2 : 1,
       moveCount: moveCount + 1,
+      lastMoveCol: col,
       moveHistory: [...moveHistory, historyEntry],
     });
     return true;

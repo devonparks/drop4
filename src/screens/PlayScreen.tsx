@@ -43,6 +43,7 @@ export function PlayScreen({ navigation }: Props) {
             <GlossyButton label="EASY" subtitle="Casual & Fun" variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
             <GlossyButton label="MEDIUM" subtitle="Think Ahead" variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
             <GlossyButton label="HARD" subtitle="No Mercy" variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
+            <GlossyButton label="LEARN" subtitle="Master the Game" variant="purple" icon="📖" onPress={() => navigation.navigate('Learn')} />
             <GlossyButton label="Custom Game" variant="navy" icon="🔧" onPress={() => navigation.navigate('CustomGame')} />
           </View>
         </View>
