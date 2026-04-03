@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Drop4Logo } from '../components/ui/Drop4Logo';
 import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
-import { EmoteBar } from '../components/ui/EmoteBar';
+import { EmoteWheel, EmoteWheelTrigger } from '../components/ui/EmoteWheel';
 import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -16,6 +16,7 @@ export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
+  const [wheelOpen, setWheelOpen] = useState(false);
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -90,13 +91,16 @@ export function HomeScreen() {
             <Text style={styles.playerName}>Player</Text>
           </Pressable>
 
-          {/* Emote buttons */}
-          <EmoteBar
-            onEmotePress={triggerEmote}
-            activeEmote={emote}
-            variant="lobby"
-          />
+          {/* Emote wheel trigger */}
+          <EmoteWheelTrigger onPress={() => setWheelOpen(true)} />
         </View>
+
+        {/* Emote Wheel Modal */}
+        <EmoteWheel
+          visible={wheelOpen}
+          onClose={() => setWheelOpen(false)}
+          onSelect={triggerEmote}
+        />
 
         {/* Menu Buttons */}
         <View style={styles.buttonsWrap}>
