@@ -7,6 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
+import { useCareerStore } from '../stores/careerStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -93,14 +94,20 @@ function LevelNode({ level, onPress, isUnlocked }: {
 export function CareerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
   const newGame = useGameStore(s => s.newGame);
+  const { getStars, isLevelUnlocked, getTotalStars, getCompletedCount } = useCareerStore();
 
   const handlePlayLevel = (careerLevel: CareerLevel) => {
     newGame(careerLevel.difficulty, true);
     navigation.navigate('Game');
   };
 
-  // First uncompleted level determines what's unlocked
-  const firstIncomplete = CAREER_LEVELS.findIndex(l => l.stars === 0);
+  // Merge career store progress into level data for display
+  const levelsWithProgress = CAREER_LEVELS.map(l => ({
+    ...l,
+    stars: getStars(l.id),
+  }));
+
+  const firstIncomplete = levelsWithProgress.findIndex(l => l.stars === 0);
 
   return (
     <ScreenBackground>
@@ -118,20 +125,20 @@ export function CareerScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Chapter 1: The Basics</Text>
           <View style={styles.progressRow}>
             <Text style={styles.progressText}>
-              {CAREER_LEVELS.filter(l => l.stars > 0).length} / {CAREER_LEVELS.length} completed
+              {getCompletedCount()} / {CAREER_LEVELS.length} completed
             </Text>
             <Text style={styles.starsTotal}>
-              ⭐ {CAREER_LEVELS.reduce((sum, l) => sum + l.stars, 0)} / {CAREER_LEVELS.length * 3}
+              ⭐ {getTotalStars()} / {CAREER_LEVELS.length * 3}
             </Text>
           </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.levelList} showsVerticalScrollIndicator={false}>
-          {CAREER_LEVELS.map((lvl, i) => (
+          {levelsWithProgress.map((lvl, i) => (
             <React.Fragment key={lvl.id}>
               <LevelNode
                 level={lvl}
-                isUnlocked={i <= firstIncomplete}
+                isUnlocked={i <= (firstIncomplete >= 0 ? firstIncomplete : levelsWithProgress.length)}
                 onPress={() => handlePlayLevel(lvl)}
               />
               {/* Connector line between levels */}

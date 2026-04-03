@@ -10,6 +10,7 @@ import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
 import { useShopStore } from './src/stores/shopStore';
+import { useCareerStore } from './src/stores/careerStore';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -28,6 +29,7 @@ export default function App() {
         });
         // Load persisted state
         await useShopStore.getState().loadFromStorage();
+        await useCareerStore.getState().loadFromStorage();
         // Preload sound effects
         await preloadSounds();
       } catch (e) {
