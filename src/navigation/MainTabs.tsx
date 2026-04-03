@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -34,7 +35,7 @@ function RanksTab() {
 }
 
 function AchievementsTab() {
-  return <PlaceholderScreen title="Achievements" icon="⭐" subtitle="Track your milestones and showcase your best achievements." />;
+  return <ProfileScreen />;
 }
 
 function InboxTab() {

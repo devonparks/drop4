@@ -63,9 +63,9 @@ export function HomeScreen() {
 
           <View style={styles.buttonsWrap}>
             <GlossyButton label="PLAY" variant="orange" iconRight="▶" onPress={() => navigateTo('Play')} />
-            <GlossyButton label="CAREER" variant="purple" iconRight="🏆" onPress={() => {}} />
-            <GlossyButton label="MULTIPLAYER" variant="teal" iconRight="👥" onPress={() => navigateTo('LocalPlay')} />
-            <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => {}} />
+            <GlossyButton label="CAREER" variant="purple" iconRight="🏆" onPress={() => navigateTo('Career')} />
+            <GlossyButton label="MULTIPLAYER" variant="teal" iconRight="👥" onPress={() => navigateTo('Multiplayer')} />
+            <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => navigation.dispatch(CommonActions.navigate({ name: 'Shop' }))} />
           </View>
         </View>
         {/* Version label */}

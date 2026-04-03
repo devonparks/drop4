@@ -4,24 +4,17 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
-import { useGameStore, Difficulty } from '../stores/gameStore';
+import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Play'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Multiplayer'>;
 };
 
-export function PlayScreen({ navigation }: Props) {
+export function MultiplayerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
-  const newGame = useGameStore(s => s.newGame);
-
-  const startGame = (difficulty: Difficulty) => {
-    newGame(difficulty, true);
-    navigation.navigate('Game');
-  };
 
   return (
     <ScreenBackground>
@@ -35,15 +28,32 @@ export function PlayScreen({ navigation }: Props) {
         />
 
         <View style={styles.mainContent}>
-          <Text style={styles.title}>PLAY</Text>
-
-          <CharacterAvatar size="xlarge" variant="player" />
+          <Text style={styles.title}>MULTIPLAYER</Text>
+          <Text style={styles.subtitle}>Play with friends or go head-to-head</Text>
 
           <View style={styles.buttonsWrap}>
-            <GlossyButton label="EASY" subtitle="Casual & Fun" variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
-            <GlossyButton label="MEDIUM" subtitle="Think Ahead" variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
-            <GlossyButton label="HARD" subtitle="No Mercy" variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
-            <GlossyButton label="Custom Game" variant="navy" icon="🔧" onPress={() => navigation.navigate('CustomGame')} />
+            <GlossyButton
+              label="LOCAL PLAY"
+              subtitle="Pass & Play"
+              variant="teal"
+              icon="👥"
+              onPress={() => navigation.navigate('LocalPlay')}
+            />
+            <GlossyButton
+              label="STAGE MODE"
+              subtitle="Wager Coins"
+              variant="gold"
+              icon="🏟"
+              onPress={() => navigation.navigate('Stage')}
+            />
+            <GlossyButton
+              label="ONLINE"
+              subtitle="Coming Soon"
+              variant="navy"
+              icon="🌐"
+              onPress={() => {}}
+              disabled
+            />
           </View>
         </View>
       </View>
@@ -60,24 +70,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    gap: 6,
+    gap: 12,
   },
   title: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 36,
+    fontSize: 28,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: 3,
+    letterSpacing: 2,
   },
-  characterEmoji: {
-    fontSize: 100,
+  subtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 16,
   },
   buttonsWrap: {
     width: '100%',
     maxWidth: 340,
-    gap: 10,
+    gap: 12,
   },
 });

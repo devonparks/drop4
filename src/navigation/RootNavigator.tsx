@@ -4,12 +4,20 @@ import { MainTabs } from './MainTabs';
 import { PlayScreen } from '../screens/PlayScreen';
 import { GameScreen } from '../screens/GameScreen';
 import { LocalPlayScreen } from '../screens/LocalPlayScreen';
+import { CustomGameScreen } from '../screens/CustomGameScreen';
+import { CareerScreen } from '../screens/CareerScreen';
+import { MultiplayerScreen } from '../screens/MultiplayerScreen';
+import { StageScreen } from '../screens/StageScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
   Play: undefined;
   Game: undefined;
   LocalPlay: undefined;
+  CustomGame: undefined;
+  Career: undefined;
+  Multiplayer: undefined;
+  Stage: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,6 +35,10 @@ export function RootNavigator() {
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Play" component={PlayScreen} />
       <Stack.Screen name="LocalPlay" component={LocalPlayScreen} />
+      <Stack.Screen name="CustomGame" component={CustomGameScreen} />
+      <Stack.Screen name="Career" component={CareerScreen} />
+      <Stack.Screen name="Multiplayer" component={MultiplayerScreen} />
+      <Stack.Screen name="Stage" component={StageScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}
