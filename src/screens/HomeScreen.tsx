@@ -6,7 +6,8 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Drop4Logo } from '../components/ui/Drop4Logo';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
+import { EmoteBar } from '../components/ui/EmoteBar';
 import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -14,6 +15,7 @@ import { fonts, weight } from '../theme/typography';
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
+  const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -61,25 +63,50 @@ export function HomeScreen() {
           </LinearGradient>
         </View>
 
-        {/* Main Content */}
-        <View style={styles.mainContent}>
-          <Drop4Logo size="large" />
+        {/* ===== LOBBY AREA ===== */}
+        <View style={styles.lobbyArea}>
+          {/* Logo */}
+          <Drop4Logo size="small" />
 
-          <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.characterArea}>
-            <View style={styles.characterFrame}>
-              <CharacterAvatar size="large" variant="player" />
-            </View>
-            <Text style={styles.customizeHint}>Tap to customize</Text>
+          {/* Character Stage */}
+          <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.stage}>
+            {/* Stage glow */}
+            <View style={styles.stageGlow} />
+
+            {/* Character */}
+            <AnimatedCharacter
+              size={180}
+              emote={emote}
+              onEmoteComplete={clearEmote}
+            />
+
+            {/* Stage platform */}
+            <LinearGradient
+              colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)', 'transparent']}
+              style={styles.stagePlatform}
+            />
+
+            {/* Player name */}
+            <Text style={styles.playerName}>Player</Text>
           </Pressable>
 
-          <View style={styles.buttonsWrap}>
-            <GlossyButton label="PLAY" variant="orange" iconRight="▶" onPress={() => navigateTo('Play')} />
-            <GlossyButton label="CAREER" variant="purple" iconRight="🏆" onPress={() => navigateTo('Career')} />
-            <GlossyButton label="MULTIPLAYER" variant="teal" iconRight="👥" onPress={() => navigateTo('Multiplayer')} />
-            <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => navigation.dispatch(CommonActions.navigate({ name: 'Shop' }))} />
-          </View>
+          {/* Emote buttons */}
+          <EmoteBar
+            onEmotePress={triggerEmote}
+            activeEmote={emote}
+            variant="lobby"
+          />
         </View>
-        {/* Version label */}
+
+        {/* Menu Buttons */}
+        <View style={styles.buttonsWrap}>
+          <GlossyButton label="PLAY" variant="orange" iconRight="▶" onPress={() => navigateTo('Play')} />
+          <GlossyButton label="CAREER" variant="purple" iconRight="🏆" onPress={() => navigateTo('Career')} />
+          <GlossyButton label="MULTIPLAYER" variant="teal" iconRight="👥" onPress={() => navigateTo('Multiplayer')} />
+          <GlossyButton label="SHOP" variant="gold" iconRight="🛍" onPress={() => navigation.dispatch(CommonActions.navigate({ name: 'Shop' }))} />
+        </View>
+
+        {/* Version */}
         <Text style={styles.version}>V1.0</Text>
       </View>
     </ScreenBackground>
@@ -170,37 +197,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ffffff',
   },
-  mainContent: {
+  // Lobby
+  lobbyArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 6,
+    gap: 4,
   },
-  characterEmoji: {
-    fontSize: 72,
-  },
-  characterArea: {
+  stage: {
     alignItems: 'center',
+    position: 'relative',
   },
-  characterFrame: {
-    width: 160,
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
+  stageGlow: {
+    position: 'absolute',
+    bottom: 20,
+    width: 200,
+    height: 40,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,140,0,0.08)',
   },
-  customizeHint: {
+  stagePlatform: {
+    width: 120,
+    height: 8,
+    borderRadius: 50,
+    marginTop: -8,
+  },
+  playerName: {
     fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.3)',
-    textAlign: 'center',
-    marginTop: 2,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+    marginTop: 4,
   },
+  // Buttons
   buttonsWrap: {
-    width: '100%',
-    maxWidth: 340,
-    gap: 10,
+    paddingHorizontal: 24,
+    gap: 8,
+    paddingBottom: 4,
   },
   version: {
     position: 'absolute',

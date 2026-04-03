@@ -12,6 +12,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { EmoteBar as EmoteBarComponent } from '../components/ui/EmoteBar';
 import { useGameStore, ROWS, COLS } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -257,17 +258,13 @@ export function GameScreen({ navigation }: Props) {
         </View>
 
         {/* Emote bar */}
-        <View style={styles.emoteBar}>
-          {['😄', '😮', '👍', '💪'].map((emoji, i) => (
-            <Pressable
-              key={i}
-              onPress={() => haptics.tap()}
-              style={styles.emoteBtn}
-            >
-              <Text style={styles.emoteText}>{emoji}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <EmoteBarComponent
+          onEmotePress={(id) => {
+            haptics.tap();
+            playSound('click');
+          }}
+          variant="game"
+        />
 
         {/* ========== GAME OVER OVERLAY ========== */}
         {(status === 'won' || status === 'draw') && (
