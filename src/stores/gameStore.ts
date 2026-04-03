@@ -18,9 +18,13 @@ interface GameState {
   scores: { player1: number; player2: number };
   isVsAi: boolean;
 
+  // Move history for undo
+  moveHistory: { board: Board; currentPlayer: Player; moveCount: number }[];
+
   // Actions
   newGame: (difficulty: Difficulty, vsAi: boolean) => void;
   dropPiece: (col: number) => boolean;
+  undoMove: () => boolean;
   setAiThinking: (thinking: boolean) => void;
   resetScores: () => void;
 }
@@ -89,6 +93,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   isAiThinking: false,
   scores: { player1: 0, player2: 0 },
   isVsAi: true,
+  moveHistory: [],
 
   newGame: (difficulty, vsAi) => set({
     board: createEmptyBoard(),
@@ -100,10 +105,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     difficulty,
     isAiThinking: false,
     isVsAi: vsAi,
+    moveHistory: [],
   }),
 
   dropPiece: (col) => {
-    const { board, currentPlayer, status } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount } = get();
+    // Save current state to history before making the move
+    const historyEntry = {
+      board: board.map(c => [...c]),
+      currentPlayer,
+      moveCount,
+    };
     if (status !== 'playing') return false;
 
     const row = getLowestEmptyRow(board, col);
@@ -123,8 +135,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         status: 'won',
         winner: currentPlayer,
         winCells,
-        moveCount: get().moveCount + 1,
+        moveCount: moveCount + 1,
         scores,
+        moveHistory: [...moveHistory, historyEntry],
       });
       return true;
     }
@@ -133,7 +146,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({
         board: newBoard,
         status: 'draw',
-        moveCount: get().moveCount + 1,
+        moveCount: moveCount + 1,
+        moveHistory: [...moveHistory, historyEntry],
       });
       return true;
     }
@@ -141,7 +155,34 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       board: newBoard,
       currentPlayer: currentPlayer === 1 ? 2 : 1,
-      moveCount: get().moveCount + 1,
+      moveCount: moveCount + 1,
+      moveHistory: [...moveHistory, historyEntry],
+    });
+    return true;
+  },
+
+  undoMove: () => {
+    const { moveHistory, status, isVsAi } = get();
+    if (moveHistory.length === 0 || status !== 'playing') return false;
+
+    // In AI mode, undo 2 moves (player + AI) so it's back to player's turn
+    const undoCount = isVsAi && moveHistory.length >= 2 ? 2 : 1;
+    const targetHistory = moveHistory.slice(0, -undoCount);
+    const restored = targetHistory.length > 0
+      ? targetHistory[targetHistory.length - 1]
+      : { board: createEmptyBoard(), currentPlayer: 1 as Player, moveCount: 0 };
+
+    // Actually restore from the state BEFORE the moves we're undoing
+    const restoreIdx = moveHistory.length - undoCount;
+    const restoreState = moveHistory[restoreIdx];
+
+    set({
+      board: restoreState.board,
+      currentPlayer: restoreState.currentPlayer,
+      moveCount: restoreState.moveCount,
+      moveHistory: moveHistory.slice(0, restoreIdx),
+      winCells: null,
+      winner: null,
     });
     return true;
   },

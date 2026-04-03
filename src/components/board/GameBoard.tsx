@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useGameStore, ROWS, COLS, Cell } from '../../stores/gameStore';
 import { useShopStore } from '../../stores/shopStore';
 import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeColors';
+import { PIECE_SKIN_VISUALS, PieceSkinVisuals } from '../../data/pieceSkinColors';
 import { colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -26,10 +27,11 @@ const PIECE_SIZE = CELL_SIZE - 6;
 export { BOARD_WIDTH, BOARD_HEIGHT, CELL_SIZE };
 
 // Individual animated piece
-function AnimatedPiece({ player, isNew, delay = 0 }: {
+function AnimatedPiece({ player, isNew, delay = 0, skinColors }: {
   player: 1 | 2;
   isNew: boolean;
   delay?: number;
+  skinColors?: PieceSkinVisuals;
 }) {
   const translateY = useSharedValue(isNew ? -(BOARD_HEIGHT + 50) : 0);
   const scaleVal = useSharedValue(1);
@@ -56,19 +58,17 @@ function AnimatedPiece({ player, isNew, delay = 0 }: {
     ],
   }));
 
-  const pieceColor = player === 1 ? colors.pieceRed : colors.pieceYellow;
-  const darkColor = player === 1 ? colors.pieceRedDark : colors.pieceYellowDark;
-  const glowColor = player === 1 ? 'rgba(230,57,70,0.6)' : 'rgba(244,166,35,0.6)';
+  const skin = skinColors || PIECE_SKIN_VISUALS.classic;
+  const pc = player === 1 ? skin.p1 : skin.p2;
+  const pieceColor = pc.main;
+  const darkColor = pc.dark;
+  const glowColor = pc.glow;
 
   return (
     <Animated.View style={[styles.piece, animStyle]}>
       {/* Piece body with gradient for 3D look */}
       <LinearGradient
-        colors={[
-          player === 1 ? '#ff6b7a' : '#ffc247',
-          pieceColor,
-          darkColor,
-        ]}
+        colors={[pc.light, pieceColor, darkColor]}
         start={{ x: 0.3, y: 0 }}
         end={{ x: 0.7, y: 1 }}
         style={[styles.pieceGradient, {
@@ -105,7 +105,9 @@ interface GameBoardProps {
 export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' }: GameBoardProps) {
   const [hoveredCol, setHoveredCol] = React.useState<number | null>(null);
   const equippedBoard = useShopStore(s => s.equipped.board);
+  const equippedPieces = useShopStore(s => s.equipped.pieces);
   const theme: BoardThemeVisuals = BOARD_THEME_VISUALS[equippedBoard] || BOARD_THEME_VISUALS.default;
+  const pieceSkin: PieceSkinVisuals = PIECE_SKIN_VISUALS[equippedPieces] || PIECE_SKIN_VISUALS.classic;
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
   const moveCount = useGameStore(s => s.moveCount);
@@ -182,6 +184,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                         <AnimatedPiece
                           player={cell as 1 | 2}
                           isNew={isNew}
+                          skinColors={pieceSkin}
                         />
                       )}
                     </View>

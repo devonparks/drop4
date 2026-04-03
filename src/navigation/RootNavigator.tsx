@@ -9,6 +9,7 @@ import { CareerScreen } from '../screens/CareerScreen';
 import { MultiplayerScreen } from '../screens/MultiplayerScreen';
 import { StageScreen } from '../screens/StageScreen';
 import { TournamentScreen } from '../screens/TournamentScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Multiplayer: undefined;
   Stage: undefined;
   Tournament: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +44,7 @@ export function RootNavigator() {
       <Stack.Screen name="Multiplayer" component={MultiplayerScreen} />
       <Stack.Screen name="Stage" component={StageScreen} />
       <Stack.Screen name="Tournament" component={TournamentScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}

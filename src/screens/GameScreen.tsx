@@ -30,11 +30,12 @@ export function GameScreen({ navigation }: Props) {
   const {
     board, currentPlayer, status, winner, winCells,
     moveCount, difficulty, isAiThinking, isVsAi,
-    dropPiece, setAiThinking, newGame, scores,
+    dropPiece, undoMove, setAiThinking, newGame, scores,
   } = useGameStore();
   const { coins, addCoins, addXp } = useShopStore();
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hintCol, setHintCol] = useState<number | null>(null);
 
   // Best of 3 series tracking
   const [seriesGame, setSeriesGame] = useState(1);
@@ -195,7 +196,14 @@ export function GameScreen({ navigation }: Props) {
         {/* Bottom controls */}
         <View style={styles.controls}>
           {/* Hint button */}
-          <Pressable onPress={() => haptics.tap()} style={styles.controlBtn}>
+          <Pressable onPress={() => {
+            if (status === 'playing' && !isAiThinking && currentPlayer === 1) {
+              haptics.tap();
+              const bestCol = getAIMove(board, 'hard');
+              setHintCol(bestCol);
+              setTimeout(() => setHintCol(null), 2000);
+            }
+          }} style={styles.controlBtn}>
             <Text style={styles.controlIcon}>💡</Text>
             <Text style={styles.controlLabel}>Hint</Text>
           </Pressable>
@@ -206,7 +214,12 @@ export function GameScreen({ navigation }: Props) {
           </View>
 
           {/* Undo button */}
-          <Pressable onPress={() => haptics.tap()} style={styles.controlBtn}>
+          <Pressable onPress={() => {
+            if (undoMove()) {
+              haptics.tap();
+              playSound('whoosh');
+            }
+          }} style={styles.controlBtn}>
             <Text style={styles.controlIcon}>↩️</Text>
             <Text style={styles.controlLabel}>Undo</Text>
           </Pressable>

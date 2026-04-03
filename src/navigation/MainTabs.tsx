@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -31,7 +32,7 @@ function FriendsTab() {
 }
 
 function RanksTab() {
-  return <PlaceholderScreen title="Ranks" icon="👑" subtitle="Global leaderboards and seasonal rankings. Coming in Phase 3!" />;
+  return <ChallengesScreen />;
 }
 
 function AchievementsTab() {
