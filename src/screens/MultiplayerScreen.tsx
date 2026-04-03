@@ -47,6 +47,13 @@ export function MultiplayerScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('Stage')}
             />
             <GlossyButton
+              label="TOURNAMENT"
+              subtitle="4-8 Player Bracket"
+              variant="red"
+              icon="🏆"
+              onPress={() => navigation.navigate('Tournament')}
+            />
+            <GlossyButton
               label="ONLINE"
               subtitle="Coming Soon"
               variant="navy"

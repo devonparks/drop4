@@ -10,6 +10,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGameStore, ROWS, COLS, Cell } from '../../stores/gameStore';
+import { useShopStore } from '../../stores/shopStore';
+import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeColors';
 import { colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -102,6 +104,8 @@ interface GameBoardProps {
 
 export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' }: GameBoardProps) {
   const [hoveredCol, setHoveredCol] = React.useState<number | null>(null);
+  const equippedBoard = useShopStore(s => s.equipped.board);
+  const theme: BoardThemeVisuals = BOARD_THEME_VISUALS[equippedBoard] || BOARD_THEME_VISUALS.default;
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
   const moveCount = useGameStore(s => s.moveCount);
@@ -148,10 +152,10 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
 
       {/* Board frame with gradient */}
       <LinearGradient
-        colors={['#2a5bce', '#1a3a8a', '#0d2060']}
+        colors={[...theme.frameGradient]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.boardFrame}
+        style={[styles.boardFrame, { borderColor: theme.frameBorder }]}
       >
         {/* Board support legs */}
         <View style={styles.boardLegs}>
@@ -172,7 +176,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                 return (
                   <View key={key} style={styles.cellWrap}>
                     {/* Hole */}
-                    <View style={styles.hole}>
+                    <View style={[styles.hole, { backgroundColor: theme.holeColor, borderColor: theme.holeBorder }]}>
                       {/* Piece if present */}
                       {cell !== 0 && (
                         <AnimatedPiece
@@ -208,7 +212,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
 
       {/* Board base/tray */}
       <LinearGradient
-        colors={['#1a3a8a', '#0d2060', '#091540']}
+        colors={[...theme.baseGradient]}
         style={styles.boardBase}
       />
     </View>
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
     width: BOARD_WIDTH,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#3668d4',
+    borderColor: '#3668d4', // overridden by theme inline
     padding: BOARD_PADDING,
     position: 'relative',
     overflow: 'hidden',
@@ -258,7 +262,7 @@ const styles = StyleSheet.create({
   leg: {
     width: 30,
     height: 8,
-    backgroundColor: '#0d2060',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
   },
