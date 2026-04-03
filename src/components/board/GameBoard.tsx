@@ -19,8 +19,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 24, 380);
 const CELL_GAP = 4;
 const BOARD_PADDING = 10;
+
+// Default sizes for standard 7-col board (used for exports)
 const CELL_SIZE = Math.floor((BOARD_MAX_WIDTH - BOARD_PADDING * 2 - CELL_GAP * (COLS - 1)) / COLS);
 const BOARD_WIDTH = CELL_SIZE * COLS + CELL_GAP * (COLS - 1) + BOARD_PADDING * 2;
+
+// Dynamic sizing helper
+function computeBoardSizes(cols: number, rows: number) {
+  const cellSize = Math.floor((BOARD_MAX_WIDTH - BOARD_PADDING * 2 - CELL_GAP * (cols - 1)) / cols);
+  const pieceSize = cellSize - 6;
+  const boardWidth = cellSize * cols + CELL_GAP * (cols - 1) + BOARD_PADDING * 2;
+  const boardHeight = cellSize * rows + CELL_GAP * (rows - 1) + BOARD_PADDING * 2;
+  return { cellSize, pieceSize, boardWidth, boardHeight };
+}
 const BOARD_HEIGHT = CELL_SIZE * ROWS + CELL_GAP * (ROWS - 1) + BOARD_PADDING * 2;
 const PIECE_SIZE = CELL_SIZE - 6;
 
@@ -106,8 +117,14 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
   const [hoveredCol, setHoveredCol] = React.useState<number | null>(null);
   const equippedBoard = useShopStore(s => s.equipped.board);
   const equippedPieces = useShopStore(s => s.equipped.pieces);
+  const customSettings = useGameStore(s => s.customSettings);
+  const gameCols = customSettings?.cols || COLS;
+  const gameRows = customSettings?.rows || ROWS;
   const theme: BoardThemeVisuals = BOARD_THEME_VISUALS[equippedBoard] || BOARD_THEME_VISUALS.default;
   const pieceSkin: PieceSkinVisuals = PIECE_SKIN_VISUALS[equippedPieces] || PIECE_SKIN_VISUALS.classic;
+
+  // Compute dynamic board dimensions based on current game settings
+  const sizes = React.useMemo(() => computeBoardSizes(gameCols, gameRows), [gameCols, gameRows]);
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
   const moveCount = useGameStore(s => s.moveCount);

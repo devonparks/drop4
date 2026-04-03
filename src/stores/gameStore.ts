@@ -6,6 +6,13 @@ export type Board = Cell[][];
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type GameStatus = 'idle' | 'playing' | 'won' | 'draw';
 
+export interface CustomGameSettings {
+  rows: number;
+  cols: number;
+  connectCount: number;
+  timerSeconds: number; // 0 = no timer
+}
+
 interface GameState {
   board: Board;
   currentPlayer: Player;
@@ -21,12 +28,13 @@ interface GameState {
   bestStreak: number;
   totalGamesPlayed: number;
   lastMoveCol: number | null;
+  customSettings: CustomGameSettings;
 
   // Move history for undo
   moveHistory: { board: Board; currentPlayer: Player; moveCount: number }[];
 
   // Actions
-  newGame: (difficulty: Difficulty, vsAi: boolean) => void;
+  newGame: (difficulty: Difficulty, vsAi: boolean, settings?: Partial<CustomGameSettings>) => void;
   dropPiece: (col: number) => boolean;
   undoMove: () => boolean;
   setAiThinking: (thinking: boolean) => void;
@@ -36,18 +44,18 @@ interface GameState {
 const ROWS = 6;
 const COLS = 7;
 
-function createEmptyBoard(): Board {
-  return Array.from({ length: COLS }, () => Array(ROWS).fill(0));
+function createEmptyBoard(cols: number = COLS, rows: number = ROWS): Board {
+  return Array.from({ length: cols }, () => Array(rows).fill(0));
 }
 
-function getLowestEmptyRow(board: Board, col: number): number {
-  for (let row = ROWS - 1; row >= 0; row--) {
+function getLowestEmptyRow(board: Board, col: number, rows: number = ROWS): number {
+  for (let row = rows - 1; row >= 0; row--) {
     if (board[col][row] === 0) return row;
   }
   return -1;
 }
 
-function checkWin(board: Board, col: number, row: number, player: Player): [number, number][] | null {
+function checkWin(board: Board, col: number, row: number, player: Player, connectCount: number = 4, cols: number = COLS, rows: number = ROWS): [number, number][] | null {
   const directions = [
     [0, 1],   // vertical
     [1, 0],   // horizontal
@@ -59,24 +67,24 @@ function checkWin(board: Board, col: number, row: number, player: Player): [numb
     const cells: [number, number][] = [[col, row]];
 
     // Check forward
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < connectCount; i++) {
       const c = col + dc * i;
       const r = row + dr * i;
-      if (c >= 0 && c < COLS && r >= 0 && r < ROWS && board[c][r] === player) {
+      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) {
         cells.push([c, r]);
       } else break;
     }
 
     // Check backward
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < connectCount; i++) {
       const c = col - dc * i;
       const r = row - dr * i;
-      if (c >= 0 && c < COLS && r >= 0 && r < ROWS && board[c][r] === player) {
+      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) {
         cells.push([c, r]);
       } else break;
     }
 
-    if (cells.length >= 4) return cells;
+    if (cells.length >= connectCount) return cells;
   }
 
   return null;
@@ -101,24 +109,35 @@ export const useGameStore = create<GameState>((set, get) => ({
   bestStreak: 0,
   totalGamesPlayed: 0,
   lastMoveCol: null,
+  customSettings: { rows: ROWS, cols: COLS, connectCount: 4, timerSeconds: 0 },
   moveHistory: [],
 
-  newGame: (difficulty, vsAi) => set({
-    board: createEmptyBoard(),
-    currentPlayer: 1,
-    status: 'playing',
-    winner: null,
-    winCells: null,
-    moveCount: 0,
-    difficulty,
-    isAiThinking: false,
-    isVsAi: vsAi,
-    lastMoveCol: null,
-    moveHistory: [],
-  }),
+  newGame: (difficulty, vsAi, settings) => {
+    const s = {
+      rows: settings?.rows ?? ROWS,
+      cols: settings?.cols ?? COLS,
+      connectCount: settings?.connectCount ?? 4,
+      timerSeconds: settings?.timerSeconds ?? 0,
+    };
+    set({
+      board: createEmptyBoard(s.cols, s.rows),
+      currentPlayer: 1,
+      status: 'playing',
+      winner: null,
+      winCells: null,
+      moveCount: 0,
+      difficulty,
+      isAiThinking: false,
+      isVsAi: vsAi,
+      lastMoveCol: null,
+      customSettings: s,
+      moveHistory: [],
+    });
+  },
 
   dropPiece: (col) => {
-    const { board, currentPlayer, status, moveHistory, moveCount } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { rows: curRows, cols: curCols, connectCount } = customSettings;
     // Save current state to history before making the move
     const historyEntry = {
       board: board.map(c => [...c]),
@@ -127,13 +146,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
     if (status !== 'playing') return false;
 
-    const row = getLowestEmptyRow(board, col);
+    const row = getLowestEmptyRow(board, col, curRows);
     if (row === -1) return false;
 
     const newBoard = board.map(c => [...c]);
     newBoard[col][row] = currentPlayer;
 
-    const winCells = checkWin(newBoard, col, row, currentPlayer);
+    const winCells = checkWin(newBoard, col, row, currentPlayer, connectCount, curCols, curRows);
 
     if (winCells) {
       const scores = { ...get().scores };

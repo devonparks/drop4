@@ -54,10 +54,18 @@ export function CustomGameScreen({ navigation }: Props) {
 
   const startCustomGame = () => {
     haptics.tap();
-    // For now, start a standard game with the selected opponent
     const isAi = opponent !== 'local';
     const difficulty = opponent === 'ai_easy' ? 'easy' : opponent === 'ai_hard' ? 'hard' : 'medium';
-    newGame(difficulty as any, isAi);
+
+    // Parse board size
+    const [cols, rows] = boardSize.split('x').map(Number);
+
+    newGame(difficulty as any, isAi, {
+      rows: rows || 7,
+      cols: cols || 6,
+      connectCount: parseInt(connectCount) || 4,
+      timerSeconds: timer === 'none' ? 0 : parseInt(timer) || 0,
+    });
     navigation.navigate('Game');
   };
 
