@@ -75,11 +75,11 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
 
 const styles = StyleSheet.create({
   largeImage: {
-    width: 150,
-    height: 200,
+    width: 160,
+    height: 160,
   },
   xlargeImage: {
-    width: 180,
-    height: 250,
+    width: 200,
+    height: 200,
   },
 });

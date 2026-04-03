@@ -65,8 +65,10 @@ export function HomeScreen() {
         <View style={styles.mainContent}>
           <Drop4Logo size="large" />
 
-          <Pressable onPress={() => navigateTo('CharacterCreator')}>
-            <CharacterAvatar size="large" variant="player" />
+          <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.characterArea}>
+            <View style={styles.characterFrame}>
+              <CharacterAvatar size="large" variant="player" />
+            </View>
             <Text style={styles.customizeHint}>Tap to customize</Text>
           </Pressable>
 
@@ -177,6 +179,15 @@ const styles = StyleSheet.create({
   },
   characterEmoji: {
     fontSize: 72,
+  },
+  characterArea: {
+    alignItems: 'center',
+  },
+  characterFrame: {
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   customizeHint: {
     fontFamily: fonts.body,
