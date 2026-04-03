@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { PoseDisplay, PoseId } from '../components/ui/AnimatedCharacter';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -79,6 +80,23 @@ export function CharacterCreatorScreen({ navigation }: Props) {
               <Text style={styles.statLabel}>Level</Text>
             </View>
           </View>
+
+          {/* Poses */}
+          <Text style={styles.sectionTitle}>POSES</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.poseScroll}>
+            {(['default', 'arms_crossed', 'hands_on_hips', 'lean', 'flex', 'point', 'peace', 'salute'] as PoseId[]).map(poseId => {
+              const poseNames: Record<string, string> = {
+                default: 'Default', arms_crossed: 'Arms Crossed', hands_on_hips: 'Power Stance',
+                lean: 'Lean', flex: 'Flex', point: 'Point', peace: 'Peace', salute: 'Salute',
+              };
+              return (
+                <Pressable key={poseId} onPress={() => haptics.tap()} style={styles.poseCard}>
+                  <PoseDisplay pose={poseId} size={80} />
+                  <Text style={styles.poseName}>{poseNames[poseId]}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
 
           {/* Unlockable cosmetics */}
           <Text style={styles.sectionTitle}>UNLOCKABLE COSMETICS</Text>
@@ -237,6 +255,28 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 12, color: colors.textSecondary,
     textAlign: 'center', lineHeight: 18,
+  },
+  poseScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+    marginBottom: 16,
+  },
+  poseCard: {
+    width: 90,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  poseName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 9,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
   },
   doneWrap: { paddingHorizontal: 24, paddingBottom: 12 },
 });

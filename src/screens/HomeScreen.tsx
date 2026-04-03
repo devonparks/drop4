@@ -6,7 +6,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Drop4Logo } from '../components/ui/Drop4Logo';
-import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
+import { AnimatedCharacter, useEmoteTrigger, PoseDisplay, PoseId, POSE_IMAGES } from '../components/ui/AnimatedCharacter';
 import { EmoteWheel, EmoteWheelTrigger } from '../components/ui/EmoteWheel';
 import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
@@ -91,8 +91,22 @@ export function HomeScreen() {
             <Text style={styles.playerName}>Player</Text>
           </Pressable>
 
-          {/* Emote wheel trigger */}
-          <EmoteWheelTrigger onPress={() => setWheelOpen(true)} />
+          {/* Lobby action buttons */}
+          <View style={styles.lobbyActions}>
+            <EmoteWheelTrigger onPress={() => setWheelOpen(true)} />
+            <Pressable
+              onPress={() => navigateTo('CharacterCreator')}
+              style={styles.poseBtn}
+            >
+              <LinearGradient
+                colors={['rgba(155,89,182,0.2)', 'rgba(155,89,182,0.08)']}
+                style={styles.poseBtnGradient}
+              >
+                <Text style={styles.poseBtnIcon}>🎭</Text>
+                <Text style={styles.poseBtnLabel}>POSES</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
         </View>
 
         {/* Emote Wheel Modal */}
@@ -225,6 +239,34 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 50,
     marginTop: -8,
+  },
+  lobbyActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  poseBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  poseBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(155,89,182,0.3)',
+  },
+  poseBtnIcon: {
+    fontSize: 20,
+  },
+  poseBtnLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: '#9b59b6',
+    letterSpacing: 1,
   },
   playerName: {
     fontFamily: fonts.body,
