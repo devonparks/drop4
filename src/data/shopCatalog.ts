@@ -116,6 +116,29 @@ export const PIECE_THEMES: ShopItem[] = [
   },
 ];
 
+export const DROP_EFFECTS: ShopItem[] = [
+  { id: 'none', name: 'None', price: 0, rarity: 'common', preview: {} },
+  { id: 'sparks', name: 'Sparks', price: 500, rarity: 'rare', preview: {} },
+  { id: 'smoke', name: 'Smoke', price: 750, rarity: 'rare', preview: {} },
+  { id: 'splash', name: 'Splash', price: 1000, rarity: 'rare', preview: {} },
+  { id: 'lightning', name: 'Lightning', price: 2000, rarity: 'epic', preview: {} },
+  { id: 'confetti', name: 'Confetti', price: 1500, rarity: 'epic', preview: {} },
+  { id: 'shockwave', name: 'Shockwave', price: 3000, rarity: 'epic', preview: {} },
+  { id: 'darkmatter_drop', name: 'Dark Matter', price: 0, rarity: 'darkmatter', preview: {} },
+];
+
+export const EMOTES: ShopItem[] = [
+  { id: 'laugh', name: 'Laugh', price: 0, rarity: 'common', preview: {} },
+  { id: 'clap', name: 'Clap', price: 0, rarity: 'common', preview: {} },
+  { id: 'shrug', name: 'Shrug', price: 300, rarity: 'common', preview: {} },
+  { id: 'flex', name: 'Flex', price: 500, rarity: 'rare', preview: {} },
+  { id: 'dance', name: 'Dance', price: 1000, rarity: 'rare', preview: {} },
+  { id: 'backflip', name: 'Backflip', price: 2000, rarity: 'epic', preview: {} },
+  { id: 'crown_pose', name: 'Crown Pose', price: 3000, rarity: 'epic', preview: {} },
+  { id: 'mic_drop', name: 'Mic Drop', price: 5000, rarity: 'legendary', preview: {} },
+  { id: 'griddy', name: 'Griddy', price: 0, rarity: 'darkmatter', preview: {} },
+];
+
 export const RARITY_COLORS: Record<string, string> = {
   common: '#8892b0',
   rare: '#3498db',

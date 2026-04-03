@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { BOARD_THEMES, PIECE_THEMES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
+import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -110,9 +110,13 @@ export function ShopScreen() {
   ];
 
   const items = activeTab === 'boards' ? BOARD_THEMES :
-                activeTab === 'pieces' ? PIECE_THEMES : [];
+                activeTab === 'pieces' ? PIECE_THEMES :
+                activeTab === 'effects' ? DROP_EFFECTS :
+                activeTab === 'emotes' ? EMOTES : [];
 
-  const category = activeTab === 'boards' ? 'boards' : 'pieces';
+  const category = activeTab === 'boards' ? 'boards' :
+                   activeTab === 'effects' ? 'dropEffects' :
+                   activeTab === 'emotes' ? 'winAnimations' : 'pieces';
 
   return (
     <ScreenBackground>

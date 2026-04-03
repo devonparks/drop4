@@ -13,6 +13,7 @@ interface TopBarProps {
   showBack?: boolean;
   onBackPress?: () => void;
   onProfilePress?: () => void;
+  onSettingsPress?: () => void;
 }
 
 export function TopBar({
@@ -22,6 +23,7 @@ export function TopBar({
   showBack = false,
   onBackPress,
   onProfilePress,
+  onSettingsPress,
 }: TopBarProps) {
   const formatNum = (n: number) =>
     n >= 10000 ? `${(n / 1000).toFixed(0)}k` :
@@ -45,7 +47,7 @@ export function TopBar({
           </Pressable>
         ) : (
           <Pressable
-            onPress={() => haptics.tap()}
+            onPress={() => { haptics.tap(); onSettingsPress?.(); }}
             style={styles.settingsBtn}
           >
             <Text style={styles.settingsIcon}>{'⚙'}</Text>

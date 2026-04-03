@@ -69,17 +69,17 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Ranks"
+        name="Challenges"
         component={RanksTab}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="👑" label="Ranks" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="🎯" label="Challenges" focused={focused} />,
         }}
       />
       <Tab.Screen
-        name="Achievements"
+        name="Profile"
         component={AchievementsTab}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="⭐" label="Achievements" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} />,
         }}
       />
       <Tab.Screen

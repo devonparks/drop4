@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Share } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -91,10 +91,15 @@ export function SettingsScreen({ navigation }: Props) {
         {/* About */}
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>
-          <SettingLink label="Rate Drop4" icon="⭐" onPress={() => {}} />
-          <SettingLink label="Share with Friends" icon="📤" onPress={() => {}} />
-          <SettingLink label="Privacy Policy" icon="🔒" onPress={() => {}} />
-          <SettingLink label="Terms of Service" icon="📄" onPress={() => {}} />
+          <SettingLink label="Rate Drop4" icon="⭐" onPress={() => {
+            // Will link to app store when published
+            haptics.tap();
+          }} />
+          <SettingLink label="Share with Friends" icon="📤" onPress={() => {
+            Share.share({ message: 'Check out Drop4 — the best Connect 4 game! 🎮🔴🟡' });
+          }} />
+          <SettingLink label="Privacy Policy" icon="🔒" onPress={() => haptics.tap()} />
+          <SettingLink label="Terms of Service" icon="📄" onPress={() => haptics.tap()} />
         </View>
 
         {/* Version */}

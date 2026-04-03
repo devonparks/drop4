@@ -22,7 +22,11 @@ export function HomeScreen() {
   return (
     <ScreenBackground>
       <View style={styles.container}>
-        <TopBar coins={coins} gems={gems} level={level} onProfilePress={() => {}} />
+        <TopBar
+          coins={coins} gems={gems} level={level}
+          onProfilePress={() => navigateTo('CharacterCreator')}
+          onSettingsPress={() => navigateTo('Settings')}
+        />
 
         {/* Season & Daily Challenges */}
         <View style={styles.statusBar}>
