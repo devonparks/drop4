@@ -1,182 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { CharacterRenderer } from '../components/ui/CharacterRenderer';
+import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import {
-  useCharacterStore,
-  HAIR_OPTIONS, TOP_OPTIONS, BOTTOM_OPTIONS, SHOES_OPTIONS, COLOR_OPTIONS,
-  Gender,
-} from '../stores/characterStore';
+import { useShopStore } from '../stores/shopStore';
+import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { CHARACTER_ITEMS, getUnlockDescription } from '../data/characterCatalog';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'CharacterCreator'>;
 };
 
-type Category = 'gender' | 'hair' | 'skin' | 'top' | 'bottom' | 'shoes' | 'color';
-
-const CATEGORIES: { key: Category; label: string; icon: string }[] = [
-  { key: 'gender', label: 'Gender', icon: '👤' },
-  { key: 'hair', label: 'Hair', icon: '💇' },
-  { key: 'skin', label: 'Skin', icon: '🎨' },
-  { key: 'top', label: 'Top', icon: '👕' },
-  { key: 'bottom', label: 'Bottom', icon: '👖' },
-  { key: 'shoes', label: 'Shoes', icon: '👟' },
-  { key: 'color', label: 'Colors', icon: '🌈' },
-];
-
-const ITEM_NAMES: Record<string, string> = {
-  // Hair
-  short: 'Short', afro: 'Afro', 'locs-front': 'Locs', braids: 'Braids', bun: 'Bun', locs: 'Locs',
-  // Tops
-  'white-tee': 'White Tee', hoodie: 'Hoodie', bomber: 'Bomber', 'crop-top': 'Crop Top',
-  // Bottoms
-  jeans: 'Jeans', shorts: 'Shorts', cargo: 'Cargo', joggers: 'Joggers', skirt: 'Skirt',
-  // Shoes
-  sneakers: 'Sneakers', barefoot: 'Barefoot', af1: 'AF1s', jordans: 'Jordans', platforms: 'Platforms',
+const RARITY_COLORS: Record<string, string> = {
+  common: '#8892b0',
+  rare: '#3498db',
+  epic: '#9b59b6',
+  legendary: '#f1c40f',
 };
-
-const SKIN_TONE_COLORS = ['#FFDBB4', '#D4A574', '#C68642', '#8D5524', '#5C3A1E', '#3B2314'];
-
-const COLOR_DISPLAY: Record<string, { name: string; color: string }> = {
-  none: { name: 'Default', color: '#ffffff' },
-  red: { name: 'Red', color: '#e74c3c' },
-  blue: { name: 'Blue', color: '#3498db' },
-  green: { name: 'Green', color: '#27ae3d' },
-  purple: { name: 'Purple', color: '#9b59b6' },
-  gold: { name: 'Gold', color: '#f1c40f' },
-  pink: { name: 'Pink', color: '#e84393' },
-  black: { name: 'Black', color: '#2c3e50' },
-};
-
-function ItemButton({ label, isSelected, isLocked, onPress }: {
-  label: string; isSelected: boolean; isLocked: boolean; onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={() => { if (!isLocked) { haptics.tap(); onPress(); } }}
-      style={[styles.itemBtn, isSelected && styles.itemBtnSelected, isLocked && styles.itemBtnLocked]}
-    >
-      <Text style={[styles.itemLabel, isSelected && styles.itemLabelSelected]}>
-        {label}
-      </Text>
-      {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
-    </Pressable>
-  );
-}
-
-function ColorButton({ color, isSelected, onPress }: {
-  color: string; isSelected: boolean; onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={() => { haptics.tap(); onPress(); }}
-      style={[styles.colorBtn, isSelected && styles.colorBtnSelected]}
-    >
-      <View style={[styles.colorSwatch, { backgroundColor: color }]} />
-    </Pressable>
-  );
-}
 
 export function CharacterCreatorScreen({ navigation }: Props) {
-  const { config, updateConfig, setGender, randomize, isUnlocked } = useCharacterStore();
-  const [activeCategory, setActiveCategory] = useState<Category>('hair');
+  const { level } = useShopStore();
+  const { winStreak, bestStreak, totalGamesPlayed } = useGameStore();
 
-  const renderCategoryContent = () => {
-    switch (activeCategory) {
-      case 'gender':
-        return (
-          <View style={styles.optionsRow}>
-            <ItemButton label="Male" isSelected={config.gender === 'male'} isLocked={false}
-              onPress={() => setGender('male')} />
-            <ItemButton label="Female" isSelected={config.gender === 'female'} isLocked={false}
-              onPress={() => setGender('female')} />
-          </View>
-        );
-
-      case 'hair':
-        return (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
-            {HAIR_OPTIONS[config.gender].map(id => (
-              <ItemButton key={id} label={ITEM_NAMES[id] || id}
-                isSelected={config.hair === id} isLocked={false}
-                onPress={() => updateConfig({ hair: id })} />
-            ))}
-          </ScrollView>
-        );
-
-      case 'skin':
-        return (
-          <View style={styles.optionsRow}>
-            {SKIN_TONE_COLORS.map((color, i) => (
-              <ColorButton key={i} color={color}
-                isSelected={config.skinTone === i}
-                onPress={() => updateConfig({ skinTone: i })} />
-            ))}
-          </View>
-        );
-
-      case 'top':
-        return (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
-            {TOP_OPTIONS[config.gender].map(id => (
-              <ItemButton key={id} label={ITEM_NAMES[id] || id}
-                isSelected={config.top === id} isLocked={false}
-                onPress={() => updateConfig({ top: id })} />
-            ))}
-          </ScrollView>
-        );
-
-      case 'bottom':
-        return (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
-            {BOTTOM_OPTIONS[config.gender].map(id => (
-              <ItemButton key={id} label={ITEM_NAMES[id] || id}
-                isSelected={config.bottom === id} isLocked={false}
-                onPress={() => updateConfig({ bottom: id })} />
-            ))}
-          </ScrollView>
-        );
-
-      case 'shoes':
-        return (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
-            {SHOES_OPTIONS[config.gender].map(id => (
-              <ItemButton key={id} label={ITEM_NAMES[id] || id}
-                isSelected={config.shoes === id} isLocked={false}
-                onPress={() => updateConfig({ shoes: id })} />
-            ))}
-          </ScrollView>
-        );
-
-      case 'color':
-        return (
-          <View style={styles.colorSection}>
-            <Text style={styles.colorSectionLabel}>Top Color</Text>
-            <View style={styles.optionsRow}>
-              {Object.entries(COLOR_DISPLAY).map(([key, { color }]) => (
-                <ColorButton key={key} color={color}
-                  isSelected={config.topColor === key}
-                  onPress={() => updateConfig({ topColor: key })} />
-              ))}
-            </View>
-            <Text style={[styles.colorSectionLabel, { marginTop: 12 }]}>Bottom Color</Text>
-            <View style={styles.optionsRow}>
-              {Object.entries(COLOR_DISPLAY).map(([key, { color }]) => (
-                <ColorButton key={key} color={color}
-                  isSelected={config.bottomColor === key}
-                  onPress={() => updateConfig({ bottomColor: key })} />
-              ))}
-            </View>
-          </View>
-        );
-    }
+  // Group items by category
+  const categories = ['hair', 'top', 'bottom', 'shoes'] as const;
+  const categoryLabels: Record<string, string> = {
+    hair: 'Hair Styles',
+    top: 'Tops',
+    bottom: 'Bottoms',
+    shoes: 'Shoes',
   };
 
   return (
@@ -187,52 +45,90 @@ export function CharacterCreatorScreen({ navigation }: Props) {
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backText}>{'<'}</Text>
           </Pressable>
-          <Text style={styles.title}>CHARACTER</Text>
-          <Pressable onPress={() => { haptics.tap(); randomize(); }} style={styles.randomBtn}>
-            <Text style={styles.randomText}>🎲</Text>
-          </Pressable>
+          <Text style={styles.title}>MY CHARACTER</Text>
+          <View style={{ width: 36 }} />
         </View>
 
-        {/* Character Preview */}
-        <View style={styles.previewArea}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)', 'transparent']}
-            style={styles.previewGlow}
-          >
-            <CharacterRenderer size={220} />
-          </LinearGradient>
-        </View>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Character display */}
+          <View style={styles.characterSection}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)', 'transparent']}
+              style={styles.characterGlow}
+            >
+              <CharacterAvatar size="xlarge" variant="player" />
+            </LinearGradient>
+            <Text style={styles.playerName}>Player</Text>
+            <Text style={styles.playerLevel}>Level {level}</Text>
+          </View>
 
-        {/* Category tabs */}
-        <View style={styles.categoryBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-            {CATEGORIES.map(cat => (
-              <Pressable
-                key={cat.key}
-                onPress={() => { haptics.tap(); setActiveCategory(cat.key); }}
-                style={[styles.categoryTab, activeCategory === cat.key && styles.categoryTabActive]}
-              >
-                <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                <Text style={[styles.categoryLabel, activeCategory === cat.key && styles.categoryLabelActive]}>
-                  {cat.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+          {/* Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{totalGamesPlayed}</Text>
+              <Text style={styles.statLabel}>Games</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.orange }]}>
+                {bestStreak > 0 ? `🔥 ${bestStreak}` : '0'}
+              </Text>
+              <Text style={styles.statLabel}>Best Streak</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.coinGold }]}>{level}</Text>
+              <Text style={styles.statLabel}>Level</Text>
+            </View>
+          </View>
 
-        {/* Options for selected category */}
-        <View style={styles.optionsArea}>
-          {renderCategoryContent()}
-        </View>
+          {/* Unlockable cosmetics */}
+          <Text style={styles.sectionTitle}>UNLOCKABLE COSMETICS</Text>
+          <Text style={styles.sectionSubtitle}>
+            Win games, level up, and complete challenges to unlock new looks
+          </Text>
 
-        {/* Done button */}
+          {categories.map(cat => {
+            const items = CHARACTER_ITEMS.filter(i => i.category === cat);
+            if (items.length === 0) return null;
+
+            return (
+              <View key={cat} style={styles.categorySection}>
+                <Text style={styles.categoryLabel}>{categoryLabels[cat]}</Text>
+                <View style={styles.itemGrid}>
+                  {items.map(item => {
+                    const isDefault = item.unlock.type === 'default';
+                    const unlockDesc = getUnlockDescription(item.unlock);
+
+                    return (
+                      <View key={item.id} style={[styles.itemCard, isDefault && styles.itemUnlocked]}>
+                        <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS[item.rarity] }]} />
+                        <Text style={styles.itemIcon}>{item.icon}</Text>
+                        <Text style={styles.itemName}>{item.name}</Text>
+                        {isDefault ? (
+                          <Text style={styles.ownedText}>OWNED</Text>
+                        ) : (
+                          <Text style={styles.unlockText}>{unlockDesc}</Text>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
+
+          {/* Info about character creator */}
+          <View style={styles.infoCard}>
+            <Text style={styles.infoIcon}>🎨</Text>
+            <Text style={styles.infoTitle}>Full Character Creator</Text>
+            <Text style={styles.infoText}>
+              Customize your 3D character with hundreds of options in the AMG Studios Character Creator.
+              Your character syncs across all AMG games.
+            </Text>
+          </View>
+        </ScrollView>
+
         <View style={styles.doneWrap}>
-          <GlossyButton
-            label="DONE"
-            variant="orange"
-            onPress={() => navigation.goBack()}
-          />
+          <GlossyButton label="DONE" variant="orange" onPress={() => navigation.goBack()} />
         </View>
       </View>
     </ScreenBackground>
@@ -242,11 +138,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
@@ -256,94 +149,94 @@ const styles = StyleSheet.create({
   backText: { fontSize: 18, color: '#fff', fontWeight: '700' },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold,
-    fontSize: 22, color: '#ffffff', letterSpacing: 2,
+    fontSize: 20, color: '#ffffff', letterSpacing: 2,
   },
-  randomBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,140,0,0.15)',
+  content: { paddingHorizontal: 16, paddingBottom: 80 },
+  characterSection: { alignItems: 'center', marginBottom: 16 },
+  characterGlow: {
+    width: 200, height: 260, borderRadius: 100,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)',
   },
-  randomText: { fontSize: 20 },
-  previewArea: {
-    alignItems: 'center', justifyContent: 'center',
-    height: 240, marginVertical: 4,
+  playerName: {
+    fontFamily: fonts.heading, fontWeight: weight.bold,
+    fontSize: 22, color: '#ffffff', marginTop: 8,
   },
-  previewGlow: {
-    width: 240, height: 240,
-    borderRadius: 120, alignItems: 'center', justifyContent: 'center',
+  playerLevel: {
+    fontFamily: fonts.body, fontWeight: weight.medium,
+    fontSize: 13, color: colors.textSecondary,
   },
-  categoryBar: { marginBottom: 4 },
-  categoryScroll: {
-    paddingHorizontal: 12, gap: 6,
+  statsRow: {
+    flexDirection: 'row', gap: 8, marginBottom: 20,
   },
-  categoryTab: {
-    paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 12, flexDirection: 'row',
-    alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'transparent',
+  statBox: {
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12, padding: 12, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  categoryTabActive: {
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderColor: 'rgba(255,140,0,0.4)',
+  statValue: {
+    fontFamily: fonts.heading, fontWeight: weight.bold,
+    fontSize: 20, color: '#ffffff',
   },
-  categoryIcon: { fontSize: 16 },
+  statLabel: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 10, color: colors.textSecondary,
+    textTransform: 'uppercase', marginTop: 2,
+  },
+  sectionTitle: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 12, color: colors.textSecondary,
+    letterSpacing: 2, marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 12, color: colors.textMuted, marginBottom: 12,
+  },
+  categorySection: { marginBottom: 14 },
   categoryLabel: {
     fontFamily: fonts.body, fontWeight: weight.semibold,
-    fontSize: 12, color: colors.textSecondary,
+    fontSize: 14, color: '#ffffff', marginBottom: 6,
   },
-  categoryLabelActive: { color: colors.orange },
-  optionsArea: {
-    flex: 1, paddingHorizontal: 16,
-    justifyContent: 'center',
+  itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  itemCard: {
+    width: '31%', backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12, padding: 10, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    opacity: 0.5,
   },
-  optionsRow: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    gap: 8, justifyContent: 'center',
+  itemUnlocked: { opacity: 1, borderColor: 'rgba(39,174,61,0.3)', backgroundColor: 'rgba(39,174,61,0.05)' },
+  rarityDot: {
+    width: 8, height: 8, borderRadius: 4,
+    position: 'absolute', top: 6, right: 6,
   },
-  optionsScroll: {
-    gap: 8, paddingVertical: 4,
-  },
-  itemBtn: {
-    paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center', position: 'relative',
-    minWidth: 80,
-  },
-  itemBtnSelected: {
-    backgroundColor: 'rgba(255,140,0,0.15)',
-    borderColor: colors.orange,
-  },
-  itemBtnLocked: { opacity: 0.4 },
-  itemLabel: {
+  itemIcon: { fontSize: 22, marginBottom: 4 },
+  itemName: {
     fontFamily: fonts.body, fontWeight: weight.semibold,
-    fontSize: 14, color: colors.textSecondary,
+    fontSize: 11, color: '#ffffff', textAlign: 'center',
   },
-  itemLabelSelected: { color: colors.orange },
-  lockIcon: { position: 'absolute', top: 2, right: 4, fontSize: 10 },
-  colorBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    borderWidth: 2, borderColor: 'transparent',
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  ownedText: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 8, color: colors.green,
+    textTransform: 'uppercase', marginTop: 2,
   },
-  colorBtnSelected: {
-    borderColor: colors.orange,
+  unlockText: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 9, color: colors.textSecondary,
+    textAlign: 'center', marginTop: 2,
   },
-  colorSwatch: {
-    width: 28, height: 28, borderRadius: 14,
+  infoCard: {
+    backgroundColor: 'rgba(255,140,0,0.06)', borderRadius: 16,
+    padding: 16, alignItems: 'center', marginTop: 8,
+    borderWidth: 1, borderColor: 'rgba(255,140,0,0.2)',
   },
-  colorSection: {},
-  colorSectionLabel: {
-    fontFamily: fonts.body, fontWeight: weight.semibold,
+  infoIcon: { fontSize: 32, marginBottom: 8 },
+  infoTitle: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 16, color: colors.orange, marginBottom: 4,
+  },
+  infoText: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 12, color: colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 1,
-    marginBottom: 6,
+    textAlign: 'center', lineHeight: 18,
   },
-  doneWrap: {
-    paddingHorizontal: 24, paddingBottom: 12,
-  },
+  doneWrap: { paddingHorizontal: 24, paddingBottom: 12 },
 });
