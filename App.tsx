@@ -9,6 +9,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
+import { useShopStore } from './src/stores/shopStore';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +26,8 @@ export default function App() {
           'Fredoka': require('./src/assets/fonts/Fredoka.ttf'),
           'Outfit': require('./src/assets/fonts/Outfit.ttf'),
         });
+        // Load persisted state
+        await useShopStore.getState().loadFromStorage();
         // Preload sound effects
         await preloadSounds();
       } catch (e) {

@@ -19,6 +19,8 @@ import { AI_THINK_DELAY, COIN_REWARDS } from '../engine/constants';
 import { haptics } from '../services/haptics';
 import { playSound, playRandomVoice } from '../services/audio';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useChallengeStore } from '../stores/challengeStore';
+import { useSeasonStore } from '../stores/seasonStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -35,6 +37,8 @@ export function GameScreen({ navigation }: Props) {
   } = useGameStore();
   const { coins, addCoins, addXp } = useShopStore();
   const addMatch = useMatchHistoryStore(s => s.addMatch);
+  const updateChallenge = useChallengeStore(s => s.updateProgress);
+  const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
@@ -49,8 +53,9 @@ export function GameScreen({ navigation }: Props) {
     if (aiTimerRef.current) return;
 
     setAiThinking(true);
-    playRandomVoice('thinking');
     const thinkTime = AI_THINK_DELAY[difficulty];
+    // Play thinking voice after a short delay so it feels natural
+    setTimeout(() => playRandomVoice('thinking'), 200);
 
     aiTimerRef.current = setTimeout(() => {
       aiTimerRef.current = null;
@@ -81,6 +86,15 @@ export function GameScreen({ navigation }: Props) {
       addCoins(totalReward);
       addXp(reward);
       addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
+      // Update challenges
+      updateChallenge('win_3', 1);
+      updateChallenge('play_5', 1);
+      if (difficulty === 'easy') updateChallenge('win_easy', 1);
+      if (difficulty === 'medium') updateChallenge('win_medium', 1);
+      if (difficulty === 'hard') updateChallenge('win_hard', 1);
+      if (moveCount < 20) updateChallenge('fast_win', 1);
+      // Season XP
+      addSeasonXp(reward);
       haptics.win();
       playSound('win');
       playSound('coin');
@@ -89,6 +103,8 @@ export function GameScreen({ navigation }: Props) {
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
       addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
+      updateChallenge('play_5', 1);
+      addSeasonXp(10); // Small XP for playing
       haptics.error();
       playSound('lose');
       playRandomVoice('win');
@@ -97,6 +113,8 @@ export function GameScreen({ navigation }: Props) {
       hasAwardedRef.current = true;
       addCoins(10);
       addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 10, mode: 'ai' });
+      updateChallenge('play_5', 1);
+      addSeasonXp(15);
       playSound('coin');
     }
     if (status === 'playing') {
