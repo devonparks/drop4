@@ -5,6 +5,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -35,7 +36,8 @@ function EquippedItem({ label, name, rarity }: { label: string; name: string; ra
 
 export function ProfileScreen() {
   const { level, xp, coins, gems, equipped } = useShopStore();
-  const { scores } = useGameStore();
+  const { scores, winStreak, bestStreak } = useGameStore();
+  const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
@@ -130,6 +132,38 @@ export function ProfileScreen() {
             </View>
           ))}
         </View>
+
+        {/* Streaks */}
+        <Text style={styles.sectionTitle}>STREAKS</Text>
+        <View style={styles.statsGrid}>
+          <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
+          <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
+        </View>
+
+        {/* Match History */}
+        {recentMatches.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>RECENT MATCHES</Text>
+            <View style={styles.matchList}>
+              {recentMatches.map(match => (
+                <View key={match.id} style={styles.matchRow}>
+                  <Text style={[styles.matchResult, {
+                    color: match.result === 'win' ? colors.green : match.result === 'loss' ? colors.pieceRed : colors.textSecondary,
+                  }]}>
+                    {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                  </Text>
+                  <View style={styles.matchInfo}>
+                    <Text style={styles.matchOpponent}>vs {match.opponent}</Text>
+                    <Text style={styles.matchMeta}>{match.moves} moves</Text>
+                  </View>
+                  {match.coinsEarned > 0 && (
+                    <Text style={styles.matchCoins}>+{match.coinsEarned} 🪙</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </ScreenBackground>
   );
@@ -326,5 +360,46 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 18,
     color: colors.green,
+  },
+  matchList: {
+    paddingHorizontal: 16,
+    gap: 4,
+    marginBottom: 16,
+  },
+  matchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    padding: 10,
+    gap: 10,
+  },
+  matchResult: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    width: 24,
+    textAlign: 'center',
+  },
+  matchInfo: {
+    flex: 1,
+  },
+  matchOpponent: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: '#ffffff',
+  },
+  matchMeta: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 10,
+    color: colors.textSecondary,
+  },
+  matchCoins: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.coinGold,
   },
 });

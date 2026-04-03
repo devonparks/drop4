@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -26,19 +26,21 @@ export function HomeScreen() {
 
         {/* Season & Daily Challenges */}
         <View style={styles.statusBar}>
-          <LinearGradient
-            colors={['rgba(0,100,0,0.35)', 'rgba(0,80,0,0.2)']}
-            style={styles.seasonPill}
-          >
-            <Text style={styles.pillIcon}>🏆</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.seasonLabel}>Season 1</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '50%' }]} />
+          <Pressable onPress={() => navigateTo('SeasonPass')} style={{ flex: 1 }}>
+            <LinearGradient
+              colors={['rgba(0,100,0,0.35)', 'rgba(0,80,0,0.2)']}
+              style={styles.seasonPill}
+            >
+              <Text style={styles.pillIcon}>🏆</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.seasonLabel}>Season 1</Text>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: '50%' }]} />
+                </View>
               </View>
-            </View>
-            <Text style={styles.seasonCount}>4/8</Text>
-          </LinearGradient>
+              <Text style={styles.seasonCount}>4/8</Text>
+            </LinearGradient>
+          </Pressable>
 
           <LinearGradient
             colors={['rgba(0,60,120,0.35)', 'rgba(0,40,80,0.2)']}

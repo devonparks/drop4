@@ -18,6 +18,7 @@ import { getAIMove } from '../engine/aiEngine';
 import { AI_THINK_DELAY, COIN_REWARDS } from '../engine/constants';
 import { haptics } from '../services/haptics';
 import { playSound, playRandomVoice } from '../services/audio';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -33,6 +34,7 @@ export function GameScreen({ navigation }: Props) {
     dropPiece, undoMove, setAiThinking, newGame, scores,
   } = useGameStore();
   const { coins, addCoins, addXp } = useShopStore();
+  const addMatch = useMatchHistoryStore(s => s.addMatch);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
@@ -75,22 +77,26 @@ export function GameScreen({ navigation }: Props) {
       hasAwardedRef.current = true;
       const reward = COIN_REWARDS[difficulty];
       const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
-      addCoins(reward + streakBonus);
+      const totalReward = reward + streakBonus;
+      addCoins(totalReward);
       addXp(reward);
+      addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
       haptics.win();
       playSound('win');
       playSound('coin');
-      playRandomVoice('lose'); // AI says "you win / good game"
+      playRandomVoice('lose');
     }
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
+      addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
       haptics.error();
       playSound('lose');
-      playRandomVoice('win'); // AI says "I win!"
+      playRandomVoice('win');
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
       addCoins(10);
+      addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 10, mode: 'ai' });
       playSound('coin');
     }
     if (status === 'playing') {
