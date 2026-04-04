@@ -28,6 +28,7 @@ import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { getRandomTip } from '../data/tips';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -490,6 +491,9 @@ export function GameScreen({ navigation }: Props) {
                   <Text style={styles.statValue}>{useGameStore.getState().bestStreak}</Text>
                 </View>
 
+                {/* Tip */}
+                <Text style={styles.tipText}>💡 {getRandomTip()}</Text>
+
                 {/* Buttons */}
                 <View style={styles.resultButtons}>
                   <GlossyButton
@@ -733,6 +737,17 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 14,
     color: '#ffffff',
+  },
+  tipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 16,
+    marginVertical: 8,
+    paddingHorizontal: 8,
+    fontStyle: 'italic',
   },
   resultButtons: {
     marginTop: 16,
