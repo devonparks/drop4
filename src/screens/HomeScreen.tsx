@@ -72,7 +72,7 @@ export function HomeScreen() {
           {/* Character on stage */}
           <View style={styles.characterStage}>
             <AnimatedCharacter
-              size={220}
+              size={280}
               emote={emote}
               onEmoteComplete={clearEmote}
             />
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 2,
   },
   logoMain: {
     fontFamily: fonts.heading,
@@ -264,10 +264,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stagePlatform: {
-    width: 140,
+    width: 160,
     height: 12,
-    borderRadius: 70,
-    marginTop: -6,
+    borderRadius: 80,
+    marginTop: -10,
   },
   // Customize button
   customizeBtn: {
