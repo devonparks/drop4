@@ -45,8 +45,9 @@ export function ScreenBackground({ children, style, variant = 'default' }: Scree
       {/* Subtle radial vignette overlay */}
       <View style={styles.vignette} />
 
-      {/* Dot pattern texture (web only — on native this is handled by the gradient) */}
-      {Platform.OS === 'web' && <View style={styles.dotPattern} />}
+      {/* Star field texture (web only) */}
+      {Platform.OS === 'web' && <View style={styles.starField} />}
+      {Platform.OS === 'web' && <View style={styles.starFieldSmall} />}
 
       {/* Content */}
       <View style={styles.content}>
@@ -68,12 +69,21 @@ const styles = StyleSheet.create({
       backgroundImage: 'radial-gradient(ellipse at 50% 30%, transparent 40%, rgba(0,0,0,0.4) 100%)',
     } as any : {}),
   },
-  dotPattern: {
+  starField: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.15,
+    ...(Platform.OS === 'web' ? {
+      backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 0.5px, transparent 0.5px)',
+      backgroundSize: '40px 40px',
+    } as any : {}),
+  },
+  starFieldSmall: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.08,
     ...(Platform.OS === 'web' ? {
-      backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)',
-      backgroundSize: '16px 16px',
+      backgroundImage: 'radial-gradient(circle, rgba(200,220,255,0.6) 0.3px, transparent 0.3px)',
+      backgroundSize: '20px 25px',
+      backgroundPosition: '10px 12px',
     } as any : {}),
   },
   content: {
