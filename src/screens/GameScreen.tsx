@@ -25,6 +25,7 @@ import { useSeasonStore } from '../stores/seasonStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
+import { useReplayStore } from '../stores/replayStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -46,12 +47,20 @@ export function GameScreen({ navigation }: Props) {
   const completeCareerLevel = useCareerStore(s => s.completeLevel);
   const checkAchievements = useAchievementStore(s => s.checkAndUnlock);
   const addLootBox = useLootBoxStore(s => s.addBox);
+  const { startRecording, recordMove, saveReplay } = useReplayStore();
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start recording replay when game begins
+  useEffect(() => {
+    if (status === 'playing' && moveCount === 0) {
+      startRecording();
+    }
+  }, [status, moveCount]);
 
   // Turn timer logic
   useEffect(() => {
@@ -105,6 +114,7 @@ export function GameScreen({ navigation }: Props) {
       const currentBoard = useGameStore.getState().board;
       const currentMoveCount = useGameStore.getState().moveCount;
       const aiCol = getAIMove(currentBoard, difficulty);
+      recordMove(aiCol, 2, currentMoveCount);
       dropPiece(aiCol);
       haptics.drop();
       playSound('drop');
@@ -214,6 +224,12 @@ export function GameScreen({ navigation }: Props) {
       addSeasonXp(15);
       playSound('coin');
     }
+    // Save replay on game end
+    if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
+      const result = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
+      const cs = customSettings || { rows: 6, cols: 7, connectCount: 4 };
+      saveReplay(result as any, difficulty, p2Name, cs.rows, cs.cols, cs.connectCount);
+    }
     if (status === 'playing') {
       hasAwardedRef.current = false;
     }
@@ -222,10 +238,11 @@ export function GameScreen({ navigation }: Props) {
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
     if (isVsAi && currentPlayer !== 1) return;
+    recordMove(col, currentPlayer, moveCount);
     dropPiece(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi]);
+  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
 
   const handleRematch = () => {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
