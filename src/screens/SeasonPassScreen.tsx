@@ -4,7 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
+import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
