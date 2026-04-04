@@ -102,10 +102,18 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingLink label="Terms of Service" icon="📄" onPress={() => haptics.tap()} />
         </View>
 
+        {/* Account */}
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <View style={styles.section}>
+          <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
+          <SettingLink label="Reset Progress" icon="⚠️" onPress={() => haptics.error()} />
+        </View>
+
         {/* Version */}
         <View style={styles.footer}>
           <Text style={styles.version}>Drop4 v1.0.0</Text>
           <Text style={styles.copyright}>Created by Devon Parks</Text>
+          <Text style={styles.copyright}>AMG Studios © 2026</Text>
         </View>
       </View>
     </ScreenBackground>
