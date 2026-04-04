@@ -57,6 +57,7 @@ export function GameScreen({ navigation }: Props) {
   const [, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Start recording replay when game begins + apply preset board
@@ -161,6 +162,7 @@ export function GameScreen({ navigation }: Props) {
       // Career level completion
       const careerLevelId = (global as any).__careerLevelId;
       if (careerLevelId) {
+        setWasCareerLevel(true);
         // Star rating: 3 stars if < 15 moves, 2 if < 25, 1 otherwise
         const starRating = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
@@ -260,6 +262,7 @@ export function GameScreen({ navigation }: Props) {
   const handleRematch = () => {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
     setShowConfetti(false);
+    setWasCareerLevel(false);
     newGame(difficulty, isVsAi);
   };
 
@@ -455,7 +458,7 @@ export function GameScreen({ navigation }: Props) {
                 )}
                 {/* Wager note — shown if this was a wager match */}
                 {/* Career stars */}
-                {status === 'won' && winner === 1 && (global as any).__careerLevelId && (
+                {status === 'won' && winner === 1 && wasCareerLevel && (
                   <View style={[styles.rewardRow, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.08)' }]}>
                     <Text style={styles.rewardLabel}>⭐ Career Stars</Text>
                     <Text style={[styles.rewardValue, { color: '#9b59b6' }]}>
