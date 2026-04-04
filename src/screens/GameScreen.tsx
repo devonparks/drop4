@@ -23,6 +23,7 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useAchievementStore } from '../stores/achievementStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -42,6 +43,7 @@ export function GameScreen({ navigation }: Props) {
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
   const completeCareerLevel = useCareerStore(s => s.completeLevel);
+  const checkAchievements = useAchievementStore(s => s.checkAndUnlock);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,6 +159,27 @@ export function GameScreen({ navigation }: Props) {
         (global as any).__careerLevelId = null;
         (global as any).__careerLevelReward = null;
       }
+      // Wager court winnings
+      const wagerCourt = (global as any).__wagerCourt;
+      if (wagerCourt && wagerCourt.winnerGets > 0) {
+        addCoins(wagerCourt.winnerGets);
+        (global as any).__wagerCourt = null;
+      }
+      // Check achievements
+      const matchHistory = useMatchHistoryStore.getState();
+      const shopState = useShopStore.getState();
+      const careerState = useCareerStore.getState();
+      checkAchievements({
+        totalWins: matchHistory.getStats().wins,
+        currentStreak: useGameStore.getState().winStreak,
+        bestStreak: useGameStore.getState().bestStreak,
+        totalGames: matchHistory.getStats().totalGames,
+        level: shopState.level,
+        careerStars: careerState.getTotalStars(),
+        lastGameMoves: moveCount,
+        hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
+        ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
+      });
       haptics.win();
       playSound('win');
       playSound('coin');
@@ -166,7 +189,11 @@ export function GameScreen({ navigation }: Props) {
       hasAwardedRef.current = true;
       addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
       updateChallenge('play_5', 1);
-      addSeasonXp(10); // Small XP for playing
+      addSeasonXp(10);
+      // Clear wager — coins already deducted, lost
+      if ((global as any).__wagerCourt) {
+        (global as any).__wagerCourt = null;
+      }
       haptics.error();
       playSound('lose');
       playRandomVoice('win');
@@ -201,11 +228,16 @@ export function GameScreen({ navigation }: Props) {
     navigation.goBack();
   };
 
+  // Local player names
+  const localNames = (global as any).__localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
+  const p1Name = isVsAi ? 'You' : localNames.player1;
+  const p2Name = isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
+
   // Turn / status text
   const turnText = status === 'playing'
-    ? (isAiThinking ? 'Thinking...' : (currentPlayer === 1 ? 'Your Turn' : (isVsAi ? 'Bot Turn' : 'Player 2')))
+    ? (isAiThinking ? 'Thinking...' : (currentPlayer === 1 ? `${p1Name}'s Turn` : `${p2Name}'s Turn`))
     : status === 'won'
-    ? (winner === 1 ? 'You Win!' : (isVsAi ? 'Bot Wins!' : 'P2 Wins!'))
+    ? (winner === 1 ? `${p1Name} Wins!` : `${p2Name} Wins!`)
     : 'Draw!';
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
@@ -217,7 +249,7 @@ export function GameScreen({ navigation }: Props) {
         {/* HUD Row */}
         <View style={styles.hudRow}>
           <PlayerHUD
-            name="You"
+            name={p1Name}
             avatar={<CharacterAvatar size="medium" variant="player" />}
             level={useShopStore.getState().level}
             pieceColor="red"
@@ -251,7 +283,7 @@ export function GameScreen({ navigation }: Props) {
           </View>
 
           <PlayerHUD
-            name={isVsAi ? `${diffLabel} Bot` : 'Player 2'}
+            name={p2Name}
             avatar={isVsAi
               ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
               : <CharacterAvatar size="medium" variant="player" />

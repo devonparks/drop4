@@ -57,8 +57,13 @@ export function StageScreen({ navigation }: Props) {
   const handleSelectCourt = (court: Court) => {
     if (court.buyIn > 0) {
       const success = spendCoins(court.buyIn);
-      if (!success) return;
+      if (!success) {
+        haptics.error();
+        return;
+      }
     }
+    // Store wager info so GameScreen can award winnings
+    (global as any).__wagerCourt = court;
     // Start a hard AI game for wager matches
     newGame('hard', true);
     navigation.navigate('Game');

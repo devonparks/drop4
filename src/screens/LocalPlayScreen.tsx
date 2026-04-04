@@ -29,6 +29,8 @@ export function LocalPlayScreen({ navigation }: Props) {
   const startLocalGame = () => {
     haptics.tap();
     resetScores();
+    // Store player names for GameScreen HUD
+    (global as any).__localPlayerNames = { player1: player1Name, player2: player2Name };
     newGame('medium', false);
     navigation.navigate('Game');
   };
