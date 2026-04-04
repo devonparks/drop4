@@ -30,6 +30,7 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
+import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -59,6 +60,10 @@ export function GameScreen({ navigation }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Matchmaking overlay for wager/stage games
+  const [showMatchmaking, setShowMatchmaking] = useState(() => !!(global as any).__wagerCourt);
+  const wagerCourt = (global as any).__wagerCourt;
 
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
@@ -411,6 +416,15 @@ export function GameScreen({ navigation }: Props) {
             playSound('click');
           }}
           variant="game"
+        />
+
+        {/* Matchmaking overlay for wager / stage games */}
+        <MatchmakingOverlay
+          visible={showMatchmaking}
+          onAccept={() => setShowMatchmaking(false)}
+          onDecline={() => { setShowMatchmaking(false); navigation.goBack(); }}
+          opponentName={wagerCourt?.name || undefined}
+          opponentElo={wagerCourt ? undefined : undefined}
         />
 
         {/* Confetti on victory */}

@@ -85,6 +85,10 @@ export function ShopScreen() {
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const insets = useSafeAreaInsets();
 
+  // Look up equipped skin names from catalogs
+  const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
+  const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
+
   const handleItemPress = (category: 'boards' | 'pieces', item: ShopItem) => {
     const equipKey = category === 'boards' ? 'board' : 'pieces';
     if (equipped[equipKey] === item.id) return; // Already equipped
@@ -124,7 +128,14 @@ export function ShopScreen() {
       <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>SHOP</Text>
+          <View>
+            <Text style={styles.title}>SHOP</Text>
+            <View style={styles.equippedRow}>
+              <Text style={styles.equippedLabel}>🎯 {equippedBoardName}</Text>
+              <Text style={styles.equippedDot}>•</Text>
+              <Text style={styles.equippedLabel}>🔴 {equippedPieceName}</Text>
+            </View>
+          </View>
           <View style={styles.coinDisplay}>
             <Text style={styles.coinEmoji}>🪙</Text>
             <Text style={styles.coinValue}>{coins.toLocaleString()}</Text>
@@ -212,6 +223,23 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#ffffff',
     letterSpacing: 2,
+  },
+  equippedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  equippedLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  equippedDot: {
+    fontFamily: fonts.body,
+    fontSize: 8,
+    color: colors.textMuted,
   },
   coinDisplay: {
     flexDirection: 'row',

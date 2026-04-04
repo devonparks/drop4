@@ -4,6 +4,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
+import { useRankedStore } from '../stores/rankedStore';
+import { useSeasonStore } from '../stores/seasonStore';
+import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted } from '../services/audio';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
@@ -43,9 +46,12 @@ function SettingLink({ label, icon, onPress }: { label: string; icon: string; on
 
 export function SettingsScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
+  const ranked = useRankedStore();
+  const season = useSeasonStore();
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(true);
   const [notificationsOn, setNotificationsOn] = useState(true);
+  const [showPastSeasons, setShowPastSeasons] = useState(false);
 
   return (
     <ScreenBackground>
@@ -75,6 +81,61 @@ export function SettingsScreen({ navigation }: Props) {
             onToggle={() => setHapticsOn(!hapticsOn)}
             icon="📳"
           />
+        </View>
+
+        {/* Season Stats */}
+        <Text style={styles.sectionTitle}>SEASON STATS</Text>
+        <View style={styles.section}>
+          <View style={styles.seasonStatsRow}>
+            <View style={styles.seasonStatItem}>
+              <Text style={styles.seasonStatLabel}>Season</Text>
+              <Text style={styles.seasonStatValue}>{season.seasonNumber}</Text>
+            </View>
+            <View style={styles.seasonStatItem}>
+              <Text style={styles.seasonStatLabel}>ELO</Text>
+              <Text style={styles.seasonStatValue}>{ranked.elo}</Text>
+            </View>
+            <View style={styles.seasonStatItem}>
+              <Text style={styles.seasonStatLabel}>Tier</Text>
+              <RankBadge size="small" showElo={false} />
+            </View>
+          </View>
+          <View style={styles.seasonRecordRow}>
+            <Text style={styles.seasonRecordLabel}>Record</Text>
+            <Text style={styles.seasonRecordValue}>
+              {ranked.rankedWins}W - {ranked.rankedLosses}L
+            </Text>
+          </View>
+          <View style={styles.seasonRecordRow}>
+            <Text style={styles.seasonRecordLabel}>Season High</Text>
+            <Text style={[styles.seasonRecordValue, { color: colors.coinGold }]}>
+              {ranked.seasonHighElo} ELO
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => { haptics.tap(); setShowPastSeasons(!showPastSeasons); }}
+            style={styles.settingRow}
+          >
+            <Text style={styles.settingIcon}>📊</Text>
+            <Text style={styles.settingLabel}>View Past Seasons</Text>
+            <Text style={styles.chevron}>{showPastSeasons ? '⌄' : '›'}</Text>
+          </Pressable>
+          {showPastSeasons && (
+            <View style={styles.pastSeasonsWrap}>
+              {ranked.seasonHistory.length === 0 ? (
+                <Text style={styles.pastSeasonEmpty}>No past seasons yet</Text>
+              ) : (
+                ranked.seasonHistory.map((s) => (
+                  <View key={s.season} style={styles.pastSeasonRow}>
+                    <Text style={styles.pastSeasonNum}>S{s.season}</Text>
+                    <Text style={styles.pastSeasonTier}>{s.tier.charAt(0).toUpperCase() + s.tier.slice(1)}</Text>
+                    <Text style={styles.pastSeasonElo}>{s.elo} ELO</Text>
+                    <Text style={styles.pastSeasonRecord}>{s.wins}W {s.losses}L</Text>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
         </View>
 
         {/* Notifications */}
@@ -176,6 +237,99 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 20,
     color: colors.textSecondary,
+  },
+  seasonStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  seasonStatItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  seasonStatLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 10,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  seasonStatValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: '#ffffff',
+  },
+  seasonRecordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  seasonRecordLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  seasonRecordValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  pastSeasonsWrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  pastSeasonEmpty: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  pastSeasonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.03)',
+  },
+  pastSeasonNum: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.orange,
+    width: 28,
+  },
+  pastSeasonTier: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: '#ffffff',
+    flex: 1,
+  },
+  pastSeasonElo: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  pastSeasonRecord: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textMuted,
   },
   footer: {
     alignItems: 'center',
