@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -38,7 +40,9 @@ function EquippedItem({ label, name, rarity }: { label: string; name: string; ra
 }
 
 export function ProfileScreen() {
+  const navigation = useNavigation<any>();
   const { level, xp, coins, gems, equipped } = useShopStore();
+  const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const { scores, winStreak, bestStreak } = useGameStore();
   const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
   const achievements = useAchievementStore(s => s.achievements);
@@ -142,6 +146,13 @@ export function ProfileScreen() {
         <View style={styles.statsGrid}>
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
           <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
+        </View>
+
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
+        <View style={styles.quickActions}>
+          <GlossyButton label="Replays" variant="navy" icon="🎬" small onPress={() => navigateTo('ReplayViewer')} style={{ flex: 1 }} />
+          <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
         </View>
 
         {/* Match History */}
@@ -386,6 +397,12 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 18,
     color: colors.green,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   matchList: {
     paddingHorizontal: 16,
