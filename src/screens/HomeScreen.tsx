@@ -45,7 +45,7 @@ export function HomeScreen() {
         <View style={styles.statusBar}>
           <Pressable onPress={() => navigateTo('SeasonPass')} style={styles.statusPill}>
             <Text style={styles.statusIcon}>🏆</Text>
-            <Text style={styles.statusLabel}>Season 1</Text>
+            <Text style={styles.statusLabel}>Season 0</Text>
             <View style={styles.progressBarSmall}>
               <View style={[styles.progressFillSmall, { width: `${(currentTier / maxTier) * 100}%` }]} />
             </View>

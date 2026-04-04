@@ -35,8 +35,8 @@ const SEASON_REWARDS: SeasonReward[] = [
 ];
 
 export const useSeasonStore = create<SeasonState>((set, get) => ({
-  seasonNumber: 1,
-  seasonName: 'Season 1: Origins',
+  seasonNumber: 0,
+  seasonName: 'Season 0: Launch',
   currentTier: 0,
   maxTier: 8,
   xp: 0,
