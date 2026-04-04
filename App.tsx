@@ -17,6 +17,7 @@ import { useReplayStore } from './src/stores/replayStore';
 import { useDailyRewardStore } from './src/stores/dailyRewardStore';
 import { useRankedStore } from './src/stores/rankedStore';
 import { useLootBoxStore } from './src/stores/lootBoxStore';
+import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -91,6 +92,7 @@ export default function App() {
         }}
       >
         <RootNavigator />
+        <DailyRewardPopup />
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>

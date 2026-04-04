@@ -159,6 +159,13 @@ export function CustomGameScreen({ navigation }: Props) {
             iconRight="▶"
             onPress={startCustomGame}
           />
+          <GlossyButton
+            label="BOARD EDITOR"
+            variant="navy"
+            icon="🎨"
+            onPress={() => navigation.navigate('BoardEditor')}
+            style={{ marginTop: 8 }}
+          />
         </View>
       </View>
     </ScreenBackground>

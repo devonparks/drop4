@@ -7,7 +7,9 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
+import { useRankedStore } from '../stores/rankedStore';
 import { haptics } from '../services/haptics';
+import { getTitleById } from '../data/playerTitles';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -40,6 +42,8 @@ export function ProfileScreen() {
   const { scores, winStreak, bestStreak } = useGameStore();
   const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
   const achievements = useAchievementStore(s => s.achievements);
+  const ranked = useRankedStore();
+  const tierInfo = ranked.getTier();
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
@@ -73,6 +77,11 @@ export function ProfileScreen() {
 
           <Text style={styles.playerName}>Player</Text>
           <Text style={styles.playerTitle}>Rookie</Text>
+          <View style={styles.rankedBadge}>
+            <Text style={styles.rankedIcon}>{tierInfo.icon}</Text>
+            <Text style={[styles.rankedTier, { color: tierInfo.color }]}>{tierInfo.name}</Text>
+            <Text style={styles.rankedElo}>{ranked.elo} ELO</Text>
+          </View>
 
           {/* Level bar */}
           <View style={styles.levelSection}>
@@ -202,6 +211,28 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 24,
     color: '#ffffff',
+  },
+  rankedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginTop: 6,
+  },
+  rankedIcon: { fontSize: 16 },
+  rankedTier: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+  },
+  rankedElo: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
   },
   playerTitle: {
     fontFamily: fonts.body,
