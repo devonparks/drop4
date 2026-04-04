@@ -59,7 +59,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             >
               <CharacterAvatar size="xlarge" variant="player" />
             </LinearGradient>
-            <Text style={styles.playerName}>Player</Text>
+            <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
             <Text style={styles.playerLevel}>Level {level}</Text>
           </View>
 

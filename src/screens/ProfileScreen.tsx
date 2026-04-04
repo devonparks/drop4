@@ -77,7 +77,7 @@ export function ProfileScreen() {
             </LinearGradient>
           </View>
 
-          <Text style={styles.playerName}>Player</Text>
+          <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
           <Text style={styles.playerTitle}>Rookie</Text>
           <View style={styles.rankedBadge}>
             <Text style={styles.rankedIcon}>{tierInfo.icon}</Text>

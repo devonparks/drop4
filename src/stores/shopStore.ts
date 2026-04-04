@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 
 interface ShopState {
+  playerName: string;
   coins: number;
   gems: number;
   level: number;
@@ -27,10 +28,12 @@ interface ShopState {
   addXp: (amount: number) => void;
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
+  setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
 
 export const useShopStore = create<ShopState>((set, get) => ({
+  playerName: 'Player',
   coins: 500,
   gems: 0,
   level: 1,
@@ -57,6 +60,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
     set((s) => ({ coins: s.coins - amount }));
     return true;
   },
+
+  addGems: (amount: number) => set((s) => ({ gems: s.gems + amount })),
 
   addXp: (amount) => {
     const state = get();
@@ -90,10 +95,13 @@ export const useShopStore = create<ShopState>((set, get) => ({
     }));
   },
 
+  setPlayerName: (name) => set({ playerName: name }),
+
   loadFromStorage: async () => {
     const saved = await loadState<Partial<ShopState>>('shop');
     if (saved) {
       set({
+        playerName: saved.playerName ?? 'Player',
         coins: saved.coins ?? 500,
         gems: saved.gems ?? 0,
         level: saved.level ?? 1,
@@ -108,6 +116,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
 // Auto-save on every state change
 useShopStore.subscribe((state) => {
   saveState('shop', {
+    playerName: state.playerName,
     coins: state.coins,
     gems: state.gems,
     level: state.level,
