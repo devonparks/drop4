@@ -84,7 +84,7 @@ export function ChallengesScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>DAILY CHALLENGES</Text>
-          <Text style={styles.subtitle}>Refreshes in 11h 46m</Text>
+          <Text style={styles.subtitle}>Refreshes daily</Text>
           <Text style={styles.progress}>{completedCount}/3 completed</Text>
         </View>
 
