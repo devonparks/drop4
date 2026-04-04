@@ -17,6 +17,8 @@ import { useReplayStore } from './src/stores/replayStore';
 import { useDailyRewardStore } from './src/stores/dailyRewardStore';
 import { useRankedStore } from './src/stores/rankedStore';
 import { useLootBoxStore } from './src/stores/lootBoxStore';
+import { useSeasonStore } from './src/stores/seasonStore';
+import { useBoardEditorStore } from './src/stores/boardEditorStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 
@@ -44,6 +46,8 @@ export default function App() {
         await useDailyRewardStore.getState().loadFromStorage();
         await useRankedStore.getState().loadFromStorage();
         await useLootBoxStore.getState().loadFromStorage();
+        await useSeasonStore.getState().loadFromStorage();
+        await useBoardEditorStore.getState().loadFromStorage();
         // Preload sound effects
         await preloadSounds();
       } catch (e) {

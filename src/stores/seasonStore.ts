@@ -20,6 +20,7 @@ interface SeasonState {
   // Actions
   addSeasonXp: (amount: number) => void;
   claimReward: (tier: number) => void;
+  loadFromStorage: () => Promise<void>;
 }
 
 const SEASON_REWARDS: SeasonReward[] = [
@@ -71,6 +72,17 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
     // Grant premium reward if player has premium
     if (reward.premiumReward && get().hasPremium && get().currentTier >= tier) {
       // Skins/boards/emotes added via shopStore by the caller
+    }
+  },
+
+  loadFromStorage: async () => {
+    const saved = await loadState<{ currentTier: number; xp: number; hasPremium: boolean }>('season');
+    if (saved) {
+      set({
+        currentTier: saved.currentTier ?? 0,
+        xp: saved.xp ?? 0,
+        hasPremium: saved.hasPremium ?? false,
+      });
     }
   },
 }));
