@@ -27,7 +27,7 @@ const RARITY_COLORS: Record<string, string> = {
 
 export function CharacterCreatorScreen({ navigation }: Props) {
   const { level } = useShopStore();
-  const { winStreak, bestStreak, totalGamesPlayed } = useGameStore();
+  const { bestStreak, totalGamesPlayed } = useGameStore();
 
   // Group items by category
   const categories = ['hair', 'top', 'bottom', 'shoes'] as const;

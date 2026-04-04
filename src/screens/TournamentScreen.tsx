@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
@@ -158,7 +157,6 @@ export function TournamentScreen({ navigation }: Props) {
   }
 
   // ═══ BRACKET PHASE ═══
-  const currentMatch = tournament.getCurrentMatch();
 
   return (
     <ScreenBackground>

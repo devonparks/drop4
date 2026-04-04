@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { saveState, loadState } from '../services/storage';
+import { saveState } from '../services/storage';
 
 export interface Challenge {
   id: string;

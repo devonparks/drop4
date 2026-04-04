@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
-import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
@@ -59,12 +56,6 @@ function generateMockLeaderboard(playerWins: number, playerLevel: number): Leade
 
   return entries;
 }
-
-const RANK_COLORS: Record<number, string> = {
-  1: '#f1c40f',
-  2: '#c0c0c0',
-  3: '#cd7f32',
-};
 
 const RANK_EMOJIS: Record<number, string> = {
   1: '🥇',

@@ -12,7 +12,7 @@ import { GameBoard } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { EmoteBar as EmoteBarComponent } from '../components/ui/EmoteBar';
-import { useGameStore, ROWS, COLS } from '../stores/gameStore';
+import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
 import { AI_THINK_DELAY, COIN_REWARDS } from '../engine/constants';
@@ -35,11 +35,11 @@ type Props = {
 
 export function GameScreen({ navigation }: Props) {
   const {
-    board, currentPlayer, status, winner, winCells,
+    board, currentPlayer, status, winner,
     moveCount, difficulty, isAiThinking, isVsAi,
     dropPiece, undoMove, setAiThinking, newGame, scores,
   } = useGameStore();
-  const { coins, addCoins, addXp } = useShopStore();
+  const { addCoins, addXp } = useShopStore();
   const addMatch = useMatchHistoryStore(s => s.addMatch);
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
@@ -50,7 +50,7 @@ export function GameScreen({ navigation }: Props) {
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hintCol, setHintCol] = useState<number | null>(null);
+  const [, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -101,7 +101,7 @@ export function GameScreen({ navigation }: Props) {
   }, [currentPlayer, status, moveCount]);
 
   // Best of 3 series tracking
-  const [seriesGame, setSeriesGame] = useState(1);
+  const [, setSeriesGame] = useState(1);
   const totalGames = 3;
 
   // AI move logic — fixed: no dependency on isAiThinking
@@ -231,7 +231,6 @@ export function GameScreen({ navigation }: Props) {
     }
     // Save replay on game end
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
-      const result = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
       const cs = customSettings || { rows: 6, cols: 7, connectCount: 4 };
       const replayResult: 'win' | 'loss' | 'draw' = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
       saveReplay(replayResult, difficulty, p2Name, cs.rows, cs.cols, cs.connectCount);

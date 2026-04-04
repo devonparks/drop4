@@ -154,7 +154,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   },
 
   getRoundName: () => {
-    const { currentRound, totalRounds, players } = get();
+    const { currentRound, players } = get();
     const remaining = players.filter(p => !p.eliminated).length;
     if (remaining <= 2) return 'Finals';
     if (remaining <= 4) return 'Semifinals';

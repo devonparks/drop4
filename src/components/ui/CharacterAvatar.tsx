@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Text } from 'react-native';
 
 interface CharacterAvatarProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';

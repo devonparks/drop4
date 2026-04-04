@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';

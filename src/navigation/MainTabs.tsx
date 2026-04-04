@@ -6,8 +6,6 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
-import { NotificationsScreen } from '../screens/NotificationsScreen';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -38,10 +36,6 @@ function RanksTab() {
 
 function AchievementsTab() {
   return <ProfileScreen />;
-}
-
-function InboxTab() {
-  return <NotificationsScreen />;
 }
 
 export function MainTabs() {

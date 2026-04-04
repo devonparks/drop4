@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -10,8 +10,6 @@ import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useRankedStore } from '../stores/rankedStore';
-import { haptics } from '../services/haptics';
-import { getTitleById } from '../data/playerTitles';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 

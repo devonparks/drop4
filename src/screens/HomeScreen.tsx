@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -16,7 +16,7 @@ import { fonts, weight } from '../theme/typography';
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
-  const { currentTier, maxTier, xp, xpPerTier } = useSeasonStore();
+  const { currentTier, maxTier } = useSeasonStore();
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [wheelOpen, setWheelOpen] = useState(false);
 

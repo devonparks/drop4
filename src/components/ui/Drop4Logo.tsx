@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { fonts, weight } from '../../theme/typography';
 
 export function Drop4Logo({ size = 'large' }: { size?: 'large' | 'small' }) {

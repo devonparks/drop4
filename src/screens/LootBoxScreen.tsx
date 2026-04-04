@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import Animated, { SlideInDown } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useLootBoxStore, LOOT_BOXES, LootBoxItem } from '../stores/lootBoxStore';
@@ -18,15 +18,8 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: '#f1c40f',
 };
 
-const RARITY_GLOW: Record<string, string> = {
-  common: 'rgba(136,146,176,0.3)',
-  rare: 'rgba(52,152,219,0.4)',
-  epic: 'rgba(155,89,182,0.5)',
-  legendary: 'rgba(241,196,15,0.6)',
-};
-
 export function LootBoxScreen() {
-  const { ownedBoxes, openBox, getBoxCount } = useLootBoxStore();
+  const { openBox, getBoxCount } = useLootBoxStore();
   const { addCoins, purchaseItem } = useShopStore();
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
@@ -60,7 +53,6 @@ export function LootBoxScreen() {
   // Reveal screen
   if (revealedItem) {
     const rarityColor = RARITY_COLORS[revealedItem.rarity];
-    const glowColor = RARITY_GLOW[revealedItem.rarity];
 
     return (
       <ScreenBackground>

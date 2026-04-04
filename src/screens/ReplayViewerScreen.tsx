@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { GlossyButton } from '../components/ui/GlossyButton';
 import { useReplayStore, Replay, ReplayMove } from '../stores/replayStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';

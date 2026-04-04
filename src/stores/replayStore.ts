@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
-import { Board, Player, Difficulty } from './gameStore';
+import { Player, Difficulty } from './gameStore';
 
 export interface ReplayMove {
   col: number;
