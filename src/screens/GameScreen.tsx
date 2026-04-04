@@ -22,6 +22,7 @@ import { playSound, playRandomVoice } from '../services/audio';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useSeasonStore } from '../stores/seasonStore';
+import { useCareerStore } from '../stores/careerStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -40,9 +41,46 @@ export function GameScreen({ navigation }: Props) {
   const addMatch = useMatchHistoryStore(s => s.addMatch);
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
+  const completeCareerLevel = useCareerStore(s => s.completeLevel);
+  const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
+  const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
+  const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Turn timer logic
+  useEffect(() => {
+    if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+    const timerSecs = customSettings?.timerSeconds || 0;
+    if (timerSecs <= 0 || status !== 'playing') return;
+
+    setTurnTimer(timerSecs);
+    turnTimerRef.current = setInterval(() => {
+      setTurnTimer(prev => {
+        if (prev <= 1) {
+          // Time's up — auto-drop in a random valid column
+          if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+          const board = useGameStore.getState().board;
+          const validCols: number[] = [];
+          for (let c = 0; c < board.length; c++) {
+            if (board[c][0] === 0) validCols.push(c);
+          }
+          if (validCols.length > 0) {
+            const randomCol = validCols[Math.floor(Math.random() * validCols.length)];
+            dropPiece(randomCol);
+            haptics.error();
+          }
+          return timerSecs;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+    };
+  }, [currentPlayer, status, moveCount]);
 
   // Best of 3 series tracking
   const [seriesGame, setSeriesGame] = useState(1);
@@ -96,6 +134,29 @@ export function GameScreen({ navigation }: Props) {
       if (moveCount < 20) updateChallenge('fast_win', 1);
       // Season XP
       addSeasonXp(reward);
+      // Career level completion
+      const careerLevelId = (global as any).__careerLevelId;
+      if (careerLevelId) {
+        // Star rating: 3 stars if < 15 moves, 2 if < 25, 1 otherwise
+        const starRating = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+        completeCareerLevel(careerLevelId, starRating, moveCount);
+        // Award career reward
+        const careerReward = (global as any).__careerLevelReward;
+        if (careerReward) {
+          if (careerReward.type === 'coins' && careerReward.amount) {
+            addCoins(careerReward.amount);
+          }
+          // Board/piece unlocks handled by shopStore
+          if (careerReward.type === 'board' && careerReward.id) {
+            useShopStore.getState().purchaseItem('boards', careerReward.id, 0);
+          }
+          if (careerReward.type === 'pieces' && careerReward.id) {
+            useShopStore.getState().purchaseItem('pieces', careerReward.id, 0);
+          }
+        }
+        (global as any).__careerLevelId = null;
+        (global as any).__careerLevelReward = null;
+      }
       haptics.win();
       playSound('win');
       playSound('coin');
@@ -175,6 +236,18 @@ export function GameScreen({ navigation }: Props) {
               {turnText}
             </Text>
             <Text style={styles.vsText}>vs {diffLabel} Bot</Text>
+            {/* Timer bar */}
+            {(customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
+              <View style={styles.timerWrap}>
+                <View style={styles.timerBar}>
+                  <View style={[styles.timerFill, {
+                    width: `${(turnTimer / (customSettings?.timerSeconds || 1)) * 100}%`,
+                    backgroundColor: turnTimer <= 5 ? colors.red : currentPlayer === 1 ? colors.pieceRed : colors.pieceYellow,
+                  }]} />
+                </View>
+                <Text style={[styles.timerText, turnTimer <= 5 && { color: colors.red }]}>{turnTimer}s</Text>
+              </View>
+            )}
           </View>
 
           <PlayerHUD
@@ -386,6 +459,32 @@ const styles = StyleSheet.create({
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  timerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    width: 100,
+  },
+  timerBar: {
+    flex: 1,
+    height: 5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  timerFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  timerText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: '#ffffff',
+    width: 22,
+    textAlign: 'right',
   },
   scoreDots: {
     flexDirection: 'row',

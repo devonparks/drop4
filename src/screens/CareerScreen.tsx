@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useCareerStore } from '../stores/careerStore';
 import { haptics } from '../services/haptics';
+import { ALL_CAREER_LEVELS, CHAPTERS, getChallengeTypeLabel, CareerLevel } from '../data/careerLevels';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -17,70 +18,48 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Career'>;
 };
 
-interface CareerLevel {
-  id: number;
-  name: string;
-  opponent: string;
-  type: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  stars: number; // 0 = not completed, 1-3 = star rating
-  isBoss: boolean;
-  reward?: string;
-}
-
-const CAREER_LEVELS: CareerLevel[] = [
-  { id: 1, name: 'First Drop', opponent: 'Rookie Ron', type: 'Standard 6x7', difficulty: 'easy', stars: 0, isBoss: false },
-  { id: 2, name: 'Getting Started', opponent: 'Beginner Ben', type: 'Standard 6x7', difficulty: 'easy', stars: 0, isBoss: false },
-  { id: 3, name: 'Center Control', opponent: 'Casual Carl', type: 'Standard 6x7', difficulty: 'easy', stars: 0, isBoss: false },
-  { id: 4, name: 'Quick Thinking', opponent: 'Speedy Sam', type: 'Timed (10s)', difficulty: 'easy', stars: 0, isBoss: false },
-  { id: 5, name: 'Mini Match', opponent: 'Tiny Tim', type: 'Connect 3 (5x5)', difficulty: 'easy', stars: 0, isBoss: false, reward: '🎨 Wood Board' },
-  { id: 6, name: 'BOSS: The Opener', opponent: 'Captain Connect', type: 'Standard 6x7', difficulty: 'medium', stars: 0, isBoss: true, reward: '500 Coins' },
-  { id: 7, name: 'Trap Setup', opponent: 'Tricky Tara', type: 'Standard 6x7', difficulty: 'medium', stars: 0, isBoss: false },
-  { id: 8, name: 'Going Second', opponent: 'Lucky Luke', type: 'You go 2nd', difficulty: 'medium', stars: 0, isBoss: false },
-  { id: 9, name: 'Speed Round', opponent: 'Flash Fiona', type: 'Timed (5s)', difficulty: 'medium', stars: 0, isBoss: false },
-  { id: 10, name: 'Big Board', opponent: 'Giant George', type: 'Connect 5 (8x8)', difficulty: 'medium', stars: 0, isBoss: false, reward: '🎨 Neon Pieces' },
-  { id: 11, name: 'Puzzle: Find the Win', opponent: 'Puzzle Pete', type: 'Preset Board', difficulty: 'medium', stars: 0, isBoss: false },
-  { id: 12, name: 'BOSS: The Strategist', opponent: 'Master Ming', type: 'Best of 3', difficulty: 'hard', stars: 0, isBoss: true, reward: '1000 Coins' },
-];
-
-function LevelNode({ level, onPress, isUnlocked }: {
+function LevelNode({ level, stars, isUnlocked, onPress }: {
   level: CareerLevel;
-  onPress: () => void;
+  stars: number;
   isUnlocked: boolean;
+  onPress: () => void;
 }) {
   const bgColor = level.isBoss
-    ? 'rgba(231,76,60,0.2)'
-    : level.stars > 0
-    ? 'rgba(39,174,61,0.15)'
+    ? 'rgba(231,76,60,0.15)'
+    : stars > 0
+    ? 'rgba(39,174,61,0.1)'
     : isUnlocked
-    ? 'rgba(255,140,0,0.1)'
-    : 'rgba(255,255,255,0.03)';
+    ? 'rgba(255,140,0,0.08)'
+    : 'rgba(255,255,255,0.02)';
 
   const borderColor = level.isBoss
-    ? 'rgba(231,76,60,0.4)'
-    : level.stars > 0
-    ? 'rgba(39,174,61,0.3)'
+    ? 'rgba(231,76,60,0.35)'
+    : stars > 0
+    ? 'rgba(39,174,61,0.25)'
     : isUnlocked
-    ? 'rgba(255,140,0,0.3)'
-    : 'rgba(255,255,255,0.06)';
+    ? 'rgba(255,140,0,0.2)'
+    : 'rgba(255,255,255,0.05)';
 
   return (
     <Pressable
       onPress={() => { if (isUnlocked) { haptics.tap(); onPress(); } }}
-      style={[styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.4 }]}
+      style={[styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }]}
     >
       <View style={styles.levelLeft}>
         <View style={[styles.levelNumber, level.isBoss && styles.bossNumber]}>
           <Text style={styles.levelNumText}>{level.isBoss ? '👑' : level.id}</Text>
         </View>
-        <View>
-          <Text style={styles.levelName}>{level.name}</Text>
-          <Text style={styles.levelType}>{level.type} • {level.opponent}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.levelName} numberOfLines={1}>{level.name}</Text>
+          <Text style={styles.levelType}>{getChallengeTypeLabel(level.type)} • {level.opponent}</Text>
+          {level.opponentPersonality && (
+            <Text style={styles.levelFlavor} numberOfLines={1}>{level.opponentPersonality}</Text>
+          )}
         </View>
       </View>
       <View style={styles.levelRight}>
-        {level.stars > 0 ? (
-          <Text style={styles.stars}>{'⭐'.repeat(level.stars)}{'☆'.repeat(3 - level.stars)}</Text>
+        {stars > 0 ? (
+          <Text style={styles.stars}>{'⭐'.repeat(stars)}{'☆'.repeat(3 - stars)}</Text>
         ) : isUnlocked ? (
           <Text style={styles.playIcon}>▶</Text>
         ) : (
@@ -94,20 +73,34 @@ function LevelNode({ level, onPress, isUnlocked }: {
 export function CareerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
   const newGame = useGameStore(s => s.newGame);
-  const { getStars, isLevelUnlocked, getTotalStars, getCompletedCount } = useCareerStore();
+  const { getStars, getTotalStars, getCompletedCount } = useCareerStore();
+  const [activeChapter, setActiveChapter] = useState(1);
 
   const handlePlayLevel = (careerLevel: CareerLevel) => {
-    newGame(careerLevel.difficulty, true);
+    // Pass career level settings to the game
+    const settings = {
+      rows: careerLevel.settings.rows,
+      cols: careerLevel.settings.cols,
+      connectCount: careerLevel.settings.connectCount,
+      timerSeconds: careerLevel.settings.timerSeconds || 0,
+    };
+
+    // Determine if player goes first
+    const playerFirst = careerLevel.settings.playerGoesFirst !== false;
+
+    newGame(careerLevel.difficulty, true, settings);
+
+    // Store which career level we're playing so we can update it on result
+    // Using a global ref since we can't pass params through navigation easily
+    (global as any).__careerLevelId = careerLevel.id;
+    (global as any).__careerLevelReward = careerLevel.reward;
+
     navigation.navigate('Game');
   };
 
-  // Merge career store progress into level data for display
-  const levelsWithProgress = CAREER_LEVELS.map(l => ({
-    ...l,
-    stars: getStars(l.id),
-  }));
-
-  const firstIncomplete = levelsWithProgress.findIndex(l => l.stars === 0);
+  const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
+  const totalStars = getTotalStars();
+  const completedCount = getCompletedCount();
 
   return (
     <ScreenBackground>
@@ -120,41 +113,75 @@ export function CareerScreen({ navigation }: Props) {
           onBackPress={() => navigation.goBack()}
         />
 
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>CAREER</Text>
-          <Text style={styles.subtitle}>Chapter 1: The Basics</Text>
           <View style={styles.progressRow}>
-            <Text style={styles.progressText}>
-              {getCompletedCount()} / {CAREER_LEVELS.length} completed
-            </Text>
-            <Text style={styles.starsTotal}>
-              ⭐ {getTotalStars()} / {CAREER_LEVELS.length * 3}
-            </Text>
+            <Text style={styles.progressText}>{completedCount}/{ALL_CAREER_LEVELS.length} completed</Text>
+            <Text style={styles.starsTotal}>⭐ {totalStars}/{ALL_CAREER_LEVELS.length * 3}</Text>
           </View>
         </View>
 
+        {/* Chapter tabs */}
+        <View style={styles.chapterTabs}>
+          {CHAPTERS.map(ch => {
+            const isActive = activeChapter === ch.id;
+            const chapterStars = ch.levels.reduce((sum, l) => sum + getStars(l.id), 0);
+            const isUnlocked = ch.id === 1 || getCompletedCount() >= ch.unlockLevel - 1;
+
+            return (
+              <Pressable
+                key={ch.id}
+                onPress={() => { if (isUnlocked) { haptics.tap(); setActiveChapter(ch.id); } }}
+                style={[styles.chapterTab, isActive && styles.chapterTabActive, !isUnlocked && { opacity: 0.4 }]}
+              >
+                <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
+                  Ch.{ch.id}
+                </Text>
+                <Text style={[styles.chapterSubtitle, isActive && { color: colors.orange }]}>
+                  {ch.name}
+                </Text>
+                {isUnlocked && (
+                  <Text style={styles.chapterStars}>⭐{chapterStars}/{ch.levels.length * 3}</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Level list */}
         <ScrollView contentContainerStyle={styles.levelList} showsVerticalScrollIndicator={false}>
-          {levelsWithProgress.map((lvl, i) => (
-            <React.Fragment key={lvl.id}>
-              <LevelNode
-                level={lvl}
-                isUnlocked={i <= (firstIncomplete >= 0 ? firstIncomplete : levelsWithProgress.length)}
-                onPress={() => handlePlayLevel(lvl)}
-              />
-              {/* Connector line between levels */}
-              {i < CAREER_LEVELS.length - 1 && (
-                <View style={styles.connector}>
-                  <View style={[styles.connectorLine, i < firstIncomplete && styles.connectorDone]} />
-                </View>
-              )}
-              {/* Reward badge */}
-              {lvl.reward && (
-                <View style={styles.rewardBadge}>
-                  <Text style={styles.rewardText}>{lvl.reward}</Text>
-                </View>
-              )}
-            </React.Fragment>
-          ))}
+          {chapter.levels.map((lvl, i) => {
+            const stars = getStars(lvl.id);
+            // Level is unlocked if it's the first level, or the previous level has been completed
+            const isUnlocked = lvl.id === 1 || getStars(lvl.id - 1) > 0 || stars > 0;
+
+            return (
+              <React.Fragment key={lvl.id}>
+                <LevelNode
+                  level={lvl}
+                  stars={stars}
+                  isUnlocked={isUnlocked}
+                  onPress={() => handlePlayLevel(lvl)}
+                />
+
+                {/* Connector line */}
+                {i < chapter.levels.length - 1 && (
+                  <View style={styles.connector}>
+                    <View style={[styles.connectorLine, stars > 0 && styles.connectorDone]} />
+                  </View>
+                )}
+
+                {/* Reward badge */}
+                {lvl.reward && (
+                  <View style={styles.rewardBadge}>
+                    <Text style={styles.rewardIcon}>{lvl.reward.icon}</Text>
+                    <Text style={styles.rewardText}>{lvl.reward.name}</Text>
+                  </View>
+                )}
+              </React.Fragment>
+            );
+          })}
         </ScrollView>
       </View>
     </ScreenBackground>
@@ -162,33 +189,23 @@ export function CareerScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     alignItems: 'center',
-    paddingHorizontal: 20,
     marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   title: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 28,
+    fontSize: 26,
     color: '#ffffff',
     letterSpacing: 2,
-  },
-  subtitle: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
   },
   progressRow: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 8,
+    marginTop: 4,
   },
   progressText: {
     fontFamily: fonts.body,
@@ -202,94 +219,146 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.coinGold,
   },
+  // Chapter tabs
+  chapterTabs: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 6,
+    marginBottom: 8,
+  },
+  chapterTab: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  chapterTabActive: {
+    backgroundColor: 'rgba(255,140,0,0.1)',
+    borderColor: 'rgba(255,140,0,0.3)',
+  },
+  chapterName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  chapterNameActive: {
+    color: colors.orange,
+  },
+  chapterSubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 9,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  chapterStars: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 9,
+    color: colors.coinGold,
+    marginTop: 2,
+  },
+  // Level list
   levelList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 100,
   },
   levelNode: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
   },
   levelLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     flex: 1,
   },
   levelNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bossNumber: {
-    backgroundColor: 'rgba(231,76,60,0.3)',
+    backgroundColor: 'rgba(231,76,60,0.2)',
   },
   levelNumText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 14,
+    fontSize: 13,
     color: '#ffffff',
   },
   levelName: {
     fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
+    fontWeight: weight.bold,
+    fontSize: 13,
     color: '#ffffff',
   },
   levelType: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textSecondary,
+    marginTop: 1,
+  },
+  levelFlavor: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 9,
+    color: colors.textMuted,
+    fontStyle: 'italic',
     marginTop: 1,
   },
   levelRight: {
     marginLeft: 8,
   },
-  stars: {
-    fontSize: 14,
-  },
+  stars: { fontSize: 12 },
   playIcon: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.orange,
   },
-  lockIcon: {
-    fontSize: 14,
-  },
+  lockIcon: { fontSize: 12 },
   connector: {
     alignItems: 'center',
-    height: 16,
+    height: 12,
   },
   connectorLine: {
     width: 2,
     height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   connectorDone: {
     backgroundColor: colors.green,
   },
   rewardBadge: {
+    flexDirection: 'row',
     alignSelf: 'center',
-    backgroundColor: 'rgba(255,209,102,0.1)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,209,102,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     marginTop: -4,
-    marginBottom: 4,
+    marginBottom: 2,
     borderWidth: 1,
-    borderColor: 'rgba(255,209,102,0.2)',
+    borderColor: 'rgba(255,209,102,0.15)',
   },
+  rewardIcon: { fontSize: 12 },
   rewardText: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.coinGold,
   },
 });
