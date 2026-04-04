@@ -55,10 +55,16 @@ export function GameScreen({ navigation }: Props) {
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Start recording replay when game begins
+  // Start recording replay when game begins + apply preset board
   useEffect(() => {
     if (status === 'playing' && moveCount === 0) {
       startRecording();
+      // Apply preset board from Board Editor if available
+      const presetBoard = (global as any).__presetBoard;
+      if (presetBoard) {
+        useGameStore.setState({ board: presetBoard });
+        (global as any).__presetBoard = null;
+      }
     }
   }, [status, moveCount]);
 
