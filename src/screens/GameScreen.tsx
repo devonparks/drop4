@@ -437,6 +437,24 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {/* Wager winnings */}
+                {status === 'won' && winner === 1 && (global as any).__wagerCourtName && (
+                  <View style={[styles.rewardRow, { borderColor: 'rgba(39,174,61,0.3)', backgroundColor: 'rgba(39,174,61,0.08)' }]}>
+                    <Text style={styles.rewardLabel}>🏟 Court Winnings</Text>
+                    <Text style={[styles.rewardValue, { color: colors.green }]}>
+                      +{(global as any).__wagerCourtWinnings || 0} 🪙
+                    </Text>
+                  </View>
+                )}
+                {/* Career stars */}
+                {status === 'won' && winner === 1 && (global as any).__careerLevelId && (
+                  <View style={[styles.rewardRow, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.08)' }]}>
+                    <Text style={styles.rewardLabel}>⭐ Career Stars</Text>
+                    <Text style={[styles.rewardValue, { color: '#9b59b6' }]}>
+                      {moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}
+                    </Text>
+                  </View>
+                )}
                 {status === 'draw' && (
                   <View style={styles.rewardRow}>
                     <Text style={styles.rewardLabel}>Draw bonus</Text>
