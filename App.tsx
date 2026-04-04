@@ -12,6 +12,11 @@ import { preloadSounds } from './src/services/audio';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
 import { useAchievementStore } from './src/stores/achievementStore';
+import { useMatchHistoryStore } from './src/stores/matchHistoryStore';
+import { useReplayStore } from './src/stores/replayStore';
+import { useDailyRewardStore } from './src/stores/dailyRewardStore';
+import { useRankedStore } from './src/stores/rankedStore';
+import { useLootBoxStore } from './src/stores/lootBoxStore';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +37,11 @@ export default function App() {
         await useShopStore.getState().loadFromStorage();
         await useCareerStore.getState().loadFromStorage();
         await useAchievementStore.getState().loadFromStorage();
+        await useMatchHistoryStore.getState().loadFromStorage();
+        await useReplayStore.getState().loadFromStorage();
+        await useDailyRewardStore.getState().loadFromStorage();
+        await useRankedStore.getState().loadFromStorage();
+        await useLootBoxStore.getState().loadFromStorage();
         // Preload sound effects
         await preloadSounds();
       } catch (e) {

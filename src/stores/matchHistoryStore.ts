@@ -26,6 +26,7 @@ interface MatchHistoryState {
     totalCoinsEarned: number;
     avgMoves: number;
   };
+  loadFromStorage: () => Promise<void>;
 }
 
 export const useMatchHistoryStore = create<MatchHistoryState>((set, get) => ({
@@ -67,4 +68,16 @@ export const useMatchHistoryStore = create<MatchHistoryState>((set, get) => ({
       avgMoves,
     };
   },
+
+  loadFromStorage: async () => {
+    const saved = await loadState<{ matches: MatchRecord[] }>('matchHistory');
+    if (saved?.matches) {
+      set({ matches: saved.matches });
+    }
+  },
 }));
+
+// Auto-save
+useMatchHistoryStore.subscribe((state) => {
+  saveState('matchHistory', { matches: state.matches });
+});

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveState, loadState } from '../services/storage';
 
 export interface Challenge {
   id: string;
@@ -78,3 +79,8 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
     return challenge.reward;
   },
 }));
+
+// Auto-save
+useChallengeStore.subscribe((state) => {
+  saveState('challenges', { challenges: state.challenges, lastRefresh: state.lastRefresh });
+});

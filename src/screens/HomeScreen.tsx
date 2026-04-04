@@ -8,6 +8,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
 import { EmoteWheel } from '../components/ui/EmoteWheel';
 import { useShopStore } from '../stores/shopStore';
+import { useSeasonStore } from '../stores/seasonStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -15,6 +16,7 @@ import { fonts, weight } from '../theme/typography';
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
+  const { currentTier, maxTier, xp, xpPerTier } = useSeasonStore();
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [wheelOpen, setWheelOpen] = useState(false);
 
@@ -45,9 +47,9 @@ export function HomeScreen() {
             <Text style={styles.statusIcon}>🏆</Text>
             <Text style={styles.statusLabel}>Season 1</Text>
             <View style={styles.progressBarSmall}>
-              <View style={[styles.progressFillSmall, { width: '50%' }]} />
+              <View style={[styles.progressFillSmall, { width: `${(currentTier / maxTier) * 100}%` }]} />
             </View>
-            <Text style={styles.statusValue}>4/8</Text>
+            <Text style={styles.statusValue}>{currentTier}/{maxTier}</Text>
           </Pressable>
 
           <View style={styles.statusPill}>

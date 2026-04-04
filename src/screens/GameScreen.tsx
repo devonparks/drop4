@@ -228,7 +228,8 @@ export function GameScreen({ navigation }: Props) {
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
       const result = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
       const cs = customSettings || { rows: 6, cols: 7, connectCount: 4 };
-      saveReplay(result as any, difficulty, p2Name, cs.rows, cs.cols, cs.connectCount);
+      const replayResult: 'win' | 'loss' | 'draw' = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
+      saveReplay(replayResult, difficulty, p2Name, cs.rows, cs.cols, cs.connectCount);
     }
     if (status === 'playing') {
       hasAwardedRef.current = false;

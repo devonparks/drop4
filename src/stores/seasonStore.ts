@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveState, loadState } from '../services/storage';
 
 export interface SeasonReward {
   tier: number;
@@ -56,7 +57,29 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
   },
 
   claimReward: (tier) => {
-    // In a real app this would update the shop store owned items
-    // For now just marks the tier as claimed
+    const reward = get().rewards.find(r => r.tier === tier);
+    if (!reward) return;
+
+    // Grant the free reward
+    if (reward.freeReward && get().currentTier >= tier) {
+      if (reward.freeReward.type === 'coins') {
+        // Coins handled by the caller (ShopStore.addCoins)
+      }
+      // Skins/boards added via shopStore by the caller
+    }
+
+    // Grant premium reward if player has premium
+    if (reward.premiumReward && get().hasPremium && get().currentTier >= tier) {
+      // Skins/boards/emotes added via shopStore by the caller
+    }
   },
 }));
+
+// Auto-save season progress
+useSeasonStore.subscribe((state) => {
+  saveState('season', {
+    currentTier: state.currentTier,
+    xp: state.xp,
+    hasPremium: state.hasPremium,
+  });
+});

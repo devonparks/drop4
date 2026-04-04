@@ -205,13 +205,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // In AI mode, undo 2 moves (player + AI) so it's back to player's turn
     const undoCount = isVsAi && moveHistory.length >= 2 ? 2 : 1;
-    const targetHistory = moveHistory.slice(0, -undoCount);
-    const restored = targetHistory.length > 0
-      ? targetHistory[targetHistory.length - 1]
-      : { board: createEmptyBoard(), currentPlayer: 1 as Player, moveCount: 0 };
-
-    // Actually restore from the state BEFORE the moves we're undoing
     const restoreIdx = moveHistory.length - undoCount;
+    if (restoreIdx < 0) return false;
     const restoreState = moveHistory[restoreIdx];
 
     set({
