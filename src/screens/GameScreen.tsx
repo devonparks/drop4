@@ -178,7 +178,8 @@ export function GameScreen({ navigation }: Props) {
       aiTimerRef.current = null;
       const currentBoard = useGameStore.getState().board;
       const currentMoveCount = useGameStore.getState().moveCount;
-      const aiCol = getAIMove(currentBoard, difficulty);
+      const { connectCount } = useGameStore.getState().customSettings;
+      const aiCol = getAIMove(currentBoard, difficulty, connectCount);
       recordMove(aiCol, 2, currentMoveCount);
       dropPiece(aiCol);
       haptics.drop();
@@ -468,7 +469,7 @@ export function GameScreen({ navigation }: Props) {
           <Pressable onPress={() => {
             if (status === 'playing' && !isAiThinking && currentPlayer === 1) {
               haptics.tap();
-              const bestCol = getAIMove(board, 'hard');
+              const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
               setHintCol(bestCol);
               setTimeout(() => setHintCol(null), 2000);
             }

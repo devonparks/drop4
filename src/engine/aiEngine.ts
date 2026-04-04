@@ -1,7 +1,7 @@
 // Drop4 AI Engine — Minimax with alpha-beta pruning
-// Ported from ODA Connect 4 (arcade/connect4/index.html lines 1177-1202)
+// Supports dynamic board sizes and connect counts for custom games
 
-import { Board, Player, Cell, ROWS, COLS, getLowestEmptyRow } from '../stores/gameStore';
+import { Board, Player, Cell, getLowestEmptyRow } from '../stores/gameStore';
 
 const AI: Player = 2;
 const HUMAN: Player = 1;
@@ -14,102 +14,117 @@ const DIFFICULTY_CONFIG = {
 
 export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
-// Score a window of 4 cells
-function scoreWindow(window: Cell[], player: Player): number {
+// Derive board dimensions from the board itself
+function getBoardDims(board: Board): { cols: number; rows: number } {
+  const cols = board.length;
+  const rows = cols > 0 ? board[0].length : 0;
+  return { cols, rows };
+}
+
+// Score a window of N cells (dynamic connect count)
+function scoreWindow(window: Cell[], player: Player, connectN: number): number {
   const opponent: Player = player === 1 ? 2 : 1;
   const playerCount = window.filter(c => c === player).length;
   const opponentCount = window.filter(c => c === opponent).length;
   const emptyCount = window.filter(c => c === 0).length;
 
-  if (playerCount === 4) return 100;
-  if (playerCount === 3 && emptyCount === 1) return 5;
-  if (playerCount === 2 && emptyCount === 2) return 2;
-  if (opponentCount === 3 && emptyCount === 1) return -4;
+  if (playerCount === connectN) return 100;
+  if (playerCount === connectN - 1 && emptyCount === 1) return 5;
+  if (playerCount === connectN - 2 && emptyCount === 2) return 2;
+  if (opponentCount === connectN - 1 && emptyCount === 1) return -4;
 
   return 0;
 }
 
-// Evaluate the entire board for a player
-function evaluateBoard(board: Board, player: Player): number {
+// Evaluate the entire board for a player (dynamic dimensions + connect count)
+function evaluateBoard(board: Board, player: Player, connectN: number): number {
+  const { cols, rows } = getBoardDims(board);
   let score = 0;
 
   // Center column preference (strategic advantage)
-  const centerCol = Math.floor(COLS / 2);
+  const centerCol = Math.floor(cols / 2);
   const centerCount = board[centerCol].filter(c => c === player).length;
   score += centerCount * 3;
 
   // Horizontal windows
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col <= COLS - 4; col++) {
-      const window: Cell[] = [board[col][row], board[col + 1][row], board[col + 2][row], board[col + 3][row]];
-      score += scoreWindow(window, player);
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col <= cols - connectN; col++) {
+      const window: Cell[] = [];
+      for (let i = 0; i < connectN; i++) window.push(board[col + i][row]);
+      score += scoreWindow(window, player, connectN);
     }
   }
 
   // Vertical windows
-  for (let col = 0; col < COLS; col++) {
-    for (let row = 0; row <= ROWS - 4; row++) {
-      const window: Cell[] = [board[col][row], board[col][row + 1], board[col][row + 2], board[col][row + 3]];
-      score += scoreWindow(window, player);
+  for (let col = 0; col < cols; col++) {
+    for (let row = 0; row <= rows - connectN; row++) {
+      const window: Cell[] = [];
+      for (let i = 0; i < connectN; i++) window.push(board[col][row + i]);
+      score += scoreWindow(window, player, connectN);
     }
   }
 
   // Positive diagonal windows
-  for (let col = 0; col <= COLS - 4; col++) {
-    for (let row = 0; row <= ROWS - 4; row++) {
-      const window: Cell[] = [board[col][row], board[col + 1][row + 1], board[col + 2][row + 2], board[col + 3][row + 3]];
-      score += scoreWindow(window, player);
+  for (let col = 0; col <= cols - connectN; col++) {
+    for (let row = 0; row <= rows - connectN; row++) {
+      const window: Cell[] = [];
+      for (let i = 0; i < connectN; i++) window.push(board[col + i][row + i]);
+      score += scoreWindow(window, player, connectN);
     }
   }
 
   // Negative diagonal windows
-  for (let col = 0; col <= COLS - 4; col++) {
-    for (let row = 3; row < ROWS; row++) {
-      const window: Cell[] = [board[col][row], board[col + 1][row - 1], board[col + 2][row - 2], board[col + 3][row - 3]];
-      score += scoreWindow(window, player);
+  for (let col = 0; col <= cols - connectN; col++) {
+    for (let row = connectN - 1; row < rows; row++) {
+      const window: Cell[] = [];
+      for (let i = 0; i < connectN; i++) window.push(board[col + i][row - i]);
+      score += scoreWindow(window, player, connectN);
     }
   }
 
   return score;
 }
 
-// Check if a move results in a win
-function isWinningMove(board: Board, col: number, row: number, player: Player): boolean {
+// Check if a move results in a win (dynamic dimensions + connect count)
+function isWinningMove(board: Board, col: number, row: number, player: Player, connectN: number): boolean {
+  const { cols, rows } = getBoardDims(board);
   const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
   for (const [dc, dr] of directions) {
     let count = 1;
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < connectN; i++) {
       const c = col + dc * i, r = row + dr * i;
-      if (c >= 0 && c < COLS && r >= 0 && r < ROWS && board[c][r] === player) count++;
+      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) count++;
       else break;
     }
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < connectN; i++) {
       const c = col - dc * i, r = row - dr * i;
-      if (c >= 0 && c < COLS && r >= 0 && r < ROWS && board[c][r] === player) count++;
+      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) count++;
       else break;
     }
-    if (count >= 4) return true;
+    if (count >= connectN) return true;
   }
   return false;
 }
 
 // Get valid columns (not full)
 function getValidCols(board: Board): number[] {
-  const cols: number[] = [];
-  for (let col = 0; col < COLS; col++) {
-    if (board[col][0] === 0) cols.push(col);
+  const { cols } = getBoardDims(board);
+  const validCols: number[] = [];
+  for (let col = 0; col < cols; col++) {
+    if (board[col][0] === 0) validCols.push(col);
   }
-  return cols;
+  return validCols;
 }
 
-// Check if the board is a terminal state
-function isTerminal(board: Board): boolean {
+// Check if the board is a terminal state (dynamic dimensions + connect count)
+function isTerminal(board: Board, connectN: number): boolean {
+  const { cols, rows } = getBoardDims(board);
   // Check for win
-  for (let col = 0; col < COLS; col++) {
-    for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < cols; col++) {
+    for (let row = 0; row < rows; row++) {
       if (board[col][row] !== 0) {
-        if (isWinningMove(board, col, row, board[col][row] as Player)) return true;
+        if (isWinningMove(board, col, row, board[col][row] as Player, connectN)) return true;
       }
     }
   }
@@ -117,33 +132,35 @@ function isTerminal(board: Board): boolean {
   return getValidCols(board).length === 0;
 }
 
-// Minimax with alpha-beta pruning
+// Minimax with alpha-beta pruning (dynamic connect count)
 function minimax(
   board: Board,
   depth: number,
   alpha: number,
   beta: number,
-  isMaximizing: boolean
+  isMaximizing: boolean,
+  connectN: number
 ): [number | null, number] {
+  const { cols, rows } = getBoardDims(board);
   const validCols = getValidCols(board);
-  const terminal = isTerminal(board);
+  const terminal = isTerminal(board, connectN);
 
   if (depth === 0 || terminal) {
     if (terminal) {
       // Check if AI won
-      for (let col = 0; col < COLS; col++) {
-        for (let row = 0; row < ROWS; row++) {
-          if (board[col][row] === AI && isWinningMove(board, col, row, AI)) {
+      for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows; row++) {
+          if (board[col][row] === AI && isWinningMove(board, col, row, AI, connectN)) {
             return [null, 100000];
           }
-          if (board[col][row] === HUMAN && isWinningMove(board, col, row, HUMAN)) {
+          if (board[col][row] === HUMAN && isWinningMove(board, col, row, HUMAN, connectN)) {
             return [null, -100000];
           }
         }
       }
       return [null, 0]; // Draw
     }
-    return [null, evaluateBoard(board, AI)];
+    return [null, evaluateBoard(board, AI, connectN)];
   }
 
   if (isMaximizing) {
@@ -155,7 +172,7 @@ function minimax(
       const newBoard = board.map(c => [...c]);
       newBoard[col][row] = AI;
 
-      const [, score] = minimax(newBoard, depth - 1, alpha, beta, false);
+      const [, score] = minimax(newBoard, depth - 1, alpha, beta, false, connectN);
       if (score > bestScore) {
         bestScore = score;
         bestCol = col;
@@ -173,7 +190,7 @@ function minimax(
       const newBoard = board.map(c => [...c]);
       newBoard[col][row] = HUMAN;
 
-      const [, score] = minimax(newBoard, depth - 1, alpha, beta, true);
+      const [, score] = minimax(newBoard, depth - 1, alpha, beta, true, connectN);
       if (score < bestScore) {
         bestScore = score;
         bestCol = col;
@@ -186,8 +203,10 @@ function minimax(
 }
 
 // Main export — get the AI's chosen column
-export function getAIMove(board: Board, difficulty: Difficulty): number {
+// connectCount defaults to 4 for backward compatibility
+export function getAIMove(board: Board, difficulty: Difficulty, connectCount: number = 4): number {
   const config = DIFFICULTY_CONFIG[difficulty];
+  const connectN = connectCount;
 
   // Random chance: sometimes make a random valid move (makes Easy feel beatable)
   if (Math.random() < config.randomChance) {
@@ -201,7 +220,7 @@ export function getAIMove(board: Board, difficulty: Difficulty): number {
     const row = getLowestEmptyRow(board, col);
     const testBoard = board.map(c => [...c]);
     testBoard[col][row] = AI;
-    if (isWinningMove(testBoard, col, row, AI)) return col;
+    if (isWinningMove(testBoard, col, row, AI, connectN)) return col;
   }
 
   // Check for immediate block (all difficulties)
@@ -209,10 +228,10 @@ export function getAIMove(board: Board, difficulty: Difficulty): number {
     const row = getLowestEmptyRow(board, col);
     const testBoard = board.map(c => [...c]);
     testBoard[col][row] = HUMAN;
-    if (isWinningMove(testBoard, col, row, HUMAN)) return col;
+    if (isWinningMove(testBoard, col, row, HUMAN, connectN)) return col;
   }
 
   // Minimax for the best strategic move
-  const [bestCol] = minimax(board, config.depth, -Infinity, Infinity, true);
+  const [bestCol] = minimax(board, config.depth, -Infinity, Infinity, true, connectN);
   return bestCol ?? validCols[Math.floor(Math.random() * validCols.length)];
 }

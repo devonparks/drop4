@@ -52,6 +52,32 @@ export function CustomGameScreen({ navigation }: Props) {
   const [firstMove, setFirstMove] = useState('random');
   const [opponent, setOpponent] = useState('ai_medium');
 
+  // Parse current board dimensions for validation
+  const [parsedCols, parsedRows] = boardSize.split('x').map(Number);
+  const maxConnect = Math.min(parsedCols || 6, parsedRows || 7);
+  const currentConnect = parseInt(connectCount) || 4;
+  const isInvalidCombo = currentConnect > maxConnect;
+
+  // Auto-clamp connectCount when board size shrinks below it
+  const handleBoardSizeChange = (val: string) => {
+    setBoardSize(val);
+    const [newCols, newRows] = val.split('x').map(Number);
+    const newMax = Math.min(newCols, newRows);
+    if (parseInt(connectCount) > newMax) {
+      setConnectCount(String(newMax));
+    }
+  };
+
+  // Cap connectCount if user picks a value too large for the board
+  const handleConnectChange = (val: string) => {
+    const n = parseInt(val);
+    if (n > maxConnect) {
+      setConnectCount(String(maxConnect));
+    } else {
+      setConnectCount(val);
+    }
+  };
+
   const startCustomGame = () => {
     haptics.tap();
     const isAi = opponent !== 'local';
@@ -101,7 +127,7 @@ export function CustomGameScreen({ navigation }: Props) {
               { label: '7x8', value: '7x8' },
               { label: '8x9', value: '8x9' },
             ]}
-            onChange={setBoardSize}
+            onChange={handleBoardSizeChange}
           />
 
           <SettingRow
@@ -113,8 +139,14 @@ export function CustomGameScreen({ navigation }: Props) {
               { label: '5', value: '5' },
               { label: '6', value: '6' },
             ]}
-            onChange={setConnectCount}
+            onChange={handleConnectChange}
           />
+
+          {isInvalidCombo && (
+            <Text style={styles.warningText}>
+              Connect {currentConnect} is impossible on a {boardSize} board (max: {maxConnect})
+            </Text>
+          )}
 
           <SettingRow
             label="Timer"
@@ -158,6 +190,7 @@ export function CustomGameScreen({ navigation }: Props) {
             variant="orange"
             iconRight="▶"
             onPress={startCustomGame}
+            disabled={isInvalidCombo}
           />
           <GlossyButton
             label="BOARD EDITOR"
@@ -241,6 +274,15 @@ const styles = StyleSheet.create({
   },
   optionTextActive: {
     color: colors.orange,
+  },
+  warningText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginTop: -4,
+    marginBottom: 4,
   },
   startWrap: {
     paddingHorizontal: 24,
