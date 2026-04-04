@@ -63,7 +63,7 @@ export function HomeScreen() {
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) */}
           <Pressable onPress={() => { haptics.tap(); setWheelOpen(true); }} style={styles.sideBtn}>
-            <LinearGradient colors={['rgba(255,200,0,0.2)', 'rgba(255,140,0,0.1)']} style={styles.sideBtnGradient}>
+            <LinearGradient colors={['rgba(255,220,50,0.3)', 'rgba(50,200,50,0.2)', 'rgba(50,100,255,0.2)']} style={styles.sideBtnGradient}>
               <Text style={styles.sideBtnIcon}>😀</Text>
             </LinearGradient>
             <Text style={styles.sideBtnLabel}>Emotes</Text>
@@ -76,16 +76,18 @@ export function HomeScreen() {
               emote={emote}
               onEmoteComplete={clearEmote}
             />
-            {/* Stage platform */}
+            {/* Stage platform glow */}
             <LinearGradient
-              colors={['rgba(100,180,255,0.15)', 'rgba(100,180,255,0.05)', 'transparent']}
+              colors={['rgba(100,180,255,0.25)', 'rgba(80,140,255,0.1)', 'transparent']}
               style={styles.stagePlatform}
             />
+            {/* Stage outer ring */}
+            <View style={styles.stageRing} />
           </View>
 
           {/* Pose button (right) */}
           <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.sideBtn}>
-            <LinearGradient colors={['rgba(255,140,0,0.2)', 'rgba(200,100,0,0.1)']} style={styles.sideBtnGradient}>
+            <LinearGradient colors={['rgba(255,160,0,0.35)', 'rgba(255,100,0,0.2)']} style={styles.sideBtnGradient}>
               <Text style={styles.sideBtnIcon}>🕺</Text>
             </LinearGradient>
             <Text style={styles.sideBtnLabel}>Pose</Text>
@@ -208,26 +210,27 @@ const styles = StyleSheet.create({
   logoMain: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 44,
+    fontSize: 52,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 8,
-    letterSpacing: 2,
+    textShadowColor: 'rgba(80,120,255,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    letterSpacing: 3,
   },
   logo4: {
     color: '#ff8c00',
-    textShadowColor: 'rgba(255,140,0,0.5)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 10,
+    fontSize: 56,
+    textShadowColor: 'rgba(255,140,0,0.7)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 25,
   },
   logoTagline: {
     fontFamily: fonts.body,
-    fontWeight: weight.medium,
+    fontWeight: weight.semibold,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 2,
-    marginTop: -2,
+    color: 'rgba(200,220,255,0.5)',
+    letterSpacing: 3,
+    marginTop: 0,
   },
   // Character lobby
   lobbyArea: {
@@ -242,32 +245,44 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sideBtnGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    shadowColor: 'rgba(255,200,0,0.4)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sideBtnIcon: {
-    fontSize: 26,
+    fontSize: 30,
   },
   sideBtnLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
   },
   characterStage: {
     flex: 1,
     alignItems: 'center',
   },
   stagePlatform: {
-    width: 160,
-    height: 12,
-    borderRadius: 80,
+    width: 180,
+    height: 14,
+    borderRadius: 90,
     marginTop: -10,
+  },
+  stageRing: {
+    width: 220,
+    height: 6,
+    borderRadius: 110,
+    backgroundColor: 'rgba(100,180,255,0.08)',
+    marginTop: 2,
   },
   // Customize button
   customizeBtn: {

@@ -10,7 +10,7 @@ interface ScreenBackgroundProps {
 
 const VARIANTS = {
   default: {
-    colors: ['#080c22', '#0e1840', '#152060', '#1a2766'] as const,
+    colors: ['#050520', '#0a1040', '#121a55', '#1a2266'] as const,
   },
   game: {
     colors: ['#060a1e', '#0c1535', '#122050', '#182560'] as const,
@@ -64,26 +64,33 @@ const styles = StyleSheet.create({
   },
   vignette: {
     ...StyleSheet.absoluteFillObject,
-    // Radial vignette — darker edges
     ...(Platform.OS === 'web' ? {
-      backgroundImage: 'radial-gradient(ellipse at 50% 30%, transparent 40%, rgba(0,0,0,0.4) 100%)',
+      backgroundImage: [
+        'radial-gradient(ellipse at 50% 20%, rgba(60,40,120,0.3) 0%, transparent 60%)',
+        'radial-gradient(ellipse at 30% 70%, rgba(20,40,100,0.2) 0%, transparent 50%)',
+        'radial-gradient(ellipse at 70% 50%, rgba(40,20,80,0.15) 0%, transparent 50%)',
+        'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%)',
+      ].join(', '),
     } as any : {}),
   },
   starField: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.15,
+    opacity: 0.25,
     ...(Platform.OS === 'web' ? {
-      backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 0.5px, transparent 0.5px)',
-      backgroundSize: '40px 40px',
+      backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.9) 0.5px, transparent 0.5px)',
+      backgroundSize: '50px 50px',
     } as any : {}),
   },
   starFieldSmall: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.08,
+    opacity: 0.15,
     ...(Platform.OS === 'web' ? {
-      backgroundImage: 'radial-gradient(circle, rgba(200,220,255,0.6) 0.3px, transparent 0.3px)',
-      backgroundSize: '20px 25px',
-      backgroundPosition: '10px 12px',
+      backgroundImage: [
+        'radial-gradient(circle, rgba(200,220,255,0.7) 0.3px, transparent 0.3px)',
+        'radial-gradient(circle, rgba(255,200,255,0.4) 0.2px, transparent 0.2px)',
+      ].join(', '),
+      backgroundSize: '23px 27px, 37px 41px',
+      backgroundPosition: '11px 13px, 5px 7px',
     } as any : {}),
   },
   content: {
