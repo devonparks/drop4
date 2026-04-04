@@ -7,6 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useRankedStore } from '../stores/rankedStore';
+import { RankBadge } from '../components/ui/RankBadge';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { WAGER_TABLES, WagerTable } from '../data/wagerTables';
@@ -66,7 +67,6 @@ export function StageScreen({ navigation }: Props) {
   const { coins, gems, level, spendCoins } = useShopStore();
   const newGame = useGameStore(s => s.newGame);
   const ranked = useRankedStore();
-  const tierInfo = ranked.getTier();
 
   const handleSelectTable = (table: WagerTable) => {
     if (table.buyIn > 0) {
@@ -89,11 +89,7 @@ export function StageScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Wager coins. Win big. Spectators watching.</Text>
 
           {/* Ranked badge */}
-          <View style={styles.rankDisplay}>
-            <Text style={styles.rankIcon}>{tierInfo.icon}</Text>
-            <Text style={[styles.rankName, { color: tierInfo.color }]}>{tierInfo.name}</Text>
-            <Text style={styles.rankElo}>{ranked.elo} ELO</Text>
-          </View>
+          <RankBadge size="medium" showElo style={{ marginTop: 8 }} />
 
           {/* Balance */}
           <View style={styles.balanceCard}>

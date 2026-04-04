@@ -10,6 +10,8 @@ import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
+import { RankBadge } from '../components/ui/RankBadge';
+import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -45,7 +47,6 @@ export function ProfileScreen() {
   const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
   const achievements = useAchievementStore(s => s.achievements);
   const ranked = useRankedStore();
-  const tierInfo = ranked.getTier();
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
@@ -79,11 +80,7 @@ export function ProfileScreen() {
 
           <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
           <Text style={styles.playerTitle}>Rookie</Text>
-          <View style={styles.rankedBadge}>
-            <Text style={styles.rankedIcon}>{tierInfo.icon}</Text>
-            <Text style={[styles.rankedTier, { color: tierInfo.color }]}>{tierInfo.name}</Text>
-            <Text style={styles.rankedElo}>{ranked.elo} ELO</Text>
-          </View>
+          <RankBadge size="medium" showElo style={{ marginTop: 4 }} />
 
           {/* Level bar */}
           <View style={styles.levelSection}>
@@ -139,6 +136,12 @@ export function ProfileScreen() {
           ))}
         </View>
 
+        {/* Ranked Progress */}
+        <Text style={styles.sectionTitle}>RANKED PROGRESS</Text>
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+          <RankProgressCard />
+        </View>
+
         {/* Streaks */}
         <Text style={styles.sectionTitle}>STREAKS</Text>
         <View style={styles.statsGrid}>
@@ -169,11 +172,18 @@ export function ProfileScreen() {
           <GlossyButton label="Replays" variant="navy" icon="🎬" small onPress={() => navigateTo('ReplayViewer')} style={{ flex: 1 }} />
           <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
         </View>
+        <View style={[styles.quickActions, { marginTop: 0 }]}>
+          <GlossyButton label="Match History" variant="orange" icon="📊" small onPress={() => navigateTo('MatchHistory')} style={{ flex: 1 }} />
+          <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
+        </View>
 
         {/* Match History */}
         {recentMatches.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>RECENT MATCHES</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RECENT MATCHES</Text>
+              <GlossyButton label="View All" variant="navy" small onPress={() => navigateTo('MatchHistory')} />
+            </View>
             <View style={styles.matchList}>
               {recentMatches.map(match => (
                 <View key={match.id} style={styles.matchRow}>
@@ -418,6 +428,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingRight: 16,
+    marginBottom: 10,
   },
   matchList: {
     paddingHorizontal: 16,

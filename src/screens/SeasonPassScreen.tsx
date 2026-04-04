@@ -1,12 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
+import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+
+/** Parse coin amounts from reward names like "100 Coins" */
+function parseCoinAmount(name: string): number {
+  const match = name.match(/^(\d+)\s*Coins?$/i);
+  return match ? parseInt(match[1], 10) : 0;
+}
 
 function RewardTierCard({ reward, currentTier, hasPremium }: {
   reward: SeasonReward;
@@ -15,6 +22,43 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
 }) {
   const isUnlocked = currentTier >= reward.tier;
   const isCurrent = currentTier === reward.tier - 1;
+
+  const isFreeClaimed = useSeasonStore(s => s.isFreeClaimed(reward.tier));
+  const isPremiumClaimed = useSeasonStore(s => s.isPremiumClaimed(reward.tier));
+  const claimFreeReward = useSeasonStore(s => s.claimFreeReward);
+  const claimPremiumReward = useSeasonStore(s => s.claimPremiumReward);
+  const addCoins = useShopStore(s => s.addCoins);
+
+  const canClaimFree = isUnlocked && reward.freeReward && !isFreeClaimed;
+  const canClaimPremium = isUnlocked && hasPremium && reward.premiumReward && !isPremiumClaimed;
+
+  const handleClaimFree = useCallback(() => {
+    if (!reward.freeReward) return;
+    const success = claimFreeReward(reward.tier);
+    if (success) {
+      haptics.win();
+      // Grant the reward
+      if (reward.freeReward.type === 'coins') {
+        const amount = parseCoinAmount(reward.freeReward.name);
+        if (amount > 0) addCoins(amount);
+      }
+      // For skins/boards, the shop store owns those — the caller would need
+      // to add them to owned. For now, coin rewards are auto-granted.
+    }
+  }, [reward, claimFreeReward, addCoins]);
+
+  const handleClaimPremium = useCallback(() => {
+    if (!reward.premiumReward) return;
+    const success = claimPremiumReward(reward.tier);
+    if (success) {
+      haptics.win();
+      // Grant premium rewards similarly
+      if (reward.premiumReward.type === 'coins') {
+        const amount = parseCoinAmount(reward.premiumReward.name);
+        if (amount > 0) addCoins(amount);
+      }
+    }
+  }, [reward, claimPremiumReward, addCoins]);
 
   return (
     <View style={[styles.tierCard, isCurrent && styles.tierCardCurrent]}>
@@ -32,9 +76,23 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
             <Text style={styles.trackLabel}>FREE</Text>
           </>
         ) : (
-          <Text style={styles.emptySlot}>—</Text>
+          <Text style={styles.emptySlot}>{'\u2014'}</Text>
         )}
-        {isUnlocked && <View style={styles.claimedBadge}><Text style={styles.claimedText}>✓</Text></View>}
+        {isFreeClaimed && (
+          <View style={styles.claimedBadge}>
+            <Text style={styles.claimedText}>{'\u2713'}</Text>
+          </View>
+        )}
+        {canClaimFree && (
+          <Pressable onPress={handleClaimFree} style={styles.claimBtn}>
+            <LinearGradient
+              colors={[colors.greenLight, colors.green, colors.greenDark]}
+              style={styles.claimGradient}
+            >
+              <Text style={styles.claimText}>CLAIM</Text>
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
 
       {/* Premium track */}
@@ -46,10 +104,24 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
             <Text style={[styles.trackLabel, { color: colors.coinGold }]}>PREMIUM</Text>
           </>
         ) : (
-          <Text style={styles.emptySlot}>—</Text>
+          <Text style={styles.emptySlot}>{'\u2014'}</Text>
         )}
-        {!hasPremium && <View style={styles.lockOverlay}><Text style={styles.lockIcon}>🔒</Text></View>}
-        {isUnlocked && hasPremium && <View style={styles.claimedBadge}><Text style={styles.claimedText}>✓</Text></View>}
+        {!hasPremium && <View style={styles.lockOverlay}><Text style={styles.lockIcon}>{'\uD83D\uDD12'}</Text></View>}
+        {isPremiumClaimed && (
+          <View style={styles.claimedBadge}>
+            <Text style={styles.claimedText}>{'\u2713'}</Text>
+          </View>
+        )}
+        {canClaimPremium && (
+          <Pressable onPress={handleClaimPremium} style={styles.claimBtn}>
+            <LinearGradient
+              colors={[colors.goldLight, colors.gold, colors.goldDark]}
+              style={styles.claimGradient}
+            >
+              <Text style={[styles.claimText, { color: '#1a1a00' }]}>CLAIM</Text>
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -92,7 +164,7 @@ export function SeasonPassScreen() {
               style={styles.premiumGradient}
             >
               <View style={styles.premiumContent}>
-                <Text style={styles.premiumTitle}>👑 Upgrade to Premium</Text>
+                <Text style={styles.premiumTitle}>{'\uD83D\uDC51'} Upgrade to Premium</Text>
                 <Text style={styles.premiumDesc}>Unlock exclusive rewards on every tier</Text>
               </View>
               <GlossyButton label="UPGRADE" variant="gold" small onPress={() => haptics.tap()} />
@@ -229,7 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 6,
-    minHeight: 64,
+    minHeight: 72,
   },
   tierCardCurrent: {
     // Highlight current tier
@@ -321,5 +393,24 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 10,
     color: '#ffffff',
+  },
+  // Claim button
+  claimBtn: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    right: 4,
+  },
+  claimGradient: {
+    borderRadius: 8,
+    paddingVertical: 4,
+    alignItems: 'center',
+  },
+  claimText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: '#ffffff',
+    letterSpacing: 1,
   },
 });

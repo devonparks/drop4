@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import Animated, { FadeIn, SlideInDown, ZoomIn } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -97,6 +99,18 @@ export function CareerScreen({ navigation }: Props) {
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
   const totalStars = getTotalStars();
   const completedCount = getCompletedCount();
+  const [chapterCelebration, setChapterCelebration] = useState<number | null>(null);
+
+  // Detect which chapters are fully 3-starred (all levels have at least 1 star)
+  const chapterCompletion = useMemo(() => {
+    const result: Record<number, { complete: boolean; totalStars: number; maxStars: number }> = {};
+    for (const ch of CHAPTERS) {
+      const chStars = ch.levels.reduce((sum, l) => sum + getStars(l.id), 0);
+      const allDone = ch.levels.every(l => getStars(l.id) > 0);
+      result[ch.id] = { complete: allDone, totalStars: chStars, maxStars: ch.levels.length * 3 };
+    }
+    return result;
+  }, [getStars, completedCount]);
 
   return (
     <ScreenBackground>
@@ -128,12 +142,26 @@ export function CareerScreen({ navigation }: Props) {
             return (
               <Pressable
                 key={ch.id}
-                onPress={() => { if (isUnlocked) { haptics.tap(); setActiveChapter(ch.id); } }}
+                onPress={() => {
+                  if (isUnlocked) {
+                    haptics.tap();
+                    setActiveChapter(ch.id);
+                    // Show celebration if chapter is complete and user taps it
+                    if (chapterCompletion[ch.id]?.complete) {
+                      setChapterCelebration(ch.id);
+                    }
+                  }
+                }}
                 style={[styles.chapterTab, isActive && styles.chapterTabActive, !isUnlocked && { opacity: 0.4 }]}
               >
-                <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
-                  Ch.{ch.id}
-                </Text>
+                <View style={styles.chapterNameRow}>
+                  <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
+                    Ch.{ch.id}
+                  </Text>
+                  {chapterCompletion[ch.id]?.complete && (
+                    <Text style={styles.chapterCheck}>✅</Text>
+                  )}
+                </View>
                 <Text style={[styles.chapterSubtitle, isActive && { color: colors.orange }]}>
                   {ch.name}
                 </Text>
@@ -179,6 +207,50 @@ export function CareerScreen({ navigation }: Props) {
             );
           })}
         </ScrollView>
+
+        {/* Chapter Complete Celebration Overlay */}
+        {chapterCelebration !== null && (() => {
+          const celebChapter = CHAPTERS.find(c => c.id === chapterCelebration);
+          const celebInfo = chapterCompletion[chapterCelebration];
+          if (!celebChapter || !celebInfo) return null;
+          return (
+            <Animated.View entering={FadeIn.duration(300)} style={styles.celebOverlay}>
+              <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.celebCard}>
+                <LinearGradient
+                  colors={['#9b59b6', '#8e44ad']}
+                  style={styles.celebHeader}
+                >
+                  <Animated.Text entering={ZoomIn.delay(300).springify()} style={styles.celebEmoji}>
+                    🏆
+                  </Animated.Text>
+                  <Text style={styles.celebTitle}>CHAPTER COMPLETE!</Text>
+                </LinearGradient>
+                <View style={styles.celebBody}>
+                  <Text style={styles.celebChapterName}>
+                    Chapter {celebChapter.id}: {celebChapter.name}
+                  </Text>
+                  <View style={styles.celebStarsRow}>
+                    <Text style={styles.celebStarsIcon}>⭐</Text>
+                    <Text style={styles.celebStarsText}>
+                      {celebInfo.totalStars} / {celebInfo.maxStars} Stars
+                    </Text>
+                  </View>
+                  {celebInfo.totalStars === celebInfo.maxStars && (
+                    <View style={styles.celebPerfect}>
+                      <Text style={styles.celebPerfectText}>✨ PERFECT — All 3-Star Clears! ✨</Text>
+                    </View>
+                  )}
+                  <Pressable
+                    onPress={() => { haptics.tap(); setChapterCelebration(null); }}
+                    style={styles.celebButton}
+                  >
+                    <Text style={styles.celebButtonText}>CONTINUE</Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            </Animated.View>
+          );
+        })()}
       </View>
     </ScreenBackground>
   );
@@ -234,6 +306,14 @@ const styles = StyleSheet.create({
   chapterTabActive: {
     backgroundColor: 'rgba(255,140,0,0.1)',
     borderColor: 'rgba(255,140,0,0.3)',
+  },
+  chapterNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  chapterCheck: {
+    fontSize: 10,
   },
   chapterName: {
     fontFamily: fonts.body,
@@ -356,5 +436,94 @@ const styles = StyleSheet.create({
     fontWeight: weight.semibold,
     fontSize: 10,
     color: colors.coinGold,
+  },
+  // Chapter Complete Celebration
+  celebOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  celebCard: {
+    width: '85%',
+    maxWidth: 320,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  celebHeader: {
+    paddingVertical: 28,
+    alignItems: 'center',
+  },
+  celebEmoji: {
+    fontSize: 52,
+    marginBottom: 8,
+  },
+  celebTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 22,
+    color: '#ffffff',
+    letterSpacing: 2,
+  },
+  celebBody: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  celebChapterName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  celebStarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  celebStarsIcon: {
+    fontSize: 20,
+  },
+  celebStarsText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: colors.coinGold,
+  },
+  celebPerfect: {
+    backgroundColor: 'rgba(241,196,15,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.25)',
+  },
+  celebPerfectText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.coinGold,
+    textAlign: 'center',
+  },
+  celebButton: {
+    backgroundColor: colors.purple,
+    borderRadius: 14,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  celebButtonText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: '#ffffff',
+    letterSpacing: 1,
   },
 });

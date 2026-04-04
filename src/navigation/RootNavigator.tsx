@@ -16,6 +16,7 @@ import { CharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
 import { BoardEditorScreen } from '../screens/BoardEditorScreen';
 import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
+import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -34,6 +35,7 @@ export type RootStackParamList = {
   BoardEditor: undefined;
   ReplayViewer: undefined;
   LootBox: undefined;
+  MatchHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -63,6 +65,7 @@ export function RootNavigator() {
       <Stack.Screen name="BoardEditor" component={BoardEditorScreen} />
       <Stack.Screen name="ReplayViewer" component={ReplayViewerScreen} />
       <Stack.Screen name="LootBox" component={LootBoxScreen} />
+      <Stack.Screen name="MatchHistory" component={MatchHistoryScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}

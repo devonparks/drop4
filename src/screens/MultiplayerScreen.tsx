@@ -7,6 +7,8 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore } from '../stores/rankedStore';
+import { RankBadge } from '../components/ui/RankBadge';
+import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -18,7 +20,6 @@ type Props = {
 export function MultiplayerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
   const ranked = useRankedStore();
-  const tierInfo = ranked.getTier();
 
   return (
     <ScreenBackground>
@@ -28,25 +29,8 @@ export function MultiplayerScreen({ navigation }: Props) {
         <View style={styles.mainContent}>
           <Text style={styles.title}>MULTIPLAYER</Text>
 
-          {/* Ranked badge */}
-          <View style={styles.rankedCard}>
-            <LinearGradient
-              colors={[`${tierInfo.color}20`, `${tierInfo.color}08`]}
-              style={styles.rankedGradient}
-            >
-              <Text style={styles.rankedIcon}>{tierInfo.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.rankedTier, { color: tierInfo.color }]}>{tierInfo.name}</Text>
-                <Text style={styles.rankedElo}>{ranked.elo} ELO • Season {ranked.currentSeason}</Text>
-              </View>
-              <View style={styles.rankedStats}>
-                <Text style={styles.rankedWL}>{ranked.rankedWins}W {ranked.rankedLosses}L</Text>
-                <View style={styles.rankedBar}>
-                  <View style={[styles.rankedFill, { width: `${ranked.getProgress()}%`, backgroundColor: tierInfo.color }]} />
-                </View>
-              </View>
-            </LinearGradient>
-          </View>
+          {/* Full rank progress card */}
+          <RankProgressCard />
 
           {/* Three-tier structure */}
           <Text style={styles.sectionLabel}>COMPETITIVE TIERS</Text>
@@ -68,7 +52,9 @@ export function MultiplayerScreen({ navigation }: Props) {
               variant="purple"
               icon="🏆"
               onPress={() => {
-                // For now, start a ranked game (online will come later)
+                // Set ranked mode flags for GameScreen chess clock
+                (global as any).__rankedMode = true;
+                (global as any).__rankedClockSeconds = 180; // 3 min per player
                 navigation.navigate('Play');
               }}
             />

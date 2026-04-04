@@ -65,6 +65,55 @@ export function GameScreen({ navigation }: Props) {
   const [showMatchmaking, setShowMatchmaking] = useState(() => !!(global as any).__wagerCourt);
   const wagerCourt = (global as any).__wagerCourt;
 
+  // Chess clock for ranked mode
+  const isRankedMode = !!(global as any).__rankedMode;
+  const p1TimeBank = useRankedStore(s => s.player1TimeBank);
+  const p2TimeBank = useRankedStore(s => s.player2TimeBank);
+  const activeClockPlayer = useRankedStore(s => s.activeClockPlayer);
+  const startChessClock = useRankedStore(s => s.startChessClock);
+  const switchClock = useRankedStore(s => s.switchClock);
+  const tickClock = useRankedStore(s => s.tickClock);
+  const chessClockRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Initialize chess clock for ranked games
+  useEffect(() => {
+    if (isRankedMode && status === 'playing' && moveCount === 0) {
+      const clockTime = (global as any).__rankedClockSeconds || 180;
+      startChessClock(clockTime);
+    }
+  }, [isRankedMode, status]);
+
+  // Switch clock on player change
+  useEffect(() => {
+    if (isRankedMode && status === 'playing' && activeClockPlayer !== null) {
+      switchClock(currentPlayer as 1 | 2);
+    }
+  }, [currentPlayer, isRankedMode, status]);
+
+  // Tick chess clock every second
+  useEffect(() => {
+    if (chessClockRef.current) clearInterval(chessClockRef.current);
+    if (!isRankedMode || status !== 'playing' || activeClockPlayer === null) return;
+
+    chessClockRef.current = setInterval(() => {
+      const result = tickClock();
+      if (result.expired && result.player) {
+        // Time expired — player loses
+        if (chessClockRef.current) clearInterval(chessClockRef.current);
+        haptics.error();
+        playSound('lose');
+        // Force game over — the player who ran out of time loses
+        const loser = result.player;
+        const winnerPlayer = loser === 1 ? 2 : 1;
+        useGameStore.setState({ status: 'won', winner: winnerPlayer });
+      }
+    }, 1000);
+
+    return () => {
+      if (chessClockRef.current) clearInterval(chessClockRef.current);
+    };
+  }, [isRankedMode, status, activeClockPlayer]);
+
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
     if (status === 'playing' && moveCount === 0) {
@@ -289,9 +338,38 @@ export function GameScreen({ navigation }: Props) {
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
+  // Format time for chess clock display
+  const formatClockTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
   return (
     <ScreenBackground>
       <View style={styles.container}>
+
+        {/* Chess Clock (ranked mode only) */}
+        {isRankedMode && status === 'playing' && (
+          <View style={styles.chessClockRow}>
+            <View style={[styles.clockBox, activeClockPlayer === 1 && styles.clockBoxActive, p1TimeBank <= 30 && styles.clockBoxDanger]}>
+              <Text style={[styles.clockTime, activeClockPlayer === 1 && styles.clockTimeActive, p1TimeBank <= 10 && { color: colors.red }]}>
+                {formatClockTime(p1TimeBank)}
+              </Text>
+              <Text style={styles.clockLabel}>YOU</Text>
+            </View>
+            <View style={styles.clockCenter}>
+              <Text style={styles.clockVs}>⏱</Text>
+              <Text style={styles.clockModeLabel}>RANKED</Text>
+            </View>
+            <View style={[styles.clockBox, activeClockPlayer === 2 && styles.clockBoxActive, p2TimeBank <= 30 && styles.clockBoxDanger]}>
+              <Text style={[styles.clockTime, activeClockPlayer === 2 && styles.clockTimeActive, p2TimeBank <= 10 && { color: colors.red }]}>
+                {formatClockTime(p2TimeBank)}
+              </Text>
+              <Text style={styles.clockLabel}>OPP</Text>
+            </View>
+          </View>
+        )}
 
         {/* HUD Row */}
         <View style={styles.hudRow}>
@@ -315,8 +393,8 @@ export function GameScreen({ navigation }: Props) {
               {turnText}
             </Text>
             <Text style={styles.vsText}>vs {diffLabel} Bot</Text>
-            {/* Timer bar */}
-            {(customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
+            {/* Timer bar (casual mode turn timer) */}
+            {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
               <View style={styles.timerWrap}>
                 <View style={styles.timerBar}>
                   <View style={[styles.timerFill, {
@@ -537,6 +615,67 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+  },
+  // Chess clock styles
+  chessClockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 16,
+    marginBottom: 6,
+    gap: 8,
+  },
+  clockBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  clockBoxActive: {
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderColor: 'rgba(255,140,0,0.4)',
+  },
+  clockBoxDanger: {
+    backgroundColor: 'rgba(231,76,60,0.12)',
+    borderColor: 'rgba(231,76,60,0.4)',
+  },
+  clockTime: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 22,
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
+  clockTimeActive: {
+    color: '#ffffff',
+  },
+  clockLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  clockCenter: {
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  clockVs: {
+    fontSize: 18,
+  },
+  clockModeLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: colors.orange,
+    letterSpacing: 1.5,
+    marginTop: 2,
   },
   hudRow: {
     flexDirection: 'row',

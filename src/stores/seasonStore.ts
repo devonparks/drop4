@@ -16,10 +16,16 @@ interface SeasonState {
   xpPerTier: number;
   hasPremium: boolean;
   rewards: SeasonReward[];
+  claimedFreeTiers: number[];
+  claimedPremiumTiers: number[];
 
   // Actions
   addSeasonXp: (amount: number) => void;
   claimReward: (tier: number) => void;
+  claimFreeReward: (tier: number) => boolean;
+  claimPremiumReward: (tier: number) => boolean;
+  isFreeClaimed: (tier: number) => boolean;
+  isPremiumClaimed: (tier: number) => boolean;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -43,6 +49,8 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
   xpPerTier: 500,
   hasPremium: false,
   rewards: SEASON_REWARDS,
+  claimedFreeTiers: [],
+  claimedPremiumTiers: [],
 
   addSeasonXp: (amount) => {
     const state = get();
@@ -58,30 +66,51 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
   },
 
   claimReward: (tier) => {
-    const reward = get().rewards.find(r => r.tier === tier);
-    if (!reward) return;
-
-    // Grant the free reward
-    if (reward.freeReward && get().currentTier >= tier) {
-      if (reward.freeReward.type === 'coins') {
-        // Coins handled by the caller (ShopStore.addCoins)
-      }
-      // Skins/boards added via shopStore by the caller
-    }
-
-    // Grant premium reward if player has premium
-    if (reward.premiumReward && get().hasPremium && get().currentTier >= tier) {
-      // Skins/boards/emotes added via shopStore by the caller
-    }
+    // Legacy — use claimFreeReward / claimPremiumReward instead
+    get().claimFreeReward(tier);
   },
 
+  claimFreeReward: (tier) => {
+    const state = get();
+    if (state.currentTier < tier) return false;
+    if (state.claimedFreeTiers.includes(tier)) return false;
+    const reward = state.rewards.find(r => r.tier === tier);
+    if (!reward?.freeReward) return false;
+
+    set({ claimedFreeTiers: [...state.claimedFreeTiers, tier] });
+    return true;
+  },
+
+  claimPremiumReward: (tier) => {
+    const state = get();
+    if (state.currentTier < tier) return false;
+    if (!state.hasPremium) return false;
+    if (state.claimedPremiumTiers.includes(tier)) return false;
+    const reward = state.rewards.find(r => r.tier === tier);
+    if (!reward?.premiumReward) return false;
+
+    set({ claimedPremiumTiers: [...state.claimedPremiumTiers, tier] });
+    return true;
+  },
+
+  isFreeClaimed: (tier) => get().claimedFreeTiers.includes(tier),
+  isPremiumClaimed: (tier) => get().claimedPremiumTiers.includes(tier),
+
   loadFromStorage: async () => {
-    const saved = await loadState<{ currentTier: number; xp: number; hasPremium: boolean }>('season');
+    const saved = await loadState<{
+      currentTier: number;
+      xp: number;
+      hasPremium: boolean;
+      claimedFreeTiers?: number[];
+      claimedPremiumTiers?: number[];
+    }>('season');
     if (saved) {
       set({
         currentTier: saved.currentTier ?? 0,
         xp: saved.xp ?? 0,
         hasPremium: saved.hasPremium ?? false,
+        claimedFreeTiers: saved.claimedFreeTiers ?? [],
+        claimedPremiumTiers: saved.claimedPremiumTiers ?? [],
       });
     }
   },
@@ -93,5 +122,7 @@ useSeasonStore.subscribe((state) => {
     currentTier: state.currentTier,
     xp: state.xp,
     hasPremium: state.hasPremium,
+    claimedFreeTiers: state.claimedFreeTiers,
+    claimedPremiumTiers: state.claimedPremiumTiers,
   });
 });
