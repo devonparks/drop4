@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useLootBoxStore, LOOT_BOXES, LootBoxItem } from '../stores/lootBoxStore';
 import { useShopStore } from '../stores/shopStore';
@@ -19,8 +21,9 @@ const RARITY_COLORS: Record<string, string> = {
 };
 
 export function LootBoxScreen() {
+  const navigation = useNavigation();
   const { openBox, getBoxCount } = useLootBoxStore();
-  const { addCoins, addGems, purchaseItem } = useShopStore();
+  const { coins, gems, level, addCoins, addGems, purchaseItem } = useShopStore();
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
 
@@ -79,6 +82,7 @@ export function LootBoxScreen() {
 
   return (
     <ScreenBackground>
+      <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <View style={styles.container}>
         <Text style={styles.title}>LOOT BOXES</Text>
         <Text style={styles.subtitle}>Open boxes to win cosmetics and coins</Text>

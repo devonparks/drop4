@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
 import { useShopStore } from '../stores/shopStore';
@@ -128,11 +130,14 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
 }
 
 export function SeasonPassScreen() {
+  const navigation = useNavigation();
   const { seasonName, currentTier, maxTier, xp, xpPerTier, hasPremium, rewards } = useSeasonStore();
+  const { coins, gems, level } = useShopStore();
   const progressPct = (xp / xpPerTier) * 100;
 
   return (
     <ScreenBackground>
+      <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>

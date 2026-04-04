@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Share } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Share, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore } from '../stores/rankedStore';
+import { useGameStore } from '../stores/gameStore';
+import { useCareerStore } from '../stores/careerStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted } from '../services/audio';
@@ -167,7 +169,36 @@ export function SettingsScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.section}>
           <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
-          <SettingLink label="Reset Progress" icon="⚠️" onPress={() => haptics.error()} />
+          <SettingLink label="Reset Progress" icon="⚠️" onPress={() => {
+            haptics.error();
+            Alert.alert(
+              'Reset All Progress',
+              'This will erase all your coins, gems, levels, career progress, ranked stats, and game data. This cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Reset Everything',
+                  style: 'destructive',
+                  onPress: () => {
+                    // Reset shop (coins, gems, level, xp, equipped, owned)
+                    useShopStore.setState({
+                      coins: 500, gems: 0, level: 1, xp: 0,
+                      playerName: 'Player',
+                      equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic' },
+                      owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'] },
+                    });
+                    // Reset ranked stats
+                    useRankedStore.getState().resetSeason();
+                    // Reset game scores
+                    useGameStore.getState().resetScores();
+                    // Reset career progress
+                    useCareerStore.setState({ progress: {}, currentChapter: 1 });
+                    haptics.tap();
+                  },
+                },
+              ],
+            );
+          }} />
         </View>
 
         {/* Version */}

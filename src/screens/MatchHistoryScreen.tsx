@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { TopBar } from '../components/ui/TopBar';
 import { useMatchHistoryStore, MatchRecord } from '../stores/matchHistoryStore';
+import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -103,6 +106,8 @@ function MatchRow({ match }: { match: MatchRecord }) {
 }
 
 export function MatchHistoryScreen() {
+  const navigation = useNavigation();
+  const { coins, gems, level } = useShopStore();
   const allMatches = useMatchHistoryStore(s => s.matches);
   const stats = useMatchHistoryStore(s => s.getStats());
   const [filter, setFilter] = useState<FilterType>('all');
@@ -149,6 +154,7 @@ export function MatchHistoryScreen() {
 
   return (
     <ScreenBackground>
+      <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <FlatList
         data={pagedMatches}
         keyExtractor={(item) => item.id}

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { TopBar } from '../components/ui/TopBar';
 import { useReplayStore, Replay, ReplayMove } from '../stores/replayStore';
+import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -85,6 +88,8 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
 }
 
 export function ReplayViewerScreen() {
+  const navigation = useNavigation();
+  const { coins, gems, level } = useShopStore();
   const { replays, toggleStar, deleteReplay } = useReplayStore();
   const [watching, setWatching] = useState<Replay | null>(null);
   const [board, setBoard] = useState<Cell[][]>([]);
@@ -208,6 +213,7 @@ export function ReplayViewerScreen() {
   // Replay list
   return (
     <ScreenBackground>
+      <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <View style={rStyles.container}>
         <Text style={rStyles.title}>REPLAYS</Text>
         <Text style={rStyles.subtitle}>{replays.length} saved</Text>

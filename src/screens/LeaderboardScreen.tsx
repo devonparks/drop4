@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
@@ -18,8 +18,18 @@ interface LeaderboardEntry {
   isPlayer: boolean;
 }
 
+// Seeded random for stable mock data across renders
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
 // Mock leaderboard data (will be replaced with Firebase data)
-function generateMockLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+function generateGlobalLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+  const rand = seededRandom(42);
   const names = [
     'xXDropKingXx', 'ConnectQueen', 'FourInARow99', 'BoardMaster',
     'StrategyPro', 'PieceDropper', 'WinStreak_', 'GoldCourt_MVP',
@@ -28,32 +38,80 @@ function generateMockLeaderboard(playerWins: number, playerLevel: number): Leade
     'CenterCtrl', 'BlockParty', 'DropItLikeItsHot', 'FourReal',
   ];
 
-  const entries: LeaderboardEntry[] = names.map((name, i) => ({
-    rank: i + 1,
+  const entries: LeaderboardEntry[] = names.map((name) => ({
+    rank: 0,
     name,
-    wins: Math.floor(Math.random() * 200) + 50,
-    winRate: Math.floor(Math.random() * 40) + 40,
-    level: Math.floor(Math.random() * 30) + 5,
+    wins: Math.floor(rand() * 500) + 100,
+    winRate: Math.floor(rand() * 40) + 45,
+    level: Math.floor(rand() * 40) + 10,
     isPlayer: false,
   }));
 
-  // Sort by wins descending
-  entries.sort((a, b) => b.wins - a.wins);
+  entries.push({
+    rank: 0, name: 'You', wins: playerWins,
+    winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
+    level: playerLevel, isPlayer: true,
+  });
 
-  // Add player
-  const playerEntry: LeaderboardEntry = {
-    rank: 0,
-    name: 'You',
-    wins: playerWins,
-    winRate: playerWins > 0 ? Math.floor(Math.random() * 30) + 50 : 0,
-    level: playerLevel,
-    isPlayer: true,
-  };
-
-  entries.push(playerEntry);
   entries.sort((a, b) => b.wins - a.wins);
   entries.forEach((e, i) => e.rank = i + 1);
+  return entries;
+}
 
+function generateWeeklyLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+  const rand = seededRandom(77);
+  const names = [
+    'WinStreak_', 'SpeedDemon42', 'ConnectQueen', 'DiagonalDan',
+    'VerticalVic', 'GoldCourt_MVP', 'ChainReactor', 'TrapSetter',
+    'BoardMaster', 'xXDropKingXx', 'CenterCtrl', 'DarkMatter1',
+    'FourInARow99', 'PieceDropper', 'BlockParty',
+  ];
+
+  const entries: LeaderboardEntry[] = names.map((name) => ({
+    rank: 0,
+    name,
+    wins: Math.floor(rand() * 30) + 5,
+    winRate: Math.floor(rand() * 35) + 40,
+    level: Math.floor(rand() * 30) + 5,
+    isPlayer: false,
+  }));
+
+  const weeklyWins = Math.min(playerWins, Math.floor(rand() * 10) + 2);
+  entries.push({
+    rank: 0, name: 'You', wins: weeklyWins,
+    winRate: weeklyWins > 0 ? Math.floor(rand() * 30) + 45 : 0,
+    level: playerLevel, isPlayer: true,
+  });
+
+  entries.sort((a, b) => b.wins - a.wins);
+  entries.forEach((e, i) => e.rank = i + 1);
+  return entries;
+}
+
+function generateFriendsLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+  const rand = seededRandom(123);
+  const names = [
+    'Alex_Drops', 'Jamie4Real', 'SamConnect', 'Jordan_MVP',
+    'RileyWins', 'TaylorGG', 'CaseyDrop4', 'MorganW',
+  ];
+
+  const entries: LeaderboardEntry[] = names.map((name) => ({
+    rank: 0,
+    name,
+    wins: Math.floor(rand() * 80) + 10,
+    winRate: Math.floor(rand() * 35) + 35,
+    level: Math.floor(rand() * 20) + 3,
+    isPlayer: false,
+  }));
+
+  entries.push({
+    rank: 0, name: 'You', wins: playerWins,
+    winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
+    level: playerLevel, isPlayer: true,
+  });
+
+  entries.sort((a, b) => b.wins - a.wins);
+  entries.forEach((e, i) => e.rank = i + 1);
   return entries;
 }
 
@@ -68,7 +126,13 @@ export function LeaderboardScreen() {
   const { level } = useShopStore();
   const stats = useMatchHistoryStore(s => s.getStats());
 
-  const leaderboard = generateMockLeaderboard(stats.wins, level);
+  const globalData = useMemo(() => generateGlobalLeaderboard(stats.wins, level), [stats.wins, level]);
+  const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level), [stats.wins, level]);
+  const friendsData = useMemo(() => generateFriendsLeaderboard(stats.wins, level), [stats.wins, level]);
+
+  const leaderboard = activeTab === 'global' ? globalData
+    : activeTab === 'weekly' ? weeklyData
+    : friendsData;
 
   const tabs: { key: LeaderboardTab; label: string }[] = [
     { key: 'global', label: 'Global' },
