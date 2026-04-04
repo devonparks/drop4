@@ -18,6 +18,7 @@ import { useDailyRewardStore } from './src/stores/dailyRewardStore';
 import { useRankedStore } from './src/stores/rankedStore';
 import { useLootBoxStore } from './src/stores/lootBoxStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
+import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -69,6 +70,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <PhoneFrame>
     <GestureHandlerRootView style={styles.container} onLayout={onLayoutRootView}>
       <StatusBar style="light" />
@@ -96,6 +98,7 @@ export default function App() {
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>
+    </ErrorBoundary>
   );
 }
 
