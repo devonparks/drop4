@@ -26,6 +26,7 @@ interface ShopState {
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
   addXp: (amount: number) => void;
+  addGems: (amount: number) => void;
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
   setPlayerName: (name: string) => void;
