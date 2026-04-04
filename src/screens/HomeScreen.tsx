@@ -120,7 +120,7 @@ export function HomeScreen() {
           />
           <GlossyButton
             label="MULTIPLAYER"
-            subtitle="Cosmetics & Coins"
+            subtitle="Wager & Compete"
             variant="teal"
             iconRight="👥"
             onPress={() => navigateTo('Multiplayer')}
