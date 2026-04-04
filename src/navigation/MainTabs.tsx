@@ -6,6 +6,7 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -41,7 +42,7 @@ function AchievementsTab() {
 }
 
 function InboxTab() {
-  return <PlaceholderScreen title="Inbox" icon="📬" subtitle="Match invites, friend requests, and rewards will appear here." />;
+  return <NotificationsScreen />;
 }
 
 export function MainTabs() {
