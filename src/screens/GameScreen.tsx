@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeInDown,
   SlideInDown,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
