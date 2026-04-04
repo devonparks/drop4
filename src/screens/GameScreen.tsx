@@ -25,6 +25,7 @@ import { useCareerStore } from '../stores/careerStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
+import { useRankedStore } from '../stores/rankedStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -47,6 +48,7 @@ export function GameScreen({ navigation }: Props) {
   const checkAchievements = useAchievementStore(s => s.checkAndUnlock);
   const addLootBox = useLootBoxStore(s => s.addBox);
   const { startRecording, recordMove, saveReplay } = useReplayStore();
+  const recordRanked = useRankedStore(s => s.recordRankedResult);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -176,10 +178,11 @@ export function GameScreen({ navigation }: Props) {
         (global as any).__careerLevelId = null;
         (global as any).__careerLevelReward = null;
       }
-      // Wager court winnings
+      // Wager court winnings + ranked ELO update
       const wagerCourt = (global as any).__wagerCourt;
-      if (wagerCourt && wagerCourt.winnerGets > 0) {
-        addCoins(wagerCourt.winnerGets);
+      if (wagerCourt) {
+        if (wagerCourt.winnerGets > 0) addCoins(wagerCourt.winnerGets);
+        recordRanked(true); // Won wager match — ELO goes up
         (global as any).__wagerCourt = null;
       }
       // Award loot box on win (every 3rd win gets a box)
@@ -213,8 +216,9 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
       updateChallenge('play_5', 1);
       addSeasonXp(10);
-      // Clear wager — coins already deducted, lost
+      // Clear wager — coins already deducted, lost + ranked ELO down
       if ((global as any).__wagerCourt) {
+        recordRanked(false); // Lost wager match
         (global as any).__wagerCourt = null;
       }
       haptics.error();
