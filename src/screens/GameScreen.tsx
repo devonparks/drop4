@@ -29,6 +29,7 @@ import { useRankedStore } from '../stores/rankedStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
+import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -55,6 +56,7 @@ export function GameScreen({ navigation }: Props) {
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Start recording replay when game begins + apply preset board
@@ -207,6 +209,7 @@ export function GameScreen({ navigation }: Props) {
         hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
       });
+      setShowConfetti(true);
       haptics.win();
       playSound('win');
       playSound('coin');
@@ -256,6 +259,7 @@ export function GameScreen({ navigation }: Props) {
 
   const handleRematch = () => {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
+    setShowConfetti(false);
     newGame(difficulty, isVsAi);
   };
 
@@ -405,6 +409,9 @@ export function GameScreen({ navigation }: Props) {
           }}
           variant="game"
         />
+
+        {/* Confetti on victory */}
+        <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
 
         {/* ========== GAME OVER OVERLAY ========== */}
         {(status === 'won' || status === 'draw') && (
