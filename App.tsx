@@ -21,6 +21,7 @@ import { useSeasonStore } from './src/stores/seasonStore';
 import { useBoardEditorStore } from './src/stores/boardEditorStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
+import { WelcomeOverlay } from './src/components/ui/WelcomeOverlay';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -101,6 +102,7 @@ export default function App() {
       >
         <RootNavigator />
         <DailyRewardPopup />
+        <WelcomeOverlay />
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>
