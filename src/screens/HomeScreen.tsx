@@ -31,7 +31,15 @@ export function HomeScreen() {
           onSettingsPress={() => navigateTo('Settings')}
         />
 
-        {/* Season & Daily Challenges */}
+        {/* ═══ DROP4 LOGO ═══ */}
+        <View style={styles.logoArea}>
+          <Text style={styles.logoMain}>
+            DROP<Text style={styles.logo4}>4</Text>
+          </Text>
+          <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
+        </View>
+
+        {/* Season & Daily Challenges (under logo) */}
         <View style={styles.statusBar}>
           <Pressable onPress={() => navigateTo('SeasonPass')} style={styles.statusPill}>
             <Text style={styles.statusIcon}>🏆</Text>
@@ -51,14 +59,6 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* ═══ DROP4 LOGO ═══ */}
-        <View style={styles.logoArea}>
-          <Text style={styles.logoMain}>
-            DROP<Text style={styles.logo4}>4</Text>
-          </Text>
-          <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
-        </View>
-
         {/* ═══ CHARACTER LOBBY ═══ */}
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) */}
@@ -72,7 +72,7 @@ export function HomeScreen() {
           {/* Character on stage */}
           <View style={styles.characterStage}>
             <AnimatedCharacter
-              size={160}
+              size={220}
               emote={emote}
               onEmoteComplete={clearEmote}
             />
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   // Menu buttons
   menuButtons: {
     paddingHorizontal: 20,
-    gap: 8,
+    gap: 6,
     paddingBottom: 4,
   },
   // Version

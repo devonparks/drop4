@@ -51,7 +51,7 @@ export function GlossyButton({
   }, [onPress]);
 
   const colors = GRADIENT_MAP[variant];
-  const minH = small ? 48 : 58;
+  const minH = small ? 40 : 50;
 
   return (
     <TouchableOpacity
@@ -149,9 +149,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
   },
   textWrap: {
     alignItems: 'center',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.body,
     fontWeight: weight.extrabold,
-    fontSize: 22,
+    fontSize: 18,
     color: '#ffffff',
     textTransform: 'uppercase',
     letterSpacing: 2,
