@@ -13,16 +13,15 @@ import { fonts, weight } from '../theme/typography';
 
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
+function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: string; focused: boolean; badgeCount?: number }) {
   return (
     <View style={styles.tabItem}>
       <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.activeIndicator} />}
-      {/* Notification badge for Inbox */}
-      {label === 'Inbox' && (
+      {badgeCount !== undefined && badgeCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>2</Text>
+          <Text style={styles.badgeText}>{badgeCount}</Text>
         </View>
       )}
     </View>
