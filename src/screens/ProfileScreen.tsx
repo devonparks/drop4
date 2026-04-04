@@ -9,7 +9,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
-import { useRankedStore } from '../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -145,6 +145,23 @@ export function ProfileScreen() {
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
           <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
         </View>
+
+        {/* Season History */}
+        {ranked.seasonHistory.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>SEASON HISTORY</Text>
+            <View style={styles.statsGrid}>
+              {ranked.seasonHistory.map((s, i) => (
+                <StatCard
+                  key={i}
+                  label={`S${s.season}`}
+                  value={`${s.elo} ELO`}
+                  color={RANKED_TIERS.find(t => t.id === s.tier)?.color || '#fff'}
+                />
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Quick Actions */}
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
