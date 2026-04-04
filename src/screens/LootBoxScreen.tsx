@@ -20,7 +20,7 @@ const RARITY_COLORS: Record<string, string> = {
 
 export function LootBoxScreen() {
   const { openBox, getBoxCount } = useLootBoxStore();
-  const { addCoins, purchaseItem } = useShopStore();
+  const { addCoins, addGems, purchaseItem } = useShopStore();
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
 
@@ -40,9 +40,7 @@ export function LootBoxScreen() {
 
         // Grant the item
         if (item.type === 'coins' && item.value) addCoins(item.value);
-        if (item.type === 'gems' && item.value) {
-          // addGems doesn't exist yet but would add gems
-        }
+        if (item.type === 'gems' && item.value) addGems(item.value);
         if (item.type === 'board') purchaseItem('boards', item.id.replace('board_', ''), 0);
         if (item.type === 'pieces') purchaseItem('pieces', item.id.replace('pieces_', ''), 0);
       }
