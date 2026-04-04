@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -9,6 +9,7 @@ import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Difficulty } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -22,9 +23,15 @@ export function PlayScreen({ navigation }: Props) {
   const newGame = useGameStore(s => s.newGame);
   const { bestStreak } = useGameStore();
   const stats = useMatchHistoryStore(s => s.getStats());
+  const [mode, setMode] = useState<'casual' | 'ranked'>('casual');
 
   const startGame = (difficulty: Difficulty) => {
-    newGame(difficulty, true);
+    // Ranked mode uses chess clock timer (180 seconds per player)
+    if (mode === 'ranked') {
+      newGame(difficulty, true, { timerSeconds: 15 }); // 15s per move for now
+    } else {
+      newGame(difficulty, true);
+    }
     navigation.navigate('Game');
   };
 
@@ -37,8 +44,21 @@ export function PlayScreen({ navigation }: Props) {
         />
 
         <View style={styles.mainContent}>
-          {/* Title */}
-          <Text style={styles.title}>PLAY</Text>
+          {/* Mode toggle */}
+          <View style={styles.modeToggle}>
+            <Pressable
+              onPress={() => { haptics.tap(); setMode('casual'); }}
+              style={[styles.modeBtn, mode === 'casual' && styles.modeBtnActive]}
+            >
+              <Text style={[styles.modeBtnText, mode === 'casual' && styles.modeBtnTextActive]}>🎮 CASUAL</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => { haptics.tap(); setMode('ranked'); }}
+              style={[styles.modeBtn, mode === 'ranked' && styles.modeBtnActiveRanked]}
+            >
+              <Text style={[styles.modeBtnText, mode === 'ranked' && styles.modeBtnTextActive]}>🏆 RANKED</Text>
+            </Pressable>
+          </View>
 
           {/* Character with glow */}
           <View style={styles.characterArea}>
@@ -91,6 +111,27 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 20, gap: 6,
+  },
+  modeToggle: {
+    flexDirection: 'row', gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12, padding: 3,
+  },
+  modeBtn: {
+    paddingHorizontal: 20, paddingVertical: 8, borderRadius: 10,
+  },
+  modeBtnActive: {
+    backgroundColor: 'rgba(39,174,61,0.2)',
+  },
+  modeBtnActiveRanked: {
+    backgroundColor: 'rgba(155,89,182,0.2)',
+  },
+  modeBtnText: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 12, color: colors.textSecondary, letterSpacing: 0.5,
+  },
+  modeBtnTextActive: {
+    color: '#ffffff',
   },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold,
