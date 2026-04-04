@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   menuButtons: {
     paddingHorizontal: 20,
     gap: 6,
-    paddingBottom: 6,
+    paddingBottom: 10,
   },
   // Version
   version: {
