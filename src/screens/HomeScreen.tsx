@@ -231,11 +231,11 @@ const styles = StyleSheet.create({
   },
   // Character lobby
   lobbyArea: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    marginVertical: 4,
   },
   sideBtn: {
     alignItems: 'center',
@@ -295,7 +295,6 @@ const styles = StyleSheet.create({
   menuButtons: {
     paddingHorizontal: 20,
     gap: 6,
-    marginTop: 'auto',
     paddingBottom: 6,
   },
   // Version
