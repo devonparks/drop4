@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeIn, FadeOut, SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
