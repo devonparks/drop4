@@ -68,9 +68,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
     const state = get();
     let newXp = state.xp + amount;
     let newLevel = state.level;
-    const xpPerLevel = newLevel * 100;
-    while (newXp >= xpPerLevel) {
-      newXp -= xpPerLevel;
+    while (newXp >= newLevel * 100) {
+      newXp -= newLevel * 100;
       newLevel++;
     }
     set({ xp: newXp, level: newLevel });

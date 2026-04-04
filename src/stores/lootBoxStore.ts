@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
+import { useShopStore } from './shopStore';
 
 export type LootBoxRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -138,6 +139,19 @@ export const useLootBoxStore = create<LootBoxState>((set, get) => ({
     // Roll and pick item
     const rarity = rollRarity(boxId);
     const item = pickItem(rarity);
+
+    // Grant the reward to shopStore
+    if (item.type === 'coins' && item.value) {
+      useShopStore.getState().addCoins(item.value);
+    } else if (item.type === 'gems' && item.value) {
+      useShopStore.getState().addGems(item.value);
+    } else if (item.type === 'board') {
+      useShopStore.getState().purchaseItem('boards', item.id, 0);
+    } else if (item.type === 'pieces') {
+      useShopStore.getState().purchaseItem('pieces', item.id, 0);
+    } else if (item.type === 'emote') {
+      // emotes don't have a shopStore category yet, skip
+    }
 
     // Add to history
     set(state => ({

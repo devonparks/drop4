@@ -55,7 +55,7 @@ export function GameScreen({ navigation }: Props) {
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [, setHintCol] = useState<number | null>(null);
+  const [hintCol, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
@@ -244,6 +244,9 @@ export function GameScreen({ navigation }: Props) {
         recordRanked(true); // Won wager match — ELO goes up
         (global as any).__wagerCourt = null;
       }
+      // Clear ranked mode flags
+      (global as any).__rankedMode = null;
+      (global as any).__rankedClockSeconds = null;
       // Award loot box on win (every 3rd win gets a box)
       const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
       if (totalWins % 3 === 0) {
@@ -281,6 +284,9 @@ export function GameScreen({ navigation }: Props) {
         recordRanked(false); // Lost wager match
         (global as any).__wagerCourt = null;
       }
+      // Clear ranked mode flags
+      (global as any).__rankedMode = null;
+      (global as any).__rankedClockSeconds = null;
       haptics.error();
       playSound('lose');
       playRandomVoice('win');
@@ -441,6 +447,13 @@ export function GameScreen({ navigation }: Props) {
             ))}
           </View>
         </View>
+
+        {/* Hint indicator */}
+        {hintCol !== null && (
+          <Animated.View entering={FadeIn.duration(200)} style={styles.hintBanner}>
+            <Text style={styles.hintText}>Try column {hintCol + 1}</Text>
+          </Animated.View>
+        )}
 
         {/* Game Board */}
         <GameBoard
@@ -780,6 +793,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
+  },
+  hintBanner: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,209,102,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,209,102,0.3)',
+  },
+  hintText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.coinGold,
+    textAlign: 'center',
   },
   moveCounter: {
     backgroundColor: 'rgba(255,255,255,0.08)',

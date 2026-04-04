@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveState, loadState } from '../services/storage';
 
 export type Player = 1 | 2;
 export type Cell = 0 | Player;
@@ -40,6 +41,7 @@ interface GameState {
   undoMove: () => boolean;
   setAiThinking: (thinking: boolean) => void;
   resetScores: () => void;
+  loadFromStorage: () => Promise<void>;
 }
 
 const ROWS = 6;
@@ -223,7 +225,34 @@ export const useGameStore = create<GameState>((set, get) => ({
   setAiThinking: (thinking) => set({ isAiThinking: thinking }),
 
   resetScores: () => set({ scores: { player1: 0, player2: 0 } }),
+
+  loadFromStorage: async () => {
+    const saved = await loadState<{
+      winStreak: number;
+      bestStreak: number;
+      scores: { player1: number; player2: number };
+      totalGamesPlayed: number;
+    }>('gameStats');
+    if (saved) {
+      set({
+        winStreak: saved.winStreak ?? 0,
+        bestStreak: saved.bestStreak ?? 0,
+        scores: saved.scores ?? { player1: 0, player2: 0 },
+        totalGamesPlayed: saved.totalGamesPlayed ?? 0,
+      });
+    }
+  },
 }));
+
+// Auto-save streaks and scores
+useGameStore.subscribe((state) => {
+  saveState('gameStats', {
+    winStreak: state.winStreak,
+    bestStreak: state.bestStreak,
+    scores: state.scores,
+    totalGamesPlayed: state.totalGamesPlayed,
+  });
+});
 
 // Export board constants for use elsewhere
 export { ROWS, COLS, getLowestEmptyRow, createEmptyBoard };

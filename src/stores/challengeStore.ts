@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { saveState } from '../services/storage';
+import { saveState, loadState } from '../services/storage';
+import { useShopStore } from './shopStore';
 
 export interface Challenge {
   id: string;
@@ -20,6 +21,7 @@ interface ChallengeState {
   refreshChallenges: () => void;
   updateProgress: (challengeId: string, amount: number) => void;
   claimReward: (challengeId: string) => number; // returns coins earned
+  loadFromStorage: () => Promise<void>;
 }
 
 // Daily challenge pool — 3 are randomly selected each day
@@ -70,13 +72,28 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
     const challenge = get().challenges.find(c => c.id === challengeId);
     if (!challenge || challenge.completed || challenge.progress < challenge.target) return 0;
 
+    const amount = challenge.reward;
+
     set(state => ({
       challenges: state.challenges.map(c =>
         c.id === challengeId ? { ...c, completed: true } : c
       ),
     }));
 
-    return challenge.reward;
+    // Grant the coins to the player
+    useShopStore.getState().addCoins(amount);
+
+    return amount;
+  },
+
+  loadFromStorage: async () => {
+    const saved = await loadState<{ challenges: Challenge[]; lastRefresh: number }>('challenges');
+    if (saved) {
+      set({
+        challenges: saved.challenges ?? pickRandomChallenges(3),
+        lastRefresh: saved.lastRefresh ?? Date.now(),
+      });
+    }
   },
 }));
 

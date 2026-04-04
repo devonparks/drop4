@@ -89,8 +89,11 @@ export function ShopScreen() {
   const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
   const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
 
-  const handleItemPress = (category: 'boards' | 'pieces', item: ShopItem) => {
-    const equipKey = category === 'boards' ? 'board' : 'pieces';
+  const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations', item: ShopItem) => {
+    const equipKey = category === 'boards' ? 'board'
+      : category === 'pieces' ? 'pieces'
+      : category === 'dropEffects' ? 'dropEffect'
+      : 'winAnimation';
     if (equipped[equipKey] === item.id) return; // Already equipped
     if (owned[category].includes(item.id)) {
       equipItem(equipKey, item.id);
@@ -188,8 +191,13 @@ export function ShopScreen() {
                   key={item.id}
                   item={item}
                   isOwned={owned[category]?.includes(item.id) ?? false}
-                  isEquipped={equipped[category === 'boards' ? 'board' : 'pieces'] === item.id}
-                  onPress={() => handleItemPress(category as 'boards' | 'pieces', item)}
+                  isEquipped={equipped[
+                    category === 'boards' ? 'board'
+                    : category === 'pieces' ? 'pieces'
+                    : category === 'dropEffects' ? 'dropEffect'
+                    : 'winAnimation'
+                  ] === item.id}
+                  onPress={() => handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations', item)}
                   index={i}
                 />
               ))}

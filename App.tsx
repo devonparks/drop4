@@ -19,6 +19,8 @@ import { useRankedStore } from './src/stores/rankedStore';
 import { useLootBoxStore } from './src/stores/lootBoxStore';
 import { useSeasonStore } from './src/stores/seasonStore';
 import { useBoardEditorStore } from './src/stores/boardEditorStore';
+import { useGameStore } from './src/stores/gameStore';
+import { useChallengeStore } from './src/stores/challengeStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 import { WelcomeOverlay } from './src/components/ui/WelcomeOverlay';
@@ -49,6 +51,8 @@ export default function App() {
         await useLootBoxStore.getState().loadFromStorage();
         await useSeasonStore.getState().loadFromStorage();
         await useBoardEditorStore.getState().loadFromStorage();
+        await useGameStore.getState().loadFromStorage();
+        await useChallengeStore.getState().loadFromStorage();
         // Preload sound effects
         await preloadSounds();
       } catch (e) {

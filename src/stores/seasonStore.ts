@@ -98,6 +98,7 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
 
   loadFromStorage: async () => {
     const saved = await loadState<{
+      seasonNumber?: number;
       currentTier: number;
       xp: number;
       hasPremium: boolean;
@@ -106,6 +107,7 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
     }>('season');
     if (saved) {
       set({
+        seasonNumber: saved.seasonNumber ?? 0,
         currentTier: saved.currentTier ?? 0,
         xp: saved.xp ?? 0,
         hasPremium: saved.hasPremium ?? false,
@@ -119,6 +121,7 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
 // Auto-save season progress
 useSeasonStore.subscribe((state) => {
   saveState('season', {
+    seasonNumber: state.seasonNumber,
     currentTier: state.currentTier,
     xp: state.xp,
     hasPremium: state.hasPremium,

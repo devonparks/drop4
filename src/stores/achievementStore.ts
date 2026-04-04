@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
+import { useShopStore } from './shopStore';
 
 export interface Achievement {
   id: string;
@@ -100,17 +101,26 @@ export const useAchievementStore = create<AchievementState>((set, get) => ({
 
   checkAndUnlock: (stats) => {
     const newlyUnlocked: string[] = [];
+    const rewardsToGrant: Achievement['reward'][] = [];
 
     set(state => ({
       achievements: state.achievements.map(a => {
         if (a.unlocked) return a;
         if (checkCondition(a.condition, stats)) {
           newlyUnlocked.push(a.name);
+          rewardsToGrant.push(a.reward);
           return { ...a, unlocked: true, unlockedAt: Date.now() };
         }
         return a;
       }),
     }));
+
+    // Grant rewards for newly unlocked achievements
+    for (const reward of rewardsToGrant) {
+      if (reward.type === 'coins' && typeof reward.value === 'number') {
+        useShopStore.getState().addCoins(reward.value);
+      }
+    }
 
     return newlyUnlocked;
   },
@@ -118,7 +128,18 @@ export const useAchievementStore = create<AchievementState>((set, get) => ({
   loadFromStorage: async () => {
     const saved = await loadState<{ achievements: Achievement[] }>('achievements');
     if (saved?.achievements) {
-      set({ achievements: saved.achievements });
+      // Merge saved unlock state into code-defined achievements
+      // so new achievements added in updates are preserved
+      const savedMap = new Map(saved.achievements.map(a => [a.id, a]));
+      set(state => ({
+        achievements: state.achievements.map(a => {
+          const savedAch = savedMap.get(a.id);
+          if (savedAch?.unlocked) {
+            return { ...a, unlocked: true, unlockedAt: savedAch.unlockedAt };
+          }
+          return a;
+        }),
+      }));
     }
   },
 }));
