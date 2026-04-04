@@ -24,6 +24,7 @@ import { useChallengeStore } from '../stores/challengeStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useAchievementStore } from '../stores/achievementStore';
+import { useLootBoxStore } from '../stores/lootBoxStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -44,6 +45,7 @@ export function GameScreen({ navigation }: Props) {
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
   const completeCareerLevel = useCareerStore(s => s.completeLevel);
   const checkAchievements = useAchievementStore(s => s.checkAndUnlock);
+  const addLootBox = useLootBoxStore(s => s.addBox);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,6 +166,12 @@ export function GameScreen({ navigation }: Props) {
       if (wagerCourt && wagerCourt.winnerGets > 0) {
         addCoins(wagerCourt.winnerGets);
         (global as any).__wagerCourt = null;
+      }
+      // Award loot box on win (every 3rd win gets a box)
+      const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
+      if (totalWins % 3 === 0) {
+        const boxTier = difficulty === 'easy' ? 'bronze_box' : difficulty === 'medium' ? 'silver_box' : 'gold_box';
+        addLootBox(boxTier);
       }
       // Check achievements
       const matchHistory = useMatchHistoryStore.getState();
