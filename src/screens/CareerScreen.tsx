@@ -83,10 +83,8 @@ export function CareerScreen({ navigation }: Props) {
       cols: careerLevel.settings.cols,
       connectCount: careerLevel.settings.connectCount,
       timerSeconds: careerLevel.settings.timerSeconds || 0,
+      startingPlayer: (careerLevel.settings.playerGoesFirst === false ? 2 : 1) as 1 | 2,
     };
-
-    // Determine if player goes first
-    const playerFirst = careerLevel.settings.playerGoesFirst !== false;
 
     newGame(careerLevel.difficulty, true, settings);
 

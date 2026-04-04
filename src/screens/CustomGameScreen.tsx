@@ -60,11 +60,17 @@ export function CustomGameScreen({ navigation }: Props) {
     // Parse board size
     const [cols, rows] = boardSize.split('x').map(Number);
 
+    // Determine starting player
+    let startingPlayer: 1 | 2 = 1;
+    if (firstMove === 'opponent') startingPlayer = 2;
+    else if (firstMove === 'random') startingPlayer = Math.random() < 0.5 ? 1 : 2;
+
     newGame(difficulty as any, isAi, {
       rows: rows || 7,
       cols: cols || 6,
       connectCount: parseInt(connectCount) || 4,
       timerSeconds: timer === 'none' ? 0 : parseInt(timer) || 0,
+      startingPlayer,
     });
     navigation.navigate('Game');
   };

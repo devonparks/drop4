@@ -6,6 +6,7 @@ import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useAchievementStore } from '../stores/achievementStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -38,6 +39,7 @@ export function ProfileScreen() {
   const { level, xp, coins, gems, equipped } = useShopStore();
   const { scores, winStreak, bestStreak } = useGameStore();
   const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
+  const achievements = useAchievementStore(s => s.achievements);
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
@@ -110,25 +112,18 @@ export function ProfileScreen() {
         </View>
 
         {/* Achievements */}
-        <Text style={styles.sectionTitle}>ACHIEVEMENTS</Text>
+        <Text style={styles.sectionTitle}>ACHIEVEMENTS ({achievements.filter(a => a.unlocked).length}/{achievements.length})</Text>
         <View style={styles.achievementsList}>
-          {[
-            { icon: '🏆', name: 'First Win', desc: 'Win your first game', done: scores.player1 > 0 },
-            { icon: '🔥', name: 'On Fire', desc: 'Win 3 games in a row', done: false },
-            { icon: '⚡', name: 'Speed Demon', desc: 'Win in under 10 moves', done: false },
-            { icon: '🎯', name: 'Sharpshooter', desc: 'Beat Hard AI', done: false },
-            { icon: '💎', name: 'Collector', desc: 'Own 5 cosmetic items', done: false },
-            { icon: '👑', name: 'Drop King', desc: 'Reach Level 10', done: level >= 10 },
-          ].map((ach, i) => (
-            <View key={i} style={[styles.achievementRow, ach.done && styles.achievementDone]}>
+          {achievements.map((ach) => (
+            <View key={ach.id} style={[styles.achievementRow, ach.unlocked && styles.achievementDone]}>
               <Text style={styles.achievementIcon}>{ach.icon}</Text>
               <View style={styles.achievementInfo}>
-                <Text style={[styles.achievementName, ach.done && { color: colors.coinGold }]}>
+                <Text style={[styles.achievementName, ach.unlocked && { color: colors.coinGold }]}>
                   {ach.name}
                 </Text>
-                <Text style={styles.achievementDesc}>{ach.desc}</Text>
+                <Text style={styles.achievementDesc}>{ach.description}</Text>
               </View>
-              {ach.done && <Text style={styles.checkmark}>✓</Text>}
+              {ach.unlocked && <Text style={styles.checkmark}>✓</Text>}
             </View>
           ))}
         </View>

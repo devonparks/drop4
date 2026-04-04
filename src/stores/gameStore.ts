@@ -11,6 +11,7 @@ export interface CustomGameSettings {
   cols: number;
   connectCount: number;
   timerSeconds: number; // 0 = no timer
+  startingPlayer?: 1 | 2; // 1 = player goes first, 2 = opponent first
 }
 
 interface GameState {
@@ -121,7 +122,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
     set({
       board: createEmptyBoard(s.cols, s.rows),
-      currentPlayer: 1,
+      currentPlayer: (settings?.startingPlayer || 1) as Player,
       status: 'playing',
       winner: null,
       winCells: null,
