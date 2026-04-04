@@ -273,25 +273,31 @@ export function AnimatedCharacter({
     };
   }, [activeEmote]);
 
-  // Determine which image to show
-  let source: ImageSourcePropType;
-
-  if (activeEmote && EMOTE_FRAMES[activeEmote]) {
-    const frames = EMOTE_FRAMES[activeEmote];
-    source = frames[currentFrame] || frames[0];
-  } else {
-    // Show idle animation or pose
-    const idleFrames = EMOTE_FRAMES.idle;
-    source = idleFrames[currentFrame % idleFrames.length] || idleFrames[0];
-  }
+  // Get current frames array and index
+  const currentFrames = activeEmote ? (EMOTE_FRAMES[activeEmote] || EMOTE_FRAMES.idle) : EMOTE_FRAMES.idle;
+  const frameIndex = currentFrame % currentFrames.length;
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      <Image
-        source={source}
-        style={styles.characterImage}
-        resizeMode="contain"
-      />
+      {/* Render ALL idle frames stacked, toggle visibility via opacity.
+          This prevents the flash caused by Image source swapping. */}
+      {!activeEmote && EMOTE_FRAMES.idle.map((source, i) => (
+        <Image
+          key={`idle_${i}`}
+          source={source}
+          style={[styles.characterImage, styles.stackedFrame, { opacity: i === frameIndex ? 1 : 0 }]}
+          resizeMode="contain"
+        />
+      ))}
+
+      {/* For emotes, use single Image since they play once (flash is less noticeable) */}
+      {activeEmote && (
+        <Image
+          source={currentFrames[frameIndex] || currentFrames[0]}
+          style={[styles.characterImage, styles.stackedFrame]}
+          resizeMode="contain"
+        />
+      )}
     </View>
   );
 }
@@ -346,5 +352,10 @@ const styles = StyleSheet.create({
   characterImage: {
     width: '100%',
     height: '100%',
+  },
+  stackedFrame: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
 });
