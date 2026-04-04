@@ -5,6 +5,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
+import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -28,7 +29,7 @@ function TabIcon({ icon, label, focused }: { icon: string; label: string; focuse
 }
 
 function FriendsTab() {
-  return <PlaceholderScreen title="Friends" icon="👥" subtitle="Add friends and see who's online. Coming in Phase 3!" />;
+  return <LeaderboardScreen />;
 }
 
 function RanksTab() {
@@ -62,10 +63,10 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Friends"
+        name="Leaderboards"
         component={FriendsTab}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="👥" label="Friends" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="🏆" label="Leaderboards" focused={focused} />,
         }}
       />
       <Tab.Screen
