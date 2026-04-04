@@ -7,10 +7,11 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
+import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
-type ShopTab = 'boards' | 'pieces' | 'effects' | 'emotes';
+type ShopTab = 'boards' | 'pieces' | 'effects' | 'emotes' | 'boxes';
 
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
   item: ShopItem;
@@ -107,6 +108,7 @@ export function ShopScreen() {
     { key: 'pieces', label: 'Pieces', icon: '🔴' },
     { key: 'effects', label: 'Effects', icon: '✨' },
     { key: 'emotes', label: 'Emotes', icon: '😎' },
+    { key: 'boxes', label: 'Boxes', icon: '🎁' },
   ];
 
   const items = activeTab === 'boards' ? BOARD_THEMES :
@@ -151,7 +153,25 @@ export function ShopScreen() {
           contentContainerStyle={styles.gridContent}
           showsVerticalScrollIndicator={false}
         >
-          {items.length > 0 ? (
+          {activeTab === 'boxes' ? (
+            <View style={styles.boxList}>
+              {LOOT_BOXES.map(box => {
+                const count = useLootBoxStore.getState().getBoxCount(box.id);
+                return (
+                  <View key={box.id} style={styles.boxItem}>
+                    <Text style={styles.boxIcon}>{box.icon}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.boxName}>{box.name}</Text>
+                      <Text style={styles.boxCount}>×{count} owned</Text>
+                    </View>
+                    {box.cost > 0 && (
+                      <Text style={styles.boxPrice}>🪙 {box.cost}</Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          ) : items.length > 0 ? (
             <View style={styles.grid}>
               {items.map((item, i) => (
                 <ShopItemCard
@@ -370,6 +390,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textTransform: 'uppercase',
   },
+  boxList: { gap: 8 },
+  boxItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  boxIcon: { fontSize: 32 },
+  boxName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
+  boxCount: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
+  boxPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
   comingSoon: {
     alignItems: 'center',
     justifyContent: 'center',
