@@ -235,7 +235,13 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
               onPressIn={() => setHoveredCol(col)}
               onHoverIn={() => setHoveredCol(col)}
               onHoverOut={() => setHoveredCol(null)}
-              style={styles.colTarget}
+              style={[
+                styles.colTarget,
+                hoveredCol === col && {
+                  backgroundColor: currentPlayerColor === 'red'
+                    ? 'rgba(230,57,70,0.08)' : 'rgba(244,166,35,0.08)',
+                },
+              ]}
             />
           ))}
         </View>
