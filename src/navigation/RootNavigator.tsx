@@ -14,6 +14,8 @@ import { LearnScreen } from '../screens/LearnScreen';
 import { SeasonPassScreen } from '../screens/SeasonPassScreen';
 import { CharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
 import { BoardEditorScreen } from '../screens/BoardEditorScreen';
+import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
+import { LootBoxScreen } from '../screens/LootBoxScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -30,6 +32,8 @@ export type RootStackParamList = {
   SeasonPass: undefined;
   CharacterCreator: undefined;
   BoardEditor: undefined;
+  ReplayViewer: undefined;
+  LootBox: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -57,6 +61,8 @@ export function RootNavigator() {
       <Stack.Screen name="SeasonPass" component={SeasonPassScreen} />
       <Stack.Screen name="CharacterCreator" component={CharacterCreatorScreen} />
       <Stack.Screen name="BoardEditor" component={BoardEditorScreen} />
+      <Stack.Screen name="ReplayViewer" component={ReplayViewerScreen} />
+      <Stack.Screen name="LootBox" component={LootBoxScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}
