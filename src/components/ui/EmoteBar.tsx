@@ -1,47 +1,82 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, Image, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 
-// Character face images for game emote buttons (Clash Royale style)
-const FACE_IMAGES = {
-  happy: require('../../assets/images/characters/player_avatar.png'),
-  surprised: require('../../assets/images/characters/player_emote_idle.png'),
-  thumbsup: require('../../assets/images/characters/player_avatar.png'),
-  angry: require('../../assets/images/characters/player_emote_idle.png'),
-};
+// ═══════════════════════════════════════════
+// QUICK EMOTE WHEEL — emoji-based reactions
+// Used in-game for fast communication
+// ═══════════════════════════════════════════
 
-interface EmoteConfig {
+interface QuickEmote {
   id: EmoteId;
-  name: string;
-  icon: string;
-  faceKey?: keyof typeof FACE_IMAGES;
-  unlocked: boolean;
+  emoji: string;
+  label: string;
+  color: string;
 }
 
-const EMOTES: EmoteConfig[] = [
-  { id: 'happy', name: 'Happy', icon: '😄', faceKey: 'happy', unlocked: true },
-  { id: 'thumbsup', name: 'Nice!', icon: '👍', faceKey: 'surprised', unlocked: true },
-  { id: 'wave', name: 'GG', icon: '👋', faceKey: 'thumbsup', unlocked: true },
-  { id: 'angry', name: 'Angry', icon: '😤', faceKey: 'angry', unlocked: true },
-  { id: 'dab', name: 'Dab', icon: '🕺', unlocked: true },
-  { id: 'dance', name: 'Dance', icon: '💃', unlocked: false },
-  { id: 'celebrate', name: 'Celebrate', icon: '🎉', unlocked: false },
-  { id: 'sad', name: 'Sad', icon: '😢', unlocked: false },
+// 8 quick emotes for in-game use (best ones from each category)
+const GAME_QUICK_EMOTES: QuickEmote[] = [
+  { id: 'thumbsup', emoji: '👍', label: 'Nice', color: '#2ecc71' },
+  { id: 'clapping', emoji: '👏', label: 'GG', color: '#f1c40f' },
+  { id: 'laughpoint', emoji: '😂', label: 'Lol', color: '#e67e22' },
+  { id: 'angry', emoji: '😤', label: 'Grr', color: '#e74c3c' },
+  { id: 'facepalm', emoji: '🤦', label: 'Ugh', color: '#9b59b6' },
+  { id: 'flexbiceps', emoji: '💪', label: 'Flex', color: '#3498db' },
+  { id: 'dab', emoji: '🕺', label: 'Dab', color: '#e94560' },
+  { id: 'wave', emoji: '👋', label: 'Hi', color: '#1abc9c' },
 ];
 
-interface EmoteBarProps {
-  onEmotePress: (emoteId: EmoteId) => void;
-  activeEmote?: EmoteId | null;
-  variant?: 'lobby' | 'game';
-}
+// Full emote list for lobby picker
+const ALL_EMOTES: QuickEmote[] = [
+  // Affection
+  { id: 'blowkiss', emoji: '😘', label: 'Kiss', color: '#ff69b4' },
+  { id: 'callme', emoji: '🤙', label: 'Call Me', color: '#e67e22' },
+  { id: 'fingerheart', emoji: '🫰', label: 'Heart', color: '#e74c3c' },
+  { id: 'hearthands', emoji: '🫶', label: 'Love', color: '#ff69b4' },
+  // Angry
+  { id: 'angry', emoji: '😤', label: 'Angry', color: '#e74c3c' },
+  { id: 'tantrum', emoji: '🤬', label: 'Rage', color: '#c0392b' },
+  // Celebrate
+  { id: 'airguitar', emoji: '🎸', label: 'Guitar', color: '#e67e22' },
+  { id: 'beatchest', emoji: '🦍', label: 'Beast', color: '#8B5E3C' },
+  { id: 'clapping', emoji: '👏', label: 'Clap', color: '#f1c40f' },
+  { id: 'dab', emoji: '🕺', label: 'Dab', color: '#9b59b6' },
+  { id: 'dustshoulder', emoji: '💅', label: 'Clean', color: '#1abc9c' },
+  { id: 'fingerguns', emoji: '👉', label: 'Pew', color: '#e94560' },
+  // Dance
+  { id: 'dancechestpump', emoji: '🪩', label: 'Pump', color: '#3498db' },
+  { id: 'dancetwist', emoji: '💃', label: 'Twist', color: '#9b59b6' },
+  { id: 'dancerunstep', emoji: '🏃', label: 'Run', color: '#2ecc71' },
+  // Greet
+  { id: 'wave', emoji: '👋', label: 'Wave', color: '#f1c40f' },
+  { id: 'bow', emoji: '🙇', label: 'Bow', color: '#8892b0' },
+  { id: 'salute', emoji: '🫡', label: 'Salute', color: '#3498db' },
+  // Happy
+  { id: 'thumbsup', emoji: '👍', label: 'Nice', color: '#2ecc71' },
+  { id: 'fistpump', emoji: '✊', label: 'Yes!', color: '#e67e22' },
+  { id: 'armsraised', emoji: '🙌', label: 'Hype', color: '#f1c40f' },
+  // Reproach
+  { id: 'calmdown', emoji: '🤚', label: 'Chill', color: '#3498db' },
+  { id: 'shrug', emoji: '🤷', label: 'Shrug', color: '#8892b0' },
+  // Sad
+  { id: 'facepalm', emoji: '🤦', label: 'Ugh', color: '#9b59b6' },
+  { id: 'crying', emoji: '😭', label: 'Cry', color: '#3498db' },
+  { id: 'thumbsdown', emoji: '👎', label: 'Boo', color: '#e74c3c' },
+  // Sporty
+  { id: 'flexbiceps', emoji: '💪', label: 'Flex', color: '#e67e22' },
+  { id: 'boxing', emoji: '🥊', label: 'Fight', color: '#e74c3c' },
+  // Taunt
+  { id: 'laughpoint', emoji: '😂', label: 'Lol', color: '#f1c40f' },
+  { id: 'slowclap', emoji: '😏', label: 'Slow', color: '#9b59b6' },
+];
 
 // Animated game emote button with tap scale feedback
 function GameEmoteButton({ emote, isActive, onPress }: {
-  emote: EmoteConfig;
+  emote: QuickEmote;
   isActive: boolean;
   onPress: (id: EmoteId) => void;
 }) {
@@ -51,9 +86,8 @@ function GameEmoteButton({ emote, isActive, onPress }: {
     haptics.tap();
     playSound('click');
     onPress(emote.id);
-    // Brief scale-up feedback
     Animated.sequence([
-      Animated.spring(scaleAnim, { toValue: 1.2, useNativeDriver: true, speed: 50, bounciness: 12 }),
+      Animated.spring(scaleAnim, { toValue: 1.25, useNativeDriver: true, speed: 50, bounciness: 12 }),
       Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
     ]).start();
   }, [emote.id, onPress, scaleAnim]);
@@ -62,34 +96,36 @@ function GameEmoteButton({ emote, isActive, onPress }: {
     <Pressable onPress={handlePress}>
       <Animated.View style={[
         styles.gameFaceBtn,
-        isActive && styles.gameFaceBtnActive,
+        { borderColor: emote.color + '40', backgroundColor: emote.color + '15' },
+        isActive && { borderColor: emote.color, backgroundColor: emote.color + '30' },
         { transform: [{ scale: scaleAnim }] },
       ]}>
-        {emote.faceKey && FACE_IMAGES[emote.faceKey] ? (
-          <Image
-            source={FACE_IMAGES[emote.faceKey]}
-            style={styles.faceImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <Text style={styles.gameFaceEmoji}>{emote.icon}</Text>
-        )}
+        <Text style={styles.gameFaceEmoji}>{emote.emoji}</Text>
       </Animated.View>
+      <Text style={[styles.gameFaceLabel, { color: emote.color + 'aa' }]}>{emote.label}</Text>
     </Pressable>
   );
+}
+
+interface EmoteBarProps {
+  onEmotePress: (emoteId: EmoteId) => void;
+  activeEmote?: EmoteId | null;
+  variant?: 'lobby' | 'game';
 }
 
 export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: EmoteBarProps) {
   const isGame = variant === 'game';
 
-  // Game variant: show first 4 emotes as character face circles (Clash Royale style)
+  // Game variant: show 8 quick emotes as emoji circles
   if (isGame) {
-    const gameEmotes = EMOTES.slice(0, 4);
-
     return (
       <View style={styles.gameContainerOuter}>
-        <View style={styles.gameContainer}>
-          {gameEmotes.map(emote => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gameContainer}
+        >
+          {GAME_QUICK_EMOTES.map(emote => (
             <GameEmoteButton
               key={emote.id}
               emote={emote}
@@ -97,48 +133,39 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
               onPress={onEmotePress}
             />
           ))}
-        </View>
+        </ScrollView>
       </View>
     );
   }
 
-  // Lobby variant: large buttons with labels
+  // Lobby variant: full emote grid
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.lobbyContainer}
     >
-      {EMOTES.map(emote => {
+      {ALL_EMOTES.map(emote => {
         const isActive = activeEmote === emote.id;
-        const isLocked = !emote.unlocked;
 
         return (
           <Pressable
             key={emote.id}
             onPress={() => {
-              if (isLocked) return;
               haptics.tap();
               playSound('click');
               onEmotePress(emote.id);
             }}
             style={[
               styles.lobbyBtn,
-              isActive && styles.activeBtn,
-              isLocked && styles.lockedBtn,
+              { borderColor: emote.color + '30' },
+              isActive && { borderColor: emote.color, backgroundColor: emote.color + '20' },
             ]}
           >
-            <Text style={[styles.lobbyIcon, isLocked && { opacity: 0.3 }]}>
-              {emote.icon}
+            <Text style={styles.lobbyIcon}>{emote.emoji}</Text>
+            <Text style={[styles.emoteName, isActive && { color: emote.color }]}>
+              {emote.label}
             </Text>
-            <Text style={[styles.emoteName, isActive && styles.activeText]}>
-              {emote.name}
-            </Text>
-            {isLocked && (
-              <View style={styles.lockOverlay}>
-                <Text style={styles.lockIcon}>🔒</Text>
-              </View>
-            )}
           </Pressable>
         );
       })}
@@ -147,49 +174,46 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
 }
 
 const styles = StyleSheet.create({
-  // Game variant — Clash Royale style face circles
+  // Game variant — emoji circles in dark pill
   gameContainerOuter: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   gameContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 32,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   gameFaceBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     overflow: 'hidden',
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.2)',
-    backgroundColor: colors.surface,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  gameFaceBtnActive: {
-    borderColor: colors.orange,
-    shadowColor: colors.orange,
-    shadowOpacity: 0.5,
-  },
-  faceImage: {
-    width: '100%',
-    height: '100%',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   gameFaceEmoji: {
-    fontSize: 26,
+    fontSize: 24,
+  },
+  gameFaceLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
   // Lobby variant
   lobbyContainer: {
@@ -198,16 +222,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   lobbyBtn: {
-    width: 72,
-    height: 80,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    width: 64,
+    height: 72,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    position: 'relative',
+    gap: 3,
   },
   lobbyIcon: {
     fontSize: 28,
@@ -215,27 +237,9 @@ const styles = StyleSheet.create({
   emoteName: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 9,
+    fontSize: 8,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  activeBtn: {
-    borderColor: colors.orange,
-    backgroundColor: 'rgba(255,140,0,0.15)',
-  },
-  activeText: {
-    color: colors.orange,
-  },
-  lockedBtn: {
-    opacity: 0.5,
-  },
-  lockOverlay: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-  },
-  lockIcon: {
-    fontSize: 10,
   },
 });
