@@ -486,6 +486,14 @@ export function GameScreen({ navigation }: Props) {
     <ScreenBackground>
       <View style={styles.container}>
 
+        {/* Back/Exit button — top left */}
+        <Pressable
+          onPress={handleBack}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>✕</Text>
+        </Pressable>
+
         {/* Chess Clock (ranked mode only) */}
         {isRankedMode && status === 'playing' && (
           <View style={styles.chessClockRow}>
@@ -851,6 +859,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 8,
+    left: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  backButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600' as const,
   },
   // Chess clock styles
   chessClockRow: {
