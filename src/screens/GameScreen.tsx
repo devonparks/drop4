@@ -36,6 +36,7 @@ import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
+import { CoinBurst } from '../components/effects/CoinBurst';
 import { sendEmote, listenForEmotes } from '../services/emotes';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
@@ -82,6 +83,13 @@ export function GameScreen({ navigation }: Props) {
   const [thinkingDots, setThinkingDots] = useState(0);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showCoinBurst, setShowCoinBurst] = useState(false);
+
+  // Screen shake on piece drop
+  const shakeAnim = useRef(new RNAnimated.Value(0)).current;
+
+  // Turn indicator pulse
+  const turnPulseAnim = useRef(new RNAnimated.Value(1)).current;
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -295,6 +303,28 @@ export function GameScreen({ navigation }: Props) {
     }
   }, [hintCol]);
 
+  // Screen shake when a piece drops (moveCount changes)
+  useEffect(() => {
+    if (moveCount === 0) return;
+    shakeAnim.setValue(0);
+    RNAnimated.sequence([
+      RNAnimated.timing(shakeAnim, { toValue: 3, duration: 40, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: -3, duration: 40, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: 2, duration: 35, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: -2, duration: 35, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  }, [moveCount]);
+
+  // Turn indicator pulse when current player changes
+  useEffect(() => {
+    turnPulseAnim.setValue(1);
+    RNAnimated.sequence([
+      RNAnimated.spring(turnPulseAnim, { toValue: 1.15, useNativeDriver: true, speed: 50, bounciness: 12 }),
+      RNAnimated.spring(turnPulseAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
+    ]).start();
+  }, [currentPlayer]);
+
   // AI thinking dots animation (cycles 0→1→2→3 every 300ms)
   useEffect(() => {
     if (!isAiThinking) { setThinkingDots(0); return; }
@@ -411,6 +441,7 @@ export function GameScreen({ navigation }: Props) {
         ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
       });
       setShowConfetti(true);
+      setShowCoinBurst(true);
       haptics.win();
       playSound('win');
       playSound('coin');
@@ -577,13 +608,14 @@ export function GameScreen({ navigation }: Props) {
 
           {/* Center: Turn indicator */}
           <View style={styles.turnCenter}>
-            <Text style={[
+            <RNAnimated.Text style={[
               styles.turnText,
               status === 'won' && winner === 1 && { color: colors.green },
               status === 'won' && winner === 2 && { color: colors.pieceRed },
+              { transform: [{ scale: turnPulseAnim }] },
             ]}>
               {turnText}
-            </Text>
+            </RNAnimated.Text>
             <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
             {/* Timer bar (casual mode turn timer) */}
             {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
@@ -653,12 +685,14 @@ export function GameScreen({ navigation }: Props) {
           </Animated.View>
         )}
 
-        {/* Game Board */}
-        <GameBoard
-          onColumnPress={handleColumnPress}
-          disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1) || (isOnlineMatch && currentPlayer !== myPlayerNum)}
-          currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
-        />
+        {/* Game Board — wrapped with screen shake */}
+        <RNAnimated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+          <GameBoard
+            onColumnPress={handleColumnPress}
+            disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1) || (isOnlineMatch && currentPlayer !== myPlayerNum)}
+            currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
+          />
+        </RNAnimated.View>
 
         {/* Bottom controls */}
         <View style={styles.controls}>
@@ -745,6 +779,13 @@ export function GameScreen({ navigation }: Props) {
 
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
+
+        {/* Coin burst on win */}
+        <CoinBurst
+          visible={showCoinBurst}
+          amount={COIN_REWARDS[difficulty]}
+          onDone={() => setShowCoinBurst(false)}
+        />
 
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">

@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
   withSequence,
   withDelay,
+  withTiming,
   FadeIn,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -96,6 +97,58 @@ function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
         <View style={styles.pieceShine} />
       </LinearGradient>
     </Animated.View>
+  );
+}
+
+// Landing shockwave flash ring — expands and fades after piece drops
+function LandFlash({ delay }: { delay: number }) {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(0);
+
+  React.useEffect(() => {
+    // Start flash after the bounce animation completes (~300ms + delay)
+    const flashDelay = delay + 300;
+    scale.value = withDelay(flashDelay, withTiming(1.5, { duration: 200 }));
+    opacity.value = withDelay(flashDelay,
+      withSequence(
+        withTiming(0.7, { duration: 30 }),
+        withTiming(0, { duration: 170 }),
+      )
+    );
+  }, []);
+
+  const flashStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.landFlash, flashStyle]} />
+  );
+}
+
+// Pulsing ghost piece preview
+function GhostPiecePulse({ color }: { color: string }) {
+  const pulseOpacity = useSharedValue(0.2);
+
+  React.useEffect(() => {
+    const loop = () => {
+      pulseOpacity.value = withSequence(
+        withTiming(0.35, { duration: 600 }),
+        withTiming(0.15, { duration: 600 }),
+      );
+    };
+    loop();
+    const interval = setInterval(loop, 1200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ghostStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.ghostPiece, { backgroundColor: color }, ghostStyle]} />
   );
 }
 
@@ -216,14 +269,17 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                           skinColors={pieceSkin}
                         />
                       )}
-                      {/* Ghost piece preview */}
+                      {/* Ghost piece preview — pulsing */}
                       {isGhost && (
-                        <View style={[styles.ghostPiece, {
-                          backgroundColor: currentPlayerColor === 'red'
-                            ? pieceSkin.p1.main : pieceSkin.p2.main,
-                        }]} />
+                        <GhostPiecePulse
+                          color={currentPlayerColor === 'red'
+                            ? pieceSkin.p1.main : pieceSkin.p2.main}
+                        />
                       )}
                     </View>
+
+                    {/* Landing shockwave flash */}
+                    {cell !== 0 && isNew && <LandFlash delay={0} />}
 
                     {/* Win highlight */}
                     {isWin && <WinHighlight delay={Array.from(winSet).indexOf(key) * 120} />}
@@ -243,14 +299,22 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
               onPressIn={() => setHoveredCol(col)}
               onHoverIn={() => setHoveredCol(col)}
               onHoverOut={() => setHoveredCol(null)}
-              style={[
-                styles.colTarget,
-                hoveredCol === col && {
-                  backgroundColor: currentPlayerColor === 'red'
-                    ? 'rgba(230,57,70,0.08)' : 'rgba(244,166,35,0.08)',
-                },
-              ]}
-            />
+              style={[styles.colTarget]}
+            >
+              {/* Dramatic column glow highlight */}
+              {hoveredCol === col && (
+                <LinearGradient
+                  colors={
+                    currentPlayerColor === 'red'
+                      ? ['rgba(230,57,70,0.0)', 'rgba(230,57,70,0.12)', 'rgba(230,57,70,0.18)']
+                      : ['rgba(244,196,35,0.0)', 'rgba(244,196,35,0.12)', 'rgba(244,196,35,0.18)']
+                  }
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                />
+              )}
+            </Pressable>
           ))}
         </View>
       </LinearGradient>
@@ -360,6 +424,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.3)',
     marginTop: 4,
+  },
+  landFlash: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: CELL_SIZE / 2 + 2,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.7)',
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 6,
   },
   winRing: {
     position: 'absolute',

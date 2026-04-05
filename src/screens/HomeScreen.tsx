@@ -67,6 +67,26 @@ function StageSparkles() {
   );
 }
 
+// Pressable wrapper with scale-down feedback for menu buttons
+function PressScaleView({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }).start();
+  };
+
+  return (
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const coins = useShopStore(s => s.coins);
@@ -176,27 +196,33 @@ export function HomeScreen() {
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
-          <GlossyButton
-            label="PLAY"
-            subtitle="Quick Match"
-            variant="orange"
-            iconRight="▶"
-            onPress={() => navigateTo('Play')}
-          />
-          <GlossyButton
-            label="CAREER"
-            subtitle="Progress & Unlocks"
-            variant="purple"
-            iconRight="🏆"
-            onPress={() => navigateTo('Career')}
-          />
-          <GlossyButton
-            label="MULTIPLAYER"
-            subtitle="Wager & Compete"
-            variant="teal"
-            iconRight="👥"
-            onPress={() => navigateTo('Multiplayer')}
-          />
+          <PressScaleView onPress={() => navigateTo('Play')}>
+            <GlossyButton
+              label="PLAY"
+              subtitle="Quick Match"
+              variant="orange"
+              iconRight="▶"
+              onPress={() => navigateTo('Play')}
+            />
+          </PressScaleView>
+          <PressScaleView onPress={() => navigateTo('Career')}>
+            <GlossyButton
+              label="CAREER"
+              subtitle="Progress & Unlocks"
+              variant="purple"
+              iconRight="🏆"
+              onPress={() => navigateTo('Career')}
+            />
+          </PressScaleView>
+          <PressScaleView onPress={() => navigateTo('Multiplayer')}>
+            <GlossyButton
+              label="MULTIPLAYER"
+              subtitle="Wager & Compete"
+              variant="teal"
+              iconRight="👥"
+              onPress={() => navigateTo('Multiplayer')}
+            />
+          </PressScaleView>
         </View>
 
         {/* Version */}
