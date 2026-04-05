@@ -58,41 +58,36 @@ export function GlossyButton({
       onPress={handlePress}
       disabled={disabled}
       style={({ pressed }) => [
-        styles.outerGlow,
         disabled && { opacity: 0.5 },
         pressed && { opacity: 0.8 },
-        {
-          shadowColor: colors.glow,
-          ...(Platform.OS === 'web' ? {
-            boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
-          } as any : {}),
-        },
         style,
       ]}
     >
-      {/* 3D bottom edge (dark underside) — hidden on web to avoid click blocking */}
-      {Platform.OS !== 'web' && (
-        <View style={[styles.bottomEdge, { backgroundColor: colors.dark }]} />
-      )}
-
-      {/* Main button body */}
-      <LinearGradient
-        colors={[colors.top, colors.main, colors.dark]}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.gradient, { minHeight: minH }]}
-      >
-        {/* Content */}
-        <View style={styles.content}>
-          {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
-          <View style={styles.textWrap}>
-            <Text style={[styles.label, small && styles.labelSmall]}>{label}</Text>
-            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      <View style={[styles.outerGlow, {
+        shadowColor: colors.glow,
+        ...(Platform.OS === 'web' ? {
+          boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
+        } as any : {}),
+      }]}>
+        {/* Main button body */}
+        <LinearGradient
+          colors={[colors.top, colors.main, colors.dark]}
+          locations={[0, 0.5, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[styles.gradient, { minHeight: minH }]}
+        >
+          {/* Content */}
+          <View style={styles.content}>
+            {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
+            <View style={styles.textWrap}>
+              <Text style={[styles.label, small && styles.labelSmall]}>{label}</Text>
+              {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+            </View>
+            {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
           </View>
-          {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
     </Pressable>
   );
 }
@@ -104,6 +99,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 10,
+    overflow: 'hidden',
   },
   bottomEdge: {
     position: 'absolute',
