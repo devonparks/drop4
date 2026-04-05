@@ -24,6 +24,12 @@ export type MatchMode = 'casual' | 'ranked';
 export type QueueStatus = 'waiting' | 'matched';
 export type MatchStatus = 'playing' | 'won' | 'draw' | 'resigned';
 
+export interface RematchRequest {
+  requestedBy: 1 | 2;
+  acceptedBy: (1 | 2)[];
+  newMatchId: string | null;
+}
+
 export interface QueueEntry {
   uid: string;
   displayName: string;
@@ -57,6 +63,7 @@ export interface MatchDocument {
   mode: MatchMode;
   createdAt: ReturnType<typeof serverTimestamp>;
   updatedAt: ReturnType<typeof serverTimestamp>;
+  rematch?: RematchRequest;
 }
 
 // ============ HELPERS ============
@@ -433,6 +440,132 @@ async function findCompatibleOpponent(
     return null;
   } catch (error) {
     console.warn('findCompatibleOpponent failed:', error);
+    return null;
+  }
+}
+
+// ============ 4. REMATCH ============
+
+/**
+ * Writes a rematch request to the match document.
+ * The requesting player's number is stored so the opponent can see who asked.
+ */
+export async function requestRematch(
+  matchId: string,
+  playerNum: 1 | 2
+): Promise<boolean> {
+  try {
+    const matchDocRef = doc(db, MATCHES_COLLECTION, matchId);
+    const matchSnap = await getDoc(matchDocRef);
+
+    if (!matchSnap.exists()) {
+      console.warn('requestRematch: match not found');
+      return false;
+    }
+
+    const match = matchSnap.data() as MatchDocument;
+
+    // If a rematch was already requested, add this player to acceptedBy
+    if (match.rematch) {
+      const alreadyAccepted = match.rematch.acceptedBy || [];
+      if (!alreadyAccepted.includes(playerNum)) {
+        alreadyAccepted.push(playerNum);
+      }
+      await updateDoc(matchDocRef, {
+        'rematch.acceptedBy': alreadyAccepted,
+      });
+      return true;
+    }
+
+    // First request — create the rematch object
+    const rematch: RematchRequest = {
+      requestedBy: playerNum,
+      acceptedBy: [playerNum],
+      newMatchId: null,
+    };
+
+    await updateDoc(matchDocRef, { rematch });
+    return true;
+  } catch (error) {
+    console.warn('requestRematch failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Listens for rematch requests on a match document.
+ * Fires the callback whenever the rematch field changes.
+ */
+export function listenForRematch(
+  matchId: string,
+  callback: (rematch: RematchRequest | null) => void
+): Unsubscribe {
+  const matchDocRef = doc(db, MATCHES_COLLECTION, matchId);
+
+  const unsubscribe = onSnapshot(matchDocRef, (snapshot) => {
+    if (!snapshot.exists()) return;
+    const data = snapshot.data() as MatchDocument;
+    callback(data.rematch || null);
+  });
+
+  return unsubscribe;
+}
+
+/**
+ * Accepts a rematch: adds the accepting player, and if both players
+ * have accepted, creates a new match with swapped colors.
+ * Returns the new match ID if the match was created, null otherwise.
+ */
+export async function acceptRematch(
+  matchId: string,
+  playerNum: 1 | 2
+): Promise<string | null> {
+  try {
+    const matchDocRef = doc(db, MATCHES_COLLECTION, matchId);
+    const matchSnap = await getDoc(matchDocRef);
+
+    if (!matchSnap.exists()) {
+      console.warn('acceptRematch: match not found');
+      return null;
+    }
+
+    const match = matchSnap.data() as MatchDocument;
+
+    if (!match.rematch) {
+      console.warn('acceptRematch: no rematch request found');
+      return null;
+    }
+
+    // Add this player to acceptedBy
+    const acceptedBy = match.rematch.acceptedBy || [];
+    if (!acceptedBy.includes(playerNum)) {
+      acceptedBy.push(playerNum);
+    }
+
+    await updateDoc(matchDocRef, {
+      'rematch.acceptedBy': acceptedBy,
+    });
+
+    // If both players accepted, create the new match with swapped colors
+    if (acceptedBy.includes(1) && acceptedBy.includes(2)) {
+      const newMatchId = await createMatch(
+        // Swap: old player2 becomes new player1
+        match.player2,
+        match.player1,
+        match.mode
+      );
+
+      if (newMatchId) {
+        await updateDoc(matchDocRef, {
+          'rematch.newMatchId': newMatchId,
+        });
+        return newMatchId;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('acceptRematch failed:', error);
     return null;
   }
 }

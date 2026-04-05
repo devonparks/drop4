@@ -22,6 +22,7 @@ import { useBoardEditorStore } from './src/stores/boardEditorStore';
 import { useGameStore } from './src/stores/gameStore';
 import { useChallengeStore } from './src/stores/challengeStore';
 import { useSeriesStore } from './src/stores/seriesStore';
+import { useFriendsStore } from './src/stores/friendsStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 import { WelcomeOverlay } from './src/components/ui/WelcomeOverlay';
@@ -56,6 +57,7 @@ export default function App() {
         await useGameStore.getState().loadFromStorage();
         await useChallengeStore.getState().loadFromStorage();
         await useSeriesStore.getState().loadFromStorage();
+        await useFriendsStore.getState().loadFromStorage();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();

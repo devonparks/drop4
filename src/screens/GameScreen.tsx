@@ -27,7 +27,8 @@ import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
-import { listenToMatch, makeMove, resignMatch } from '../services/matchmaking';
+import { listenToMatch, makeMove, resignMatch, requestRematch, listenForRematch, acceptRematch } from '../services/matchmaking';
+import type { RematchRequest } from '../services/matchmaking';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
@@ -79,6 +80,10 @@ export function GameScreen({ navigation }: Props) {
 
   // Opponent emote display (online matches)
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
+
+  // Rematch state (online matches)
+  const [rematchState, setRematchState] = useState<'idle' | 'requested' | 'opponent-requested'>('idle');
+  const [rematchNewMatchId, setRematchNewMatchId] = useState<string | null>(null);
 
   // Chess clock for ranked mode
   const isRankedMode = !!params.rankedMode;
@@ -172,6 +177,48 @@ export function GameScreen({ navigation }: Props) {
 
     return () => unsubscribe();
   }, [isOnlineMatch, onlineMatchId, myPlayerNum]);
+
+  // Online match: listen for rematch requests
+  useEffect(() => {
+    if (!isOnlineMatch || !onlineMatchId || !myPlayerNum) return;
+    if (status === 'playing') return; // Only listen when game is over
+
+    const unsubscribe = listenForRematch(onlineMatchId, (rematch) => {
+      if (!rematch) {
+        setRematchState('idle');
+        return;
+      }
+
+      // If a new match was created, navigate to it
+      if (rematch.newMatchId) {
+        setRematchNewMatchId(rematch.newMatchId);
+        return;
+      }
+
+      // Determine if we requested or the opponent did
+      if (rematch.acceptedBy.includes(myPlayerNum)) {
+        setRematchState('requested');
+      } else {
+        setRematchState('opponent-requested');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isOnlineMatch, onlineMatchId, myPlayerNum, status]);
+
+  // Navigate to new rematch game when both accept
+  useEffect(() => {
+    if (!rematchNewMatchId || !myPlayerNum) return;
+
+    // In the new match, colors are swapped: old player1 becomes player2 and vice versa
+    const newPlayerNum: 1 | 2 = myPlayerNum === 1 ? 2 : 1;
+    newGame('medium', false);
+    navigation.replace('Game', {
+      onlineMatchId: rematchNewMatchId,
+      onlinePlayerNum: newPlayerNum,
+      onlineOpponentName: p2Name,
+    } as any);
+  }, [rematchNewMatchId]);
 
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
@@ -714,11 +761,60 @@ export function GameScreen({ navigation }: Props) {
                 {/* Buttons */}
                 <View style={styles.resultButtons}>
                   {isOnlineMatch ? (
-                    <GlossyButton
-                      label="BACK TO LOBBY"
-                      variant="orange"
-                      onPress={handleBack}
-                    />
+                    <>
+                      {/* Opponent wants a rematch */}
+                      {rematchState === 'opponent-requested' && (
+                        <View style={styles.rematchBanner}>
+                          <Text style={styles.rematchBannerText}>Opponent wants a rematch!</Text>
+                        </View>
+                      )}
+                      {rematchState === 'opponent-requested' ? (
+                        <>
+                          <GlossyButton
+                            label="ACCEPT REMATCH"
+                            variant="green"
+                            onPress={() => {
+                              if (onlineMatchId && myPlayerNum) {
+                                acceptRematch(onlineMatchId, myPlayerNum);
+                                setRematchState('requested');
+                              }
+                            }}
+                          />
+                          <GlossyButton
+                            label="DECLINE"
+                            variant="red"
+                            onPress={handleBack}
+                            style={{ marginTop: 10 }}
+                          />
+                        </>
+                      ) : rematchState === 'requested' ? (
+                        <GlossyButton
+                          label="WAITING FOR OPPONENT..."
+                          variant="navy"
+                          onPress={() => {}}
+                          disabled
+                        />
+                      ) : (
+                        <>
+                          <GlossyButton
+                            label="REMATCH"
+                            variant="orange"
+                            onPress={() => {
+                              if (onlineMatchId && myPlayerNum) {
+                                requestRematch(onlineMatchId, myPlayerNum);
+                                setRematchState('requested');
+                              }
+                            }}
+                          />
+                          <GlossyButton
+                            label="LEAVE"
+                            variant="navy"
+                            onPress={handleBack}
+                            style={{ marginTop: 10 }}
+                          />
+                        </>
+                      )}
+                    </>
                   ) : (
                     <>
                       <GlossyButton
@@ -1056,5 +1152,22 @@ const styles = StyleSheet.create({
   },
   resultButtons: {
     marginTop: 16,
+  },
+  rematchBanner: {
+    backgroundColor: 'rgba(255,140,0,0.15)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+    alignItems: 'center',
+  },
+  rematchBannerText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.orange,
+    textAlign: 'center',
   },
 });
