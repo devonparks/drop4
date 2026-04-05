@@ -598,23 +598,45 @@ export function GameScreen({ navigation }: Props) {
     const reactions: Record<string, string[]> = {
       // Taunts → AI gets annoyed or shrugs
       laughpoint: ['angry', 'shrug'],
-      angry: ['shrug', 'laughpoint'],
+      slowclap: ['angry', 'shrug', 'laughpoint'],
+      angry: ['shrug', 'laughpoint', 'calmdown'],
+      tantrum: ['calmdown', 'shrug'],
       // Positive → AI is friendly back
-      thumbsup: ['thumbsup', 'clapping', 'happy'],
-      clapping: ['thumbsup', 'happy', 'wave'],
-      happy: ['thumbsup', 'happy', 'wave'],
-      wave: ['wave', 'happy', 'thumbsup'],
+      thumbsup: ['thumbsup', 'clapping', 'wave'],
+      clapping: ['thumbsup', 'fistpump', 'wave'],
+      fistpump: ['thumbsup', 'clapping', 'wave'],
+      armsraised: ['clapping', 'thumbsup'],
+      wave: ['wave', 'thumbsup', 'salute'],
+      bow: ['wave', 'salute'],
+      salute: ['salute', 'wave', 'thumbsup'],
       // Celebrations → AI is annoyed or congratulates
-      celebrate: ['angry', 'clapping', 'shrug'],
       dab: ['angry', 'laughpoint', 'shrug'],
-      dance: ['clapping', 'angry', 'shrug'],
+      airguitar: ['clapping', 'angry', 'shrug'],
+      dustshoulder: ['angry', 'laughpoint'],
+      fingerguns: ['fingerguns', 'thumbsup'],
+      beatchest: ['flexbiceps', 'angry'],
+      // Dance → AI reacts
+      dancechestpump: ['clapping', 'angry', 'shrug'],
+      dancetwist: ['clapping', 'dancechestpump'],
+      dancerunstep: ['clapping', 'shrug'],
       // Sad → AI shows sympathy or taunts
-      sad: ['wave', 'thumbsup', 'laughpoint'],
-      // Chat-based emotes
+      facepalm: ['wave', 'thumbsup', 'laughpoint'],
+      crying: ['wave', 'thumbsup', 'calmdown'],
+      thumbsdown: ['shrug', 'laughpoint', 'thumbsup'],
+      // Affection
+      blowkiss: ['wave', 'fingerheart', 'shrug'],
+      fingerheart: ['fingerheart', 'thumbsup', 'wave'],
+      hearthands: ['hearthands', 'wave', 'thumbsup'],
+      callme: ['wave', 'shrug', 'laughpoint'],
+      // Reproach
       shrug: ['shrug', 'laughpoint'],
+      calmdown: ['shrug', 'thumbsup'],
+      // Sporty
+      flexbiceps: ['flexbiceps', 'laughpoint', 'boxing'],
+      boxing: ['boxing', 'flexbiceps', 'angry'],
     };
 
-    const options = reactions[playerEmoteId] || ['thumbsup', 'happy', 'shrug'];
+    const options = reactions[playerEmoteId] || ['thumbsup', 'wave', 'shrug'];
     return options[Math.floor(Math.random() * options.length)];
   };
 

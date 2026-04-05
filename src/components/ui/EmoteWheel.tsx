@@ -19,16 +19,15 @@ interface EmoteConfig {
 }
 
 const WHEEL_ITEMS: EmoteConfig[] = [
-  // Top row (emotes)
-  { id: 'thumbsup', name: 'Thumbs Up', icon: '👍', unlocked: true, type: 'emote' },
-  { id: 'wave', name: 'Wave', icon: '👋', unlocked: true, type: 'emote' },
-  { id: 'happy', name: 'Happy', icon: '😄', unlocked: true, type: 'emote' },
-  { id: 'dab', name: 'Dab', icon: '🕺', unlocked: true, type: 'emote' },
-  // Bottom row (more emotes + poses)
-  { id: 'dance', name: 'Dance', icon: '💃', unlocked: false, type: 'emote' },
-  { id: 'celebrate', name: 'Celebrate', icon: '🎉', unlocked: false, type: 'emote' },
-  { id: 'sad', name: 'Sad', icon: '😢', unlocked: false, type: 'emote' },
-  { id: 'angry', name: 'Angry', icon: '😤', unlocked: false, type: 'emote' },
+  // One from each category for variety (8 slots)
+  { id: 'thumbsup',       name: 'Thumbs Up',  icon: '👍', unlocked: true, type: 'emote' },   // Happy
+  { id: 'wave',           name: 'Wave',        icon: '👋', unlocked: true, type: 'emote' },   // Greet
+  { id: 'dab',            name: 'Dab',         icon: '🕺', unlocked: true, type: 'emote' },   // Celebrate
+  { id: 'dancechestpump', name: 'Dance',       icon: '💃', unlocked: true, type: 'emote' },   // Dance
+  { id: 'fingerheart',    name: 'Heart',       icon: '🫰', unlocked: true, type: 'emote' },   // Affection
+  { id: 'laughpoint',     name: 'Laugh',       icon: '🤣', unlocked: true, type: 'emote' },   // Taunt
+  { id: 'flexbiceps',     name: 'Flex',        icon: '💪', unlocked: true, type: 'emote' },   // Sporty
+  { id: 'facepalm',       name: 'Facepalm',   icon: '🤦', unlocked: true, type: 'emote' },   // Sad
 ];
 
 interface EmoteWheelProps {

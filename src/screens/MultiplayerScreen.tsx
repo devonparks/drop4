@@ -11,7 +11,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
-import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useOnlineStore } from '../stores/onlineStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
@@ -173,7 +173,7 @@ export function MultiplayerScreen({ navigation }: Props) {
             {/* Ranked — ELO rating, chess clock */}
             <GlossyButton
               label="RANKED"
-              subtitle={`Chess clock • ${tierInfo.icon} ${tierInfo.name} (${elo} MMR)`}
+              subtitle={`Chess clock • ${tierInfo.icon} ${formatRank(elo)} (${elo} MMR)`}
               variant="purple"
               icon="🏆"
               onPress={() => startSearching('ranked')}

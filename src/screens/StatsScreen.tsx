@@ -6,7 +6,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
-import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useCareerStore } from '../stores/careerStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -272,7 +272,7 @@ export function StatsScreen({ navigation }: Props) {
               <View style={styles.eloHeader}>
                 <Text style={styles.eloIcon}>{tierInfo.icon}</Text>
                 <View>
-                  <Text style={[styles.eloTierName, { color: tierInfo.color }]}>{tierInfo.name}</Text>
+                  <Text style={[styles.eloTierName, { color: tierInfo.color }]}>{formatRank(elo)}</Text>
                   <Text style={styles.eloValue}>{elo} ELO</Text>
                 </View>
                 <View style={styles.eloStats}>

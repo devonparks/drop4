@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRankedStore, RANKED_TIERS, RankedTierInfo } from '../../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, RankedTierInfo, formatRank, getDivision, getDivisionProgress } from '../../stores/rankedStore';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -21,20 +21,41 @@ export function RankProgressCard({ compact = false }: RankProgressCardProps) {
   const tierInfo = useMemo(() => {
     return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
   }, [tier]);
-  const progress = useMemo(() => {
-    const currentTierInfo = RANKED_TIERS.find(t => t.id === tier)!;
-    const currentTierIdx = RANKED_TIERS.indexOf(currentTierInfo);
-    const nextTier = RANKED_TIERS[currentTierIdx + 1];
-    if (!nextTier) return 100;
-    const range = nextTier.minElo - currentTierInfo.minElo;
-    return Math.min(100, Math.round(((elo - currentTierInfo.minElo) / range) * 100));
-  }, [elo, tier]);
 
-  // Find next tier
+  // Division-based progress (within current division, not whole tier)
+  const division = useMemo(() => getDivision(elo), [elo]);
+  const progress = useMemo(() => getDivisionProgress(elo), [elo]);
+  const formattedRank = useMemo(() => formatRank(elo), [elo]);
+
+  // Find next tier (for "ELO to next tier" display)
   const currentIdx = RANKED_TIERS.findIndex(t => t.id === tier);
   const nextTier: RankedTierInfo | null = currentIdx < RANKED_TIERS.length - 1
     ? RANKED_TIERS[currentIdx + 1]
     : null;
+
+  // Next division label: if tier has divisions and not at div 1, show next div; else next tier
+  const nextDivLabel = useMemo(() => {
+    if (tierInfo.divisions > 1 && division > 1) {
+      const romanNumerals = ['', 'I', 'II', 'III'];
+      return `${tierInfo.name} ${romanNumerals[division - 1]}`;
+    }
+    return nextTier?.name ?? 'MAX';
+  }, [tierInfo, division, nextTier]);
+
+  // ELO needed to reach next milestone (next division or next tier)
+  const eloToNext = useMemo(() => {
+    if (!nextTier && tierInfo.divisions === 1) return 0; // at max
+    const tierRange = nextTier ? nextTier.minElo - tierInfo.minElo : 300;
+    if (tierInfo.divisions > 1 && division > 1) {
+      const divisionSize = tierRange / tierInfo.divisions;
+      const divIndex = tierInfo.divisions - division; // 0-based from bottom
+      const nextDivElo = tierInfo.minElo + (divIndex + 1) * divisionSize;
+      return Math.max(0, Math.ceil(nextDivElo - elo));
+    }
+    // Next tier
+    if (nextTier) return Math.max(0, nextTier.minElo - elo);
+    return 0;
+  }, [elo, tierInfo, division, nextTier]);
 
   // Animated progress bar
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -60,14 +81,14 @@ export function RankProgressCard({ compact = false }: RankProgressCardProps) {
       <View style={styles.compactCard}>
         <View style={styles.compactHeader}>
           <Text style={styles.compactTierIcon}>{tierInfo.icon}</Text>
-          <Text style={[styles.compactTierName, { color: tierInfo.color }]}>{tierInfo.name}</Text>
+          <Text style={[styles.compactTierName, { color: tierInfo.color }]}>{formattedRank}</Text>
           <Text style={styles.compactElo}>{elo} ELO</Text>
         </View>
         <View style={styles.progressBarBg}>
           <Animated.View style={[styles.progressBarFill, { width: progressWidth, backgroundColor: tierInfo.color }]} />
         </View>
-        {nextTier && (
-          <Text style={styles.compactNextLabel}>{nextTier.minElo - elo} ELO to {nextTier.name}</Text>
+        {eloToNext > 0 && (
+          <Text style={styles.compactNextLabel}>{eloToNext} ELO to {nextDivLabel}</Text>
         )}
       </View>
     );
@@ -84,7 +105,7 @@ export function RankProgressCard({ compact = false }: RankProgressCardProps) {
           <View style={styles.tierSection}>
             <Text style={styles.tierIconLarge}>{tierInfo.icon}</Text>
             <View>
-              <Text style={[styles.tierName, { color: tierInfo.color }]}>{tierInfo.name}</Text>
+              <Text style={[styles.tierName, { color: tierInfo.color }]}>{formattedRank}</Text>
               <Text style={styles.seasonLabel}>Season {currentSeason}</Text>
             </View>
           </View>
@@ -94,16 +115,16 @@ export function RankProgressCard({ compact = false }: RankProgressCardProps) {
           </View>
         </View>
 
-        {/* Progress bar to next tier */}
+        {/* Progress bar to next division / tier */}
         <View style={styles.progressSection}>
           <View style={styles.progressLabelRow}>
             <Text style={[styles.progressTierLabel, { color: tierInfo.color }]}>
-              {tierInfo.name}
+              {formattedRank}
             </Text>
             <Text style={styles.progressPct}>{progress}%</Text>
-            {nextTier ? (
-              <Text style={[styles.progressTierLabel, { color: nextTier.color, textAlign: 'right' }]}>
-                {nextTier.name}
+            {eloToNext > 0 ? (
+              <Text style={[styles.progressTierLabel, { color: nextTier?.color ?? tierInfo.color, textAlign: 'right' }]}>
+                {nextDivLabel}
               </Text>
             ) : (
               <Text style={[styles.progressTierLabel, { color: tierInfo.color, textAlign: 'right' }]}>
@@ -119,9 +140,9 @@ export function RankProgressCard({ compact = false }: RankProgressCardProps) {
               ]}
             />
           </View>
-          {nextTier && (
+          {eloToNext > 0 && (
             <Text style={styles.eloToNext}>
-              {nextTier.minElo - elo} ELO to {nextTier.name}
+              {eloToNext} ELO to {nextDivLabel}
             </Text>
           )}
         </View>

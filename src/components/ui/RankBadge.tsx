@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { useRankedStore, RANKED_TIERS, RankedTierInfo } from '../../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, RankedTierInfo, formatRank, getDivisionProgress } from '../../stores/rankedStore';
 import { fonts, weight } from '../../theme/typography';
 import { colors } from '../../theme/colors';
 
@@ -11,6 +11,8 @@ interface RankBadgeProps {
   showElo?: boolean;
   /** Show tier progress bar toward next tier */
   showProgress?: boolean;
+  /** Show division (e.g., "Gold II") for tiers below Master. Default true. */
+  showDivision?: boolean;
   /** Override tier info instead of reading from store */
   tierOverride?: RankedTierInfo;
   /** Override ELO instead of reading from store */
@@ -28,6 +30,7 @@ export function RankBadge({
   size = 'medium',
   showElo = true,
   showProgress = false,
+  showDivision = true,
   tierOverride,
   eloOverride,
   style,
@@ -37,22 +40,23 @@ export function RankBadge({
   const storeTierInfo = useMemo(() => {
     return RANKED_TIERS.find(t => t.id === storeTier) || RANKED_TIERS[0];
   }, [storeTier]);
-  const progress = useMemo(() => {
-    const currentTierInfo = RANKED_TIERS.find(t => t.id === storeTier)!;
-    const currentTierIdx = RANKED_TIERS.indexOf(currentTierInfo);
-    const nextTier = RANKED_TIERS[currentTierIdx + 1];
-    if (!nextTier) return 100;
-    const range = nextTier.minElo - currentTierInfo.minElo;
-    return Math.min(100, Math.round(((storeElo - currentTierInfo.minElo) / range) * 100));
-  }, [storeElo, storeTier]);
 
   const tierInfo = tierOverride || storeTierInfo;
   const elo = eloOverride ?? storeElo;
 
+  // Use division-based progress (within current division, not whole tier)
+  const progress = useMemo(() => getDivisionProgress(elo), [elo]);
+
+  // Formatted rank with division (e.g., "Gold II" or "Master")
+  const displayName = useMemo(() => {
+    if (!showDivision) return tierInfo.name;
+    return formatRank(elo);
+  }, [elo, tierInfo, showDivision]);
+
   const fontSize = size === 'small' ? 10 : size === 'large' ? 16 : 13;
   const iconSize = size === 'small' ? 14 : size === 'large' ? 24 : 18;
   const padding = size === 'small' ? 4 : size === 'large' ? 10 : 6;
-  const gap = size === 'small' ? 3 : size === 'large' ? 8 : 5;
+  const gapSize = size === 'small' ? 3 : size === 'large' ? 8 : 5;
 
   return (
     <View style={[
@@ -62,12 +66,12 @@ export function RankBadge({
         paddingVertical: padding,
         borderColor: `${tierInfo.color}40`,
         backgroundColor: `${tierInfo.color}12`,
-        gap,
+        gap: gapSize,
       },
       style,
     ]}>
       <Text style={{ fontSize: iconSize }}>{tierInfo.icon}</Text>
-      <Text style={[styles.tierName, { fontSize, color: tierInfo.color }]}>{tierInfo.name}</Text>
+      <Text style={[styles.tierName, { fontSize, color: tierInfo.color }]}>{displayName}</Text>
       {showElo && (
         <Text style={[styles.elo, { fontSize: fontSize - 2 }]}>{elo}</Text>
       )}

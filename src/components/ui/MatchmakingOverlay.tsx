@@ -5,7 +5,7 @@ import Animated, { SlideInDown } from 'react-native-reanimated';
 import { GlossyButton } from './GlossyButton';
 import { CharacterAvatar } from './CharacterAvatar';
 import { PlayerProfileCard } from './PlayerProfileCard';
-import { useRankedStore, calculateOdds, RANKED_TIERS } from '../../stores/rankedStore';
+import { useRankedStore, calculateOdds, RANKED_TIERS, formatRank } from '../../stores/rankedStore';
 import { useShopStore } from '../../stores/shopStore';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -48,7 +48,7 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
 
   const oppElo = opponentElo || Math.round(playerElo + (Math.random() - 0.3) * 400);
   const oppName = opponentName || 'Opponent';
-  const oppTier = RANKED_TIERS.find(t => oppElo >= t.minElo) || RANKED_TIERS[0];
+  const oppTier = [...RANKED_TIERS].reverse().find(t => oppElo >= t.minElo) || RANKED_TIERS[0];
   const odds = calculateOdds(playerElo, oppElo);
 
   return (
@@ -71,7 +71,7 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
                   name="You"
                   level={useShopStore.getState().level}
                   elo={playerElo}
-                  tier={playerTier.name}
+                  tier={formatRank(playerElo)}
                   tierIcon={playerTier.icon}
                   tierColor={playerTier.color}
                   isOnline
@@ -96,7 +96,7 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
                   name={oppName}
                   level={Math.max(1, Math.round(oppElo / 80))}
                   elo={oppElo}
-                  tier={oppTier.name}
+                  tier={formatRank(oppElo)}
                   tierIcon={oppTier.icon}
                   tierColor={oppTier.color}
                   isOnline

@@ -10,19 +10,50 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
-// Map emote IDs to emoji for display
+// Map emote IDs to emoji for display (all 30 emotes + idle)
 const EMOTE_EMOJI: Record<string, string> = {
-  happy: '😄',
-  thumbsup: '👍',
-  wave: '👋',
+  // Base
+  idle: '😐',
+  // Affection
+  blowkiss: '😘',
+  callme: '🤙',
+  fingerheart: '🫰',
+  hearthands: '🫶',
+  // Angry
   angry: '😤',
-  dab: '🕺',
-  dance: '💃',
-  celebrate: '🎉',
-  sad: '😢',
+  tantrum: '🤬',
+  // Celebrate
+  airguitar: '🎸',
+  beatchest: '🦍',
   clapping: '👏',
-  laughpoint: '😂',
+  dab: '🕺',
+  dustshoulder: '😎',
+  fingerguns: '👉',
+  // Dance
+  dancechestpump: '💃',
+  dancetwist: '🪩',
+  dancerunstep: '🏃',
+  // Greet
+  wave: '👋',
+  bow: '🙇',
+  salute: '🫡',
+  // Happy
+  thumbsup: '👍',
+  fistpump: '✊',
+  armsraised: '🙌',
+  // Reproach
+  calmdown: '🤚',
   shrug: '🤷',
+  // Sad
+  facepalm: '🤦',
+  crying: '😢',
+  thumbsdown: '👎',
+  // Sporty
+  flexbiceps: '💪',
+  boxing: '🥊',
+  // Taunt
+  laughpoint: '🤣',
+  slowclap: '👏',
 };
 
 interface FloatingEmoteProps {
