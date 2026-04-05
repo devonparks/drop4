@@ -38,6 +38,9 @@ import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { sendEmote, listenForEmotes } from '../services/emotes';
+import { QuickChatBar } from '../components/ui/QuickChatBar';
+import { ChatBubble } from '../components/effects/ChatBubble';
+import type { QuickChatMessage } from '../data/quickChat';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
 type Props = {
@@ -84,6 +87,11 @@ export function GameScreen({ navigation }: Props) {
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
+
+  // Quick Chat (Tier 3)
+  const [quickChatOpen, setQuickChatOpen] = useState(false);
+  const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
+  const [opponentChatBubble, setOpponentChatBubble] = useState<{ text: string; senderName: string; key: number } | null>(null);
 
   // Screen shake on piece drop
   const shakeAnim = useRef(new RNAnimated.Value(0)).current;
@@ -196,6 +204,24 @@ export function GameScreen({ navigation }: Props) {
     const unsubscribe = listenForEmotes(onlineMatchId, (emote) => {
       // Only show emotes from the opponent, not our own
       if (emote.playerNum === myPlayerNum) return;
+
+      // Handle quick chat messages (prefixed with "chat:")
+      if (emote.emoteId.startsWith('chat:')) {
+        const chatId = emote.emoteId.replace('chat:', '');
+        // Look up message text from quickChat data
+        const CHAT_LOOKUP: Record<string, string> = {
+          gl: 'Good luck!', hf: 'Have fun!', nm: 'Nice move!', wp: 'Well played!',
+          ez: 'Too easy!', bm: 'Bring it on!', uh: 'Uh oh...', wow: 'Wow!',
+          oops: 'Oops!', close: 'That was close!', think: 'Hmm...', what: 'Wait what?!',
+          gg: 'Good game!', rematch: 'Rematch?', thanks: 'Thanks!', bye: 'See ya!',
+        };
+        const chatText = CHAT_LOOKUP[chatId];
+        if (chatText) {
+          setOpponentChatBubble({ text: chatText, senderName: p2Name, key: emote.timestamp });
+        }
+        return;
+      }
+
       setOpponentEmote({ emoteId: emote.emoteId, key: emote.timestamp });
     });
 
@@ -750,18 +776,71 @@ export function GameScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* Emote bar */}
-        <EmoteBarComponent
-          onEmotePress={(id) => {
-            haptics.tap();
-            playSound('click');
-            // In online matches, send emote to opponent via Firestore
+        {/* Emote bar + Quick Chat button (Tier 2 + Tier 3 trigger) */}
+        <View style={styles.emoteRow}>
+          <EmoteBarComponent
+            onEmotePress={(id) => {
+              haptics.tap();
+              playSound('click');
+              setQuickChatOpen(false);
+              // In online matches, send emote to opponent via Firestore
+              if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+                sendEmote(onlineMatchId, id, myPlayerNum);
+              }
+            }}
+            variant="game"
+          />
+
+          {/* Quick Chat toggle button */}
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              playSound('click');
+              setQuickChatOpen(prev => !prev);
+            }}
+            style={[styles.chatToggleBtn, quickChatOpen && styles.chatToggleBtnActive]}
+          >
+            <Text style={styles.chatToggleIcon}>{quickChatOpen ? '✕' : '💬'}</Text>
+          </Pressable>
+        </View>
+
+        {/* Quick Chat Bar — slides in when chat button is pressed (Tier 3) */}
+        <QuickChatBar
+          visible={quickChatOpen}
+          onSend={(msg: QuickChatMessage) => {
+            setQuickChatOpen(false);
+            // Show local bubble
+            setMyChatBubble({ text: msg.text, key: Date.now() });
+            // In online matches, send to opponent via Firestore
             if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-              sendEmote(onlineMatchId, id, myPlayerNum);
+              sendEmote(onlineMatchId, `chat:${msg.id}`, myPlayerNum);
             }
           }}
-          variant="game"
         />
+
+        {/* My Chat Bubble — shows above the board on my side */}
+        {myChatBubble && (
+          <ChatBubble
+            key={myChatBubble.key}
+            text={myChatBubble.text}
+            senderName={p1Name}
+            side={isOnlineMatch && myPlayerNum === 2 ? 'right' : 'left'}
+            visible
+            onDone={() => setMyChatBubble(null)}
+          />
+        )}
+
+        {/* Opponent Chat Bubble — shows on opponent's side */}
+        {opponentChatBubble && (
+          <ChatBubble
+            key={opponentChatBubble.key}
+            text={opponentChatBubble.text}
+            senderName={opponentChatBubble.senderName}
+            side={isOnlineMatch && myPlayerNum === 2 ? 'left' : 'right'}
+            visible
+            onDone={() => setOpponentChatBubble(null)}
+          />
+        )}
 
         {/* Floating emote from opponent (online matches) */}
         {opponentEmote && (
@@ -1338,6 +1417,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emoteText: {
+    fontSize: 22,
+  },
+  // Emote row — face emotes + quick chat button side by side
+  emoteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  chatToggleBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  chatToggleBtnActive: {
+    borderColor: colors.orange,
+    backgroundColor: 'rgba(255,140,0,0.2)',
+  },
+  chatToggleIcon: {
     fontSize: 22,
   },
   // ======== Basketball Stars-style Game Over ========
