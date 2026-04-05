@@ -88,12 +88,10 @@ export function CareerScreen({ navigation }: Props) {
 
     newGame(careerLevel.difficulty, true, settings);
 
-    // Store which career level we're playing so we can update it on result
-    // Using a global ref since we can't pass params through navigation easily
-    (global as any).__careerLevelId = careerLevel.id;
-    (global as any).__careerLevelReward = careerLevel.reward;
-
-    navigation.navigate('Game');
+    navigation.navigate('Game', {
+      careerLevelId: careerLevel.id,
+      careerLevelReward: careerLevel.reward,
+    });
   };
 
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;

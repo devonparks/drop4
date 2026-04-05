@@ -73,10 +73,9 @@ export function StageScreen({ navigation }: Props) {
       const success = spendCoins(table.buyIn);
       if (!success) { haptics.error(); return; }
     }
-    (global as any).__wagerCourt = table;
     playSound('coin');
     newGame('hard', true);
-    navigation.navigate('Game');
+    navigation.navigate('Game', { wagerCourt: table });
   };
 
   return (

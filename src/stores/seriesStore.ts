@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveState, loadState } from '../services/storage';
 
 export type SeriesVenue = 'home' | 'away' | 'neutral';
 
@@ -17,6 +18,7 @@ interface SeriesState {
   getCurrentVenue: () => SeriesVenue;
   getActiveBoard: () => string;
   endSeries: () => void;
+  loadFromStorage: () => Promise<void>;
 }
 
 // Bot board themes per difficulty
@@ -89,6 +91,39 @@ export const useSeriesStore = create<SeriesState>((set, get) => ({
     scores: [0, 0],
     venue: 'home',
   }),
+
+  loadFromStorage: async () => {
+    const saved = await loadState<{
+      isActive: boolean;
+      currentGame: number;
+      scores: [number, number];
+      homePlayerBoard: string;
+      awayPlayerBoard: string;
+      venue: SeriesVenue;
+    }>('series');
+    if (saved) {
+      set({
+        isActive: saved.isActive ?? false,
+        currentGame: saved.currentGame ?? 1,
+        scores: saved.scores ?? [0, 0],
+        homePlayerBoard: saved.homePlayerBoard ?? 'default',
+        awayPlayerBoard: saved.awayPlayerBoard ?? 'default',
+        venue: saved.venue ?? 'home',
+      });
+    }
+  },
 }));
+
+// Auto-save series state
+useSeriesStore.subscribe((state) => {
+  saveState('series', {
+    isActive: state.isActive,
+    currentGame: state.currentGame,
+    scores: state.scores,
+    homePlayerBoard: state.homePlayerBoard,
+    awayPlayerBoard: state.awayPlayerBoard,
+    venue: state.venue,
+  });
+});
 
 export { BOT_BOARDS };

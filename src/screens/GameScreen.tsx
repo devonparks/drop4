@@ -6,6 +6,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard } from '../components/board/GameBoard';
@@ -31,13 +32,16 @@ import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
-import type { RootStackParamList } from '../navigation/RootNavigator';
+import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Game'>;
 };
 
 export function GameScreen({ navigation }: Props) {
+  const route = useRoute<RouteProp<RootStackParamList, 'Game'>>();
+  const params = (route.params || {}) as GameParams;
+
   const {
     board, currentPlayer, status, winner,
     moveCount, difficulty, isAiThinking, isVsAi,
@@ -62,11 +66,11 @@ export function GameScreen({ navigation }: Props) {
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Matchmaking overlay for wager/stage games
-  const [showMatchmaking, setShowMatchmaking] = useState(() => !!(global as any).__wagerCourt);
-  const wagerCourt = (global as any).__wagerCourt;
+  const [showMatchmaking, setShowMatchmaking] = useState(() => !!params.wagerCourt);
+  const wagerCourt = params.wagerCourt;
 
   // Chess clock for ranked mode
-  const isRankedMode = !!(global as any).__rankedMode;
+  const isRankedMode = !!params.rankedMode;
   const p1TimeBank = useRankedStore(s => s.player1TimeBank);
   const p2TimeBank = useRankedStore(s => s.player2TimeBank);
   const activeClockPlayer = useRankedStore(s => s.activeClockPlayer);
@@ -78,7 +82,7 @@ export function GameScreen({ navigation }: Props) {
   // Initialize chess clock for ranked games
   useEffect(() => {
     if (isRankedMode && status === 'playing' && moveCount === 0) {
-      const clockTime = (global as any).__rankedClockSeconds || 180;
+      const clockTime = params.rankedClockSeconds || 180;
       startChessClock(clockTime);
     }
   }, [isRankedMode, status]);
@@ -119,10 +123,8 @@ export function GameScreen({ navigation }: Props) {
     if (status === 'playing' && moveCount === 0) {
       startRecording();
       // Apply preset board from Board Editor if available
-      const presetBoard = (global as any).__presetBoard;
-      if (presetBoard) {
-        useGameStore.setState({ board: presetBoard });
-        (global as any).__presetBoard = null;
+      if (params.presetBoard) {
+        useGameStore.setState({ board: params.presetBoard });
       }
     }
   }, [status, moveCount]);
@@ -215,14 +217,14 @@ export function GameScreen({ navigation }: Props) {
       // Season XP
       addSeasonXp(reward);
       // Career level completion
-      const careerLevelId = (global as any).__careerLevelId;
+      const careerLevelId = params.careerLevelId;
       if (careerLevelId) {
         setWasCareerLevel(true);
         // Star rating: 3 stars if < 15 moves, 2 if < 25, 1 otherwise
         const starRating = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
         // Award career reward
-        const careerReward = (global as any).__careerLevelReward;
+        const careerReward = params.careerLevelReward;
         if (careerReward) {
           if (careerReward.type === 'coins' && careerReward.amount) {
             addCoins(careerReward.amount);
@@ -235,19 +237,12 @@ export function GameScreen({ navigation }: Props) {
             useShopStore.getState().purchaseItem('pieces', careerReward.id, 0);
           }
         }
-        (global as any).__careerLevelId = null;
-        (global as any).__careerLevelReward = null;
       }
       // Wager court winnings + ranked ELO update
-      const wagerCourt = (global as any).__wagerCourt;
       if (wagerCourt) {
         if (wagerCourt.winnerGets > 0) addCoins(wagerCourt.winnerGets);
         recordRanked(true); // Won wager match — ELO goes up
-        (global as any).__wagerCourt = null;
       }
-      // Clear ranked mode flags
-      (global as any).__rankedMode = null;
-      (global as any).__rankedClockSeconds = null;
       // Award loot box on win (every 3rd win gets a box)
       const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
       if (totalWins % 3 === 0) {
@@ -280,14 +275,10 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
       updateChallenge('play_5', 1);
       addSeasonXp(10);
-      // Clear wager — coins already deducted, lost + ranked ELO down
-      if ((global as any).__wagerCourt) {
+      // Wager lost — coins already deducted, ranked ELO down
+      if (wagerCourt) {
         recordRanked(false); // Lost wager match
-        (global as any).__wagerCourt = null;
       }
-      // Clear ranked mode flags
-      (global as any).__rankedMode = null;
-      (global as any).__rankedClockSeconds = null;
       haptics.error();
       playSound('lose');
       playRandomVoice('win');
@@ -332,7 +323,7 @@ export function GameScreen({ navigation }: Props) {
   };
 
   // Local player names
-  const localNames = (global as any).__localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
+  const localNames = params.localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
   const p1Name = isVsAi ? 'You' : localNames.player1;
   const p2Name = isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
 

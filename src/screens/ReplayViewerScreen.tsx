@@ -97,6 +97,7 @@ export function ReplayViewerScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastMove, setLastMove] = useState<{ col: number; row: number } | null>(null);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stepForwardRef = useRef<() => void>(() => {});
 
   // Initialize board for watching
   const startWatching = useCallback((replay: Replay) => {
@@ -133,20 +134,25 @@ export function ReplayViewerScreen() {
     playSound('drop');
   }, [watching, moveIndex, applyMove]);
 
+  // Keep ref in sync so the interval always calls the latest stepForward
+  useEffect(() => {
+    stepForwardRef.current = stepForward;
+  }, [stepForward]);
+
   // Auto-play
   useEffect(() => {
     if (playRef.current) clearInterval(playRef.current);
 
     if (isPlaying && watching && moveIndex < watching.moves.length) {
       playRef.current = setInterval(() => {
-        stepForward();
+        stepForwardRef.current();
       }, 600);
     }
 
     return () => {
       if (playRef.current) clearInterval(playRef.current);
     };
-  }, [isPlaying, moveIndex, watching]);
+  }, [isPlaying, watching]);
 
   // Stop playing when reached end
   useEffect(() => {

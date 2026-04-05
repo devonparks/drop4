@@ -18,10 +18,20 @@ import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
 import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 
+export type GameParams = {
+  wagerCourt?: any;
+  rankedMode?: boolean;
+  rankedClockSeconds?: number;
+  presetBoard?: any;
+  careerLevelId?: number;
+  careerLevelReward?: any;
+  localPlayerNames?: { player1: string; player2: string };
+};
+
 export type RootStackParamList = {
   MainTabs: undefined;
-  Play: undefined;
-  Game: undefined;
+  Play: { rankedMode?: boolean; rankedClockSeconds?: number } | undefined;
+  Game: GameParams | undefined;
   LocalPlay: undefined;
   CustomGame: undefined;
   Career: undefined;

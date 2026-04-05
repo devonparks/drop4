@@ -50,9 +50,9 @@ export function BoardEditorScreen({ navigation }: Props) {
       connectCount: 4,
       timerSeconds: 0,
     });
-    // Store preset board for GameScreen to apply
-    (global as any).__presetBoard = editorBoard.map(c => [...c]);
-    navigation.navigate('Game');
+    navigation.navigate('Game', {
+      presetBoard: editorBoard.map(c => [...c]),
+    });
   };
 
   return (

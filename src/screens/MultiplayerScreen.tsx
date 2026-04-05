@@ -52,10 +52,10 @@ export function MultiplayerScreen({ navigation }: Props) {
               variant="purple"
               icon="🏆"
               onPress={() => {
-                // Set ranked mode flags for GameScreen chess clock
-                (global as any).__rankedMode = true;
-                (global as any).__rankedClockSeconds = 180; // 3 min per player
-                navigation.navigate('Play');
+                navigation.navigate('Play', {
+                  rankedMode: true,
+                  rankedClockSeconds: 180, // 3 min per player
+                });
               }}
             />
 

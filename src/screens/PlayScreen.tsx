@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
@@ -19,20 +20,27 @@ type Props = {
 };
 
 export function PlayScreen({ navigation }: Props) {
+  const route = useRoute<RouteProp<RootStackParamList, 'Play'>>();
   const { coins, gems, level } = useShopStore();
   const newGame = useGameStore(s => s.newGame);
   const { bestStreak } = useGameStore();
   const stats = useMatchHistoryStore(s => s.getStats());
-  const [mode, setMode] = useState<'casual' | 'ranked'>('casual');
+  // If navigated here from Multiplayer with ranked flags, default to ranked mode
+  const incomingRanked = route.params?.rankedMode;
+  const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
 
   const startGame = (difficulty: Difficulty) => {
     // Ranked mode uses chess clock timer (180 seconds per player)
     if (mode === 'ranked') {
       newGame(difficulty, true, { timerSeconds: 15 }); // 15s per move for now
+      navigation.navigate('Game', {
+        rankedMode: true,
+        rankedClockSeconds: route.params?.rankedClockSeconds || 180,
+      });
     } else {
       newGame(difficulty, true);
+      navigation.navigate('Game');
     }
-    navigation.navigate('Game');
   };
 
   return (

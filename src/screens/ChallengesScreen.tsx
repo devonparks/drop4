@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -65,19 +65,41 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
 }
 
 export function ChallengesScreen() {
-  const { challenges, claimReward } = useChallengeStore();
+  const { challenges, claimReward, refreshChallenges, lastRefresh } = useChallengeStore();
   const { addCoins } = useShopStore();
+  const hasAutoRefreshed = useRef(false);
+  const [bonusClaimed, setBonusClaimed] = useState(false);
+
+  // Daily auto-refresh: if lastRefresh date differs from today, refresh challenges
+  useEffect(() => {
+    if (hasAutoRefreshed.current) return;
+    const lastDate = new Date(lastRefresh).toDateString();
+    const today = new Date().toDateString();
+    if (lastDate !== today) {
+      refreshChallenges();
+    }
+    hasAutoRefreshed.current = true;
+  }, [lastRefresh, refreshChallenges]);
 
   const handleClaim = (challengeId: string) => {
     const reward = claimReward(challengeId);
     if (reward > 0) {
-      addCoins(reward);
       haptics.win();
       playSound('coin');
     }
   };
 
+  const totalCount = challenges.length;
   const completedCount = challenges.filter(c => c.completed).length;
+  const allComplete = completedCount === totalCount && totalCount > 0;
+
+  const handleClaimBonus = () => {
+    if (!allComplete || bonusClaimed) return;
+    addCoins(200);
+    setBonusClaimed(true);
+    haptics.win();
+    playSound('coin');
+  };
 
   return (
     <ScreenBackground>
@@ -85,7 +107,7 @@ export function ChallengesScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>DAILY CHALLENGES</Text>
           <Text style={styles.subtitle}>Refreshes daily</Text>
-          <Text style={styles.progress}>{completedCount}/3 completed</Text>
+          <Text style={styles.progress}>{completedCount}/{totalCount} completed</Text>
         </View>
 
         <View style={styles.cardList}>
@@ -98,15 +120,19 @@ export function ChallengesScreen() {
           ))}
         </View>
 
-        {/* Bonus for completing all 3 */}
-        <View style={[styles.bonusCard, completedCount === 3 && styles.bonusActive]}>
+        {/* Bonus for completing all challenges */}
+        <Pressable
+          onPress={handleClaimBonus}
+          disabled={!allComplete || bonusClaimed}
+          style={[styles.bonusCard, allComplete && !bonusClaimed && styles.bonusActive]}
+        >
           <Text style={styles.bonusIcon}>🎁</Text>
           <View>
             <Text style={styles.bonusTitle}>Daily Bonus</Text>
-            <Text style={styles.bonusDesc}>Complete all 3 challenges</Text>
+            <Text style={styles.bonusDesc}>Complete all {totalCount} challenges</Text>
           </View>
           <Text style={styles.bonusReward}>🪙 200</Text>
-        </View>
+        </Pressable>
       </View>
     </ScreenBackground>
   );

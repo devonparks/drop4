@@ -66,10 +66,10 @@ export function TournamentScreen({ navigation }: Props) {
     resetScores();
     const p1 = tournament.players[match.player1Index];
     const p2 = tournament.players[match.player2Index];
-    (global as any).__localPlayerNames = { player1: p1.name, player2: p2.name };
-    (global as any).__tournamentMatch = true;
     newGame('medium', false);
-    navigation.navigate('Game');
+    navigation.navigate('Game', {
+      localPlayerNames: { player1: p1.name, player2: p2.name },
+    });
   };
 
   // ═══ SETUP PHASE ═══

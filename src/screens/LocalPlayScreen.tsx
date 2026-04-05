@@ -27,9 +27,10 @@ export function LocalPlayScreen({ navigation }: Props) {
   const startLocalGame = () => {
     haptics.tap();
     resetScores();
-    (global as any).__localPlayerNames = { player1: player1Name, player2: player2Name };
     newGame('medium', false);
-    navigation.navigate('Game');
+    navigation.navigate('Game', {
+      localPlayerNames: { player1: player1Name, player2: player2Name },
+    });
   };
 
   return (

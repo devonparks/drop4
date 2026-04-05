@@ -9,6 +9,7 @@ import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCha
 import { EmoteWheel } from '../components/ui/EmoteWheel';
 import { useShopStore } from '../stores/shopStore';
 import { useSeasonStore } from '../stores/seasonStore';
+import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -16,7 +17,8 @@ import { fonts, weight } from '../theme/typography';
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { coins, gems, level } = useShopStore();
-  const { currentTier, maxTier } = useSeasonStore();
+  const { currentTier, maxTier, seasonName } = useSeasonStore();
+  const challenges = useChallengeStore(s => s.challenges);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [wheelOpen, setWheelOpen] = useState(false);
 
@@ -45,7 +47,7 @@ export function HomeScreen() {
         <View style={styles.statusBar}>
           <Pressable onPress={() => navigateTo('SeasonPass')} style={styles.statusPill}>
             <Text style={styles.statusIcon}>🏆</Text>
-            <Text style={styles.statusLabel}>Season 0</Text>
+            <Text style={styles.statusLabel}>{seasonName}</Text>
             <View style={styles.progressBarSmall}>
               <View style={[styles.progressFillSmall, { width: `${(currentTier / maxTier) * 100}%` }]} />
             </View>
@@ -56,7 +58,7 @@ export function HomeScreen() {
             <Text style={styles.statusIcon}>📋</Text>
             <Text style={styles.statusLabel}>Daily Challenges</Text>
             <View style={styles.challengeBadge}>
-              <Text style={styles.badgeNum}>3</Text>
+              <Text style={styles.badgeNum}>{challenges.filter(c => !c.completed).length}</Text>
             </View>
           </View>
         </View>

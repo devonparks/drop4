@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Share, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -10,7 +10,7 @@ import { useCareerStore } from '../stores/careerStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted } from '../services/audio';
-import { haptics } from '../services/haptics';
+import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -51,7 +51,7 @@ export function SettingsScreen({ navigation }: Props) {
   const ranked = useRankedStore();
   const season = useSeasonStore();
   const [soundOn, setSoundOn] = useState(!getMuted());
-  const [hapticsOn, setHapticsOn] = useState(true);
+  const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [showPastSeasons, setShowPastSeasons] = useState(false);
 
@@ -66,6 +66,7 @@ export function SettingsScreen({ navigation }: Props) {
           onBackPress={() => navigation.goBack()}
         />
 
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>SETTINGS</Text>
 
         {/* Audio */}
@@ -80,7 +81,7 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingToggle
             label="Haptic Feedback"
             value={hapticsOn}
-            onToggle={() => setHapticsOn(!hapticsOn)}
+            onToggle={() => { const next = !hapticsOn; setHapticsOn(next); setHapticsEnabled(next); }}
             icon="📳"
           />
         </View>
@@ -207,6 +208,7 @@ export function SettingsScreen({ navigation }: Props) {
           <Text style={styles.copyright}>Created by Devon Parks</Text>
           <Text style={styles.copyright}>AMG Studios © 2026</Text>
         </View>
+        </ScrollView>
       </View>
     </ScreenBackground>
   );
@@ -215,6 +217,9 @@ export function SettingsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   title: {
     fontFamily: fonts.heading,
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: 'auto',
+    marginTop: 24,
     paddingBottom: 24,
   },
   version: {
