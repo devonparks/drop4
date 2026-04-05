@@ -13,6 +13,7 @@ import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { EmotePickerModal } from '../components/ui/EmotePickerModal';
+import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
 import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -96,6 +97,10 @@ export function GameScreen({ navigation }: Props) {
   // Emote Picker Modal
   const [emotePickerOpen, setEmotePickerOpen] = useState(false);
   const [emotePickerTab, setEmotePickerTab] = useState<'emotes' | 'chat'>('emotes');
+
+  // Fortnite-style emote wheel
+  const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
+  const equippedEmotes = useShopStore(s => s.equippedEmotes);
 
   // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
@@ -1009,6 +1014,38 @@ export function GameScreen({ navigation }: Props) {
           }}
         />
 
+        {/* Round EMOTE button — opens Fortnite-style wheel */}
+        <Pressable
+          onPress={() => {
+            haptics.tap();
+            playSound('click');
+            setEmoteWheelOpen(true);
+          }}
+          style={styles.emoteWheelTrigger}
+        >
+          <LinearGradient
+            colors={['rgba(255,140,0,0.3)', 'rgba(255,100,0,0.12)']}
+            style={styles.emoteWheelTriggerGradient}
+          >
+            <Text style={styles.emoteWheelTriggerIcon}>{'😀'}</Text>
+          </LinearGradient>
+        </Pressable>
+
+        {/* Fortnite-style radial emote wheel */}
+        <FortniteEmoteWheel
+          visible={emoteWheelOpen}
+          equippedEmotes={equippedEmotes as any}
+          onSelect={(emoteId) => {
+            setMyEmote({ emoteId, key: Date.now() });
+            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+              sendEmote(onlineMatchId, emoteId, myPlayerNum);
+            } else {
+              triggerAiEmoteReaction(emoteId);
+            }
+          }}
+          onClose={() => setEmoteWheelOpen(false)}
+        />
+
         {/* My Chat Bubble — shows above the board on my side */}
         {myChatBubble && (
           <ChatBubble
@@ -1676,6 +1713,32 @@ const styles = StyleSheet.create({
   },
   chatToggleIcon: {
     fontSize: 16,
+  },
+  // Round EMOTE wheel trigger button
+  emoteWheelTrigger: {
+    position: 'absolute',
+    bottom: 120,
+    right: 12,
+    borderRadius: 28,
+    overflow: 'hidden',
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 20,
+  },
+  emoteWheelTriggerGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,140,0,0.4)',
+  },
+  emoteWheelTriggerIcon: {
+    fontSize: 26,
   },
   // ======== Basketball Stars-style Game Over ========
   overlay: {

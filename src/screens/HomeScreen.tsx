@@ -198,9 +198,9 @@ export function HomeScreen() {
             <Text style={styles.customizeIcon}>✏️</Text>
             <Text style={styles.customizeText}>Customize</Text>
           </Pressable>
-          <Pressable onPress={() => navigateTo('Friends')} style={styles.friendsBtn}>
-            <Text style={styles.customizeIcon}>👫</Text>
-            <Text style={styles.friendsBtnText}>Friends</Text>
+          <Pressable onPress={() => navigateTo('PartyLobby')} style={styles.friendsBtn}>
+            <Text style={styles.customizeIcon}>🎉</Text>
+            <Text style={styles.friendsBtnText}>Party</Text>
           </Pressable>
         </View>
 

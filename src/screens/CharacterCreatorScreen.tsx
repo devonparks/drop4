@@ -91,6 +91,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const playerName = useShopStore(s => s.playerName);
   const bestStreak = useGameStore(s => s.bestStreak);
   const totalGamesPlayed = useGameStore(s => s.totalGamesPlayed);
+  const equippedEmotes = useShopStore(s => s.equippedEmotes);
+  const setEquippedEmote = useShopStore(s => s.setEquippedEmote);
 
   const [activeTab, setActiveTab] = useState<TabId>('outfit');
   const [selectedPose, setSelectedPose] = useState<PoseId>('default');
@@ -98,6 +100,9 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const [previewingItem, setPreviewingItem] = useState<CharacterItem | null>(null);
   const { emote: previewEmote, triggerEmote: triggerPreviewEmote, clearEmote: clearPreviewEmote } = useEmoteTrigger();
   const [playingEmoteId, setPlayingEmoteId] = useState<EmoteId | null>(null);
+
+  // Emote wheel assignment: which wheel slot is selected for assignment
+  const [selectedWheelSlot, setSelectedWheelSlot] = useState<number | null>(null);
 
   // Get items for the active tab
   const activeCategories = TAB_TO_CATEGORIES[activeTab];
@@ -305,6 +310,48 @@ export function CharacterCreatorScreen({ navigation }: Props) {
           {/* ══ ITEMS SCROLL / EMOTES GRID ══ */}
           {activeTab === 'emotes' ? (
             <View style={styles.emotesTabContent}>
+              {/* ── YOUR WHEEL ── */}
+              <View style={styles.yourWheelSection}>
+                <View style={styles.yourWheelHeader}>
+                  <Text style={styles.yourWheelTitle}>YOUR WHEEL</Text>
+                  <Text style={styles.yourWheelSub}>
+                    {selectedWheelSlot !== null
+                      ? `Tap an emote below to assign to Slot ${selectedWheelSlot + 1}`
+                      : 'Tap a slot, then pick an emote to assign'}
+                  </Text>
+                </View>
+                <View style={styles.yourWheelSlots}>
+                  {equippedEmotes.map((emoteId, index) => {
+                    const eid = emoteId as EmoteId;
+                    const isSelected = selectedWheelSlot === index;
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() => {
+                          haptics.tap();
+                          setSelectedWheelSlot(isSelected ? null : index);
+                        }}
+                        style={[
+                          styles.wheelSlot,
+                          isSelected && styles.wheelSlotSelected,
+                        ]}
+                      >
+                        <Text style={styles.wheelSlotEmoji}>
+                          {EMOTE_EMOJI[eid] || '?'}
+                        </Text>
+                        <Text style={styles.wheelSlotName} numberOfLines={1}>
+                          {EMOTE_NAME[eid] || 'Empty'}
+                        </Text>
+                        <View style={styles.wheelSlotNum}>
+                          <Text style={styles.wheelSlotNumText}>{index + 1}</Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* ── EMOTE GRID ── */}
               {EMOTE_CATEGORIES.map(category => (
                 <View key={category.name} style={styles.emoteCategorySection}>
                   <View style={styles.emoteCategoryHeader}>
@@ -317,6 +364,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                       const unlock = EMOTE_UNLOCKS[emoteId];
                       const isLocked = !unlock?.unlocked;
                       const isPlaying = playingEmoteId === emoteId;
+                      const isInWheel = equippedEmotes.includes(emoteId);
 
                       return (
                         <Pressable
@@ -324,6 +372,15 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           onPress={() => {
                             if (isLocked) { haptics.error(); return; }
                             haptics.tap();
+
+                            // If a wheel slot is selected, assign this emote to it
+                            if (selectedWheelSlot !== null) {
+                              setEquippedEmote(selectedWheelSlot, emoteId);
+                              setSelectedWheelSlot(null);
+                              return;
+                            }
+
+                            // Otherwise, preview the emote
                             setPlayingEmoteId(emoteId);
                             triggerPreviewEmote(emoteId);
                           }}
@@ -331,6 +388,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                             styles.emoteTabCard,
                             isPlaying && styles.emoteTabCardPlaying,
                             isLocked && styles.emoteTabCardLocked,
+                            isInWheel && styles.emoteTabCardInWheel,
                           ]}
                         >
                           <Text style={[styles.emoteTabCardEmoji, isLocked && { opacity: 0.3 }]}>
@@ -348,6 +406,11 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           {isPlaying && (
                             <View style={styles.emoteTabPlayingDot}>
                               <Text style={{ fontSize: 8, color: colors.orange }}>{'▶'}</Text>
+                            </View>
+                          )}
+                          {isInWheel && (
+                            <View style={styles.emoteTabWheelBadge}>
+                              <Text style={styles.emoteTabWheelBadgeText}>{'W'}</Text>
                             </View>
                           )}
                         </Pressable>
@@ -1292,6 +1355,104 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 3,
     right: 3,
+  },
+  emoteTabCardInWheel: {
+    borderColor: 'rgba(255,140,0,0.25)',
+  },
+  emoteTabWheelBadge: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255,140,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoteTabWheelBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: colors.orange,
+  },
+
+  // --- YOUR WHEEL section ---
+  yourWheelSection: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  yourWheelHeader: {
+    marginBottom: 8,
+  },
+  yourWheelTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.orange,
+    letterSpacing: 3,
+  },
+  yourWheelSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  yourWheelSlots: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  wheelSlot: {
+    width: (SCREEN_WIDTH - 24 - 40) / 6,
+    aspectRatio: 0.85,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    position: 'relative',
+  },
+  wheelSlotSelected: {
+    borderColor: colors.orange,
+    backgroundColor: 'rgba(255,140,0,0.1)',
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  wheelSlotEmoji: {
+    fontSize: 22,
+  },
+  wheelSlotName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 7,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    paddingHorizontal: 2,
+  },
+  wheelSlotNum: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wheelSlotNumText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.3)',
   },
 
   // --- Bottom Bar ---

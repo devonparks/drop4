@@ -24,6 +24,9 @@ interface ShopState {
     boardAccessories: string[];
   };
 
+  // Emote wheel — 6 equipped emote slots
+  equippedEmotes: string[];
+
   // Actions
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
@@ -31,6 +34,7 @@ interface ShopState {
   addGems: (amount: number) => void;
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
+  setEquippedEmote: (slot: number, emoteId: string) => void;
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -57,6 +61,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
     winAnimations: ['basic'],
     boardAccessories: ['none'],
   },
+
+  equippedEmotes: ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
 
   addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
 
@@ -99,6 +105,16 @@ export const useShopStore = create<ShopState>((set, get) => ({
     }));
   },
 
+  setEquippedEmote: (slot, emoteId) => {
+    set((s) => {
+      const newEmotes = [...s.equippedEmotes];
+      if (slot >= 0 && slot < 6) {
+        newEmotes[slot] = emoteId;
+      }
+      return { equippedEmotes: newEmotes };
+    });
+  },
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -126,6 +142,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
           boardAccessories: ['none'],
           ...saved.owned,
         },
+        equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
       });
     }
   },
@@ -141,5 +158,6 @@ useShopStore.subscribe((state) => {
     xp: state.xp,
     equipped: state.equipped,
     owned: state.owned,
+    equippedEmotes: state.equippedEmotes,
   });
 });

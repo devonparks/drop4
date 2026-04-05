@@ -21,6 +21,7 @@ import { SpectatorScreen } from '../screens/SpectatorScreen';
 import { FriendsScreen } from '../screens/FriendsScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
+import { PartyLobbyScreen } from '../screens/PartyLobbyScreen';
 
 export type WagerCourtParams = {
   id?: string;
@@ -92,6 +93,7 @@ export type RootStackParamList = {
   Spectator: undefined;
   Friends: undefined;
   Stats: undefined;
+  PartyLobby: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -130,6 +132,7 @@ export function RootNavigator() {
       <Stack.Screen name="Spectator" component={SpectatorScreen} />
       <Stack.Screen name="Friends" component={FriendsScreen} />
       <Stack.Screen name="Stats" component={StatsScreen} />
+      <Stack.Screen name="PartyLobby" component={PartyLobbyScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}
