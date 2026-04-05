@@ -18,9 +18,9 @@ import { DarkMatterCamo } from '../effects/DarkMatterCamo';
 import { colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BOARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 24, 380);
+const BOARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 16, 400);
 const CELL_GAP = 3;
-const BOARD_PADDING = 10;
+const BOARD_PADDING = 8;
 
 // Default sizes for standard 7-col board (used for exports)
 const CELL_SIZE = Math.floor((BOARD_MAX_WIDTH - BOARD_PADDING * 2 - CELL_GAP * (COLS - 1)) / COLS);
@@ -345,6 +345,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     position: 'relative',
+    // Premium floating glow
+    shadowColor: 'rgba(80,140,255,0.5)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 14,
   },
   dropIndicator: {
     position: 'absolute',

@@ -12,7 +12,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
-import { EmoteBar as EmoteBarComponent } from '../components/ui/EmoteBar';
+import { EmotePickerModal } from '../components/ui/EmotePickerModal';
 import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -38,7 +38,7 @@ import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { sendEmote, listenForEmotes } from '../services/emotes';
-import { QuickChatBar } from '../components/ui/QuickChatBar';
+// QuickChatBar replaced by EmotePickerModal
 import { ChatBubble } from '../components/effects/ChatBubble';
 import type { QuickChatMessage } from '../data/quickChat';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
@@ -88,8 +88,11 @@ export function GameScreen({ navigation }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
 
-  // Quick Chat (Tier 3)
-  const [quickChatOpen, setQuickChatOpen] = useState(false);
+  // Emote Picker Modal
+  const [emotePickerOpen, setEmotePickerOpen] = useState(false);
+  const [emotePickerTab, setEmotePickerTab] = useState<'emotes' | 'chat'>('emotes');
+
+  // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
   const [opponentChatBubble, setOpponentChatBubble] = useState<{ text: string; senderName: string; key: number } | null>(null);
 
@@ -776,42 +779,71 @@ export function GameScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* Emote bar + Quick Chat button (Tier 2 + Tier 3 trigger) */}
+        {/* Compact emote pills + MORE button */}
         <View style={styles.emoteRow}>
-          <EmoteBarComponent
-            onEmotePress={(id) => {
-              haptics.tap();
-              playSound('click');
-              setQuickChatOpen(false);
-              // In online matches, send emote to opponent via Firestore
-              if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-                sendEmote(onlineMatchId, id, myPlayerNum);
-              }
-            }}
-            variant="game"
-          />
+          {/* 4 recently-used emote pills */}
+          {([
+            { id: 'thumbsup' as const, emoji: '👍', label: 'Nice', color: '#2ecc71' },
+            { id: 'clapping' as const, emoji: '👏', label: 'GG', color: '#f1c40f' },
+            { id: 'laughpoint' as const, emoji: '😂', label: 'Lol', color: '#e67e22' },
+            { id: 'angry' as const, emoji: '😤', label: 'Grr', color: '#e74c3c' },
+          ]).map(emote => (
+            <Pressable
+              key={emote.id}
+              onPress={() => {
+                haptics.tap();
+                playSound('click');
+                if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+                  sendEmote(onlineMatchId, emote.id, myPlayerNum);
+                }
+              }}
+              style={[styles.quickEmotePill, { borderColor: emote.color + '30' }]}
+            >
+              <Text style={styles.quickEmoteEmoji}>{emote.emoji}</Text>
+              <Text style={[styles.quickEmoteLabel, { color: emote.color + 'bb' }]}>{emote.label}</Text>
+            </Pressable>
+          ))}
 
-          {/* Quick Chat toggle button */}
+          {/* MORE button — opens full picker */}
           <Pressable
             onPress={() => {
               haptics.tap();
               playSound('click');
-              setQuickChatOpen(prev => !prev);
+              setEmotePickerTab('emotes');
+              setEmotePickerOpen(true);
             }}
-            style={[styles.chatToggleBtn, quickChatOpen && styles.chatToggleBtnActive]}
+            style={styles.moreBtn}
           >
-            <Text style={styles.chatToggleIcon}>{quickChatOpen ? '✕' : '💬'}</Text>
+            <Text style={styles.moreBtnText}>MORE</Text>
+            <Text style={styles.moreBtnArrow}>{'▲'}</Text>
+          </Pressable>
+
+          {/* Chat button — opens picker on chat tab */}
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              playSound('click');
+              setEmotePickerTab('chat');
+              setEmotePickerOpen(true);
+            }}
+            style={styles.chatToggleBtn}
+          >
+            <Text style={styles.chatToggleIcon}>{'💬'}</Text>
           </Pressable>
         </View>
 
-        {/* Quick Chat Bar — slides in when chat button is pressed (Tier 3) */}
-        <QuickChatBar
-          visible={quickChatOpen}
-          onSend={(msg: QuickChatMessage) => {
-            setQuickChatOpen(false);
-            // Show local bubble
+        {/* Full-screen emote/chat picker modal */}
+        <EmotePickerModal
+          visible={emotePickerOpen}
+          onClose={() => setEmotePickerOpen(false)}
+          initialTab={emotePickerTab}
+          onEmotePress={(id) => {
+            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+              sendEmote(onlineMatchId, id, myPlayerNum);
+            }
+          }}
+          onChatSend={(msg: QuickChatMessage) => {
             setMyChatBubble({ text: msg.text, key: Date.now() });
-            // In online matches, send to opponent via Firestore
             if (isOnlineMatch && onlineMatchId && myPlayerNum) {
               sendEmote(onlineMatchId, `chat:${msg.id}`, myPlayerNum);
             }
@@ -1326,37 +1358,35 @@ const styles = StyleSheet.create({
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: 6,
+    marginTop: 6,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,140,0,0.15)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   controlBtn: {
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   controlIcon: {
-    fontSize: 18,
+    fontSize: 15,
   },
   controlLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 1,
   },
   resignLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 10,
-    color: 'rgba(230,57,70,0.6)',
-    marginTop: 2,
+    fontSize: 9,
+    color: 'rgba(230,57,70,0.5)',
+    marginTop: 1,
   },
   hudRightWrap: {
     alignItems: 'flex-end',
@@ -1387,66 +1417,81 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   moveCounter: {
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 7,
+    backgroundColor: 'rgba(255,140,0,0.10)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.2)',
+    borderColor: 'rgba(255,140,0,0.15)',
   },
   moveText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 15,
-    color: '#ffffff',
-    letterSpacing: 0.5,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.3,
   },
-  emoteBar: {
+  // Emote row — compact pills + MORE + chat
+  emoteRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 4,
   },
-  emoteBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(26,37,86,0.8)',
+  quickEmotePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1.5,
+  },
+  quickEmoteEmoji: {
+    fontSize: 16,
+  },
+  quickEmoteLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    letterSpacing: 0.3,
+  },
+  moreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.25)',
+  },
+  moreBtnText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.orange,
+    letterSpacing: 1,
+  },
+  moreBtnArrow: {
+    fontSize: 8,
+    color: colors.orange,
+  },
+  chatToggleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoteText: {
-    fontSize: 22,
-  },
-  // Emote row — face emotes + quick chat button side by side
-  emoteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  chatToggleBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  chatToggleBtnActive: {
-    borderColor: colors.orange,
-    backgroundColor: 'rgba(255,140,0,0.2)',
-  },
   chatToggleIcon: {
-    fontSize: 22,
+    fontSize: 16,
   },
   // ======== Basketball Stars-style Game Over ========
   overlay: {
