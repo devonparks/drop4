@@ -191,8 +191,8 @@ export function SettingsScreen({ navigation }: Props) {
                     useShopStore.setState({
                       coins: 500, gems: 0, level: 1, xp: 0,
                       playerName: 'Player',
-                      equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic' },
-                      owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'] },
+                      equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic', boardAccessory: 'none' },
+                      owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'], boardAccessories: ['none'] },
                     });
                     // Reset ranked stats
                     useRankedStore.getState().resetSeason();

@@ -9,6 +9,7 @@ export interface BoardThemeVisuals {
 }
 
 export const BOARD_THEME_VISUALS: Record<string, BoardThemeVisuals> = {
+  // ─── OG Collection ──────────────────────────────────────────────────────
   default: {
     frameGradient: ['#2a5bce', '#1a3a8a', '#0d2060'],
     frameBorder: '#3668d4',
@@ -64,5 +65,63 @@ export const BOARD_THEME_VISUALS: Record<string, BoardThemeVisuals> = {
     holeColor: '#030208',
     holeBorder: '#e9456033',
     baseGradient: ['#100818', '#080410', '#030208'],
+  },
+
+  // ─── Season 0 / New Themes ──────────────────────────────────────────────
+
+  midnight: {
+    frameGradient: ['#1a1a2e', '#0e0e1a', '#060610'],
+    frameBorder: '#8892b0',
+    holeColor: '#030308',
+    holeBorder: '#8892b022',
+    baseGradient: ['#0e0e1a', '#060610', '#020206'],
+  },
+
+  candy: {
+    frameGradient: ['#e88aaf', '#d15a8a', '#a83a6a'],
+    frameBorder: '#ffb6d5',
+    holeColor: '#3d0a20',
+    holeBorder: '#5a1530',
+    baseGradient: ['#d15a8a', '#a83a6a', '#801a4a'],
+  },
+
+  matrix: {
+    frameGradient: ['#0a2a0a', '#061a06', '#020e02'],
+    frameBorder: '#00ff41',
+    holeColor: '#010800',
+    holeBorder: '#00ff4122',
+    baseGradient: ['#061a06', '#020e02', '#010800'],
+  },
+
+  sunset: {
+    frameGradient: ['#e86830', '#c84820', '#8a2a10'],
+    frameBorder: '#ff9060',
+    holeColor: '#1a0800',
+    holeBorder: '#301208',
+    baseGradient: ['#c84820', '#8a2a10', '#5a1a08'],
+  },
+
+  crystal: {
+    frameGradient: ['#6ac8e8', '#3a98c8', '#1a6898'],
+    frameBorder: '#a0e8ff',
+    holeColor: '#081a28',
+    holeBorder: '#a0e8ff22',
+    baseGradient: ['#3a98c8', '#1a6898', '#0a4868'],
+  },
+
+  void: {
+    frameGradient: ['#2a0848', '#180430', '#0a0018'],
+    frameBorder: '#8a40c8',
+    holeColor: '#02000a',
+    holeBorder: '#8a40c833',
+    baseGradient: ['#180430', '#0a0018', '#02000a'],
+  },
+
+  rainbow: {
+    frameGradient: ['#6a2a8a', '#2a4a8a', '#2a6a4a'],
+    frameBorder: '#c840e8',
+    holeColor: '#0a0810',
+    holeBorder: '#c840e833',
+    baseGradient: ['#2a4a8a', '#2a6a4a', '#6a6a2a'],
   },
 };

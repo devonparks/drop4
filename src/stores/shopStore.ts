@@ -13,6 +13,7 @@ interface ShopState {
     pieces: string;
     dropEffect: string;
     winAnimation: string;
+    boardAccessory: string;
   };
 
   owned: {
@@ -20,6 +21,7 @@ interface ShopState {
     pieces: string[];
     dropEffects: string[];
     winAnimations: string[];
+    boardAccessories: string[];
   };
 
   // Actions
@@ -45,6 +47,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
     pieces: 'classic',
     dropEffect: 'none',
     winAnimation: 'basic',
+    boardAccessory: 'none',
   },
 
   owned: {
@@ -52,6 +55,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
     pieces: ['classic'],
     dropEffects: ['none'],
     winAnimations: ['basic'],
+    boardAccessories: ['none'],
   },
 
   addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
@@ -106,8 +110,22 @@ export const useShopStore = create<ShopState>((set, get) => ({
         gems: saved.gems ?? 0,
         level: saved.level ?? 1,
         xp: saved.xp ?? 0,
-        equipped: saved.equipped ?? { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic' },
-        owned: saved.owned ?? { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'] },
+        equipped: {
+          board: 'default',
+          pieces: 'classic',
+          dropEffect: 'none',
+          winAnimation: 'basic',
+          boardAccessory: 'none',
+          ...saved.equipped,
+        },
+        owned: {
+          boards: ['default'],
+          pieces: ['classic'],
+          dropEffects: ['none'],
+          winAnimations: ['basic'],
+          boardAccessories: ['none'],
+          ...saved.owned,
+        },
       });
     }
   },

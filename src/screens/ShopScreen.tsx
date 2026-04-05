@@ -5,12 +5,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
+import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
-type ShopTab = 'boards' | 'pieces' | 'effects' | 'emotes' | 'boxes';
+type ShopTab = 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'boxes';
 
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
   item: ShopItem;
@@ -67,8 +67,8 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
           </View>
         ) : isOwned ? (
           <Text style={styles.ownedText}>Tap to Equip</Text>
-        ) : isDarkMatter ? (
-          <Text style={styles.lockedText}>Earn Only</Text>
+        ) : isDarkMatter || (item.price === 0 && item.rarity === 'mythic') ? (
+          <Text style={[styles.lockedText, { color: rarityColor }]}>Earn Only</Text>
         ) : (
           <View style={styles.priceRow}>
             <Text style={styles.priceEmoji}>🪙</Text>
@@ -93,16 +93,17 @@ export function ShopScreen() {
   const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
   const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
 
-  const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations', item: ShopItem) => {
+  const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item: ShopItem) => {
     const equipKey = category === 'boards' ? 'board'
       : category === 'pieces' ? 'pieces'
       : category === 'dropEffects' ? 'dropEffect'
+      : category === 'boardAccessories' ? 'boardAccessory'
       : 'winAnimation';
     if (equipped[equipKey] === item.id) return; // Already equipped
     if (owned[category].includes(item.id)) {
       equipItem(equipKey, item.id);
       haptics.select();
-    } else if (item.rarity !== 'darkmatter') {
+    } else if (item.rarity !== 'darkmatter' && !(item.price === 0 && item.rarity === 'mythic')) {
       const success = purchaseItem(category, item.id, item.price);
       if (success) {
         haptics.win();
@@ -117,6 +118,8 @@ export function ShopScreen() {
     { key: 'boards', label: 'Boards', icon: '🎯' },
     { key: 'pieces', label: 'Pieces', icon: '🔴' },
     { key: 'effects', label: 'Effects', icon: '✨' },
+    { key: 'wins', label: 'Wins', icon: '🏆' },
+    { key: 'accessories', label: 'Frames', icon: '🖼' },
     { key: 'emotes', label: 'Emotes', icon: '😎' },
     { key: 'boxes', label: 'Boxes', icon: '🎁' },
   ];
@@ -124,10 +127,14 @@ export function ShopScreen() {
   const items = activeTab === 'boards' ? BOARD_THEMES :
                 activeTab === 'pieces' ? PIECE_THEMES :
                 activeTab === 'effects' ? DROP_EFFECTS :
+                activeTab === 'wins' ? WIN_ANIMATIONS :
+                activeTab === 'accessories' ? BOARD_ACCESSORIES :
                 activeTab === 'emotes' ? EMOTES : [];
 
   const category = activeTab === 'boards' ? 'boards' :
                    activeTab === 'effects' ? 'dropEffects' :
+                   activeTab === 'wins' ? 'winAnimations' :
+                   activeTab === 'accessories' ? 'boardAccessories' :
                    activeTab === 'emotes' ? 'winAnimations' : 'pieces';
 
   return (
@@ -199,9 +206,10 @@ export function ShopScreen() {
                     category === 'boards' ? 'board'
                     : category === 'pieces' ? 'pieces'
                     : category === 'dropEffects' ? 'dropEffect'
+                    : category === 'boardAccessories' ? 'boardAccessory'
                     : 'winAnimation'
                   ] === item.id}
-                  onPress={() => handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations', item)}
+                  onPress={() => handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
                   index={i}
                 />
               ))}
@@ -424,7 +432,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 10,
-    color: RARITY_COLORS.darkmatter,
+    color: RARITY_COLORS.darkmatter, // default; overridden inline for mythic
     textAlign: 'center',
     marginTop: 4,
     textTransform: 'uppercase',
