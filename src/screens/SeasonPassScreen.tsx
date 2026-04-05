@@ -8,6 +8,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -39,6 +40,7 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
     const success = claimFreeReward(reward.tier);
     if (success) {
       haptics.win();
+      playSound('coin');
       // Grant the reward
       if (reward.freeReward.type === 'coins') {
         const amount = parseCoinAmount(reward.freeReward.name);
@@ -54,6 +56,7 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
     const success = claimPremiumReward(reward.tier);
     if (success) {
       haptics.win();
+      playSound('coin');
       // Grant premium rewards similarly
       if (reward.premiumReward.type === 'coins') {
         const amount = parseCoinAmount(reward.premiumReward.name);

@@ -9,6 +9,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useCareerStore } from '../stores/careerStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { ALL_CAREER_LEVELS, CHAPTERS, getChallengeTypeLabel, CareerLevel } from '../data/careerLevels';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -42,7 +43,7 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
 
   return (
     <Pressable
-      onPress={() => { if (isUnlocked) { haptics.tap(); onPress(); } }}
+      onPress={() => { if (isUnlocked) { haptics.tap(); playSound('click'); onPress(); } }}
       style={[styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }]}
     >
       <View style={styles.levelLeft}>
@@ -147,6 +148,7 @@ export function CareerScreen({ navigation }: Props) {
                     // Show celebration if chapter is complete and user taps it
                     if (chapterCompletion[ch.id]?.complete) {
                       setChapterCelebration(ch.id);
+                      playSound('win');
                     }
                   }
                 }}

@@ -41,7 +41,7 @@ export function TournamentScreen({ navigation }: Props) {
       // Record result
       const winnerIndex = winner === 1 ? match.player1Index : match.player2Index;
       tournament.recordResult(winnerIndex);
-      playSound('coin');
+      playSound('win');
     }
   }, []);
 
@@ -63,6 +63,7 @@ export function TournamentScreen({ navigation }: Props) {
     if (!match) return;
 
     haptics.tap();
+    playSound('click');
     resetScores();
     const p1 = tournament.players[match.player1Index];
     const p2 = tournament.players[match.player2Index];

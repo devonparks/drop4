@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -27,6 +27,7 @@ import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
+import { listenToMatch, makeMove, resignMatch } from '../services/matchmaking';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
@@ -64,6 +65,11 @@ export function GameScreen({ navigation }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Online multiplayer
+  const isOnlineMatch = !!params.onlineMatchId;
+  const onlineMatchId = params.onlineMatchId;
+  const myPlayerNum = params.onlinePlayerNum;
 
   // Matchmaking overlay for wager/stage games
   const [showMatchmaking, setShowMatchmaking] = useState(() => !!params.wagerCourt);
@@ -118,13 +124,44 @@ export function GameScreen({ navigation }: Props) {
     };
   }, [isRankedMode, status, activeClockPlayer]);
 
+  // Online match: listen to Firestore for board updates from opponent
+  useEffect(() => {
+    if (!isOnlineMatch || !onlineMatchId) return;
+
+    const unsubscribe = listenToMatch(onlineMatchId, (matchData) => {
+      // Sync board and current player from Firestore
+      // Cast number[][] from Firestore to Cell[][] (0 | 1 | 2)
+      useGameStore.setState({
+        board: matchData.board as (0 | 1 | 2)[][],
+        currentPlayer: matchData.currentPlayer,
+      });
+
+      // Handle game end states from the server
+      if (matchData.status === 'won' && matchData.winner) {
+        useGameStore.setState({
+          status: 'won',
+          winner: matchData.winner,
+        });
+      } else if (matchData.status === 'draw') {
+        useGameStore.setState({ status: 'draw' });
+      } else if (matchData.status === 'resigned' && matchData.winner) {
+        useGameStore.setState({
+          status: 'won',
+          winner: matchData.winner,
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isOnlineMatch, onlineMatchId]);
+
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
     if (status === 'playing' && moveCount === 0) {
       startRecording();
       // Apply preset board from Board Editor if available
       if (params.presetBoard) {
-        useGameStore.setState({ board: params.presetBoard });
+        useGameStore.setState({ board: params.presetBoard as (0 | 1 | 2)[][] });
       }
     }
   }, [status, moveCount]);
@@ -167,7 +204,9 @@ export function GameScreen({ navigation }: Props) {
   const totalGames = 3;
 
   // AI move logic — fixed: no dependency on isAiThinking
+  // Skip AI entirely for online matches (opponent is a real player)
   useEffect(() => {
+    if (isOnlineMatch) return;
     if (!isVsAi || currentPlayer !== 2 || status !== 'playing') return;
     if (aiTimerRef.current) return;
 
@@ -195,7 +234,7 @@ export function GameScreen({ navigation }: Props) {
         aiTimerRef.current = null;
       }
     };
-  }, [currentPlayer, status, isVsAi]);
+  }, [currentPlayer, status, isVsAi, isOnlineMatch]);
 
   // Award coins on win
   useEffect(() => {
@@ -304,12 +343,22 @@ export function GameScreen({ navigation }: Props) {
 
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
+
+    // Online match: only allow moves on our turn, send to Firestore
+    if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+      if (currentPlayer !== myPlayerNum) return;
+      haptics.drop();
+      playSound('drop');
+      makeMove(onlineMatchId, col, myPlayerNum);
+      return;
+    }
+
     if (isVsAi && currentPlayer !== 1) return;
     recordMove(col, currentPlayer, moveCount);
     dropPiece(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
+  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, isOnlineMatch, onlineMatchId, myPlayerNum]);
 
   const handleRematch = () => {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
@@ -319,19 +368,44 @@ export function GameScreen({ navigation }: Props) {
   };
 
   const handleBack = () => {
+    if (isOnlineMatch && onlineMatchId && myPlayerNum && status === 'playing') {
+      Alert.alert(
+        'Resign Match?',
+        'Leaving will count as a loss.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Resign',
+            style: 'destructive',
+            onPress: () => {
+              resignMatch(onlineMatchId, myPlayerNum);
+              navigation.goBack();
+            },
+          },
+        ]
+      );
+      return;
+    }
     navigation.goBack();
   };
 
   // Local player names
   const localNames = params.localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
-  const p1Name = isVsAi ? 'You' : localNames.player1;
-  const p2Name = isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
+  const p1Name = isOnlineMatch ? 'You' : isVsAi ? 'You' : localNames.player1;
+  const p2Name = isOnlineMatch
+    ? (params.onlineOpponentName || 'Opponent')
+    : isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
 
   // Turn / status text
+  const isMyTurn = isOnlineMatch ? currentPlayer === myPlayerNum : currentPlayer === 1;
   const turnText = status === 'playing'
-    ? (isAiThinking ? 'Thinking...' : (currentPlayer === 1 ? `${p1Name}'s Turn` : `${p2Name}'s Turn`))
+    ? (isAiThinking ? 'Thinking...'
+      : isOnlineMatch ? (isMyTurn ? 'Your Turn' : 'Waiting...')
+      : (currentPlayer === 1 ? `${p1Name}'s Turn` : `${p2Name}'s Turn`))
     : status === 'won'
-    ? (winner === 1 ? `${p1Name} Wins!` : `${p2Name} Wins!`)
+    ? (isOnlineMatch
+      ? (winner === myPlayerNum ? 'You Win!' : `${p2Name} Wins!`)
+      : (winner === 1 ? `${p1Name} Wins!` : `${p2Name} Wins!`))
     : 'Draw!';
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
@@ -450,40 +524,52 @@ export function GameScreen({ navigation }: Props) {
         {/* Game Board */}
         <GameBoard
           onColumnPress={handleColumnPress}
-          disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1)}
+          disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1) || (isOnlineMatch && currentPlayer !== myPlayerNum)}
           currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
         />
 
         {/* Bottom controls */}
         <View style={styles.controls}>
-          {/* Hint button */}
-          <Pressable onPress={() => {
-            if (status === 'playing' && !isAiThinking && currentPlayer === 1) {
-              haptics.tap();
-              const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
-              setHintCol(bestCol);
-              setTimeout(() => setHintCol(null), 2000);
-            }
-          }} style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>💡</Text>
-            <Text style={styles.controlLabel}>Hint</Text>
-          </Pressable>
+          {/* Hint button — hidden in online matches */}
+          {!isOnlineMatch && (
+            <Pressable onPress={() => {
+              if (status === 'playing' && !isAiThinking && currentPlayer === 1) {
+                haptics.tap();
+                const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
+                setHintCol(bestCol);
+                setTimeout(() => setHintCol(null), 2000);
+              }
+            }} style={styles.controlBtn}>
+              <Text style={styles.controlIcon}>💡</Text>
+              <Text style={styles.controlLabel}>Hint</Text>
+            </Pressable>
+          )}
 
           {/* Move counter */}
           <View style={styles.moveCounter}>
             <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
           </View>
 
-          {/* Undo button */}
-          <Pressable onPress={() => {
-            if (undoMove()) {
-              haptics.tap();
-              playSound('whoosh');
-            }
-          }} style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>↩️</Text>
-            <Text style={styles.controlLabel}>Undo</Text>
-          </Pressable>
+          {/* Undo button — hidden in online matches */}
+          {!isOnlineMatch && (
+            <Pressable onPress={() => {
+              if (undoMove()) {
+                haptics.tap();
+                playSound('whoosh');
+              }
+            }} style={styles.controlBtn}>
+              <Text style={styles.controlIcon}>↩️</Text>
+              <Text style={styles.controlLabel}>Undo</Text>
+            </Pressable>
+          )}
+
+          {/* Resign button — online matches only */}
+          {isOnlineMatch && status === 'playing' && (
+            <Pressable onPress={handleBack} style={styles.controlBtn}>
+              <Text style={styles.controlIcon}>🏳️</Text>
+              <Text style={styles.controlLabel}>Resign</Text>
+            </Pressable>
+          )}
 
           {/* Menu button */}
           <Pressable onPress={handleBack} style={styles.controlBtn}>
@@ -595,17 +681,27 @@ export function GameScreen({ navigation }: Props) {
 
                 {/* Buttons */}
                 <View style={styles.resultButtons}>
-                  <GlossyButton
-                    label="REMATCH"
-                    variant="orange"
-                    onPress={handleRematch}
-                  />
-                  <GlossyButton
-                    label="HOME"
-                    variant="navy"
-                    onPress={handleBack}
-                    style={{ marginTop: 10 }}
-                  />
+                  {isOnlineMatch ? (
+                    <GlossyButton
+                      label="BACK TO LOBBY"
+                      variant="orange"
+                      onPress={handleBack}
+                    />
+                  ) : (
+                    <>
+                      <GlossyButton
+                        label="REMATCH"
+                        variant="orange"
+                        onPress={handleRematch}
+                      />
+                      <GlossyButton
+                        label="HOME"
+                        variant="navy"
+                        onPress={handleBack}
+                        style={{ marginTop: 10 }}
+                      />
+                    </>
+                  )}
                 </View>
               </View>
             </Animated.View>
