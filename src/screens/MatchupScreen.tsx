@@ -155,8 +155,8 @@ export function MatchupScreen({ navigation }: Props) {
       careerLevelReward: params.careerLevelReward,
       wagerCourt: params.wagerAmount ? {
         name: courtName,
-        entry: params.wagerAmount,
-        winnerGets: params.wagerAmount * 2,
+        entryFee: params.wagerAmount,
+        winnerGets: Math.floor(params.wagerAmount * 2 * 0.9), // 10% rake
       } : undefined,
     });
   }, [navigation, params, courtName]);

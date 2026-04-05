@@ -23,10 +23,15 @@ import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 
 export type WagerCourtParams = {
+  id?: string;
   name: string;
-  entry: number;
+  entryFee: number;
   winnerGets: number;
+  rake?: number;
   minLevel?: number;
+  minTier?: string;
+  isVIP?: boolean;
+  color?: string;
 };
 
 export type CareerRewardParams = {

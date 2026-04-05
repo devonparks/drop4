@@ -6,10 +6,11 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
+import { useRankedStore } from '../stores/rankedStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
-import { WAGER_TABLES, WagerTable } from '../data/wagerTables';
+import { WAGER_COURTS, WagerCourt, canEnterCourt } from '../data/wagerTables';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -18,38 +19,51 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Stage'>;
 };
 
-function TableCard({ table, coins, playerLevel, onPress }: {
-  table: WagerTable; coins: number; playerLevel: number; onPress: () => void;
+function CourtCard({ court, coins, playerLevel, playerTier, onPress }: {
+  court: WagerCourt; coins: number; playerLevel: number; playerTier: string; onPress: () => void;
 }) {
-  const canAfford = coins >= table.buyIn;
-  const meetsLevel = !table.minLevel || playerLevel >= table.minLevel;
-  const canPlay = canAfford && meetsLevel;
+  const check = canEnterCourt(court, coins, playerLevel, playerTier as any);
+  const canPlay = check.allowed;
 
   return (
     <Pressable
       onPress={() => { if (canPlay) { haptics.tap(); onPress(); } }}
-      style={[styles.tableCard, !canPlay && { opacity: 0.4 }]}
+      style={[styles.courtCard, !canPlay && { opacity: 0.4 }]}
     >
       <LinearGradient
-        colors={[table.bgColor, 'rgba(0,0,0,0)']}
-        style={styles.tableGradient}
+        colors={[court.bgColor, 'rgba(0,0,0,0)']}
+        style={styles.courtGradient}
       >
-        <Text style={styles.tableIcon}>{table.icon}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.tableName}>{table.name}</Text>
-          <Text style={styles.tableDesc}>{table.description}</Text>
-          {table.minLevel && playerLevel < table.minLevel && (
-            <Text style={styles.levelReq}>🔒 Level {table.minLevel} required</Text>
+        <View style={styles.courtLeft}>
+          <Text style={styles.courtIcon}>{court.icon}</Text>
+          {court.isVIP && (
+            <View style={styles.vipBadge}>
+              <Text style={styles.vipText}>VIP</Text>
+            </View>
           )}
         </View>
-        <View style={styles.tableStakes}>
-          {table.buyIn > 0 ? (
+
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.courtName, { color: court.color }]}>{court.name}</Text>
+          <Text style={styles.courtDesc}>{court.description}</Text>
+          {!check.allowed && check.reason && (
+            <Text style={styles.lockReq}>{'🔒'} {check.reason}</Text>
+          )}
+        </View>
+
+        <View style={styles.courtStakes}>
+          {court.entryFee > 0 ? (
             <>
-              <Text style={styles.buyInLabel}>BUY-IN</Text>
-              <Text style={styles.buyInAmount}>🪙 {table.buyIn.toLocaleString()}</Text>
+              <Text style={styles.entryLabel}>ENTRY</Text>
+              <Text style={styles.entryAmount}>
+                {'\u{1FA99}'} {court.entryFee.toLocaleString()}
+              </Text>
               <View style={styles.winBadge}>
-                <Text style={styles.winText}>WIN: 🪙 {table.winnerGets.toLocaleString()}</Text>
+                <Text style={styles.winText}>
+                  WIN: {'\u{1FA99}'} {court.winnerGets.toLocaleString()}
+                </Text>
               </View>
+              <Text style={styles.rakeText}>{court.rake}% rake</Text>
             </>
           ) : (
             <View style={styles.freeBadge}>
@@ -67,16 +81,17 @@ export function StageScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const spendCoins = useShopStore(s => s.spendCoins);
+  const tier = useRankedStore(s => s.tier);
   const newGame = useGameStore(s => s.newGame);
 
-  const handleSelectTable = (table: WagerTable) => {
-    if (table.buyIn > 0) {
-      const success = spendCoins(table.buyIn);
+  const handleSelectCourt = (court: WagerCourt) => {
+    if (court.entryFee > 0) {
+      const success = spendCoins(court.entryFee);
       if (!success) { haptics.error(); return; }
     }
     playSound('coin');
     newGame('hard', true);
-    navigation.navigate('Game', { wagerCourt: table });
+    navigation.navigate('Game', { wagerCourt: court });
   };
 
   return (
@@ -86,7 +101,7 @@ export function StageScreen({ navigation }: Props) {
 
         <View style={styles.header}>
           <Text style={styles.title}>GOLD COURT</Text>
-          <Text style={styles.subtitle}>Wager coins. Win big. Spectators watching.</Text>
+          <Text style={styles.subtitle}>Wager coins. Winner takes all minus rake.</Text>
 
           {/* Ranked badge */}
           <RankBadge size="medium" showElo style={{ marginTop: 8 }} />
@@ -94,18 +109,19 @@ export function StageScreen({ navigation }: Props) {
           {/* Balance */}
           <View style={styles.balanceCard}>
             <Text style={styles.balanceLabel}>Balance</Text>
-            <Text style={styles.balanceAmount}>🪙 {coins.toLocaleString()}</Text>
+            <Text style={styles.balanceAmount}>{'\u{1FA99}'} {coins.toLocaleString()}</Text>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.tableList} showsVerticalScrollIndicator={false}>
-          {WAGER_TABLES.map(table => (
-            <TableCard
-              key={table.id}
-              table={table}
+        <ScrollView contentContainerStyle={styles.courtList} showsVerticalScrollIndicator={false}>
+          {WAGER_COURTS.map(court => (
+            <CourtCard
+              key={court.id}
+              court={court}
               coins={coins}
               playerLevel={level}
-              onPress={() => handleSelectTable(table)}
+              playerTier={tier}
+              onPress={() => handleSelectCourt(court)}
             />
           ))}
 
@@ -141,14 +157,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 12, color: colors.textSecondary, marginTop: 2,
   },
-  rankDisplay: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginTop: 8, backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
-  },
-  rankIcon: { fontSize: 18 },
-  rankName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14 },
-  rankElo: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
   balanceCard: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 14,
@@ -157,23 +165,36 @@ const styles = StyleSheet.create({
   },
   balanceLabel: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 12, color: colors.textSecondary },
   balanceAmount: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 18, color: colors.coinGold },
-  tableList: { paddingHorizontal: 14, gap: 6, paddingBottom: 100 },
-  tableCard: { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  tableGradient: {
+
+  // Court list
+  courtList: { paddingHorizontal: 14, gap: 6, paddingBottom: 100 },
+  courtCard: { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  courtGradient: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', padding: 14, borderRadius: 14,
   },
-  tableIcon: { fontSize: 28, marginRight: 10 },
-  tableName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
-  tableDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
-  levelReq: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 9, color: colors.red, marginTop: 2 },
-  tableStakes: { alignItems: 'flex-end', gap: 2 },
-  buyInLabel: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 9, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  buyInAmount: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
+  courtLeft: { alignItems: 'center', marginRight: 10, gap: 4 },
+  courtIcon: { fontSize: 28 },
+  vipBadge: {
+    backgroundColor: 'rgba(233,69,96,0.2)', borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 1,
+  },
+  vipText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: '#e94560', letterSpacing: 1 },
+  courtName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14 },
+  courtDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
+  lockReq: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 9, color: colors.red, marginTop: 2 },
+
+  // Stakes column
+  courtStakes: { alignItems: 'flex-end', gap: 2 },
+  entryLabel: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 9, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  entryAmount: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
   winBadge: { backgroundColor: 'rgba(39,174,61,0.15)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginTop: 2 },
   winText: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 10, color: colors.green },
+  rakeText: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 8, color: colors.textMuted, marginTop: 1 },
   freeBadge: { backgroundColor: 'rgba(39,174,61,0.2)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 },
   freeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: colors.green },
+
+  // Spectator
   spectatorSection: {
     alignItems: 'center', padding: 16, marginTop: 8,
     backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 14,
