@@ -68,7 +68,7 @@ export function GlossyButton({
         } as any : {}),
       }]}>
         {/* 3D bottom edge (dark underside) */}
-        <View style={[styles.bottomEdge, { backgroundColor: colors.dark }]} />
+        <View style={[styles.bottomEdge, { backgroundColor: colors.dark }]} pointerEvents="none" />
 
         {/* Main button body */}
         <LinearGradient
@@ -84,10 +84,11 @@ export function GlossyButton({
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
             style={styles.gloss}
+            pointerEvents="none"
           />
 
           {/* Inner top highlight line */}
-          <View style={styles.topHighlight} />
+          <View style={styles.topHighlight} pointerEvents="none" />
 
           {/* Content */}
           <View style={styles.content}>
