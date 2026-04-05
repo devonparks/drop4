@@ -108,11 +108,21 @@ export function StageScreen({ navigation }: Props) {
             />
           ))}
 
-          {/* Spectator section placeholder */}
-          <View style={styles.spectatorSection}>
-            <Text style={styles.spectatorTitle}>👁 SPECTATE</Text>
-            <Text style={styles.spectatorDesc}>Watch live matches (coming soon)</Text>
-          </View>
+          {/* Spectator section */}
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              navigation.navigate('Spectator');
+            }}
+            style={styles.spectatorSection}
+          >
+            <Text style={styles.spectatorTitle}>{'👁'} SPECTATE</Text>
+            <Text style={styles.spectatorDesc}>Watch live Gold Court matches</Text>
+            <View style={styles.spectatorLiveBadge}>
+              <View style={styles.spectatorDot} />
+              <Text style={styles.spectatorLiveText}>LIVE</Text>
+            </View>
+          </Pressable>
         </ScrollView>
       </View>
     </ScreenBackground>
@@ -170,4 +180,16 @@ const styles = StyleSheet.create({
   },
   spectatorTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: colors.textSecondary },
   spectatorDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  spectatorLiveBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(231,76,60,0.15)', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 3, marginTop: 6,
+  },
+  spectatorDot: {
+    width: 6, height: 6, borderRadius: 3, backgroundColor: colors.red,
+  },
+  spectatorLiveText: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
+    color: colors.red, letterSpacing: 1,
+  },
 });

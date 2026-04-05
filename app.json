@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Drop4",
-    "slug": "Drop4",
+    "slug": "drop4",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "scheme": "drop4",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0a0e27"
     },

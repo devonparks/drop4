@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
@@ -25,6 +25,7 @@ import { useSeriesStore } from './src/stores/seriesStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 import { WelcomeOverlay } from './src/components/ui/WelcomeOverlay';
+import { SplashAnimation } from './src/components/ui/SplashAnimation';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -79,13 +80,7 @@ export default function App() {
   }, [appReady]);
 
   if (!appReady) {
-    return (
-      <View style={styles.loading}>
-        <Text style={styles.loadingLogo}>DROP<Text style={styles.loadingLogo4}>4</Text></Text>
-        <Text style={styles.loadingTagline}>Stack. Connect. Dominate.</Text>
-        <ActivityIndicator size="small" color={colors.orange} style={{ marginTop: 20 }} />
-      </View>
-    );
+    return <SplashAnimation />;
   }
 
   return (
@@ -126,27 +121,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bgDark,
-  },
-  loading: {
-    flex: 1,
-    backgroundColor: colors.bgDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingLogo: {
-    fontSize: 48,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: 3,
-  },
-  loadingLogo4: {
-    color: colors.orange,
-    fontSize: 52,
-  },
-  loadingTagline: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 3,
-    marginTop: 4,
   },
 });
