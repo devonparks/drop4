@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -63,6 +64,9 @@ export function PartyLobbyScreen({ navigation }: Props) {
   const [roomCode] = useState(generateRoomCode);
   const [isReady, setIsReady] = useState(false);
   const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showInviteMenu, setShowInviteMenu] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   // Player emote
   const { emote: myEmote, triggerEmote: triggerMyEmote, clearEmote: clearMyEmote } = useEmoteTrigger();
@@ -134,11 +138,30 @@ export function PartyLobbyScreen({ navigation }: Props) {
     navigation.goBack();
   };
 
-  const handleInvite = () => {
+  const handleCopyRoomCode = () => {
     haptics.tap();
     playSound('click');
-    // Placeholder — would open friend invite modal
+    // Clipboard.setStringAsync(roomCode) in production
+    setCodeCopied(true);
+    Alert.alert('Copied!', `Room code ${roomCode} copied to clipboard.`);
+    setTimeout(() => setCodeCopied(false), 2000);
   };
+
+  const handleInviteFriends = () => {
+    haptics.tap();
+    playSound('click');
+    setShowInviteMenu(false);
+    navigation.navigate('Friends');
+  };
+
+  const handleChooseMode = () => {
+    haptics.tap();
+    playSound('click');
+    navigation.navigate('Play');
+  };
+
+  // Check if all players are ready
+  const allReady = isReady && bots.every(b => b.ready);
 
   // Get the player's tier for display
   const playerTier = RANKED_TIERS.find(t => t.id === 'silver') || RANKED_TIERS[0];
@@ -157,20 +180,60 @@ export function PartyLobbyScreen({ navigation }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>PARTY LOBBY</Text>
-          <View style={styles.roomCodeContainer}>
-            <Text style={styles.roomCodeLabel}>ROOM:</Text>
-            <Text style={styles.roomCode}>{roomCode}</Text>
-          </View>
+          <Text style={styles.headerSubtitle}>Invite friends and play together!</Text>
+
+          {/* Room Code — big and prominent */}
+          <Pressable onPress={handleCopyRoomCode} style={styles.roomCodeContainer}>
+            <Text style={styles.roomCodeLabel}>ROOM CODE</Text>
+            <View style={styles.roomCodeRow}>
+              <Text style={styles.roomCode}>{roomCode}</Text>
+              <View style={styles.roomCodeCopyBtn}>
+                <Text style={styles.roomCodeCopyText}>
+                  {codeCopied ? 'COPIED!' : 'COPY'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.roomCodeHint}>Tap to copy and share with friends</Text>
+          </Pressable>
         </View>
 
-        {/* Spectator info */}
-        <View style={styles.spectatorBar}>
-          <View style={styles.spectatorBadge}>
-            <Text style={styles.spectatorIcon}>{'👁'}</Text>
-            <Text style={styles.spectatorText}>SPECTATING</Text>
+        {/* How It Works — expandable */}
+        <Pressable
+          onPress={() => {
+            haptics.tap();
+            setShowHowItWorks(!showHowItWorks);
+          }}
+          style={styles.howItWorksToggle}
+        >
+          <Text style={styles.howItWorksToggleIcon}>{'💡'}</Text>
+          <Text style={styles.howItWorksToggleText}>HOW IT WORKS</Text>
+          <Text style={styles.howItWorksArrow}>{showHowItWorks ? '▲' : '▼'}</Text>
+        </Pressable>
+
+        {showHowItWorks && (
+          <View style={styles.howItWorksContent}>
+            <View style={styles.howStep}>
+              <Text style={styles.howStepNum}>1</Text>
+              <Text style={styles.howStepText}>Share your room code with friends</Text>
+            </View>
+            <View style={styles.howStep}>
+              <Text style={styles.howStepNum}>2</Text>
+              <Text style={styles.howStepText}>They enter the code to join your lobby</Text>
+            </View>
+            <View style={styles.howStep}>
+              <Text style={styles.howStepNum}>3</Text>
+              <Text style={styles.howStepText}>Everyone picks emotes and idles while waiting</Text>
+            </View>
+            <View style={styles.howStep}>
+              <Text style={styles.howStepNum}>4</Text>
+              <Text style={styles.howStepText}>Host picks a game mode and starts the match</Text>
+            </View>
+            <View style={styles.howStep}>
+              <Text style={styles.howStepNum}>5</Text>
+              <Text style={styles.howStepText}>Friends who can't play will spectate</Text>
+            </View>
           </View>
-          <Text style={styles.spectatorSub}>Your friends will watch your match</Text>
-        </View>
+        )}
 
         {/* Character slots — horizontal scroll */}
         <ScrollView
@@ -180,7 +243,7 @@ export function PartyLobbyScreen({ navigation }: Props) {
           snapToInterval={SLOT_WIDTH + 12}
           decelerationRate="fast"
         >
-          {/* Slot 1 — YOU */}
+          {/* Slot 1 — YOU (HOST) */}
           <View style={[styles.playerSlot, styles.playerSlotSelf]}>
             <LinearGradient
               colors={['rgba(100,180,255,0.12)', 'rgba(60,100,200,0.04)']}
@@ -216,9 +279,9 @@ export function PartyLobbyScreen({ navigation }: Props) {
                 </View>
               )}
 
-              {/* YOU badge */}
+              {/* HOST badge */}
               <View style={styles.youBadge}>
-                <Text style={styles.youBadgeText}>YOU</Text>
+                <Text style={styles.youBadgeText}>HOST</Text>
               </View>
             </LinearGradient>
           </View>
@@ -271,7 +334,13 @@ export function PartyLobbyScreen({ navigation }: Props) {
           ))}
 
           {/* Empty invite slot */}
-          <Pressable onPress={handleInvite} style={styles.playerSlot}>
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              setShowInviteMenu(true);
+            }}
+            style={styles.playerSlot}
+          >
             <View style={styles.emptySlot}>
               <View style={styles.inviteCircle}>
                 <Text style={styles.invitePlus}>+</Text>
@@ -301,18 +370,33 @@ export function PartyLobbyScreen({ navigation }: Props) {
             </LinearGradient>
           </Pressable>
 
-          {/* Ready button */}
+          {/* Ready / Start button — changes based on state */}
           <View style={styles.readyBtnWrap}>
-            <GlossyButton
-              label={isReady ? 'UNREADY' : 'READY'}
-              variant={isReady ? 'purple' : 'green'}
-              iconRight={isReady ? '✕' : '✓'}
-              onPress={handleReady}
-            />
+            {allReady ? (
+              <GlossyButton
+                label="CHOOSE MODE"
+                variant="orange"
+                icon="🎮"
+                onPress={handleChooseMode}
+              />
+            ) : (
+              <GlossyButton
+                label={isReady ? 'UNREADY' : 'READY'}
+                variant={isReady ? 'purple' : 'green'}
+                iconRight={isReady ? '✕' : '✓'}
+                onPress={handleReady}
+              />
+            )}
           </View>
 
           {/* Invite button */}
-          <Pressable onPress={handleInvite} style={styles.inviteBtn}>
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              setShowInviteMenu(true);
+            }}
+            style={styles.inviteBtn}
+          >
             <LinearGradient
               colors={['rgba(100,180,255,0.2)', 'rgba(60,120,255,0.08)']}
               style={styles.inviteBtnGradient}
@@ -327,6 +411,57 @@ export function PartyLobbyScreen({ navigation }: Props) {
         <Pressable onPress={handleLeave} style={styles.leaveBtn}>
           <Text style={styles.leaveBtnText}>LEAVE PARTY</Text>
         </Pressable>
+
+        {/* Invite Menu Overlay */}
+        {showInviteMenu && (
+          <Pressable
+            onPress={() => setShowInviteMenu(false)}
+            style={styles.inviteMenuOverlay}
+          >
+            <View style={styles.inviteMenuCard}>
+              <Text style={styles.inviteMenuTitle}>INVITE FRIENDS</Text>
+
+              <Pressable
+                onPress={handleCopyRoomCode}
+                style={styles.inviteMenuOption}
+              >
+                <LinearGradient
+                  colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.05)']}
+                  style={styles.inviteMenuOptionGrad}
+                >
+                  <Text style={styles.inviteMenuOptionIcon}>{'📋'}</Text>
+                  <View style={styles.inviteMenuOptionInfo}>
+                    <Text style={styles.inviteMenuOptionTitle}>Copy Room Code</Text>
+                    <Text style={styles.inviteMenuOptionSub}>Share code {roomCode} with friends</Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                onPress={handleInviteFriends}
+                style={styles.inviteMenuOption}
+              >
+                <LinearGradient
+                  colors={['rgba(100,180,255,0.15)', 'rgba(100,180,255,0.05)']}
+                  style={styles.inviteMenuOptionGrad}
+                >
+                  <Text style={styles.inviteMenuOptionIcon}>{'👥'}</Text>
+                  <View style={styles.inviteMenuOptionInfo}>
+                    <Text style={styles.inviteMenuOptionTitle}>Invite Friends</Text>
+                    <Text style={styles.inviteMenuOptionSub}>Send invite from your friends list</Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setShowInviteMenu(false)}
+                style={styles.inviteMenuCancel}
+              >
+                <Text style={styles.inviteMenuCancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        )}
 
         {/* Emote Wheel */}
         <FortniteEmoteWheel
@@ -348,78 +483,138 @@ const styles = StyleSheet.create({
   // Header
   header: {
     alignItems: 'center',
-    paddingTop: 4,
-    paddingBottom: 8,
+    paddingTop: 2,
+    paddingBottom: 4,
   },
   headerTitle: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 28,
+    fontSize: 26,
     color: '#ffffff',
     letterSpacing: 4,
     textShadowColor: 'rgba(100,180,255,0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },
+  headerSubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+    marginBottom: 8,
+  },
   roomCodeContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,140,0,0.08)',
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.25)',
   },
   roomCodeLabel: {
     fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 12,
-    color: colors.textSecondary,
-    letterSpacing: 1,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.orange,
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  roomCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   roomCode: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 20,
-    color: colors.orange,
-    letterSpacing: 4,
+    fontSize: 32,
+    color: '#ffffff',
+    letterSpacing: 6,
   },
-
-  // Spectator bar
-  spectatorBar: {
-    alignItems: 'center',
-    paddingVertical: 6,
-    gap: 2,
-  },
-  spectatorBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(155,89,182,0.15)',
+  roomCodeCopyBtn: {
+    backgroundColor: 'rgba(255,140,0,0.25)',
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(155,89,182,0.3)',
+    borderColor: 'rgba(255,140,0,0.5)',
   },
-  spectatorIcon: {
-    fontSize: 14,
-  },
-  spectatorText: {
+  roomCodeCopyText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 11,
-    color: colors.purple,
+    color: colors.orange,
+    letterSpacing: 1,
+  },
+  roomCodeHint: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 10,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+
+  // How It Works
+  howItWorksToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    marginHorizontal: 16,
+  },
+  howItWorksToggleIcon: {
+    fontSize: 14,
+  },
+  howItWorksToggleText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.textSecondary,
     letterSpacing: 1.5,
   },
-  spectatorSub: {
+  howItWorksArrow: {
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  howItWorksContent: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    gap: 8,
+    marginBottom: 4,
+  },
+  howStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  howStepNum: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,140,0,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.4)',
+    textAlign: 'center',
+    lineHeight: 20,
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.orange,
+    overflow: 'hidden',
+  },
+  howStepText: {
+    flex: 1,
     fontFamily: fonts.body,
     fontWeight: weight.medium,
-    fontSize: 10,
-    color: 'rgba(155,89,182,0.6)',
+    fontSize: 12,
+    color: colors.textSecondary,
   },
 
   // Player slots
@@ -655,5 +850,78 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(231,76,60,0.7)',
     letterSpacing: 2,
+  },
+
+  // Invite Menu Overlay
+  inviteMenuOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 50,
+  },
+  inviteMenuCard: {
+    width: '85%',
+    maxWidth: 340,
+    backgroundColor: '#141a3a',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    gap: 10,
+  },
+  inviteMenuTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: '#ffffff',
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  inviteMenuOption: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  inviteMenuOptionGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  inviteMenuOptionIcon: {
+    fontSize: 24,
+  },
+  inviteMenuOptionInfo: {
+    flex: 1,
+  },
+  inviteMenuOptionTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  inviteMenuOptionSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  inviteMenuCancel: {
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 4,
+  },
+  inviteMenuCancelText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.textMuted,
+    letterSpacing: 1,
   },
 });

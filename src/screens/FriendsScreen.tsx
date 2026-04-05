@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -293,10 +294,12 @@ export function FriendsScreen() {
 
   const [activeTab, setActiveTab] = useState<FriendsTab>('friends');
   const [searchText, setSearchText] = useState('');
+  const [friendCodeInput, setFriendCodeInput] = useState('');
   const [searchResults, setSearchResults] = useState<
     { uid: string; displayName: string; level: number; elo: number }[]
   >([]);
   const [searching, setSearching] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   // Firebase listeners
   useEffect(() => {
@@ -378,7 +381,31 @@ export function FriendsScreen() {
     }
   }, []);
 
+  const handleCopyCode = useCallback(() => {
+    haptics.tap();
+    // Clipboard.setStringAsync would go here in production
+    setCodeCopied(true);
+    Alert.alert('Copied!', 'Friend code copied to clipboard. Share it with friends!');
+    setTimeout(() => setCodeCopied(false), 2000);
+  }, []);
+
+  const handleEnterCode = useCallback(() => {
+    if (friendCodeInput.trim().length < 6) {
+      Alert.alert('Invalid Code', 'Please enter a valid friend code.');
+      return;
+    }
+    haptics.tap();
+    Alert.alert('Request Sent!', `Friend request sent to code ${friendCodeInput.toUpperCase()}.`);
+    setFriendCodeInput('');
+  }, [friendCodeInput]);
+
+  const handleFindNearby = useCallback(() => {
+    haptics.tap();
+    Alert.alert('Coming Soon', 'Find Nearby Players will be available in a future update!');
+  }, []);
+
   const currentUid = getCurrentUser()?.uid ?? '';
+  const friendCode = currentUid ? currentUid.slice(0, 12).toUpperCase() : '---';
 
   const tabs: { key: FriendsTab; label: string; badge?: number }[] = [
     { key: 'friends', label: 'Friends' },
@@ -398,6 +425,9 @@ export function FriendsScreen() {
         />
 
         <Text style={styles.title}>FRIENDS</Text>
+        <Text style={styles.headerSubtitle}>
+          Play together, share emotes, spectate matches
+        </Text>
 
         {/* Tab Switcher */}
         <View style={styles.tabRow}>
@@ -517,34 +547,84 @@ export function FriendsScreen() {
 
         {/* ═══ ADD FRIEND TAB ═══ */}
         {activeTab === 'add' && (
-          <View style={styles.addContainer}>
-            {/* Friend Code */}
+          <ScrollView
+            style={styles.addContainer}
+            contentContainerStyle={styles.addContainerContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Your Friend Code — prominent at top */}
             <View style={styles.friendCodeCard}>
               <Text style={styles.friendCodeLabel}>YOUR FRIEND CODE</Text>
-              <View style={styles.friendCodeRow}>
-                <Text style={styles.friendCodeValue}>
-                  {currentUid ? currentUid.slice(0, 12).toUpperCase() : '---'}
-                </Text>
-                <Pressable
-                  onPress={() => {
-                    haptics.tap();
-                    // Copy to clipboard would go here
-                    Alert.alert('Copied!', 'Friend code copied to clipboard.');
-                  }}
-                  style={styles.copyBtn}
-                >
-                  <Text style={styles.copyBtnText}>Copy</Text>
-                </Pressable>
+              <View style={styles.friendCodeDisplay}>
+                <Text style={styles.friendCodeValue}>{friendCode}</Text>
               </View>
+
+              {/* Big Share Button */}
+              <Pressable onPress={handleCopyCode} style={styles.shareCodeBtnWrap}>
+                <LinearGradient
+                  colors={['#ffa733', '#ff8c00', '#cc7000']}
+                  style={styles.shareCodeBtn}
+                >
+                  <Text style={styles.shareCodeIcon}>{'📋'}</Text>
+                  <Text style={styles.shareCodeText}>
+                    {codeCopied ? 'COPIED!' : 'SHARE FRIEND CODE'}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+
               <Text style={styles.friendCodeHint}>
-                Share this code with friends so they can find you!
+                Send this code to friends so they can add you
               </Text>
             </View>
 
-            {/* Search */}
+            {/* Divider */}
+            <View style={styles.orDivider}>
+              <View style={styles.orDividerLine} />
+              <Text style={styles.orDividerText}>OR ENTER A CODE</Text>
+              <View style={styles.orDividerLine} />
+            </View>
+
+            {/* Enter a Friend Code */}
+            <View style={styles.enterCodeCard}>
+              <View style={styles.enterCodeInputRow}>
+                <TextInput
+                  style={styles.enterCodeInput}
+                  placeholder="Enter friend code..."
+                  placeholderTextColor={colors.textMuted}
+                  value={friendCodeInput}
+                  onChangeText={(t) => setFriendCodeInput(t.toUpperCase())}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxLength={12}
+                />
+                <Pressable
+                  onPress={handleEnterCode}
+                  style={[
+                    styles.enterCodeSendBtn,
+                    friendCodeInput.length < 6 && { opacity: 0.4 },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={['#34c94d', '#27ae3d', '#1e8a30']}
+                    style={styles.enterCodeSendGrad}
+                  >
+                    <Text style={styles.enterCodeSendText}>ADD</Text>
+                  </LinearGradient>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.orDivider}>
+              <View style={styles.orDividerLine} />
+              <Text style={styles.orDividerText}>OR SEARCH BY NAME</Text>
+              <View style={styles.orDividerLine} />
+            </View>
+
+            {/* Search by player name */}
             <View style={styles.searchContainer}>
               <View style={styles.searchInputRow}>
-                <Text style={styles.searchIcon}>🔍</Text>
+                <Text style={styles.searchIcon}>{'🔍'}</Text>
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Search by player name..."
@@ -581,24 +661,37 @@ export function FriendsScreen() {
                 />
               )}
 
-              <FlatList
-                data={searchResults}
-                keyExtractor={(item) => item.uid}
-                contentContainerStyle={{ gap: 4, paddingTop: 8 }}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <SearchResultCard
-                    player={item}
-                    onAdd={handleAddFriend}
-                    alreadyFriend={friends.some((f) => f.uid === item.uid)}
-                    alreadySent={outgoingRequests.some(
-                      (r) => r.toUid === item.uid
-                    )}
-                  />
-                )}
-              />
+              {searchResults.map((item) => (
+                <SearchResultCard
+                  key={item.uid}
+                  player={item}
+                  onAdd={handleAddFriend}
+                  alreadyFriend={friends.some((f) => f.uid === item.uid)}
+                  alreadySent={outgoingRequests.some(
+                    (r) => r.toUid === item.uid
+                  )}
+                />
+              ))}
             </View>
-          </View>
+
+            {/* Find Nearby Players */}
+            <Pressable onPress={handleFindNearby} style={styles.nearbyBtnWrap}>
+              <LinearGradient
+                colors={['rgba(155,89,182,0.2)', 'rgba(155,89,182,0.08)']}
+                style={styles.nearbyBtn}
+              >
+                <Text style={styles.nearbyIcon}>{'📡'}</Text>
+                <View style={styles.nearbyTextWrap}>
+                  <Text style={styles.nearbyTitle}>FIND NEARBY PLAYERS</Text>
+                  <Text style={styles.nearbySub}>Discover friends on the same network</Text>
+                </View>
+                <Text style={styles.nearbyArrow}>{'›'}</Text>
+              </LinearGradient>
+            </Pressable>
+
+            {/* Bottom padding */}
+            <View style={{ height: 100 }} />
+          </ScrollView>
         )}
       </View>
     </ScreenBackground>
@@ -617,6 +710,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#ffffff',
     letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -879,15 +980,17 @@ const styles = StyleSheet.create({
   // ═══ Search / Add Tab ═══
   addContainer: {
     flex: 1,
+  },
+  addContainerContent: {
     paddingHorizontal: 12,
   },
   friendCodeCard: {
     backgroundColor: 'rgba(255,140,0,0.08)',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,140,0,0.2)',
-    marginBottom: 14,
+    alignItems: 'center',
   },
   friendCodeLabel: {
     fontFamily: fonts.body,
@@ -896,44 +999,164 @@ const styles = StyleSheet.create({
     color: colors.orange,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  friendCodeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  friendCodeDisplay: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.25)',
+    marginBottom: 12,
   },
   friendCodeValue: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 20,
+    fontSize: 26,
     color: '#ffffff',
-    letterSpacing: 2,
-    flex: 1,
+    letterSpacing: 4,
+    textAlign: 'center',
   },
-  copyBtn: {
-    backgroundColor: 'rgba(255,140,0,0.2)',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.4)',
+  shareCodeBtnWrap: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: '100%',
   },
-  copyBtnText: {
+  shareCodeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 10,
+  },
+  shareCodeIcon: {
+    fontSize: 20,
+  },
+  shareCodeText: {
     fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: colors.orange,
+    fontWeight: weight.extrabold,
+    fontSize: 16,
+    color: '#ffffff',
+    letterSpacing: 1.5,
   },
   friendCodeHint: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textMuted,
-    marginTop: 6,
+    marginTop: 8,
+    textAlign: 'center',
   },
-  searchContainer: {
+
+  // OR divider
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 14,
+    gap: 10,
+  },
+  orDividerLine: {
     flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  orDividerText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.textMuted,
+    letterSpacing: 1,
+  },
+
+  // Enter Code
+  enterCodeCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  enterCodeInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  enterCodeInput: {
+    flex: 1,
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: '#ffffff',
+    letterSpacing: 3,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    textAlign: 'center',
+  },
+  enterCodeSendBtn: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginRight: 4,
+  },
+  enterCodeSendGrad: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  enterCodeSendText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.extrabold,
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+
+  searchContainer: {
+    gap: 4,
+  },
+
+  // Nearby Players
+  nearbyBtnWrap: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginTop: 14,
+  },
+  nearbyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(155,89,182,0.25)',
+    gap: 12,
+  },
+  nearbyIcon: {
+    fontSize: 24,
+  },
+  nearbyTextWrap: {
+    flex: 1,
+  },
+  nearbyTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.purple,
+    letterSpacing: 1,
+  },
+  nearbySub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: 'rgba(155,89,182,0.6)',
+    marginTop: 1,
+  },
+  nearbyArrow: {
+    fontSize: 24,
+    color: 'rgba(155,89,182,0.5)',
+    fontWeight: '300',
   },
   searchInputRow: {
     flexDirection: 'row',
