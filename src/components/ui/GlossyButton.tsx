@@ -53,47 +53,44 @@ export function GlossyButton({
   const colors = GRADIENT_MAP[variant];
   const minH = small ? 40 : 50;
 
-  // On web, Pressable's responder system doesn't always capture clicks from
-  // deeply nested children (LinearGradient > View > Text). Add an explicit
-  // onClick on the wrapper View as a web-only fix.
-  const webClickProps = Platform.OS === 'web' ? { onClick: disabled ? undefined : handlePress } : {};
-
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        disabled && { opacity: 0.5 },
-        pressed && { opacity: 0.8 },
-        style,
-      ]}
-    >
-      <View {...webClickProps} style={[styles.outerGlow, {
-        shadowColor: colors.glow,
-        ...(Platform.OS === 'web' ? {
-          boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
-        } as any : {}),
-      }]}>
-        {/* Main button body */}
-        <LinearGradient
-          colors={[colors.top, colors.main, colors.dark]}
-          locations={[0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={[styles.gradient, { minHeight: minH }]}
-        >
-          {/* Content */}
-          <View style={styles.content}>
-            {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
-            <View style={styles.textWrap}>
-              <Text style={[styles.label, small && styles.labelSmall]}>{label}</Text>
-              {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-            </View>
-            {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
+  const buttonContent = (
+    <View style={[styles.outerGlow, {
+      shadowColor: colors.glow,
+      ...(Platform.OS === 'web' ? {
+        boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
+      } as any : {}),
+    }]}>
+      <LinearGradient
+        colors={[colors.top, colors.main, colors.dark]}
+        locations={[0, 0.5, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.gradient, { minHeight: minH }]}
+      >
+        <View style={styles.content}>
+          {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
+          <View style={styles.textWrap}>
+            <Text style={[styles.label, small && styles.labelSmall]}>{label}</Text>
+            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
-        </LinearGradient>
-      </View>
-    </Pressable>
+          {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
+        </View>
+      </LinearGradient>
+    </View>
+  );
+
+  // On native, use Pressable which handles touch events properly.
+  // On web, Pressable's responder system fails with deeply nested children
+  // (LinearGradient), so we use a transparent Pressable overlay on top.
+  return (
+    <View style={[disabled && { opacity: 0.5 }, style]}>
+      {buttonContent}
+      <Pressable
+        onPress={handlePress}
+        disabled={disabled}
+        style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
+      />
+    </View>
   );
 }
 
