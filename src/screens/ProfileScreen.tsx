@@ -87,7 +87,7 @@ export function ProfileScreen() {
 
           <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
           <Text style={styles.playerTitle}>Rookie</Text>
-          <RankBadge size="medium" showElo style={{ marginTop: 4 }} />
+          <RankBadge size="medium" showElo showProgress style={{ marginTop: 4 }} />
 
           {/* Level bar */}
           <View style={styles.levelSection}>

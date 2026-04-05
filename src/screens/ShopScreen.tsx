@@ -80,6 +80,8 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
   );
 }
 
+type CollectionFilter = 'All' | 'OG Collection' | 'Season 0' | 'Neon Pack' | 'Mythic Collection';
+
 export function ShopScreen() {
   const coins = useShopStore(s => s.coins);
   const owned = useShopStore(s => s.owned);
@@ -87,6 +89,7 @@ export function ShopScreen() {
   const purchaseItem = useShopStore(s => s.purchaseItem);
   const equipItem = useShopStore(s => s.equipItem);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
+  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
   const insets = useSafeAreaInsets();
 
   // Look up equipped skin names from catalogs
@@ -124,12 +127,18 @@ export function ShopScreen() {
     { key: 'boxes', label: 'Boxes', icon: '🎁' },
   ];
 
-  const items = activeTab === 'boards' ? BOARD_THEMES :
-                activeTab === 'pieces' ? PIECE_THEMES :
-                activeTab === 'effects' ? DROP_EFFECTS :
-                activeTab === 'wins' ? WIN_ANIMATIONS :
-                activeTab === 'accessories' ? BOARD_ACCESSORIES :
-                activeTab === 'emotes' ? EMOTES : [];
+  const rawItems = activeTab === 'boards' ? BOARD_THEMES :
+                   activeTab === 'pieces' ? PIECE_THEMES :
+                   activeTab === 'effects' ? DROP_EFFECTS :
+                   activeTab === 'wins' ? WIN_ANIMATIONS :
+                   activeTab === 'accessories' ? BOARD_ACCESSORIES :
+                   activeTab === 'emotes' ? EMOTES : [];
+
+  const items = collectionFilter === 'All'
+    ? rawItems
+    : rawItems.filter(item => item.collection === collectionFilter);
+
+  const collectionFilters: CollectionFilter[] = ['All', 'OG Collection', 'Season 0', 'Neon Pack', 'Mythic Collection'];
 
   const category = activeTab === 'boards' ? 'boards' :
                    activeTab === 'effects' ? 'dropEffects' :
@@ -171,6 +180,29 @@ export function ShopScreen() {
             </Pressable>
           ))}
         </View>
+
+        {/* Collection filter pills */}
+        {activeTab !== 'boxes' && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionRow}>
+            {collectionFilters.map(cf => (
+              <Pressable
+                key={cf}
+                onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
+                style={[
+                  styles.collectionPill,
+                  collectionFilter === cf && styles.collectionPillActive,
+                ]}
+              >
+                <Text style={[
+                  styles.collectionPillText,
+                  collectionFilter === cf && styles.collectionPillTextActive,
+                ]}>
+                  {cf}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
 
         {/* Items grid */}
         <ScrollView
@@ -313,6 +345,32 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   tabLabelActive: {
+    color: colors.orange,
+  },
+  collectionRow: {
+    paddingHorizontal: 16,
+    gap: 6,
+    marginBottom: 10,
+  },
+  collectionPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  collectionPillActive: {
+    borderColor: 'rgba(255,140,0,0.5)',
+    backgroundColor: 'rgba(255,140,0,0.1)',
+  },
+  collectionPillText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  collectionPillTextActive: {
     color: colors.orange,
   },
   gridContent: {

@@ -88,6 +88,11 @@ export function GameScreen({ navigation }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
 
+  // Last move indicator
+  const [lastMoveCol, setLastMoveCol] = useState<number | null>(null);
+  const lastMoveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastMoveFade = useRef(new RNAnimated.Value(0)).current;
+
   // Emote Picker Modal
   const [emotePickerOpen, setEmotePickerOpen] = useState(false);
   const [emotePickerTab, setEmotePickerTab] = useState<'emotes' | 'chat'>('emotes');
@@ -389,6 +394,7 @@ export function GameScreen({ navigation }: Props) {
       const aiCol = getAIMove(currentBoard, difficulty, connectCount);
       recordMove(aiCol, 2, currentMoveCount);
       dropPiece(aiCol);
+      showLastMove(aiCol);
       haptics.drop();
       playSound('drop');
       setAiThinking(false);
@@ -508,6 +514,14 @@ export function GameScreen({ navigation }: Props) {
     }
   }, [status, winner]);
 
+  const showLastMove = useCallback((col: number) => {
+    if (lastMoveTimerRef.current) clearTimeout(lastMoveTimerRef.current);
+    setLastMoveCol(col);
+    lastMoveFade.setValue(1);
+    RNAnimated.timing(lastMoveFade, { toValue: 0, duration: 1000, useNativeDriver: true }).start();
+    lastMoveTimerRef.current = setTimeout(() => setLastMoveCol(null), 1000);
+  }, []);
+
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
 
@@ -516,6 +530,7 @@ export function GameScreen({ navigation }: Props) {
       if (currentPlayer !== myPlayerNum) return;
       haptics.drop();
       playSound('drop');
+      showLastMove(col);
       makeMove(onlineMatchId, col, myPlayerNum);
       return;
     }
@@ -523,6 +538,7 @@ export function GameScreen({ navigation }: Props) {
     if (isVsAi && currentPlayer !== 1) return;
     recordMove(col, currentPlayer, moveCount);
     dropPiece(col);
+    showLastMove(col);
     haptics.drop();
     playSound('drop');
   }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, isOnlineMatch, onlineMatchId, myPlayerNum]);
@@ -808,6 +824,13 @@ export function GameScreen({ navigation }: Props) {
             currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
           />
         </RNAnimated.View>
+
+        {/* Last move indicator */}
+        {lastMoveCol !== null && (
+          <RNAnimated.View style={[styles.lastMoveIndicator, { opacity: lastMoveFade }]}>
+            <Text style={styles.lastMoveText}>Col {lastMoveCol + 1}</Text>
+          </RNAnimated.View>
+        )}
 
         {/* Bottom controls */}
         <View style={styles.controls}>
@@ -1561,6 +1584,21 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(255,215,0,0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+  },
+  lastMoveIndicator: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,140,0,0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginBottom: 2,
+  },
+  lastMoveText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(255,180,80,0.8)',
+    letterSpacing: 0.3,
   },
   moveCounter: {
     backgroundColor: 'rgba(255,140,0,0.10)',

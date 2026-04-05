@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
 import { CharacterAvatar } from './CharacterAvatar';
+import { useRankedStore, RANKED_TIERS, formatRank } from '../../stores/rankedStore';
 
 interface TopBarProps {
   coins: number;
@@ -25,6 +26,11 @@ export function TopBar({
   onProfilePress,
   onSettingsPress,
 }: TopBarProps) {
+  const elo = useRankedStore(s => s.elo);
+  const tier = useRankedStore(s => s.tier);
+  const tierInfo = useMemo(() => RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0], [tier]);
+  const rankLabel = useMemo(() => formatRank(elo), [elo]);
+
   const formatNum = (n: number) =>
     n >= 10000 ? `${(n / 1000).toFixed(0)}k` :
     n >= 1000 ? n.toLocaleString() :
@@ -67,7 +73,7 @@ export function TopBar({
         <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
       </LinearGradient>
 
-      {/* Right: Profile avatar */}
+      {/* Right: Profile avatar + rank */}
       <Pressable
         onPress={() => { haptics.tap(); onProfilePress?.(); }}
         style={styles.avatarWrap}
@@ -83,6 +89,7 @@ export function TopBar({
         <View style={styles.levelBadge}>
           <Text style={styles.levelText}>{level}</Text>
         </View>
+        <Text style={[styles.rankLabel, { color: tierInfo.color }]} numberOfLines={1}>{rankLabel}</Text>
       </Pressable>
     </View>
   );
@@ -250,5 +257,13 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 9,
     color: '#ffffff',
+  },
+  rankLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    textAlign: 'center',
+    marginTop: 1,
+    letterSpacing: 0.3,
   },
 });
