@@ -55,6 +55,12 @@ export default function App() {
         await useGameStore.getState().loadFromStorage();
         await useChallengeStore.getState().loadFromStorage();
         await useSeriesStore.getState().loadFromStorage();
+        // Auto-refresh daily challenges if stale
+        const challengeState = useChallengeStore.getState();
+        const today = new Date().toISOString().split('T')[0];
+        if (challengeState.lastRefresh !== today) {
+          challengeState.refreshChallenges();
+        }
         // Preload sound effects
         await preloadSounds();
       } catch (e) {

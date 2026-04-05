@@ -18,13 +18,26 @@ import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
 import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 
+export type WagerCourtParams = {
+  name: string;
+  entry: number;
+  winnerGets: number;
+  minLevel?: number;
+};
+
+export type CareerRewardParams = {
+  type: 'coins' | 'board' | 'pieces';
+  amount?: number;
+  id?: string;
+};
+
 export type GameParams = {
-  wagerCourt?: any;
+  wagerCourt?: WagerCourtParams;
   rankedMode?: boolean;
   rankedClockSeconds?: number;
-  presetBoard?: any;
+  presetBoard?: number[][];
   careerLevelId?: number;
-  careerLevelReward?: any;
+  careerLevelReward?: CareerRewardParams;
   localPlayerNames?: { player1: string; player2: string };
 };
 

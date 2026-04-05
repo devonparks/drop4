@@ -168,7 +168,7 @@ function minimax(
     let bestCol = validCols[Math.floor(Math.random() * validCols.length)];
 
     for (const col of validCols) {
-      const row = getLowestEmptyRow(board, col);
+      const row = getLowestEmptyRow(board, col, board[col].length);
       const newBoard = board.map(c => [...c]);
       newBoard[col][row] = AI;
 
@@ -186,7 +186,7 @@ function minimax(
     let bestCol = validCols[Math.floor(Math.random() * validCols.length)];
 
     for (const col of validCols) {
-      const row = getLowestEmptyRow(board, col);
+      const row = getLowestEmptyRow(board, col, board[col].length);
       const newBoard = board.map(c => [...c]);
       newBoard[col][row] = HUMAN;
 
@@ -217,7 +217,7 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
   // Check for immediate winning move first (all difficulties)
   const validCols = getValidCols(board);
   for (const col of validCols) {
-    const row = getLowestEmptyRow(board, col);
+    const row = getLowestEmptyRow(board, col, board[col].length);
     const testBoard = board.map(c => [...c]);
     testBoard[col][row] = AI;
     if (isWinningMove(testBoard, col, row, AI, connectN)) return col;
@@ -225,7 +225,7 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
 
   // Check for immediate block (all difficulties)
   for (const col of validCols) {
-    const row = getLowestEmptyRow(board, col);
+    const row = getLowestEmptyRow(board, col, board[col].length);
     const testBoard = board.map(c => [...c]);
     testBoard[col][row] = HUMAN;
     if (isWinningMove(testBoard, col, row, HUMAN, connectN)) return col;

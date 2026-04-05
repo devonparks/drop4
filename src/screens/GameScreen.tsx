@@ -390,7 +390,7 @@ export function GameScreen({ navigation }: Props) {
             ]}>
               {turnText}
             </Text>
-            <Text style={styles.vsText}>vs {diffLabel} Bot</Text>
+            <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
             {/* Timer bar (casual mode turn timer) */}
             {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
               <View style={styles.timerWrap}>
@@ -411,7 +411,7 @@ export function GameScreen({ navigation }: Props) {
               ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
               : <CharacterAvatar size="medium" variant="player" />
             }
-            level={isVsAi ? 16 : useShopStore.getState().level}
+            level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
             pieceColor="yellow"
             score={scores.player2}
             isActive={currentPlayer === 2 && status === 'playing'}
