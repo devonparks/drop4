@@ -525,6 +525,11 @@ export function GameScreen({ navigation }: Props) {
     navigation.goBack();
   };
 
+  /** Navigate all the way back to the Home tab (used by HOME / LEAVE buttons after game over) */
+  const handleGoHome = () => {
+    navigation.popToTop();
+  };
+
   // Local player names
   const localNames = params.localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
   const p1Name = isOnlineMatch ? 'You' : isVsAi ? 'You' : localNames.player1;
@@ -1014,7 +1019,7 @@ export function GameScreen({ navigation }: Props) {
                         <GlossyButton
                           label="DECLINE"
                           variant="red"
-                          onPress={handleBack}
+                          onPress={handleGoHome}
                           style={{ marginTop: 8 }}
                         />
                       </>
@@ -1042,7 +1047,7 @@ export function GameScreen({ navigation }: Props) {
                           label="LEAVE"
                           icon="🚪"
                           variant="navy"
-                          onPress={handleBack}
+                          onPress={handleGoHome}
                           style={{ marginTop: 8 }}
                         />
                       </>
@@ -1060,7 +1065,7 @@ export function GameScreen({ navigation }: Props) {
                       label="HOME"
                       icon="🏠"
                       variant="navy"
-                      onPress={handleBack}
+                      onPress={handleGoHome}
                       style={{ marginTop: 8 }}
                     />
                   </>
