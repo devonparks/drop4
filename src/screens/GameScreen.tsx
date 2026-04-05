@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -9,7 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { GameBoard } from '../components/board/GameBoard';
+import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { EmoteBar as EmoteBarComponent } from '../components/ui/EmoteBar';
@@ -77,6 +77,9 @@ export function GameScreen({ navigation }: Props) {
   const preGameEloRef = useRef(useRankedStore.getState().elo);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const hintPulseAnim = useRef(new RNAnimated.Value(0)).current;
+  const [thinkingDots, setThinkingDots] = useState(0);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
@@ -276,6 +279,30 @@ export function GameScreen({ navigation }: Props) {
       if (turnTimerRef.current) clearInterval(turnTimerRef.current);
     };
   }, [currentPlayer, status, moveCount]);
+
+  // Hint pulse animation — pulsing opacity when hint is shown
+  useEffect(() => {
+    if (hintCol !== null) {
+      hintPulseAnim.setValue(0);
+      const loop = RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(hintPulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+          RNAnimated.timing(hintPulseAnim, { toValue: 0.2, duration: 600, useNativeDriver: true }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+  }, [hintCol]);
+
+  // AI thinking dots animation (cycles 0→1→2→3 every 300ms)
+  useEffect(() => {
+    if (!isAiThinking) { setThinkingDots(0); return; }
+    const interval = setInterval(() => {
+      setThinkingDots(prev => (prev + 1) % 4);
+    }, 300);
+    return () => clearInterval(interval);
+  }, [isAiThinking]);
 
   // Best of 3 series tracking
   const [, setSeriesGame] = useState(1);
@@ -488,6 +515,13 @@ export function GameScreen({ navigation }: Props) {
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
+  // Helper: compute hint arrow left offset for a given column
+  const _getHintArrowOffset = (col: number): number => {
+    const BOARD_PAD = 10;
+    const GAP = 4;
+    return BOARD_PAD + col * (CELL_SIZE + GAP) + CELL_SIZE / 2 - 10;
+  };
+
   // Format time for chess clock display
   const formatClockTime = (seconds: number): string => {
     const m = Math.floor(seconds / 60);
@@ -565,18 +599,25 @@ export function GameScreen({ navigation }: Props) {
             )}
           </View>
 
-          <PlayerHUD
-            name={p2Name}
-            avatar={isVsAi
-              ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
-              : <CharacterAvatar size="medium" variant="player" />
-            }
-            level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
-            pieceColor="yellow"
-            score={scores.player2}
-            isActive={currentPlayer === 2 && status === 'playing'}
-            side="right"
-          />
+          <View style={styles.hudRightWrap}>
+            <PlayerHUD
+              name={p2Name}
+              avatar={isVsAi
+                ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
+                : <CharacterAvatar size="medium" variant="player" />
+              }
+              level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
+              pieceColor="yellow"
+              score={scores.player2}
+              isActive={currentPlayer === 2 && status === 'playing'}
+              side="right"
+            />
+            {isAiThinking && isVsAi && (
+              <Text style={styles.thinkingDots}>
+                {'.'.repeat(thinkingDots)}
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Score dots (best of 5) */}
@@ -600,10 +641,15 @@ export function GameScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* Hint indicator */}
+        {/* Hint indicator — pulsing arrow above the board */}
         {hintCol !== null && (
-          <Animated.View entering={FadeIn.duration(200)} style={styles.hintBanner}>
-            <Text style={styles.hintText}>Try column {hintCol + 1}</Text>
+          <Animated.View entering={FadeIn.duration(200)} style={[styles.hintArrowRow, { width: BOARD_WIDTH }]}>
+            <RNAnimated.Text style={[
+              styles.hintArrow,
+              { left: _getHintArrowOffset(hintCol), opacity: hintPulseAnim },
+            ]}>
+              ▼
+            </RNAnimated.Text>
           </Animated.View>
         )}
 
@@ -623,11 +669,12 @@ export function GameScreen({ navigation }: Props) {
                 haptics.tap();
                 const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
                 setHintCol(bestCol);
+                setHintsUsed(prev => prev + 1);
                 setTimeout(() => setHintCol(null), 2000);
               }
             }} style={styles.controlBtn}>
               <Text style={styles.controlIcon}>💡</Text>
-              <Text style={styles.controlLabel}>Hint</Text>
+              <Text style={styles.controlLabel}>Hint{hintsUsed > 0 ? ` (${hintsUsed})` : ''}</Text>
             </Pressable>
           )}
 
@@ -653,14 +700,14 @@ export function GameScreen({ navigation }: Props) {
           {isOnlineMatch && status === 'playing' && (
             <Pressable onPress={handleBack} style={styles.controlBtn}>
               <Text style={styles.controlIcon}>🏳️</Text>
-              <Text style={styles.controlLabel}>Resign</Text>
+              <Text style={styles.resignLabel}>Resign</Text>
             </Pressable>
           )}
 
           {/* Resign button */}
           <Pressable onPress={handleBack} style={styles.controlBtn}>
             <Text style={styles.controlIcon}>🏳</Text>
-            <Text style={styles.controlLabel}>Resign</Text>
+            <Text style={styles.resignLabel}>Resign</Text>
           </Pressable>
         </View>
 
@@ -1043,6 +1090,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,140,0,0.15)',
   },
   controlBtn: {
     alignItems: 'center',
@@ -1058,34 +1107,55 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
-  hintBanner: {
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255,209,102,0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,209,102,0.3)',
+  resignLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(230,57,70,0.6)',
+    marginTop: 2,
   },
-  hintText: {
+  hudRightWrap: {
+    alignItems: 'flex-end',
+  },
+  thinkingDots: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 13,
-    color: colors.coinGold,
+    fontSize: 14,
+    color: colors.pieceYellow,
+    letterSpacing: 2,
+    minWidth: 24,
     textAlign: 'center',
+    marginTop: 2,
+  },
+  hintArrowRow: {
+    alignSelf: 'center',
+    height: 22,
+    marginBottom: 2,
+    position: 'relative',
+  },
+  hintArrow: {
+    position: 'absolute',
+    top: 0,
+    fontSize: 20,
+    color: colors.coinGold,
+    textShadowColor: 'rgba(255,215,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   moveCounter: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,140,0,0.12)',
     borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.2)',
   },
   moveText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 14,
+    fontSize: 15,
     color: '#ffffff',
+    letterSpacing: 0.5,
   },
   emoteBar: {
     flexDirection: 'row',
