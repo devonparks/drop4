@@ -128,25 +128,7 @@ export function HomeScreen() {
           <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
         </View>
 
-        {/* Season & Daily Challenges (under logo) */}
-        <View style={styles.statusBar}>
-          <Pressable onPress={() => navigateTo('SeasonPass')} style={styles.statusPill}>
-            <Text style={styles.statusIcon}>🏆</Text>
-            <Text style={styles.statusLabel}>{seasonName}</Text>
-            <View style={styles.progressBarSmall}>
-              <View style={[styles.progressFillSmall, { width: `${(currentTier / maxTier) * 100}%` }]} />
-            </View>
-            <Text style={styles.statusValue}>{currentTier}/{maxTier}</Text>
-          </Pressable>
-
-          <Pressable onPress={() => navigateTo('Challenges')} style={styles.statusPill}>
-            <Text style={styles.statusIcon}>📋</Text>
-            <Text style={styles.statusLabel}>Daily Challenges</Text>
-            <View style={styles.challengeBadge}>
-              <Text style={styles.badgeNum}>{challenges.filter(c => !c.completed).length}</Text>
-            </View>
-          </Pressable>
-        </View>
+        {/* Season & Challenges moved to tab bar — more room for character */}
 
         {/* ═══ CHARACTER LOBBY ═══ */}
         <View style={styles.lobbyArea}>
@@ -169,7 +151,7 @@ export function HomeScreen() {
 
             <Pressable onPress={handleCharacterTap}>
               <AnimatedCharacter
-                size={280}
+                size={320}
                 emote={emote}
                 onEmoteComplete={clearEmote}
               />
@@ -188,7 +170,7 @@ export function HomeScreen() {
             <LinearGradient colors={['rgba(255,160,0,0.35)', 'rgba(255,100,0,0.2)']} style={styles.sideBtnGradient}>
               <Text style={styles.sideBtnIcon}>🕺</Text>
             </LinearGradient>
-            <Text style={styles.sideBtnLabel}>Pose</Text>
+            <Text style={styles.sideBtnLabel}>Idles</Text>
           </Pressable>
         </View>
 
@@ -211,7 +193,8 @@ export function HomeScreen() {
               label="PLAY"
               subtitle="Quick Match"
               variant="orange"
-              iconRight="▶"
+              small
+              iconRight="›"
               onPress={() => navigateTo('Play')}
             />
           </PressScaleView>
@@ -220,7 +203,8 @@ export function HomeScreen() {
               label="CAREER"
               subtitle="Progress & Unlocks"
               variant="purple"
-              iconRight="🏆"
+              small
+              iconRight="›"
               onPress={() => navigateTo('Career')}
             />
           </PressScaleView>
@@ -229,7 +213,8 @@ export function HomeScreen() {
               label="MULTIPLAYER"
               subtitle="Wager & Compete"
               variant="teal"
-              iconRight="👥"
+              small
+              iconRight="›"
               onPress={() => navigateTo('Multiplayer')}
             />
           </PressScaleView>
@@ -314,13 +299,13 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    marginTop: -4,
-    marginBottom: 2,
+    marginTop: -6,
+    marginBottom: -2,
   },
   logoMain: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 52,
+    fontSize: 44,
     color: '#ffffff',
     textShadowColor: 'rgba(80,120,255,0.6)',
     textShadowOffset: { width: 0, height: 0 },
@@ -381,8 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: -15,
-    marginBottom: -18,
+    paddingTop: 20,
   },
   stageGlowOuter: {
     width: 280,
