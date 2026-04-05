@@ -468,7 +468,7 @@ export function GameScreen({ navigation }: Props) {
   const turnText = status === 'playing'
     ? (isAiThinking ? 'Thinking...'
       : isOnlineMatch ? (isMyTurn ? 'Your Turn' : 'Waiting...')
-      : (currentPlayer === 1 ? `${p1Name}'s Turn` : `${p2Name}'s Turn`))
+      : (currentPlayer === 1 ? (p1Name === 'You' ? 'Your Turn' : `${p1Name}'s Turn`) : `${p2Name}'s Turn`))
     : status === 'won'
     ? (isOnlineMatch
       ? (winner === myPlayerNum ? 'You Win!' : `${p2Name} Wins!`)

@@ -190,7 +190,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
         </View>
 
         {/* Grid */}
-        <View style={styles.grid}>
+        <View style={styles.grid} pointerEvents="none">
           {Array.from({ length: ROWS }).map((_, row) => (
             <View key={row} style={styles.row}>
               {Array.from({ length: COLS }).map((_, col) => {
@@ -383,6 +383,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     flexDirection: 'row',
+    zIndex: 10,
   },
   colTarget: {
     flex: 1,
