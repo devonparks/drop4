@@ -30,10 +30,14 @@ interface ShopState {
   // Equipped idle variant (null = base idle with random variants)
   equippedIdle: string | null;
 
+  // Level up celebration flag
+  justLeveledUp: boolean;
+
   // Actions
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
   addXp: (amount: number) => void;
+  clearLevelUp: () => void;
   addGems: (amount: number) => void;
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
@@ -70,6 +74,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   equippedIdle: null,
 
+  justLeveledUp: false,
+
   addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
 
   spendCoins: (amount) => {
@@ -84,12 +90,16 @@ export const useShopStore = create<ShopState>((set, get) => ({
     const state = get();
     let newXp = state.xp + amount;
     let newLevel = state.level;
+    let didLevelUp = false;
     while (newXp >= newLevel * 100) {
       newXp -= newLevel * 100;
       newLevel++;
+      didLevelUp = true;
     }
-    set({ xp: newXp, level: newLevel });
+    set({ xp: newXp, level: newLevel, ...(didLevelUp ? { justLeveledUp: true } : {}) });
   },
+
+  clearLevelUp: () => set({ justLeveledUp: false }),
 
   purchaseItem: (category, itemId, cost) => {
     const state = get();

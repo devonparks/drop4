@@ -124,15 +124,35 @@ export function RootNavigator() {
       <Stack.Screen name="Tournament" component={TournamentScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Learn" component={LearnScreen} />
-      <Stack.Screen name="SeasonPass" component={SeasonPassScreen} />
+      <Stack.Screen
+        name="SeasonPass"
+        component={SeasonPassScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
       <Stack.Screen name="CharacterCreator" component={CharacterCreatorScreen} />
       <Stack.Screen name="BoardEditor" component={BoardEditorScreen} />
       <Stack.Screen name="ReplayViewer" component={ReplayViewerScreen} />
-      <Stack.Screen name="LootBox" component={LootBoxScreen} />
-      <Stack.Screen name="MatchHistory" component={MatchHistoryScreen} />
+      <Stack.Screen
+        name="LootBox"
+        component={LootBoxScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="MatchHistory"
+        component={MatchHistoryScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
       <Stack.Screen name="Spectator" component={SpectatorScreen} />
-      <Stack.Screen name="Friends" component={FriendsScreen} />
-      <Stack.Screen name="Stats" component={StatsScreen} />
+      <Stack.Screen
+        name="Friends"
+        component={FriendsScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Stats"
+        component={StatsScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
       <Stack.Screen name="PartyLobby" component={PartyLobbyScreen} />
       <Stack.Screen
         name="Game"

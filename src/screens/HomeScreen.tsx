@@ -107,7 +107,55 @@ export function HomeScreen() {
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
+  const justLeveledUp = useShopStore(s => s.justLeveledUp);
+  const clearLevelUp = useShopStore(s => s.clearLevelUp);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
+
+  // ═══ Coin earn animation ═══
+  const prevCoinsRef = useRef(coins);
+  const [coinDelta, setCoinDelta] = useState<number | null>(null);
+  const coinAnimY = useRef(new Animated.Value(0)).current;
+  const coinAnimOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (coins > prevCoinsRef.current) {
+      const diff = coins - prevCoinsRef.current;
+      setCoinDelta(diff);
+      coinAnimY.setValue(0);
+      coinAnimOpacity.setValue(1);
+      Animated.parallel([
+        Animated.timing(coinAnimY, { toValue: -40, duration: 1400, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.delay(800),
+          Animated.timing(coinAnimOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
+        ]),
+      ]).start(() => setCoinDelta(null));
+    }
+    prevCoinsRef.current = coins;
+  }, [coins]);
+
+  // ═══ Level Up celebration ═══
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const levelUpScale = useRef(new Animated.Value(0)).current;
+  const levelUpOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (justLeveledUp) {
+      setShowLevelUp(true);
+      levelUpScale.setValue(0.3);
+      levelUpOpacity.setValue(1);
+      haptics.win();
+      Animated.sequence([
+        Animated.spring(levelUpScale, { toValue: 1.1, useNativeDriver: true, speed: 12, bounciness: 14 }),
+        Animated.spring(levelUpScale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }),
+        Animated.delay(1600),
+        Animated.timing(levelUpOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start(() => {
+        setShowLevelUp(false);
+        clearLevelUp();
+      });
+    }
+  }, [justLeveledUp]);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
@@ -185,13 +233,26 @@ export function HomeScreen() {
   return (
     <ScreenBackground>
       <View style={styles.container}>
-        <TopBar
-          coins={coins} gems={gems} level={level}
-          onProfilePress={() => navigation.navigate('MainTabs', { screen: 'Profile' } as any)}
-          onSettingsPress={() => navigateTo('Settings')}
-          onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
-          onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
-        />
+        <View>
+          <TopBar
+            coins={coins} gems={gems} level={level}
+            onProfilePress={() => navigation.navigate('MainTabs', { screen: 'Profile' } as any)}
+            onSettingsPress={() => navigateTo('Settings')}
+            onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+            onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+          />
+          {/* Floating +coins animation */}
+          {coinDelta !== null && (
+            <Animated.Text
+              style={[
+                styles.coinDeltaText,
+                { opacity: coinAnimOpacity, transform: [{ translateY: coinAnimY }] },
+              ]}
+            >
+              +{coinDelta}
+            </Animated.Text>
+          )}
+        </View>
 
         {/* ═══ DROP4 LOGO ═══ */}
         <View style={styles.logoArea}>
@@ -339,6 +400,21 @@ export function HomeScreen() {
           visible={showTutorial && !hasSeenTip('home_tap_character')}
           onDismiss={() => setShowTutorial(false)}
         />
+
+        {/* Level Up celebration overlay */}
+        {showLevelUp && (
+          <Animated.View
+            style={[
+              styles.levelUpOverlay,
+              { opacity: levelUpOpacity, transform: [{ scale: levelUpScale }] },
+            ]}
+            pointerEvents="none"
+          >
+            <Text style={styles.levelUpEmoji}>🎉</Text>
+            <Text style={styles.levelUpTitle}>LEVEL UP!</Text>
+            <Text style={styles.levelUpSubtitle}>Level {level}</Text>
+          </Animated.View>
+        )}
       </View>
     </ScreenBackground>
   );
@@ -640,5 +716,51 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
+  },
+  // Coin earn animation
+  coinDeltaText: {
+    position: 'absolute',
+    top: 8,
+    alignSelf: 'center',
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 22,
+    color: colors.coinGold,
+    textShadowColor: 'rgba(255,200,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    zIndex: 20,
+    letterSpacing: 1,
+  },
+  // Level Up celebration
+  levelUpOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 0,
+  },
+  levelUpEmoji: {
+    fontSize: 64,
+    marginBottom: 8,
+  },
+  levelUpTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 42,
+    color: '#ffffff',
+    letterSpacing: 4,
+    textShadowColor: 'rgba(255,200,0,0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 30,
+  },
+  levelUpSubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 20,
+    color: colors.coinGold,
+    marginTop: 4,
+    letterSpacing: 2,
   },
 });
