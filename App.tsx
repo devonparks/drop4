@@ -25,7 +25,7 @@ import { useSeriesStore } from './src/stores/seriesStore';
 import { useFriendsStore } from './src/stores/friendsStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
-import { WelcomeOverlay } from './src/components/ui/WelcomeOverlay';
+// WelcomeOverlay removed — DailyRewardPopup serves as the first-time welcome
 import { SplashAnimation } from './src/components/ui/SplashAnimation';
 
 // Keep splash screen visible while loading
@@ -112,7 +112,6 @@ export default function App() {
       >
         <RootNavigator />
         <DailyRewardPopup />
-        <WelcomeOverlay />
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>
