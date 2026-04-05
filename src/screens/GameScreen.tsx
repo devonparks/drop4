@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Modal } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -699,8 +699,8 @@ export function GameScreen({ navigation }: Props) {
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
 
-        {/* ========== GAME OVER OVERLAY ========== */}
-        {(status === 'won' || status === 'draw') && (
+        {/* ========== GAME OVER OVERLAY (Modal so it covers PhoneFrame) ========== */}
+        <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
             <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.gameOverCard}>
               {/* Result header */}
@@ -862,7 +862,7 @@ export function GameScreen({ navigation }: Props) {
               </View>
             </Animated.View>
           </Animated.View>
-        )}
+        </Modal>
       </View>
     </ScreenBackground>
   );
@@ -1105,17 +1105,12 @@ const styles = StyleSheet.create({
   emoteText: {
     fontSize: 22,
   },
-  // Game Over — use fixed positioning so overlay covers viewport, not just container
+  // Game Over — inside Modal so it always covers the full screen
   overlay: {
-    position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 100,
   },
   gameOverCard: {
     width: '85%',
