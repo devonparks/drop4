@@ -119,6 +119,9 @@ export function PlayScreen({ navigation }: Props) {
             <GlossyButton label="LEARN" variant="purple" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
             <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
           </View>
+          <View style={styles.secondaryWrap}>
+            <GlossyButton label="BOARD EDITOR" variant="navy" icon="🏗" small onPress={() => navigation.navigate('BoardEditor')} style={{ flex: 1 }} />
+          </View>
         </View>
       </View>
     </ScreenBackground>

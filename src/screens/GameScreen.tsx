@@ -657,10 +657,10 @@ export function GameScreen({ navigation }: Props) {
             </Pressable>
           )}
 
-          {/* Menu button */}
+          {/* Resign button */}
           <Pressable onPress={handleBack} style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>☰</Text>
-            <Text style={styles.controlLabel}>Menu</Text>
+            <Text style={styles.controlIcon}>🏳</Text>
+            <Text style={styles.controlLabel}>Resign</Text>
           </Pressable>
         </View>
 

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -192,7 +192,9 @@ export function ProfileScreen() {
           <>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RECENT MATCHES</Text>
-              <GlossyButton label="View All" variant="navy" small onPress={() => navigateTo('MatchHistory')} />
+              <Pressable onPress={() => navigateTo('MatchHistory')}>
+                <Text style={styles.viewAllLink}>View All →</Text>
+              </Pressable>
             </View>
             <View style={styles.matchList}>
               {recentMatches.map(match => (
@@ -486,5 +488,11 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 12,
     color: colors.coinGold,
+  },
+  viewAllLink: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.orange,
   },
 });

@@ -92,6 +92,7 @@ export function ChallengesScreen() {
   const totalCount = challenges.length;
   const completedCount = challenges.filter(c => c.completed).length;
   const allComplete = completedCount === totalCount && totalCount > 0;
+  const totalAvailableCoins = challenges.reduce((sum, c) => sum + c.reward, 0) + 200;
 
   const handleClaimBonus = () => {
     if (!allComplete || bonusClaimed) return;
@@ -108,6 +109,7 @@ export function ChallengesScreen() {
           <Text style={styles.title}>DAILY CHALLENGES</Text>
           <Text style={styles.subtitle}>Refreshes daily</Text>
           <Text style={styles.progress}>{completedCount}/{totalCount} completed</Text>
+          <Text style={styles.availableCoins}>🪙 {totalAvailableCoins} available</Text>
         </View>
 
         <View style={styles.cardList}>
@@ -168,6 +170,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.orange,
     marginTop: 4,
+  },
+  availableCoins: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.coinGold,
+    marginTop: 2,
   },
   cardList: {
     gap: 10,

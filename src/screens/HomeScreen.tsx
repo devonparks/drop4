@@ -144,7 +144,7 @@ export function HomeScreen() {
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>V1.0</Text>
+        <Text style={styles.version}>v1.0.0</Text>
 
         {/* Emote Wheel Modal */}
         <EmoteWheel
@@ -379,16 +379,15 @@ const styles = StyleSheet.create({
   menuButtons: {
     paddingHorizontal: 20,
     gap: 6,
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   // Version
   version: {
-    position: 'absolute',
-    bottom: 4,
-    left: 12,
     fontFamily: fonts.body,
     fontWeight: weight.medium,
     fontSize: 10,
-    color: 'rgba(255,255,255,0.15)',
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
