@@ -21,9 +21,11 @@ type Props = {
 
 export function PlayScreen({ navigation }: Props) {
   const route = useRoute<RouteProp<RootStackParamList, 'Play'>>();
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
-  const { bestStreak } = useGameStore();
+  const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;

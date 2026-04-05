@@ -66,7 +66,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
 
 export function ChallengesScreen() {
   const { challenges, claimReward, refreshChallenges, lastRefresh } = useChallengeStore();
-  const { addCoins } = useShopStore();
+  const addCoins = useShopStore(s => s.addCoins);
   const hasAutoRefreshed = useRef(false);
   const [bonusClaimed, setBonusClaimed] = useState(false);
 

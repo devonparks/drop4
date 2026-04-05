@@ -15,7 +15,7 @@ export function DailyRewardPopup() {
   const [visible, setVisible] = useState(false);
   const [reward, setReward] = useState<any>(null);
   const { checkAndShowReward, claimReward, currentStreak } = useDailyRewardStore();
-  const { addCoins } = useShopStore();
+  const addCoins = useShopStore(s => s.addCoins);
   const { addBox } = useLootBoxStore();
 
   useEffect(() => {

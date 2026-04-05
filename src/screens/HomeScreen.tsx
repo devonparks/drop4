@@ -16,8 +16,12 @@ import { fonts, weight } from '../theme/typography';
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { coins, gems, level } = useShopStore();
-  const { currentTier, maxTier, seasonName } = useSeasonStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
+  const currentTier = useSeasonStore(s => s.currentTier);
+  const maxTier = useSeasonStore(s => s.maxTier);
+  const seasonName = useSeasonStore(s => s.seasonName);
   const challenges = useChallengeStore(s => s.challenges);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [wheelOpen, setWheelOpen] = useState(false);

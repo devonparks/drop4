@@ -72,9 +72,13 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
 }
 
 export function CareerScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
-  const { getStars, getTotalStars, getCompletedCount } = useCareerStore();
+  const getStars = useCareerStore(s => s.getStars);
+  const getTotalStars = useCareerStore(s => s.getTotalStars);
+  const getCompletedCount = useCareerStore(s => s.getCompletedCount);
   const [activeChapter, setActiveChapter] = useState(1);
 
   const handlePlayLevel = (careerLevel: CareerLevel) => {

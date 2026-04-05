@@ -134,8 +134,16 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
 
 export function SeasonPassScreen() {
   const navigation = useNavigation();
-  const { seasonName, currentTier, maxTier, xp, xpPerTier, hasPremium, rewards } = useSeasonStore();
-  const { coins, gems, level } = useShopStore();
+  const seasonName = useSeasonStore(s => s.seasonName);
+  const currentTier = useSeasonStore(s => s.currentTier);
+  const maxTier = useSeasonStore(s => s.maxTier);
+  const xp = useSeasonStore(s => s.xp);
+  const xpPerTier = useSeasonStore(s => s.xpPerTier);
+  const hasPremium = useSeasonStore(s => s.hasPremium);
+  const rewards = useSeasonStore(s => s.rewards);
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const progressPct = (xp / xpPerTier) * 100;
 
   return (

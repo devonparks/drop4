@@ -41,13 +41,19 @@ function EquippedItem({ label, name, rarity }: { label: string; name: string; ra
 
 export function ProfileScreen() {
   const navigation = useNavigation<any>();
-  const { level, xp, coins, gems, equipped } = useShopStore();
+  const level = useShopStore(s => s.level);
+  const xp = useShopStore(s => s.xp);
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const equipped = useShopStore(s => s.equipped);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
-  const { scores, winStreak, bestStreak } = useGameStore();
+  const scores = useGameStore(s => s.scores);
+  const winStreak = useGameStore(s => s.winStreak);
+  const bestStreak = useGameStore(s => s.bestStreak);
   const allMatches = useMatchHistoryStore(s => s.matches);
   const recentMatches = useMemo(() => allMatches.slice(0, 5), [allMatches]);
   const achievements = useAchievementStore(s => s.achievements);
-  const ranked = useRankedStore();
+  const seasonHistory = useRankedStore(s => s.seasonHistory);
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
@@ -151,11 +157,11 @@ export function ProfileScreen() {
         </View>
 
         {/* Season History */}
-        {ranked.seasonHistory.length > 0 && (
+        {seasonHistory.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>SEASON HISTORY</Text>
             <View style={styles.statsGrid}>
-              {ranked.seasonHistory.map((s, i) => (
+              {seasonHistory.map((s, i) => (
                 <StatCard
                   key={i}
                   label={`S${s.season}`}

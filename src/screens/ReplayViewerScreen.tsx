@@ -89,7 +89,9 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
 
 export function ReplayViewerScreen() {
   const navigation = useNavigation();
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const { replays, toggleStar, deleteReplay } = useReplayStore();
   const [watching, setWatching] = useState<Replay | null>(null);
   const [board, setBoard] = useState<Cell[][]>([]);

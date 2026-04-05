@@ -81,7 +81,11 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
 }
 
 export function ShopScreen() {
-  const { coins, owned, equipped, purchaseItem, equipItem } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const owned = useShopStore(s => s.owned);
+  const equipped = useShopStore(s => s.equipped);
+  const purchaseItem = useShopStore(s => s.purchaseItem);
+  const equipItem = useShopStore(s => s.equipItem);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const insets = useSafeAreaInsets();
 

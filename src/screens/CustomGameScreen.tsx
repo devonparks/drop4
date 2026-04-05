@@ -43,7 +43,9 @@ function SettingRow({ label, value, options, onChange }: {
 }
 
 export function CustomGameScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
 
   const [boardSize, setBoardSize] = useState('6x7');

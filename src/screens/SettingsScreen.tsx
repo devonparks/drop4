@@ -47,9 +47,15 @@ function SettingLink({ label, icon, onPress }: { label: string; icon: string; on
 }
 
 export function SettingsScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
-  const ranked = useRankedStore();
-  const season = useSeasonStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
+  const rankedElo = useRankedStore(s => s.elo);
+  const rankedWins = useRankedStore(s => s.rankedWins);
+  const rankedLosses = useRankedStore(s => s.rankedLosses);
+  const seasonHighElo = useRankedStore(s => s.seasonHighElo);
+  const rankedSeasonHistory = useRankedStore(s => s.seasonHistory);
+  const seasonNumber = useSeasonStore(s => s.seasonNumber);
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
@@ -92,11 +98,11 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.seasonStatsRow}>
             <View style={styles.seasonStatItem}>
               <Text style={styles.seasonStatLabel}>Season</Text>
-              <Text style={styles.seasonStatValue}>{season.seasonNumber}</Text>
+              <Text style={styles.seasonStatValue}>{seasonNumber}</Text>
             </View>
             <View style={styles.seasonStatItem}>
               <Text style={styles.seasonStatLabel}>ELO</Text>
-              <Text style={styles.seasonStatValue}>{ranked.elo}</Text>
+              <Text style={styles.seasonStatValue}>{rankedElo}</Text>
             </View>
             <View style={styles.seasonStatItem}>
               <Text style={styles.seasonStatLabel}>Tier</Text>
@@ -106,13 +112,13 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.seasonRecordRow}>
             <Text style={styles.seasonRecordLabel}>Record</Text>
             <Text style={styles.seasonRecordValue}>
-              {ranked.rankedWins}W - {ranked.rankedLosses}L
+              {rankedWins}W - {rankedLosses}L
             </Text>
           </View>
           <View style={styles.seasonRecordRow}>
             <Text style={styles.seasonRecordLabel}>Season High</Text>
             <Text style={[styles.seasonRecordValue, { color: colors.coinGold }]}>
-              {ranked.seasonHighElo} ELO
+              {seasonHighElo} ELO
             </Text>
           </View>
           <Pressable
@@ -125,10 +131,10 @@ export function SettingsScreen({ navigation }: Props) {
           </Pressable>
           {showPastSeasons && (
             <View style={styles.pastSeasonsWrap}>
-              {ranked.seasonHistory.length === 0 ? (
+              {rankedSeasonHistory.length === 0 ? (
                 <Text style={styles.pastSeasonEmpty}>No past seasons yet</Text>
               ) : (
-                ranked.seasonHistory.map((s) => (
+                rankedSeasonHistory.map((s) => (
                   <View key={s.season} style={styles.pastSeasonRow}>
                     <Text style={styles.pastSeasonNum}>S{s.season}</Text>
                     <Text style={styles.pastSeasonTier}>{s.tier.charAt(0).toUpperCase() + s.tier.slice(1)}</Text>

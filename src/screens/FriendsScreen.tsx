@@ -273,7 +273,9 @@ function getTimeAgo(timestamp: number): string {
 
 export function FriendsScreen() {
   const navigation = useNavigation<any>();
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const {
     friends,
     incomingRequests,

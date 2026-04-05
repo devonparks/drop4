@@ -23,7 +23,12 @@ const RARITY_COLORS: Record<string, string> = {
 export function LootBoxScreen() {
   const navigation = useNavigation();
   const { openBox, getBoxCount } = useLootBoxStore();
-  const { coins, gems, level, addCoins, addGems, purchaseItem } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
+  const addCoins = useShopStore(s => s.addCoins);
+  const addGems = useShopStore(s => s.addGems);
+  const purchaseItem = useShopStore(s => s.purchaseItem);
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
 

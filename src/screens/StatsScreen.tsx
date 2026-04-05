@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
-import { useMatchHistoryStore, MatchRecord } from '../stores/matchHistoryStore';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
 import { useCareerStore } from '../stores/careerStore';
 import { colors } from '../theme/colors';
@@ -56,14 +56,42 @@ function ProgressBar({ label, value, max, color, showPct = true }: {
 /* ---------- main screen ---------- */
 
 export function StatsScreen({ navigation }: Props) {
-  const { coins, level } = useShopStore();
-  const { scores, winStreak, bestStreak, totalGamesPlayed } = useGameStore();
+  const coins = useShopStore(s => s.coins);
+  const level = useShopStore(s => s.level);
+  const scores = useGameStore(s => s.scores);
+  const winStreak = useGameStore(s => s.winStreak);
+  const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
-  const getStats = useMatchHistoryStore(s => s.getStats);
-  const ranked = useRankedStore();
-  const career = useCareerStore();
+  const elo = useRankedStore(s => s.elo);
+  const tier = useRankedStore(s => s.tier);
+  const rankedGames = useRankedStore(s => s.rankedGames);
+  const rankedWins = useRankedStore(s => s.rankedWins);
+  const rankedLosses = useRankedStore(s => s.rankedLosses);
+  const seasonHighElo = useRankedStore(s => s.seasonHighElo);
+  const seasonHistory = useRankedStore(s => s.seasonHistory);
+  const careerProgress = useCareerStore(s => s.progress);
 
-  const stats = getStats();
+  const stats = useMemo(() => {
+    const wins = matches.filter(m => m.result === 'win').length;
+    const losses = matches.filter(m => m.result === 'loss').length;
+    const draws = matches.filter(m => m.result === 'draw').length;
+    const totalGames = matches.length;
+    const totalCoinsEarned = matches.reduce((sum, m) => sum + (m.coinsEarned || 0), 0);
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+    return { totalGames, wins, losses, draws, winRate, totalCoinsEarned };
+  }, [matches]);
+
+  const tierInfo = useMemo(() => {
+    return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+  }, [tier]);
+
+  const completedCount = useMemo(() => {
+    return Object.values(careerProgress).filter(p => p.completed).length;
+  }, [careerProgress]);
+
+  const totalStars = useMemo(() => {
+    return Object.values(careerProgress).reduce((sum, p) => sum + p.stars, 0);
+  }, [careerProgress]);
 
   // Difficulty breakdown from match history
   const easyWins = matches.filter(m => m.result === 'win' && m.difficulty === 'easy').length;
@@ -100,9 +128,6 @@ export function StatsScreen({ navigation }: Props) {
   // ELO history — derive from ranked games in match history
   // We show the ranked ELO progression as text entries
   const rankedMatches = matches.filter(m => m.mode === 'stage').slice(0, 10);
-
-  // Current tier info
-  const tierInfo = ranked.getTier();
 
   return (
     <ScreenBackground>
@@ -179,7 +204,7 @@ export function StatsScreen({ navigation }: Props) {
             <ModeItem label="vs AI" count={aiGames} icon="🤖" />
             <ModeItem label="Local" count={localGames} icon="👥" />
             <ModeItem label="Wager" count={stageGames} icon="💰" />
-            <ModeItem label="Ranked" count={ranked.rankedGames} icon="🏅" />
+            <ModeItem label="Ranked" count={rankedGames} icon="🏅" />
           </View>
         </View>
 
@@ -240,7 +265,7 @@ export function StatsScreen({ navigation }: Props) {
         </View>
 
         {/* ---------- 7. ELO History ---------- */}
-        {ranked.rankedGames > 0 && (
+        {rankedGames > 0 && (
           <>
             <SectionTitle title="RANKED / ELO" />
             <View style={styles.card}>
@@ -248,24 +273,24 @@ export function StatsScreen({ navigation }: Props) {
                 <Text style={styles.eloIcon}>{tierInfo.icon}</Text>
                 <View>
                   <Text style={[styles.eloTierName, { color: tierInfo.color }]}>{tierInfo.name}</Text>
-                  <Text style={styles.eloValue}>{ranked.elo} ELO</Text>
+                  <Text style={styles.eloValue}>{elo} ELO</Text>
                 </View>
                 <View style={styles.eloStats}>
-                  <Text style={[styles.eloStatNum, { color: colors.green }]}>{ranked.rankedWins}W</Text>
+                  <Text style={[styles.eloStatNum, { color: colors.green }]}>{rankedWins}W</Text>
                   <Text style={styles.eloStatSep}>/</Text>
-                  <Text style={[styles.eloStatNum, { color: colors.pieceRed }]}>{ranked.rankedLosses}L</Text>
+                  <Text style={[styles.eloStatNum, { color: colors.pieceRed }]}>{rankedLosses}L</Text>
                 </View>
               </View>
-              {ranked.seasonHighElo > 0 && (
+              {seasonHighElo > 0 && (
                 <View style={styles.eloMetaRow}>
                   <Text style={styles.eloMetaLabel}>Season High</Text>
-                  <Text style={[styles.eloMetaValue, { color: colors.coinGold }]}>{ranked.seasonHighElo}</Text>
+                  <Text style={[styles.eloMetaValue, { color: colors.coinGold }]}>{seasonHighElo}</Text>
                 </View>
               )}
-              {ranked.seasonHistory.length > 0 && (
+              {seasonHistory.length > 0 && (
                 <View style={{ marginTop: 8 }}>
                   <Text style={styles.eloHistoryLabel}>Past Seasons</Text>
-                  {ranked.seasonHistory.slice(-5).reverse().map((s, i) => {
+                  {seasonHistory.slice(-5).reverse().map((s, i) => {
                     const tier = RANKED_TIERS.find(t => t.id === s.tier) || RANKED_TIERS[0];
                     return (
                       <View key={i} style={styles.eloHistoryRow}>
@@ -285,8 +310,8 @@ export function StatsScreen({ navigation }: Props) {
         {/* ---------- Career ---------- */}
         <SectionTitle title="CAREER" />
         <View style={styles.grid}>
-          <OverviewCard icon="✅" label="Completed" value={career.getCompletedCount()} color={colors.green} />
-          <OverviewCard icon="⭐" label="Total Stars" value={career.getTotalStars()} color={colors.coinGold} />
+          <OverviewCard icon="✅" label="Completed" value={completedCount} color={colors.green} />
+          <OverviewCard icon="⭐" label="Total Stars" value={totalStars} color={colors.coinGold} />
         </View>
       </ScrollView>
     </ScreenBackground>

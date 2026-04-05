@@ -138,7 +138,9 @@ function AnimatedDotsText() {
 // --- Main Screen ---
 
 export function MultiplayerScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const elo = useRankedStore(s => s.elo);
   const tier = useRankedStore(s => s.tier);
   const tierInfo = useMemo(() => RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0], [tier]);

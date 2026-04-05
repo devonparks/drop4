@@ -6,7 +6,6 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
-import { useRankedStore } from '../stores/rankedStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -64,9 +63,11 @@ function TableCard({ table, coins, playerLevel, onPress }: {
 }
 
 export function StageScreen({ navigation }: Props) {
-  const { coins, gems, level, spendCoins } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
+  const spendCoins = useShopStore(s => s.spendCoins);
   const newGame = useGameStore(s => s.newGame);
-  const ranked = useRankedStore();
 
   const handleSelectTable = (table: WagerTable) => {
     if (table.buyIn > 0) {

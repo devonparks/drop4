@@ -123,7 +123,7 @@ const RANK_EMOJIS: Record<number, string> = {
 
 export function LeaderboardScreen() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('global');
-  const { level } = useShopStore();
+  const level = useShopStore(s => s.level);
   const matches = useMatchHistoryStore(s => s.matches);
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;

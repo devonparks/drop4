@@ -17,7 +17,9 @@ type Props = {
 };
 
 export function BoardEditorScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const {
     editorBoard, editorRows, editorCols, currentPiece,
     placePiece, setCurrentPiece, clearBoard, saveBoard, myBoards,

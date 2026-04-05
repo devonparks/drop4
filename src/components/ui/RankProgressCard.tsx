@@ -11,7 +11,13 @@ interface RankProgressCardProps {
 }
 
 export function RankProgressCard({ compact = false }: RankProgressCardProps) {
-  const { elo, tier, rankedWins, rankedLosses, rankedGames, seasonHighElo, currentSeason } = useRankedStore();
+  const elo = useRankedStore(s => s.elo);
+  const tier = useRankedStore(s => s.tier);
+  const rankedWins = useRankedStore(s => s.rankedWins);
+  const rankedLosses = useRankedStore(s => s.rankedLosses);
+  const rankedGames = useRankedStore(s => s.rankedGames);
+  const seasonHighElo = useRankedStore(s => s.seasonHighElo);
+  const currentSeason = useRankedStore(s => s.currentSeason);
   const tierInfo = useMemo(() => {
     return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
   }, [tier]);

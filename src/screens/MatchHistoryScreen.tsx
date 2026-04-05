@@ -107,7 +107,9 @@ function MatchRow({ match }: { match: MatchRecord }) {
 
 export function MatchHistoryScreen() {
   const navigation = useNavigation();
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const allMatches = useMatchHistoryStore(s => s.matches);
   const stats = useMemo(() => {
     const wins = allMatches.filter(m => m.result === 'win').length;

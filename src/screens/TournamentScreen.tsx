@@ -18,7 +18,9 @@ type Props = {
 };
 
 export function TournamentScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
   const resetScores = useGameStore(s => s.resetScores);
   const tournament = useTournamentStore();

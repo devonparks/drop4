@@ -47,19 +47,30 @@ export function GameScreen({ navigation }: Props) {
   const route = useRoute<RouteProp<RootStackParamList, 'Game'>>();
   const params = (route.params || {}) as GameParams;
 
-  const {
-    board, currentPlayer, status, winner,
-    moveCount, difficulty, isAiThinking, isVsAi,
-    dropPiece, undoMove, setAiThinking, newGame, scores,
-  } = useGameStore();
-  const { addCoins, addXp } = useShopStore();
+  const board = useGameStore(s => s.board);
+  const currentPlayer = useGameStore(s => s.currentPlayer);
+  const status = useGameStore(s => s.status);
+  const winner = useGameStore(s => s.winner);
+  const moveCount = useGameStore(s => s.moveCount);
+  const difficulty = useGameStore(s => s.difficulty);
+  const isAiThinking = useGameStore(s => s.isAiThinking);
+  const isVsAi = useGameStore(s => s.isVsAi);
+  const dropPiece = useGameStore(s => s.dropPiece);
+  const undoMove = useGameStore(s => s.undoMove);
+  const setAiThinking = useGameStore(s => s.setAiThinking);
+  const newGame = useGameStore(s => s.newGame);
+  const scores = useGameStore(s => s.scores);
+  const addCoins = useShopStore(s => s.addCoins);
+  const addXp = useShopStore(s => s.addXp);
   const addMatch = useMatchHistoryStore(s => s.addMatch);
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
   const completeCareerLevel = useCareerStore(s => s.completeLevel);
   const checkAchievements = useAchievementStore(s => s.checkAndUnlock);
   const addLootBox = useLootBoxStore(s => s.addBox);
-  const { startRecording, recordMove, saveReplay } = useReplayStore();
+  const startRecording = useReplayStore(s => s.startRecording);
+  const recordMove = useReplayStore(s => s.recordMove);
+  const saveReplay = useReplayStore(s => s.saveReplay);
   const recordRanked = useRankedStore(s => s.recordRankedResult);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
@@ -349,21 +360,23 @@ export function GameScreen({ navigation }: Props) {
         if (wagerCourt.winnerGets > 0) addCoins(wagerCourt.winnerGets);
         recordRanked(true); // Won wager match — ELO goes up
       }
+      // Check achievements
+      const matchHistory = useMatchHistoryStore.getState();
+      const allMatches = matchHistory.matches;
+      const totalWins = allMatches.filter(m => m.result === 'win').length;
+      const totalGames = allMatches.length;
       // Award loot box on win (every 3rd win gets a box)
-      const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
       if (totalWins % 3 === 0) {
         const boxTier = difficulty === 'easy' ? 'bronze_box' : difficulty === 'medium' ? 'silver_box' : 'gold_box';
         addLootBox(boxTier);
       }
-      // Check achievements
-      const matchHistory = useMatchHistoryStore.getState();
       const shopState = useShopStore.getState();
       const careerState = useCareerStore.getState();
       checkAchievements({
-        totalWins: matchHistory.getStats().wins,
+        totalWins,
         currentStreak: useGameStore.getState().winStreak,
         bestStreak: useGameStore.getState().bestStreak,
-        totalGames: matchHistory.getStats().totalGames,
+        totalGames,
         level: shopState.level,
         careerStars: careerState.getTotalStars(),
         lastGameMoves: moveCount,
@@ -862,11 +875,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 8,
-    left: 12,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    top: 4,
+    left: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -947,6 +960,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 12,
     marginBottom: 4,
+    marginTop: 28,
   },
   turnCenter: {
     alignItems: 'center',

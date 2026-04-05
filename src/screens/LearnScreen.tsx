@@ -93,7 +93,9 @@ const DIFF_COLORS: Record<string, string> = {
 };
 
 export function LearnScreen({ navigation }: Props) {
-  const { coins, gems, level } = useShopStore();
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
+  const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
   const [selected, setSelected] = useState<Lesson | null>(null);
 
