@@ -1,12 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
-  Animated,
-  Easing,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -43,23 +41,6 @@ function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
 
   const ranked = useRankedStore();
 
-  // Animated dots
-  const dotAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (!isSearching) return;
-    const loop = Animated.loop(
-      Animated.timing(dotAnim, {
-        toValue: 3,
-        duration: 1500,
-        easing: Easing.linear,
-        useNativeDriver: false,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [isSearching, dotAnim]);
-
   // Tick the search timer every second
   useEffect(() => {
     if (!isSearching) return;
@@ -81,11 +62,6 @@ function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
       });
     }
   }, [isInMatch, matchId, myPlayerNum, queueMode, opponentName, clearMatch, navigation]);
-
-  const dots = dotAnim.interpolate({
-    inputRange: [0, 1, 2, 3],
-    outputRange: ['.', '..', '...', ''],
-  });
 
   const minutes = Math.floor(searchDuration / 60);
   const seconds = searchDuration % 60;

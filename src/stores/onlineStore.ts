@@ -48,6 +48,7 @@ export const useOnlineStore = create<OnlineState>((set, get) => ({
 
   startSearching: (mode) =>
     set({
+      isOnline: true,
       isSearching: true,
       queueMode: mode,
       queueStartTime: Date.now(),
@@ -76,6 +77,7 @@ export const useOnlineStore = create<OnlineState>((set, get) => ({
 
   clearMatch: () =>
     set({
+      isOnline: false,
       isInMatch: false,
       matchId: null,
       opponentName: null,

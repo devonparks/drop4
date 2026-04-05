@@ -58,8 +58,9 @@ export default function App() {
         await useSeriesStore.getState().loadFromStorage();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
-        const today = new Date().toISOString().split('T')[0];
-        if (challengeState.lastRefresh !== today) {
+        const today = new Date().toDateString();
+        const lastRefreshDate = new Date(challengeState.lastRefresh).toDateString();
+        if (lastRefreshDate !== today) {
           challengeState.refreshChallenges();
         }
         // Preload sound effects

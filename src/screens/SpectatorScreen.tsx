@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   Animated,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -255,8 +256,12 @@ export function SpectatorScreen({ navigation }: Props) {
             <MatchCard
               match={item}
               onWatch={() => {
-                // TODO: navigate to spectator view once built
                 haptics.tap();
+                Alert.alert(
+                  'Spectator Mode',
+                  `Watching ${item.player1.name} vs ${item.player2.name}\n\nFull spectator view coming in Season 1!`,
+                  [{ text: 'OK' }]
+                );
               }}
             />
           )}
