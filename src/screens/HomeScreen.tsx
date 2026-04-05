@@ -165,9 +165,12 @@ export function HomeScreen() {
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) */}
           <Pressable onPress={() => { haptics.tap(); setShowcaseOpen(true); }} style={styles.sideBtn}>
-            <View style={styles.sideBtnCircle}>
-              <Text style={styles.sideBtnIcon}>E</Text>
-            </View>
+            <LinearGradient
+              colors={['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.15)', 'rgba(255,40,0,0.1)']}
+              style={styles.sideBtnCircle}
+            >
+              <Text style={styles.sideBtnEmoji}>🕺</Text>
+            </LinearGradient>
             <Text style={styles.sideBtnLabel}>Emotes</Text>
           </Pressable>
 
@@ -206,9 +209,12 @@ export function HomeScreen() {
 
           {/* Idles button (right) */}
           <Pressable onPress={() => { haptics.tap(); setIdlePickerOpen(true); }} style={styles.sideBtn}>
-            <View style={styles.sideBtnCircle}>
-              <Text style={styles.sideBtnIcon}>I</Text>
-            </View>
+            <LinearGradient
+              colors={['rgba(80,140,255,0.25)', 'rgba(60,100,255,0.15)', 'rgba(40,80,255,0.1)']}
+              style={styles.sideBtnCircle}
+            >
+              <Text style={styles.sideBtnEmoji}>💫</Text>
+            </LinearGradient>
             <Text style={styles.sideBtnLabel}>Idles</Text>
           </Pressable>
         </View>
@@ -383,20 +389,21 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   sideBtnCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: 'rgba(255,140,0,0.4)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  sideBtnIcon: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.7)',
+  sideBtnEmoji: {
+    fontSize: 26,
   },
   sideBtnLabel: {
     fontFamily: fonts.body,
