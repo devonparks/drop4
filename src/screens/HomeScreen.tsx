@@ -178,12 +178,18 @@ export function HomeScreen() {
     }
   }, [canSpin()]);
 
-  // Show tutorial on first visit — only if not already seen (check seenTips directly)
+  // Show tutorial on first visit — delay enough for stores to load from AsyncStorage
   const homeTip = getTipById('home_tap_character')!;
   const tipAlreadySeen = seenTips.includes('home_tap_character');
   useEffect(() => {
     if (!tipAlreadySeen) {
-      const timer = setTimeout(() => setShowTutorial(true), 1500);
+      // Wait 3s to ensure tutorialStore has loaded from AsyncStorage
+      const timer = setTimeout(() => {
+        // Re-check after delay in case store loaded in the meantime
+        if (!useTutorialStore.getState().seenTips.includes('home_tap_character')) {
+          setShowTutorial(true);
+        }
+      }, 3000);
       return () => clearTimeout(timer);
     } else {
       setShowTutorial(false);
