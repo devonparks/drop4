@@ -578,7 +578,7 @@ export function GameScreen({ navigation }: Props) {
     : status === 'won'
     ? (isOnlineMatch
       ? (winner === myPlayerNum ? 'You Win!' : `${p2Name} Wins!`)
-      : (winner === 1 ? `${p1Name} Wins!` : `${p2Name} Wins!`))
+      : (winner === 1 ? (p1Name === 'You' ? 'You Win!' : `${p1Name} Wins!`) : `${p2Name} Wins!`))
     : 'Draw!';
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
