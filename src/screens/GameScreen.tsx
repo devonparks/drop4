@@ -35,6 +35,7 @@ import { getRandomTip } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
+import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
 import { sendEmote, listenForEmotes } from '../services/emotes';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
@@ -62,6 +63,7 @@ export function GameScreen({ navigation }: Props) {
   const recordRanked = useRankedStore(s => s.recordRankedResult);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
+  const preGameEloRef = useRef(useRankedStore.getState().elo);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
@@ -727,6 +729,13 @@ export function GameScreen({ navigation }: Props) {
                       {moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}
                     </Text>
                   </View>
+                )}
+                {/* ELO change for ranked/wager matches */}
+                {(isRankedMode || wagerCourt) && (
+                  <EloChangeAnimation
+                    eloBefore={preGameEloRef.current}
+                    eloAfter={useRankedStore.getState().elo}
+                  />
                 )}
                 {status === 'draw' && (
                   <View style={styles.rewardRow}>

@@ -176,6 +176,9 @@ export function ProfileScreen() {
           <GlossyButton label="Match History" variant="orange" icon="📊" small onPress={() => navigateTo('MatchHistory')} style={{ flex: 1 }} />
           <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
         </View>
+        <View style={[styles.quickActions, { marginTop: 0 }]}>
+          <GlossyButton label="Stats" variant="navy" icon="📈" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
+        </View>
 
         {/* Match History */}
         {recentMatches.length > 0 && (

@@ -4,7 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { GlossyButton } from './GlossyButton';
 import { CharacterAvatar } from './CharacterAvatar';
+import { PlayerProfileCard } from './PlayerProfileCard';
 import { useRankedStore, calculateOdds, RANKED_TIERS } from '../../stores/rankedStore';
+import { useShopStore } from '../../stores/shopStore';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -60,29 +62,44 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
             <>
               <Text style={styles.foundTitle}>OPPONENT FOUND</Text>
 
-              {/* VS display */}
-              <View style={styles.vsRow}>
-                {/* Player */}
-                <View style={styles.playerCol}>
-                  <CharacterAvatar size="medium" variant="player" />
-                  <Text style={styles.vsName}>You</Text>
-                  <Text style={[styles.vsTier, { color: playerTier.color }]}>{playerTier.icon} {playerElo}</Text>
-                  <Text style={[styles.oddsText, odds.playerOdds.startsWith('+') ? { color: colors.green } : { color: colors.red }]}>
-                    {odds.playerOdds}
-                  </Text>
+              {/* VS display using PlayerProfileCard */}
+              <View style={styles.vsSection}>
+                <PlayerProfileCard
+                  name="You"
+                  level={useShopStore.getState().level}
+                  elo={playerElo}
+                  tier={playerTier.name}
+                  tierIcon={playerTier.icon}
+                  tierColor={playerTier.color}
+                  isOnline
+                  compact
+                  side="left"
+                />
+
+                <View style={styles.vsCenter}>
+                  <Text style={styles.vsLabel}>VS</Text>
+                  <View style={styles.oddsRow}>
+                    <Text style={[styles.oddsText, odds.playerOdds.startsWith('+') ? { color: colors.green } : { color: colors.red }]}>
+                      {odds.playerOdds}
+                    </Text>
+                    <Text style={styles.oddsSep}>/</Text>
+                    <Text style={[styles.oddsText, odds.opponentOdds.startsWith('+') ? { color: colors.green } : { color: colors.red }]}>
+                      {odds.opponentOdds}
+                    </Text>
+                  </View>
                 </View>
 
-                <Text style={styles.vsLabel}>VS</Text>
-
-                {/* Opponent */}
-                <View style={styles.playerCol}>
-                  <CharacterAvatar size="medium" variant="bot_hard" />
-                  <Text style={styles.vsName}>{oppName}</Text>
-                  <Text style={[styles.vsTier, { color: oppTier.color }]}>{oppTier.icon} {oppElo}</Text>
-                  <Text style={[styles.oddsText, odds.opponentOdds.startsWith('+') ? { color: colors.green } : { color: colors.red }]}>
-                    {odds.opponentOdds}
-                  </Text>
-                </View>
+                <PlayerProfileCard
+                  name={oppName}
+                  level={Math.max(1, Math.round(oppElo / 80))}
+                  elo={oppElo}
+                  tier={oppTier.name}
+                  tierIcon={oppTier.icon}
+                  tierColor={oppTier.color}
+                  isOnline
+                  compact
+                  side="right"
+                />
               </View>
 
               {/* Odds info */}
@@ -121,16 +138,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading, fontWeight: weight.bold,
     fontSize: 16, color: colors.orange, letterSpacing: 2, marginBottom: 12,
   },
-  vsRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12 },
-  playerCol: { alignItems: 'center', flex: 1, gap: 4 },
-  vsName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: '#ffffff' },
-  vsTier: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11 },
+  vsSection: { gap: 8, marginBottom: 12, width: '100%' },
+  vsCenter: { alignItems: 'center', paddingVertical: 4 },
   vsLabel: {
     fontFamily: fonts.heading, fontWeight: weight.bold,
-    fontSize: 20, color: colors.textSecondary,
+    fontSize: 18, color: colors.textSecondary,
   },
+  oddsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   oddsText: {
-    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 16,
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14,
+  },
+  oddsSep: {
+    fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 12, color: colors.textMuted,
   },
   underdogBanner: {
     backgroundColor: 'rgba(39,174,61,0.1)', borderRadius: 10,
