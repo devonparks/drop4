@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 20,
+    paddingTop: 30,
   },
   stageGlowOuter: {
     width: 280,
