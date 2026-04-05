@@ -1220,10 +1220,11 @@ export function AnimatedCharacter({
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      {/* Always render base idle frame 0 as fallback (prevents invisible character) */}
+      {/* ALWAYS render base idle frame 0 as the bottom fallback layer.
+          Everything else renders ON TOP. If animations fail, character is still visible. */}
       <Image
         source={EMOTE_FRAMES.idle[0]}
-        style={[styles.characterImage, styles.stackedFrame, { opacity: animState !== 'idle' && animState !== 'idle_variant' ? 0 : (animState === 'idle' && !selectedIdle && frameIndex === 0 ? 1 : 0) }]}
+        style={[styles.characterImage, styles.stackedFrame, { opacity: 1 }]}
         resizeMode="contain"
       />
 
