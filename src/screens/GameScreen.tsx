@@ -727,7 +727,7 @@ export function GameScreen({ navigation }: Props) {
             <Pressable onPress={() => {
               if (undoMove()) {
                 haptics.tap();
-                playSound('whoosh');
+                playSound('swoosh');
               }
             }} style={styles.controlBtn}>
               <Text style={styles.controlIcon}>↩️</Text>

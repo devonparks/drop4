@@ -41,6 +41,7 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
     if (success) {
       haptics.win();
       playSound('coin');
+      playSound('level_up');
       // Grant the reward
       if (reward.freeReward.type === 'coins') {
         const amount = parseCoinAmount(reward.freeReward.name);
@@ -57,6 +58,7 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
     if (success) {
       haptics.win();
       playSound('coin');
+      playSound('level_up');
       // Grant premium rewards similarly
       if (reward.premiumReward.type === 'coins') {
         const amount = parseCoinAmount(reward.premiumReward.name);

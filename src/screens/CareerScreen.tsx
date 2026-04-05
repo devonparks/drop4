@@ -170,7 +170,7 @@ export function CareerScreen({ navigation }: Props) {
                     // Show celebration if chapter is complete and user taps it
                     if (chapterCompletion[ch.id]?.complete) {
                       setChapterCelebration(ch.id);
-                      playSound('win');
+                      playSound('level_up');
                     }
                   }
                 }}

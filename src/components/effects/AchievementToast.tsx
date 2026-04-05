@@ -18,7 +18,7 @@ export function AchievementToast({ name, icon = '🏆', visible, onDone }: Achie
   useEffect(() => {
     if (visible && name) {
       setShow(true);
-      playSound('win');
+      playSound('achievement');
       const timer = setTimeout(() => {
         setShow(false);
         onDone?.();

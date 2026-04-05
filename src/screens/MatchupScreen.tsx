@@ -122,10 +122,11 @@ export function MatchupScreen({ navigation }: Props) {
   // ═══════════════════════════════════
   useEffect(() => {
     // Phase 1: "Finding opponent..." for 1.5s
+    const isBoss = params.mode === 'career' && courtName.includes('BOSS');
     const revealTimer = setTimeout(() => {
       setPhase('reveal');
       haptics.tap();
-      playSound('whoosh');
+      playSound(isBoss ? 'boss_intro' : 'match_found');
     }, 1500);
 
     // Phase 2: Enable READY after another 1s
