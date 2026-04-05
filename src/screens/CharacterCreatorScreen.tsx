@@ -44,14 +44,16 @@ const RARITY_DESCRIPTIONS: Record<string, string> = {
   legendary: 'The pinnacle of style. A true collector\'s piece.',
 };
 
+// ── Category Grid Config ─────────────────────────────────────────────
 type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors' | 'emotes';
-const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'species', icon: '\uD83E\uDDD1', label: 'Species' },
-  { id: 'outfit', icon: '\uD83D\uDC55', label: 'Outfit' },
-  { id: 'hair', icon: '\uD83D\uDC87', label: 'Hair' },
-  { id: 'shoes', icon: '\uD83D\uDC5F', label: 'Shoes' },
-  { id: 'colors', icon: '\uD83C\uDFA8', label: 'Colors' },
-  { id: 'emotes', icon: '\uD83D\uDE00', label: 'Emotes' },
+
+const CATEGORY_CARDS: { id: TabId; icon: string; label: string; color: [string, string]; }[] = [
+  { id: 'outfit', icon: '\uD83D\uDC55', label: 'OUTFITS', color: ['#3498db', '#2176ae'] },
+  { id: 'hair', icon: '\uD83D\uDC87', label: 'HAIR', color: ['#9b59b6', '#7d4192'] },
+  { id: 'shoes', icon: '\uD83D\uDC5F', label: 'SHOES', color: ['#27ae60', '#1e8a4e'] },
+  { id: 'colors', icon: '\uD83C\uDFA8', label: 'COLORS', color: [colors.orange, colors.orangeDark] },
+  { id: 'emotes', icon: '\uD83D\uDD7A', label: 'EMOTES', color: ['#e74c3c', '#c0392b'] },
+  { id: 'species', icon: '\uD83E\uDDD1', label: 'SPECIES', color: ['#1abc9c', '#15967d'] },
 ];
 
 const TAB_TO_CATEGORIES: Record<TabId, string[]> = {
@@ -94,7 +96,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const equippedEmotes = useShopStore(s => s.equippedEmotes);
   const setEquippedEmote = useShopStore(s => s.setEquippedEmote);
 
-  const [activeTab, setActiveTab] = useState<TabId>('outfit');
+  // 'grid' = category grid view, TabId = browsing a specific category
+  const [viewMode, setViewMode] = useState<'grid' | TabId>('grid');
   const [selectedPose, setSelectedPose] = useState<PoseId>('default');
   const [selectedItem, setSelectedItem] = useState<CharacterItem | null>(null);
   const [previewingItem, setPreviewingItem] = useState<CharacterItem | null>(null);
@@ -105,7 +108,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const [selectedWheelSlot, setSelectedWheelSlot] = useState<number | null>(null);
 
   // Get items for the active tab
-  const activeCategories = TAB_TO_CATEGORIES[activeTab];
+  const activeCategories = viewMode !== 'grid' ? TAB_TO_CATEGORIES[viewMode] : [];
   const tabItems = CHARACTER_ITEMS.filter(i => activeCategories.includes(i.category));
 
   // ── Collection stats ──────────────────────────────────────────────────
@@ -126,16 +129,16 @@ export function CharacterCreatorScreen({ navigation }: Props) {
       colors: { owned: 0, total: 0 },
       emotes: { owned: 0, total: 0 },
     };
-    for (const tab of TABS) {
-      if (tab.id === 'emotes') {
+    for (const card of CATEGORY_CARDS) {
+      if (card.id === 'emotes') {
         const allEmotes = EMOTE_CATEGORIES.flatMap(c => c.emotes);
         const unlocked = allEmotes.filter(e => EMOTE_UNLOCKS[e]?.unlocked);
         counts.emotes = { total: allEmotes.length, owned: unlocked.length };
         continue;
       }
-      const cats = TAB_TO_CATEGORIES[tab.id];
+      const cats = TAB_TO_CATEGORIES[card.id];
       const items = CHARACTER_ITEMS.filter(i => cats.includes(i.category));
-      counts[tab.id] = {
+      counts[card.id] = {
         total: items.length,
         owned: items.filter(i => i.unlock.type === 'default').length,
       };
@@ -143,10 +146,26 @@ export function CharacterCreatorScreen({ navigation }: Props) {
     return counts;
   }, []);
 
+  // Rarity breakdown
+  const rarityBreakdown = useMemo(() => {
+    const breakdown: Record<string, { owned: number; total: number }> = {
+      common: { owned: 0, total: 0 },
+      rare: { owned: 0, total: 0 },
+      epic: { owned: 0, total: 0 },
+      legendary: { owned: 0, total: 0 },
+    };
+    for (const item of CHARACTER_ITEMS) {
+      if (breakdown[item.rarity]) {
+        breakdown[item.rarity].total++;
+        if (item.unlock.type === 'default') breakdown[item.rarity].owned++;
+      }
+    }
+    return breakdown;
+  }, []);
+
   // ── Randomize ─────────────────────────────────────────────────────────
   const handleRandomize = useCallback(() => {
     haptics.tap();
-    // Pick random owned items from each category and "preview" the last one
     const categories = ['hair', 'top', 'bottom', 'shoes'] as const;
     let lastPicked: CharacterItem | null = null;
     for (const cat of categories) {
@@ -155,12 +174,10 @@ export function CharacterCreatorScreen({ navigation }: Props) {
         lastPicked = items[Math.floor(Math.random() * items.length)];
       }
     }
-    // Also randomize pose
     const randomPose = POSE_LIST[Math.floor(Math.random() * POSE_LIST.length)];
     setSelectedPose(randomPose.id);
     if (lastPicked) {
       setPreviewingItem(lastPicked);
-      // Clear preview after 2s
       setTimeout(() => setPreviewingItem(null), 2000);
     }
   }, []);
@@ -178,6 +195,18 @@ export function CharacterCreatorScreen({ navigation }: Props) {
     setPreviewingItem(null);
   }, []);
 
+  // ── Navigate to a category ────────────────────────────────────────────
+  const openCategory = useCallback((id: TabId) => {
+    haptics.tap();
+    setViewMode(id);
+  }, []);
+
+  const backToGrid = useCallback(() => {
+    haptics.tap();
+    setViewMode('grid');
+    setSelectedWheelSlot(null);
+  }, []);
+
   return (
     <ScreenBackground>
       <View style={styles.container}>
@@ -192,7 +221,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-          {/* ══ CHARACTER DISPLAY ══ */}
+          {/* ══ CHARACTER DISPLAY (bigger — 350px) ══ */}
           <View style={styles.characterDisplayArea}>
             {/* Rotating spotlight glow */}
             <View style={styles.glowRingOuter} />
@@ -219,7 +248,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
             {/* Character */}
             <AnimatedCharacter
-              size={300}
+              size={340}
               pose={selectedPose}
               emote={previewEmote}
               onEmoteComplete={() => { clearPreviewEmote(); setPlayingEmoteId(null); }}
@@ -248,283 +277,353 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* ══ EQUIPPED SUMMARY ROW (A) ══ */}
-          <View style={styles.equipRow}>
-            <EquipPill icon={'\uD83D\uDC55'} label="Default Outfit" onPress={() => { haptics.tap(); setActiveTab('outfit'); }} />
-            <EquipPill icon={'\uD83D\uDC87'} label="Short" onPress={() => { haptics.tap(); setActiveTab('hair'); }} />
-            <EquipPill icon={'\uD83D\uDC5F'} label="Sneakers" onPress={() => { haptics.tap(); setActiveTab('shoes'); }} />
-            <EquipPill icon={'\uD83C\uDFA8'} label="Default" onPress={() => { haptics.tap(); setActiveTab('colors'); }} />
-          </View>
-
-          {/* ══ COLLECTION PROGRESS (E) ══ */}
-          <View style={styles.collectionBar}>
-            <Text style={styles.collectionLabel}>Collection: {collectionStats.pct}% complete</Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${collectionStats.pct}%` }]} />
-            </View>
-            <Text style={styles.collectionCount}>{collectionStats.owned}/{collectionStats.total} items</Text>
-          </View>
-
-          {/* ══ SECTION DIVIDER ══ */}
-          <View style={styles.sectionDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>CUSTOMIZE</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* ══ OUTFIT TABS with counts (E) ══ */}
-          <View style={styles.tabBar}>
-            {TABS.map(tab => {
-              const isActive = activeTab === tab.id;
-              const counts = tabCounts[tab.id];
-              const hasItems = counts.total > 0;
-              return (
-                <Pressable
-                  key={tab.id}
-                  onPress={() => { haptics.tap(); setActiveTab(tab.id); }}
-                  style={[styles.tab, isActive && styles.tabActive]}
-                >
-                  <Text style={styles.tabIcon}>{tab.icon}</Text>
-                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                    {tab.label}
-                  </Text>
-                  {hasItems && (
-                    <Text style={[styles.tabCount, isActive && styles.tabCountActive]}>
-                      {counts.owned}/{counts.total}
-                    </Text>
-                  )}
-                  {isActive && <View style={styles.tabIndicator} />}
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* ══ RANDOMIZE BUTTON (D) ══ */}
-          <View style={styles.randomRow}>
-            <Pressable onPress={handleRandomize} style={styles.randomButton}>
-              <Text style={styles.randomIcon}>{'\uD83C\uDFB2'}</Text>
-              <Text style={styles.randomLabel}>Random Look</Text>
-            </Pressable>
-          </View>
-
-          {/* ══ ITEMS SCROLL / EMOTES GRID ══ */}
-          {activeTab === 'emotes' ? (
-            <View style={styles.emotesTabContent}>
-              {/* ── YOUR WHEEL ── */}
-              <View style={styles.yourWheelSection}>
-                <View style={styles.yourWheelHeader}>
-                  <Text style={styles.yourWheelTitle}>YOUR WHEEL</Text>
-                  <Text style={styles.yourWheelSub}>
-                    {selectedWheelSlot !== null
-                      ? `Tap an emote below to assign to Slot ${selectedWheelSlot + 1}`
-                      : 'Tap a slot, then pick an emote to assign'}
-                  </Text>
-                </View>
-                <View style={styles.yourWheelSlots}>
-                  {equippedEmotes.map((emoteId, index) => {
-                    const eid = emoteId as EmoteId;
-                    const isSelected = selectedWheelSlot === index;
-                    return (
-                      <Pressable
-                        key={index}
-                        onPress={() => {
-                          haptics.tap();
-                          setSelectedWheelSlot(isSelected ? null : index);
-                        }}
-                        style={[
-                          styles.wheelSlot,
-                          isSelected && styles.wheelSlotSelected,
-                        ]}
-                      >
-                        <Text style={styles.wheelSlotEmoji}>
-                          {EMOTE_EMOJI[eid] || '?'}
-                        </Text>
-                        <Text style={styles.wheelSlotName} numberOfLines={1}>
-                          {EMOTE_NAME[eid] || 'Empty'}
-                        </Text>
-                        <View style={styles.wheelSlotNum}>
-                          <Text style={styles.wheelSlotNumText}>{index + 1}</Text>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+          {/* ══ COLLECTION STATS BAR ══ */}
+          <View style={styles.statsSection}>
+            {/* Collection progress */}
+            <View style={styles.collectionRow}>
+              <Text style={styles.collectionLabel}>
+                COLLECTION: {collectionStats.owned}/{collectionStats.total} items ({collectionStats.pct}%)
+              </Text>
+              <View style={styles.collectionTrack}>
+                <LinearGradient
+                  colors={[colors.orange, '#ff6600']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.collectionFill, { width: `${collectionStats.pct}%` }]}
+                />
               </View>
+            </View>
 
-              {/* ── EMOTE GRID ── */}
-              {EMOTE_CATEGORIES.map(category => (
-                <View key={category.name} style={styles.emoteCategorySection}>
-                  <View style={styles.emoteCategoryHeader}>
-                    <Text style={styles.emoteCategoryEmoji}>{CATEGORY_EMOJI[category.name] || '🎭'}</Text>
-                    <Text style={styles.emoteCategoryName}>{category.name.toUpperCase()}</Text>
-                    <View style={styles.emoteCategoryLine} />
-                  </View>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emoteHScroll}>
-                    {category.emotes.map(emoteId => {
-                      const unlock = EMOTE_UNLOCKS[emoteId];
-                      const isLocked = !unlock?.unlocked;
-                      const isPlaying = playingEmoteId === emoteId;
-                      const isInWheel = equippedEmotes.includes(emoteId);
-
-                      return (
-                        <Pressable
-                          key={emoteId}
-                          onPress={() => {
-                            if (isLocked) { haptics.error(); return; }
-                            haptics.tap();
-
-                            // If a wheel slot is selected, assign this emote to it
-                            if (selectedWheelSlot !== null) {
-                              setEquippedEmote(selectedWheelSlot, emoteId);
-                              setSelectedWheelSlot(null);
-                              return;
-                            }
-
-                            // Otherwise, preview the emote
-                            setPlayingEmoteId(emoteId);
-                            triggerPreviewEmote(emoteId);
-                          }}
-                          style={[
-                            styles.emoteTabCard,
-                            isPlaying && styles.emoteTabCardPlaying,
-                            isLocked && styles.emoteTabCardLocked,
-                            isInWheel && styles.emoteTabCardInWheel,
-                          ]}
-                        >
-                          <Text style={[styles.emoteTabCardEmoji, isLocked && { opacity: 0.3 }]}>
-                            {EMOTE_EMOJI[emoteId]}
-                          </Text>
-                          <Text style={[styles.emoteTabCardName, isLocked && { opacity: 0.4 }]} numberOfLines={1}>
-                            {EMOTE_NAME[emoteId]}
-                          </Text>
-                          {isLocked && (
-                            <View style={styles.emoteTabLockBadge}>
-                              <Text style={styles.emoteTabLockIcon}>{'\uD83D\uDD12'}</Text>
-                              <Text style={styles.emoteTabLockReq} numberOfLines={1}>{unlock?.requirement}</Text>
-                            </View>
-                          )}
-                          {isPlaying && (
-                            <View style={styles.emoteTabPlayingDot}>
-                              <Text style={{ fontSize: 8, color: colors.orange }}>{'▶'}</Text>
-                            </View>
-                          )}
-                          {isInWheel && (
-                            <View style={styles.emoteTabWheelBadge}>
-                              <Text style={styles.emoteTabWheelBadgeText}>{'W'}</Text>
-                            </View>
-                          )}
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
+            {/* Rarity breakdown */}
+            <View style={styles.rarityRow}>
+              {Object.entries(rarityBreakdown).map(([rarity, data]) => (
+                <View key={rarity} style={styles.rarityChip}>
+                  <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS[rarity] }]} />
+                  <Text style={[styles.rarityChipText, { color: RARITY_COLORS[rarity] }]}>
+                    {data.owned}/{data.total}
+                  </Text>
                 </View>
               ))}
             </View>
-          ) : tabItems.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.itemsScroll}
-            >
-              {tabItems.map(item => {
-                const isDefault = item.unlock.type === 'default';
-                const isLocked = !isDefault;
-                const unlockDesc = getUnlockDescription(item.unlock);
-                const rarityColor = RARITY_COLORS[item.rarity];
-                const isSelected = selectedItem?.id === item.id;
-
-                return (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => handleItemTap(item)}
-                    style={[
-                      styles.itemCard,
-                      isDefault && styles.itemCardOwned,
-                      isSelected && styles.itemCardSelected,
-                    ]}
-                  >
-                    {/* Rarity strip at top */}
-                    <View style={[styles.rarityStrip, { backgroundColor: rarityColor }]} />
-
-                    {/* Icon / preview */}
-                    <View style={styles.itemPreview}>
-                      {isLocked && (
-                        <View style={styles.lockOverlay}>
-                          <Text style={styles.lockIcon}>&#x1F512;</Text>
-                        </View>
-                      )}
-                      <Text style={styles.itemEmoji}>{item.icon}</Text>
-                    </View>
-
-                    {/* Info */}
-                    <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={[styles.itemRarity, { color: rarityColor }]}>
-                      {RARITY_LABELS[item.rarity]}
-                    </Text>
-
-                    {/* Status */}
-                    {isDefault ? (
-                      <View style={styles.ownedTag}>
-                        <Text style={styles.ownedTagText}>OWNED</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.unlockReq} numberOfLines={1}>{unlockDesc}</Text>
-                    )}
-
-                    {/* Selected checkmark for owned items */}
-                    {isDefault && (
-                      <View style={styles.checkmark}>
-                        <Text style={styles.checkmarkText}>&#x2713;</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          ) : (
-            <View style={styles.emptyTab}>
-              <Text style={styles.emptyTabIcon}>
-                {activeTab === 'species' ? '\uD83E\uDDD1' : '\uD83C\uDFA8'}
-              </Text>
-              <Text style={styles.emptyTabTitle}>
-                {activeTab === 'species' ? 'Species' : 'Color Palettes'}
-              </Text>
-              <Text style={styles.emptyTabSub}>Coming soon in a future update</Text>
-            </View>
-          )}
-
-          {/* ══ SECTION DIVIDER ══ */}
-          <View style={styles.sectionDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>POSES</Text>
-            <View style={styles.dividerLine} />
           </View>
 
-          {/* ══ POSES SECTION ══ */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.posesScroll}
-          >
-            {POSE_LIST.map(pose => {
-              const isSelected = selectedPose === pose.id;
-              return (
-                <Pressable
-                  key={pose.id}
-                  onPress={() => { haptics.tap(); setSelectedPose(pose.id); }}
-                  style={[styles.poseCard, isSelected && styles.poseCardSelected]}
-                >
-                  <View style={styles.posePreview}>
-                    <PoseDisplay pose={pose.id} size={80} />
-                  </View>
-                  <Text style={[styles.poseLabel, isSelected && styles.poseLabelSelected]}>
-                    {pose.label}
-                  </Text>
-                  {isSelected && <View style={styles.poseSelectedDot} />}
+          {/* ══ VIEW-DEPENDENT CONTENT ══ */}
+          {viewMode === 'grid' ? (
+            <>
+              {/* ── SECTION DIVIDER ── */}
+              <View style={styles.sectionDivider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>CUSTOMIZE</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* ── CATEGORY GRID (2x3) ── */}
+              <View style={styles.categoryGrid}>
+                {CATEGORY_CARDS.map(card => {
+                  const counts = tabCounts[card.id];
+                  const hasItems = counts.total > 0;
+                  return (
+                    <Pressable
+                      key={card.id}
+                      onPress={() => openCategory(card.id)}
+                      style={styles.categoryCardWrap}
+                    >
+                      <LinearGradient
+                        colors={[card.color[0] + '25', card.color[0] + '08']}
+                        style={styles.categoryCard}
+                      >
+                        {/* Colored left accent */}
+                        <View style={[styles.categoryAccent, { backgroundColor: card.color[0] }]} />
+
+                        {/* Icon */}
+                        <Text style={styles.categoryIcon}>{card.icon}</Text>
+
+                        {/* Label */}
+                        <Text style={[styles.categoryLabel, { color: card.color[0] }]}>
+                          {card.label}
+                        </Text>
+
+                        {/* Count badge */}
+                        {hasItems && (
+                          <View style={[styles.categoryCountBadge, { backgroundColor: card.color[0] + '20', borderColor: card.color[0] + '40' }]}>
+                            <Text style={[styles.categoryCountText, { color: card.color[0] }]}>
+                              {counts.owned}/{counts.total}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Arrow */}
+                        <Text style={[styles.categoryArrow, { color: card.color[0] }]}>›</Text>
+                      </LinearGradient>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* ── RANDOMIZE BUTTON ── */}
+              <View style={styles.randomRow}>
+                <Pressable onPress={handleRandomize} style={styles.randomButton}>
+                  <Text style={styles.randomIcon}>{'\uD83C\uDFB2'}</Text>
+                  <Text style={styles.randomLabel}>Random Look</Text>
                 </Pressable>
-              );
-            })}
-          </ScrollView>
+              </View>
+
+              {/* ── POSES SECTION ── */}
+              <View style={styles.sectionDivider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>POSES</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.posesScroll}
+              >
+                {POSE_LIST.map(pose => {
+                  const isSelected = selectedPose === pose.id;
+                  return (
+                    <Pressable
+                      key={pose.id}
+                      onPress={() => { haptics.tap(); setSelectedPose(pose.id); }}
+                      style={[styles.poseCard, isSelected && styles.poseCardSelected]}
+                    >
+                      <View style={styles.posePreview}>
+                        <PoseDisplay pose={pose.id} size={80} />
+                      </View>
+                      <Text style={[styles.poseLabel, isSelected && styles.poseLabelSelected]}>
+                        {pose.label}
+                      </Text>
+                      {isSelected && <View style={styles.poseSelectedDot} />}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </>
+          ) : (
+            <>
+              {/* ── BACK TO CATEGORIES button ── */}
+              <Pressable onPress={backToGrid} style={styles.backBtn}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
+                  style={styles.backBtnGradient}
+                >
+                  <Text style={styles.backArrow}>‹</Text>
+                  <Text style={styles.backLabel}>BACK TO CATEGORIES</Text>
+                </LinearGradient>
+              </Pressable>
+
+              {/* ── ACTIVE TAB HEADER ── */}
+              {(() => {
+                const activeCard = CATEGORY_CARDS.find(c => c.id === viewMode);
+                if (!activeCard) return null;
+                const counts = tabCounts[viewMode];
+                return (
+                  <View style={styles.activeTabHeader}>
+                    <LinearGradient
+                      colors={[activeCard.color[0] + '18', 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.activeTabHeaderGrad}
+                    >
+                      <Text style={styles.activeTabIcon}>{activeCard.icon}</Text>
+                      <Text style={[styles.activeTabTitle, { color: activeCard.color[0] }]}>
+                        {activeCard.label}
+                      </Text>
+                      {counts.total > 0 && (
+                        <Text style={styles.activeTabCount}>
+                          {counts.owned}/{counts.total} owned
+                        </Text>
+                      )}
+                    </LinearGradient>
+                  </View>
+                );
+              })()}
+
+              {/* ── EMOTES VIEW ── */}
+              {viewMode === 'emotes' ? (
+                <View style={styles.emotesTabContent}>
+                  {/* YOUR WHEEL */}
+                  <View style={styles.yourWheelSection}>
+                    <View style={styles.yourWheelHeader}>
+                      <Text style={styles.yourWheelTitle}>YOUR WHEEL</Text>
+                      <Text style={styles.yourWheelSub}>
+                        {selectedWheelSlot !== null
+                          ? `Tap an emote below to assign to Slot ${selectedWheelSlot + 1}`
+                          : 'Tap a slot, then pick an emote to assign'}
+                      </Text>
+                    </View>
+                    <View style={styles.yourWheelSlots}>
+                      {equippedEmotes.map((emoteId, index) => {
+                        const eid = emoteId as EmoteId;
+                        const isSelected = selectedWheelSlot === index;
+                        return (
+                          <Pressable
+                            key={index}
+                            onPress={() => {
+                              haptics.tap();
+                              setSelectedWheelSlot(isSelected ? null : index);
+                            }}
+                            style={[
+                              styles.wheelSlot,
+                              isSelected && styles.wheelSlotSelected,
+                            ]}
+                          >
+                            <Text style={styles.wheelSlotEmoji}>
+                              {EMOTE_EMOJI[eid] || '?'}
+                            </Text>
+                            <Text style={styles.wheelSlotName} numberOfLines={1}>
+                              {EMOTE_NAME[eid] || 'Empty'}
+                            </Text>
+                            <View style={styles.wheelSlotNum}>
+                              <Text style={styles.wheelSlotNumText}>{index + 1}</Text>
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  {/* EMOTE GRID */}
+                  {EMOTE_CATEGORIES.map(category => (
+                    <View key={category.name} style={styles.emoteCategorySection}>
+                      <View style={styles.emoteCategoryHeader}>
+                        <Text style={styles.emoteCategoryEmoji}>{CATEGORY_EMOJI[category.name] || '\uD83C\uDFAD'}</Text>
+                        <Text style={styles.emoteCategoryName}>{category.name.toUpperCase()}</Text>
+                        <View style={styles.emoteCategoryLine} />
+                      </View>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emoteHScroll}>
+                        {category.emotes.map(emoteId => {
+                          const unlock = EMOTE_UNLOCKS[emoteId];
+                          const isLocked = !unlock?.unlocked;
+                          const isPlaying = playingEmoteId === emoteId;
+                          const isInWheel = equippedEmotes.includes(emoteId);
+
+                          return (
+                            <Pressable
+                              key={emoteId}
+                              onPress={() => {
+                                if (isLocked) { haptics.error(); return; }
+                                haptics.tap();
+                                if (selectedWheelSlot !== null) {
+                                  setEquippedEmote(selectedWheelSlot, emoteId);
+                                  setSelectedWheelSlot(null);
+                                  return;
+                                }
+                                setPlayingEmoteId(emoteId);
+                                triggerPreviewEmote(emoteId);
+                              }}
+                              style={[
+                                styles.emoteTabCard,
+                                isPlaying && styles.emoteTabCardPlaying,
+                                isLocked && styles.emoteTabCardLocked,
+                                isInWheel && styles.emoteTabCardInWheel,
+                              ]}
+                            >
+                              <Text style={[styles.emoteTabCardEmoji, isLocked && { opacity: 0.3 }]}>
+                                {EMOTE_EMOJI[emoteId]}
+                              </Text>
+                              <Text style={[styles.emoteTabCardName, isLocked && { opacity: 0.4 }]} numberOfLines={1}>
+                                {EMOTE_NAME[emoteId]}
+                              </Text>
+                              {isLocked && (
+                                <View style={styles.emoteTabLockBadge}>
+                                  <Text style={styles.emoteTabLockIcon}>{'\uD83D\uDD12'}</Text>
+                                  <Text style={styles.emoteTabLockReq} numberOfLines={1}>{unlock?.requirement}</Text>
+                                </View>
+                              )}
+                              {isPlaying && (
+                                <View style={styles.emoteTabPlayingDot}>
+                                  <Text style={{ fontSize: 8, color: colors.orange }}>{'▶'}</Text>
+                                </View>
+                              )}
+                              {isInWheel && (
+                                <View style={styles.emoteTabWheelBadge}>
+                                  <Text style={styles.emoteTabWheelBadgeText}>{'W'}</Text>
+                                </View>
+                              )}
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  ))}
+                </View>
+              ) : tabItems.length > 0 ? (
+                /* ── ITEM SCROLL ── */
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.itemsScroll}
+                >
+                  {tabItems.map(item => {
+                    const isDefault = item.unlock.type === 'default';
+                    const isLocked = !isDefault;
+                    const unlockDesc = getUnlockDescription(item.unlock);
+                    const rarityColor = RARITY_COLORS[item.rarity];
+                    const isSelected = selectedItem?.id === item.id;
+
+                    return (
+                      <Pressable
+                        key={item.id}
+                        onPress={() => handleItemTap(item)}
+                        style={[
+                          styles.itemCard,
+                          isDefault && styles.itemCardOwned,
+                          isSelected && styles.itemCardSelected,
+                        ]}
+                      >
+                        {/* Rarity strip at top */}
+                        <View style={[styles.rarityStrip, { backgroundColor: rarityColor }]} />
+
+                        {/* Icon / preview */}
+                        <View style={styles.itemPreview}>
+                          {isLocked && (
+                            <View style={styles.lockOverlay}>
+                              <Text style={styles.lockIcon}>&#x1F512;</Text>
+                            </View>
+                          )}
+                          <Text style={styles.itemEmoji}>{item.icon}</Text>
+                        </View>
+
+                        {/* Info */}
+                        <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+                        <Text style={[styles.itemRarity, { color: rarityColor }]}>
+                          {RARITY_LABELS[item.rarity]}
+                        </Text>
+
+                        {/* Status */}
+                        {isDefault ? (
+                          <View style={styles.ownedTag}>
+                            <Text style={styles.ownedTagText}>OWNED</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.unlockReq} numberOfLines={1}>{unlockDesc}</Text>
+                        )}
+
+                        {/* Selected checkmark for owned items */}
+                        {isDefault && (
+                          <View style={styles.checkmark}>
+                            <Text style={styles.checkmarkText}>&#x2713;</Text>
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyTab}>
+                  <Text style={styles.emptyTabIcon}>
+                    {viewMode === 'species' ? '\uD83E\uDDD1' : '\uD83C\uDFA8'}
+                  </Text>
+                  <Text style={styles.emptyTabTitle}>
+                    {viewMode === 'species' ? 'Species' : 'Color Palettes'}
+                  </Text>
+                  <Text style={styles.emptyTabSub}>Coming soon in a future update</Text>
+                </View>
+              )}
+            </>
+          )}
 
           {/* Bottom spacer */}
           <View style={{ height: 80 }} />
@@ -603,7 +702,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* ══ SAVE BUTTON (pinned bottom) — with checkmark icon (E) ══ */}
+        {/* ══ SAVE BUTTON (pinned bottom) ══ */}
         <View style={styles.bottomBar}>
           <GlossyButton
             label="SAVE"
@@ -621,33 +720,36 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 // STYLES
 // ====================================
 
+const CARD_GAP = 10;
+const CARD_WIDTH = (SCREEN_WIDTH - 32 - CARD_GAP) / 2; // 2 columns
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: {
     paddingBottom: 20,
   },
 
-  // --- Character Display ---
+  // --- Character Display (bigger: 380px) ---
   characterDisplayArea: {
-    height: 340,
+    height: 380,
     alignItems: 'center',
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   glowRingOuter: {
     position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
+    width: 340,
+    height: 340,
+    borderRadius: 170,
     borderWidth: 1,
     borderColor: 'rgba(100,80,200,0.1)',
     top: 10,
   },
   glowRingMiddle: {
     position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
     borderWidth: 1.5,
     borderColor: 'rgba(80,120,255,0.15)',
     backgroundColor: 'rgba(80,100,255,0.03)',
@@ -655,9 +757,9 @@ const styles = StyleSheet.create({
   },
   spotlightGlow: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
     top: 20,
   },
   previewTintOverlay: {
@@ -685,7 +787,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   displayPlatform: {
-    width: 200,
+    width: 220,
     height: 16,
     borderRadius: 100,
     marginTop: -6,
@@ -696,9 +798,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   displayRing: {
-    width: 240,
+    width: 260,
     height: 6,
-    borderRadius: 120,
+    borderRadius: 130,
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
   },
@@ -734,14 +836,64 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // --- Equipped Summary Row (A) ---
-  equipRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingHorizontal: 14,
+  // --- Collection Stats Section ---
+  statsSection: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
+  collectionRow: {
+    marginBottom: 8,
+  },
+  collectionLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  collectionTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+  },
+  collectionFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  rarityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rarityChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  rarityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  rarityChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+
+  // --- Equipped Summary Row ---
   equipPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -762,40 +914,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.textSecondary,
     maxWidth: 60,
-  },
-
-  // --- Collection Progress (E) ---
-  collectionBar: {
-    marginHorizontal: 20,
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  collectionLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 10,
-    color: colors.textMuted,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  progressTrack: {
-    width: '100%',
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-    backgroundColor: colors.orange,
-  },
-  collectionCount: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 9,
-    color: colors.textMuted,
-    marginTop: 3,
   },
 
   // --- Section Divider ---
@@ -820,66 +938,74 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
 
-  // --- Tabs ---
-  tabBar: {
+  // --- Category Grid (2x3) ---
+  categoryGrid: {
     flexDirection: 'row',
-    marginHorizontal: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 14,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: CARD_GAP,
   },
-  tab: {
-    flex: 1,
+  categoryCardWrap: {
+    width: CARD_WIDTH,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  categoryCard: {
+    height: 100,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 10,
+    justifyContent: 'center',
     position: 'relative',
+    overflow: 'hidden',
   },
-  tabActive: {
-    backgroundColor: 'rgba(255,140,0,0.12)',
+  categoryAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 12,
+    bottom: 12,
+    width: 4,
+    borderRadius: 2,
   },
-  tabIcon: {
-    fontSize: 18,
-    marginBottom: 2,
+  categoryIcon: {
+    fontSize: 30,
+    marginBottom: 4,
   },
-  tabLabel: {
+  categoryLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    letterSpacing: 1.5,
+  },
+  categoryCountBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+  },
+  categoryCountText: {
     fontFamily: fonts.body,
-    fontWeight: weight.semibold,
+    fontWeight: weight.bold,
     fontSize: 9,
-    color: colors.textMuted,
     letterSpacing: 0.5,
   },
-  tabLabelActive: {
-    color: colors.orange,
-    fontWeight: weight.bold,
-  },
-  tabCount: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 7,
-    color: colors.textMuted,
-    marginTop: 1,
-    opacity: 0.6,
-  },
-  tabCountActive: {
-    color: colors.orange,
-    opacity: 0.8,
-  },
-  tabIndicator: {
+  categoryArrow: {
     position: 'absolute',
-    bottom: 2,
-    width: 16,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.orange,
+    bottom: 6,
+    right: 10,
+    fontSize: 22,
+    fontWeight: '300',
+    opacity: 0.5,
   },
 
-  // --- Randomize (D) ---
+  // --- Randomize ---
   randomRow: {
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 14,
     marginBottom: 2,
   },
   randomButton: {
@@ -902,6 +1028,73 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#bf5fff',
     letterSpacing: 0.5,
+  },
+
+  // --- Back to Categories ---
+  backBtn: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  backBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    gap: 6,
+  },
+  backArrow: {
+    fontSize: 22,
+    color: colors.textSecondary,
+    fontWeight: '300',
+    marginTop: -2,
+  },
+  backLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 1.5,
+  },
+
+  // --- Active Tab Header ---
+  activeTabHeader: {
+    marginHorizontal: 16,
+    marginTop: 6,
+    marginBottom: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  activeTabHeaderGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  activeTabIcon: {
+    fontSize: 24,
+  },
+  activeTabTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    letterSpacing: 1.5,
+  },
+  activeTabCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginLeft: 'auto',
   },
 
   // --- Item Cards ---
@@ -1119,7 +1312,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e1230',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: 90, // room above save button
+    paddingBottom: 90,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     borderBottomWidth: 0,
