@@ -35,6 +35,7 @@ interface BoardEditorState {
   setCurrentPiece: (piece: Cell) => void;
   clearBoard: () => void;
   saveBoard: (name: string, description: string) => void;
+  loadBoard: (board: CustomBoard) => void;
   deleteBoard: (id: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -96,6 +97,15 @@ export const useBoardEditorStore = create<BoardEditorState>((set, get) => ({
     set(state => ({
       myBoards: [board, ...state.myBoards],
     }));
+  },
+
+  loadBoard: (board) => {
+    set({
+      editorBoard: board.board.map(c => [...c]),
+      editorRows: board.rows,
+      editorCols: board.cols,
+      editorConnectCount: board.connectCount,
+    });
   },
 
   deleteBoard: (id) => {

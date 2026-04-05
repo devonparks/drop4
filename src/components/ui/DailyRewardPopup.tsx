@@ -52,9 +52,20 @@ export function DailyRewardPopup() {
           <Text style={styles.icon}>{reward.icon}</Text>
           <Text style={styles.rewardName}>{reward.name}</Text>
           <View style={styles.streakDots}>
-            {[1,2,3,4,5,6,7].map(d => (
-              <View key={d} style={[styles.dot, d <= (currentStreak % 7) + 1 && styles.dotActive]} />
-            ))}
+            {[1,2,3,4,5,6,7].map(d => {
+              const currentDay = (currentStreak % 7) + 1;
+              const isActive = d <= currentDay;
+              const isToday = d === currentDay;
+              return (
+                <View key={d} style={[
+                  styles.dot,
+                  isActive && styles.dotActive,
+                  isToday && styles.dotToday,
+                ]}>
+                  <Text style={[styles.dotText, isActive && styles.dotTextActive]}>{d}</Text>
+                </View>
+              );
+            })}
           </View>
           <GlossyButton label="CLAIM" variant="orange" onPress={handleClaim} />
         </Animated.View>
@@ -76,6 +87,21 @@ const styles = StyleSheet.create({
   icon: { fontSize: 56, marginBottom: 8 },
   rewardName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 20, color: '#ffffff', marginBottom: 16 },
   streakDots: { flexDirection: 'row', gap: 6, marginBottom: 20 },
-  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.1)' },
-  dotActive: { backgroundColor: colors.orange },
+  dot: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center' as const, justifyContent: 'center' as const,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  dotActive: { backgroundColor: colors.orange, borderColor: 'rgba(255,140,0,0.5)' },
+  dotToday: {
+    borderWidth: 2, borderColor: '#ffffff',
+    shadowColor: colors.orange, shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6, shadowRadius: 6, elevation: 4,
+  },
+  dotText: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 10, color: 'rgba(255,255,255,0.3)',
+  },
+  dotTextActive: { color: '#ffffff' },
 });

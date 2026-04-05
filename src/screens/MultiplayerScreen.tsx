@@ -162,22 +162,32 @@ export function MultiplayerScreen({ navigation }: Props) {
 
           <View style={styles.buttonsWrap}>
             {/* Quick Match — casual online, no stakes */}
-            <GlossyButton
-              label="QUICK MATCH"
-              subtitle="Find an opponent • No stakes"
-              variant="green"
-              icon="🌐"
-              onPress={() => startSearching('casual')}
-            />
+            <View style={styles.btnWithBadge}>
+              <GlossyButton
+                label="QUICK MATCH"
+                subtitle="Find an opponent • No stakes"
+                variant="green"
+                icon="🌐"
+                onPress={() => startSearching('casual')}
+              />
+              <View style={styles.betaBadge}>
+                <Text style={styles.betaBadgeText}>BETA</Text>
+              </View>
+            </View>
 
             {/* Ranked — ELO rating, chess clock */}
-            <GlossyButton
-              label="RANKED"
-              subtitle={`Chess clock • ${tierInfo.icon} ${formatRank(elo)} (${elo} MMR)`}
-              variant="purple"
-              icon="🏆"
-              onPress={() => startSearching('ranked')}
-            />
+            <View style={styles.btnWithBadge}>
+              <GlossyButton
+                label="RANKED"
+                subtitle={`Chess clock • ${tierInfo.icon} ${formatRank(elo)} (${elo} MMR)`}
+                variant="purple"
+                icon="🏆"
+                onPress={() => startSearching('ranked')}
+              />
+              <View style={styles.betaBadge}>
+                <Text style={styles.betaBadgeText}>BETA</Text>
+              </View>
+            </View>
 
             {/* Gold Court — wager coins online */}
             <GlossyButton
@@ -339,4 +349,24 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start', marginLeft: 10, marginTop: 4,
   },
   buttonsWrap: { width: '100%', maxWidth: 340, gap: 6 },
+  btnWithBadge: { position: 'relative' as const },
+  betaBadge: {
+    position: 'absolute' as const,
+    top: -4,
+    right: -2,
+    backgroundColor: '#e74c3c',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.3)',
+  },
+  betaBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
 });

@@ -55,6 +55,7 @@ export type MatchupParams = {
   careerLevelId?: number;
   careerLevelReward?: CareerRewardParams;
   careerChapter?: number;
+  localPlayerNames?: { player1: string; player2: string };
 };
 
 export type GameParams = {

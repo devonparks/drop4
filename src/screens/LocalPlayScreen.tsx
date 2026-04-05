@@ -30,8 +30,13 @@ export function LocalPlayScreen({ navigation }: Props) {
     haptics.tap();
     resetScores();
     newGame('medium', false);
-    navigation.navigate('Game', {
-      localPlayerNames: { player1: player1Name, player2: player2Name },
+    navigation.navigate('Matchup', {
+      mode: 'local',
+      courtName: 'LOCAL MATCH',
+      opponentName: player2Name || 'Player 2',
+      opponentLevel: level,
+      opponentTitle: 'Local Player',
+      localPlayerNames: { player1: player1Name || 'Player 1', player2: player2Name || 'Player 2' },
     });
   };
 

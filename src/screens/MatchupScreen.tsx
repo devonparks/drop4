@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { useShopStore } from '../stores/shopStore';
@@ -46,6 +47,8 @@ export function MatchupScreen({ navigation }: Props) {
   const params = route.params;
   const playerName = useShopStore(s => s.playerName);
   const playerLevel = useShopStore(s => s.level);
+  const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
 
   // State
   const [phase, setPhase] = useState<'searching' | 'reveal' | 'ready'>('searching');
@@ -153,6 +156,7 @@ export function MatchupScreen({ navigation }: Props) {
       rankedClockSeconds: params.mode === 'ranked' ? 180 : undefined,
       careerLevelId: params.careerLevelId,
       careerLevelReward: params.careerLevelReward,
+      localPlayerNames: params.localPlayerNames,
       wagerCourt: params.wagerAmount ? {
         name: courtName,
         entryFee: params.wagerAmount,
@@ -174,6 +178,9 @@ export function MatchupScreen({ navigation }: Props) {
   return (
     <ScreenBackground>
       <View style={styles.container}>
+        {/* Coin/gem display */}
+        <TopBar coins={coins} gems={gems} level={playerLevel} />
+
         {/* Halftone dot pattern overlay */}
         {Platform.OS === 'web' && <View style={styles.halftoneOverlay} />}
 
@@ -331,7 +338,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingTop: 50,
+    paddingTop: 4,
     paddingBottom: 30,
   },
 

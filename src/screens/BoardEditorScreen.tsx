@@ -22,7 +22,7 @@ export function BoardEditorScreen({ navigation }: Props) {
   const level = useShopStore(s => s.level);
   const {
     editorBoard, editorRows, editorCols, currentPiece,
-    placePiece, setCurrentPiece, clearBoard, saveBoard, myBoards,
+    placePiece, setCurrentPiece, clearBoard, saveBoard, loadBoard, myBoards,
   } = useBoardEditorStore();
   const newGame = useGameStore(s => s.newGame);
 
@@ -148,9 +148,9 @@ export function BoardEditorScreen({ navigation }: Props) {
             <Text style={styles.myBoardsTitle}>MY BOARDS ({myBoards.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.myBoardsScroll}>
               {myBoards.map(board => (
-                <Pressable key={board.id} onPress={() => haptics.tap()} style={styles.boardCard}>
+                <Pressable key={board.id} onPress={() => { haptics.tap(); loadBoard(board); }} style={styles.boardCard}>
                   <Text style={styles.boardCardName}>{board.name}</Text>
-                  <Text style={styles.boardCardInfo}>{board.cols}×{board.rows}</Text>
+                  <Text style={styles.boardCardInfo}>{board.cols}x{board.rows}</Text>
                 </Pressable>
               ))}
             </ScrollView>
