@@ -18,7 +18,7 @@ import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
 import { AI_THINK_DELAY, COIN_REWARDS } from '../engine/constants';
 import { haptics } from '../services/haptics';
-import { playSound, playRandomVoice } from '../services/audio';
+import { playSound } from '../services/audio';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useSeasonStore } from '../stores/seasonStore';
@@ -280,7 +280,7 @@ export function GameScreen({ navigation }: Props) {
     setAiThinking(true);
     const thinkTime = AI_THINK_DELAY[difficulty];
     // Play thinking voice after a short delay so it feels natural
-    setTimeout(() => playRandomVoice('thinking'), 200);
+
 
     aiTimerRef.current = setTimeout(() => {
       aiTimerRef.current = null;
@@ -374,7 +374,6 @@ export function GameScreen({ navigation }: Props) {
       haptics.win();
       playSound('win');
       playSound('coin');
-      playRandomVoice('lose');
     }
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
@@ -387,7 +386,6 @@ export function GameScreen({ navigation }: Props) {
       }
       haptics.error();
       playSound('lose');
-      playRandomVoice('win');
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;

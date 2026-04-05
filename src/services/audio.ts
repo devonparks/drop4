@@ -1,8 +1,7 @@
 import { Audio } from 'expo-av';
 
-// Sound references
+// Sound references — UI SFX only (no voice lines)
 const sounds: Record<string, Audio.Sound | null> = {
-  // UI SFX
   tap: null,
   drop: null,
   win: null,
@@ -10,15 +9,6 @@ const sounds: Record<string, Audio.Sound | null> = {
   coin: null,
   whoosh: null,
   click: null,
-  // AI Voice Lines
-  voice_nice_move: null,
-  voice_my_turn: null,
-  voice_you_win: null,
-  voice_i_win: null,
-  voice_thinking: null,
-  voice_good_game: null,
-  voice_oh_no: null,
-  voice_bring_it: null,
 };
 
 let isInitialized = false;
@@ -51,7 +41,6 @@ export async function preloadSounds() {
   await initAudio();
 
   const soundFiles: Record<string, any> = {
-    // UI SFX
     tap: require('../assets/sounds/tap.wav'),
     drop: require('../assets/sounds/drop.wav'),
     win: require('../assets/sounds/win.wav'),
@@ -59,15 +48,6 @@ export async function preloadSounds() {
     coin: require('../assets/sounds/coin.wav'),
     whoosh: require('../assets/sounds/whoosh.wav'),
     click: require('../assets/sounds/click.wav'),
-    // AI Voice Lines
-    voice_nice_move: require('../assets/sounds/voice_nice_move.wav'),
-    voice_my_turn: require('../assets/sounds/voice_my_turn.wav'),
-    voice_you_win: require('../assets/sounds/voice_you_win.wav'),
-    voice_i_win: require('../assets/sounds/voice_i_win.wav'),
-    voice_thinking: require('../assets/sounds/voice_thinking.wav'),
-    voice_good_game: require('../assets/sounds/voice_good_game.wav'),
-    voice_oh_no: require('../assets/sounds/voice_oh_no.wav'),
-    voice_bring_it: require('../assets/sounds/voice_bring_it.wav'),
   };
 
   await Promise.all(
@@ -84,19 +64,6 @@ export async function playSound(name: keyof typeof sounds) {
   } catch (e) {
     // Fail silently
   }
-}
-
-// Play a random voice line from a category
-export async function playRandomVoice(category: 'thinking' | 'win' | 'lose' | 'taunt') {
-  const voiceMap: Record<string, string[]> = {
-    thinking: ['voice_thinking', 'voice_my_turn'],
-    win: ['voice_i_win'],
-    lose: ['voice_you_win', 'voice_good_game'],
-    taunt: ['voice_nice_move', 'voice_oh_no', 'voice_bring_it'],
-  };
-  const options = voiceMap[category];
-  const pick = options[Math.floor(Math.random() * options.length)];
-  await playSound(pick as keyof typeof sounds);
 }
 
 export function toggleMute(): boolean {
