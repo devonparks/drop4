@@ -53,6 +53,11 @@ export function GlossyButton({
   const colors = GRADIENT_MAP[variant];
   const minH = small ? 40 : 50;
 
+  // On web, Pressable's responder system doesn't always capture clicks from
+  // deeply nested children (LinearGradient > View > Text). Add an explicit
+  // onClick on the wrapper View as a web-only fix.
+  const webClickProps = Platform.OS === 'web' ? { onClick: disabled ? undefined : handlePress } : {};
+
   return (
     <Pressable
       onPress={handlePress}
@@ -63,7 +68,7 @@ export function GlossyButton({
         style,
       ]}
     >
-      <View style={[styles.outerGlow, {
+      <View {...webClickProps} style={[styles.outerGlow, {
         shadowColor: colors.glow,
         ...(Platform.OS === 'web' ? {
           boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
