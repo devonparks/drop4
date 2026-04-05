@@ -18,6 +18,7 @@ import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
 import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { SpectatorScreen } from '../screens/SpectatorScreen';
+import { FriendsScreen } from '../screens/FriendsScreen';
 
 export type WagerCourtParams = {
   name: string;
@@ -65,6 +66,7 @@ export type RootStackParamList = {
   LootBox: undefined;
   MatchHistory: undefined;
   Spectator: undefined;
+  Friends: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -96,6 +98,7 @@ export function RootNavigator() {
       <Stack.Screen name="LootBox" component={LootBoxScreen} />
       <Stack.Screen name="MatchHistory" component={MatchHistoryScreen} />
       <Stack.Screen name="Spectator" component={SpectatorScreen} />
+      <Stack.Screen name="Friends" component={FriendsScreen} />
       <Stack.Screen
         name="Game"
         component={GameScreen}

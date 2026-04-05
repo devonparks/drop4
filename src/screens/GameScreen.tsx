@@ -32,7 +32,9 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
+import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
+import { sendEmote, listenForEmotes } from '../services/emotes';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
 type Props = {
@@ -74,6 +76,9 @@ export function GameScreen({ navigation }: Props) {
   // Matchmaking overlay for wager/stage games
   const [showMatchmaking, setShowMatchmaking] = useState(() => !!params.wagerCourt);
   const wagerCourt = params.wagerCourt;
+
+  // Opponent emote display (online matches)
+  const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
 
   // Chess clock for ranked mode
   const isRankedMode = !!params.rankedMode;
@@ -154,6 +159,19 @@ export function GameScreen({ navigation }: Props) {
 
     return () => unsubscribe();
   }, [isOnlineMatch, onlineMatchId]);
+
+  // Online match: listen for opponent emotes via Firestore subcollection
+  useEffect(() => {
+    if (!isOnlineMatch || !onlineMatchId || !myPlayerNum) return;
+
+    const unsubscribe = listenForEmotes(onlineMatchId, (emote) => {
+      // Only show emotes from the opponent, not our own
+      if (emote.playerNum === myPlayerNum) return;
+      setOpponentEmote({ emoteId: emote.emoteId, key: emote.timestamp });
+    });
+
+    return () => unsubscribe();
+  }, [isOnlineMatch, onlineMatchId, myPlayerNum]);
 
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
@@ -583,9 +601,23 @@ export function GameScreen({ navigation }: Props) {
           onEmotePress={(id) => {
             haptics.tap();
             playSound('click');
+            // In online matches, send emote to opponent via Firestore
+            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
+              sendEmote(onlineMatchId, id, myPlayerNum);
+            }
           }}
           variant="game"
         />
+
+        {/* Floating emote from opponent (online matches) */}
+        {opponentEmote && (
+          <FloatingEmote
+            key={opponentEmote.key}
+            emoteId={opponentEmote.emoteId}
+            side={myPlayerNum === 1 ? 'right' : 'left'}
+            onDone={() => setOpponentEmote(null)}
+          />
+        )}
 
         {/* Matchmaking overlay for wager / stage games */}
         <MatchmakingOverlay

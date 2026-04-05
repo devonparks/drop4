@@ -98,11 +98,17 @@ export function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Customize button */}
-        <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.customizeBtn}>
-          <Text style={styles.customizeIcon}>✏️</Text>
-          <Text style={styles.customizeText}>Customize</Text>
-        </Pressable>
+        {/* Quick action buttons */}
+        <View style={styles.quickActions}>
+          <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.customizeBtn}>
+            <Text style={styles.customizeIcon}>✏️</Text>
+            <Text style={styles.customizeText}>Customize</Text>
+          </Pressable>
+          <Pressable onPress={() => navigateTo('Friends')} style={styles.friendsBtn}>
+            <Text style={styles.customizeIcon}>👫</Text>
+            <Text style={styles.friendsBtnText}>Friends</Text>
+          </Pressable>
+        </View>
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
@@ -288,10 +294,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
   },
-  // Customize button
+  // Quick action buttons
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
   customizeBtn: {
     flexDirection: 'row',
-    alignSelf: 'center',
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(100,180,255,0.12)',
@@ -300,7 +311,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
     borderColor: 'rgba(100,180,255,0.3)',
-    marginBottom: 6,
   },
   customizeIcon: { fontSize: 14 },
   customizeText: {
@@ -308,6 +318,24 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 12,
     color: 'rgba(200,230,255,0.9)',
+    letterSpacing: 0.5,
+  },
+  friendsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+  },
+  friendsBtnText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: 'rgba(255,200,130,0.9)',
     letterSpacing: 0.5,
   },
   // Menu buttons

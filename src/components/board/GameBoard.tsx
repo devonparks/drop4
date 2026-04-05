@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -30,25 +30,35 @@ const PIECE_SIZE = CELL_SIZE - 6;
 export { BOARD_WIDTH, BOARD_HEIGHT, CELL_SIZE };
 
 // Individual animated piece
-function AnimatedPiece({ player, isNew, delay = 0, skinColors }: {
+function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
   player: 1 | 2;
   isNew: boolean;
+  row?: number;
   delay?: number;
   skinColors?: PieceSkinVisuals;
 }) {
-  const translateY = useSharedValue(isNew ? -(BOARD_HEIGHT + 50) : 0);
+  // Drop distance is proportional to the row — pieces near the top travel less
+  // row 0 = top of board, row 5 = bottom. We drop from above the board.
+  const dropDistance = isNew ? -(BOARD_HEIGHT + 50) : 0;
+  const translateY = useSharedValue(dropDistance);
   const scaleVal = useSharedValue(1);
+
+  // Row-dependent stiffness: deeper rows feel heavier/faster (more gravity)
+  const stiffness = 160 + row * 8;
+  const damping = 12 + row * 0.5;
 
   React.useEffect(() => {
     if (isNew) {
       translateY.value = withDelay(delay,
-        withSpring(0, { damping: 14, stiffness: 180, mass: 0.7 })
+        withSpring(0, { damping, stiffness, mass: 0.6 })
       );
-      // Landing bounce
-      scaleVal.value = withDelay(delay + 200,
+      // Landing bounce — more pronounced for deeper rows
+      const bounceScale = 1.1 + row * 0.02;
+      const bounceDelay = delay + 180 + row * 15;
+      scaleVal.value = withDelay(bounceDelay,
         withSequence(
-          withSpring(1.15, { damping: 8, stiffness: 400 }),
-          withSpring(1, { damping: 12, stiffness: 200 })
+          withSpring(bounceScale, { damping: 6, stiffness: 500 }),
+          withSpring(1, { damping: 10, stiffness: 200 })
         )
       );
     }
@@ -116,26 +126,36 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
   const winCells = useGameStore(s => s.winCells);
   const moveCount = useGameStore(s => s.moveCount);
 
-  // Track which pieces are "new" for animation
-  const [prevMoveCount, setPrevMoveCount] = React.useState(0);
-  const newPieceMoves = React.useRef(new Set<string>());
+  // Track which pieces are "new" for drop animation.
+  // Uses board-snapshot comparison so it works for both local drops and
+  // online match board syncs from Firestore.
+  const knownPieces = useRef(new Set<string>());
+  const newPieceKeys = useRef(new Set<string>());
+  const [animTick, setAnimTick] = React.useState(0);
 
   React.useEffect(() => {
-    if (moveCount > prevMoveCount) {
-      // Find the new piece
-      for (let col = 0; col < COLS; col++) {
-        for (let row = 0; row < ROWS; row++) {
-          if (board[col][row] !== 0) {
-            const key = `${col}-${row}`;
-            if (!newPieceMoves.current.has(key)) {
-              newPieceMoves.current.add(key);
-            }
+    let hasNew = false;
+    const freshNew = new Set<string>();
+
+    for (let col = 0; col < COLS; col++) {
+      for (let row = 0; row < ROWS; row++) {
+        if (board[col][row] !== 0) {
+          const key = `${col}-${row}`;
+          if (!knownPieces.current.has(key)) {
+            knownPieces.current.add(key);
+            freshNew.add(key);
+            hasNew = true;
           }
         }
       }
-      setPrevMoveCount(moveCount);
     }
-  }, [moveCount, board]);
+
+    if (hasNew) {
+      newPieceKeys.current = freshNew;
+      // Bump tick to trigger re-render so AnimatedPiece mounts with isNew=true
+      setAnimTick(t => t + 1);
+    }
+  }, [board]);
 
   // Win cells lookup
   const winSet = useMemo(() => {
@@ -176,7 +196,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
               {Array.from({ length: COLS }).map((_, col) => {
                 const cell = board[col][row];
                 const key = `${col}-${row}`;
-                const isNew = newPieceMoves.current.has(key) && moveCount === prevMoveCount;
+                const isNew = newPieceKeys.current.has(key);
                 const isWin = winSet.has(key);
 
                 // Ghost piece: show translucent piece where it would land
@@ -192,6 +212,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                         <AnimatedPiece
                           player={cell as 1 | 2}
                           isNew={isNew}
+                          row={row}
                           skinColors={pieceSkin}
                         />
                       )}
