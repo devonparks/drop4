@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { Pressable, Text, View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
 import { fonts, weight } from '../../theme/typography';
@@ -54,13 +54,12 @@ export function GlossyButton({
   const minH = small ? 40 : 50;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={handlePress}
-      activeOpacity={0.8}
       disabled={disabled}
-      style={[disabled && { opacity: 0.5 }, style]}
+      style={({ pressed }) => [disabled && { opacity: 0.5 }, pressed && { opacity: 0.8 }, style]}
     >
-      {/* All visual layers in a pointer-events-none wrapper so clicks pass to TouchableOpacity */}
+      {/* All visual layers in a pointer-events-none wrapper so clicks pass to Pressable */}
       <View pointerEvents="none" style={[styles.outerGlow, {
         shadowColor: colors.glow,
         ...(Platform.OS === 'web' ? {
@@ -100,7 +99,7 @@ export function GlossyButton({
           </View>
         </LinearGradient>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
