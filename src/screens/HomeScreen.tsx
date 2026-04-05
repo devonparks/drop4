@@ -130,14 +130,17 @@ export function HomeScreen() {
     }
   }, [canSpin()]);
 
-  // Show tutorial on first visit
+  // Show tutorial on first visit — only if not already seen (check seenTips directly)
   const homeTip = getTipById('home_tap_character')!;
+  const tipAlreadySeen = seenTips.includes('home_tap_character');
   useEffect(() => {
-    if (!hasSeenTip('home_tap_character')) {
+    if (!tipAlreadySeen) {
       const timer = setTimeout(() => setShowTutorial(true), 1500);
       return () => clearTimeout(timer);
+    } else {
+      setShowTutorial(false);
     }
-  }, []);
+  }, [tipAlreadySeen]);
 
   // "Tap me!" tooltip — subtle hint that character is tappable
   const [showTapHint, setShowTapHint] = useState(false);
@@ -146,8 +149,8 @@ export function HomeScreen() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Only show if no emote is playing and we haven't shown 3 times yet
-      if (!emote && tapHintCountRef.current < 3) {
+      // Only show if no emote playing, tutorial not showing, and less than 3 times
+      if (!emote && !showTutorial && tapHintCountRef.current < 3) {
         tapHintCountRef.current += 1;
         setShowTapHint(true);
         // Fade in
