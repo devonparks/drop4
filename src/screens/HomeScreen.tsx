@@ -169,7 +169,7 @@ export function HomeScreen() {
 
             <Pressable onPress={handleCharacterTap}>
               <AnimatedCharacter
-                size={220}
+                size={280}
                 emote={emote}
                 onEmoteComplete={clearEmote}
               />
@@ -381,26 +381,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: -30,
-    marginBottom: -12,
+    marginTop: -15,
+    marginBottom: -18,
   },
   stageGlowOuter: {
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     position: 'absolute',
-    bottom: 30,
+    bottom: 20,
     alignSelf: 'center',
     borderWidth: 1.5,
     borderColor: 'rgba(100,180,255,0.08)',
     backgroundColor: 'rgba(80,140,255,0.03)',
   },
   stageGlowInner: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: 210,
+    height: 210,
+    borderRadius: 105,
     position: 'absolute',
-    bottom: 60,
+    bottom: 50,
     alignSelf: 'center',
     borderWidth: 1,
     borderColor: 'rgba(100,180,255,0.12)',
@@ -418,9 +418,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   stageRing: {
-    width: 240,
+    width: 280,
     height: 6,
-    borderRadius: 120,
+    borderRadius: 140,
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
   },
