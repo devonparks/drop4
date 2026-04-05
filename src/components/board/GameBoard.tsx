@@ -14,6 +14,7 @@ import { useGameStore, ROWS, COLS } from '../../stores/gameStore';
 import { useShopStore } from '../../stores/shopStore';
 import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeColors';
 import { PIECE_SKIN_VISUALS, PieceSkinVisuals } from '../../data/pieceSkinColors';
+import { DarkMatterCamo } from '../effects/DarkMatterCamo';
 import { colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -229,6 +230,17 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
         </View>
       )}
 
+      {/* Dark Matter camo effect — rendered behind the board frame */}
+      {equippedBoard === 'darkmatter' && (
+        <DarkMatterCamo
+          width={BOARD_WIDTH}
+          height={BOARD_HEIGHT}
+          borderRadius={16}
+          intensity="high"
+          style={styles.darkMatterBg}
+        />
+      )}
+
       {/* Board frame with gradient */}
       <LinearGradient
         colors={[...theme.frameGradient]}
@@ -343,6 +355,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+  },
+  darkMatterBg: {
+    position: 'absolute',
+    top: 0,
+    zIndex: 0,
   },
   boardFrame: {
     width: BOARD_WIDTH,

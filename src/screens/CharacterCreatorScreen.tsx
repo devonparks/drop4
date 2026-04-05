@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Modal } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -13,7 +13,7 @@ import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
-import { CHARACTER_ITEMS, getUnlockDescription } from '../data/characterCatalog';
+import { CHARACTER_ITEMS, CharacterItem, getUnlockDescription } from '../data/characterCatalog';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -34,6 +34,13 @@ const RARITY_LABELS: Record<string, string> = {
   rare: 'RARE',
   epic: 'EPIC',
   legendary: 'LEGENDARY',
+};
+
+const RARITY_DESCRIPTIONS: Record<string, string> = {
+  common: 'A staple piece for any wardrobe.',
+  rare: 'A cut above the rest. Stand out from the crowd.',
+  epic: 'Exceptionally crafted. Only the dedicated earn this.',
+  legendary: 'The pinnacle of style. A true collector\'s piece.',
 };
 
 type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors';
@@ -64,6 +71,16 @@ const POSE_LIST: { id: PoseId; label: string }[] = [
   { id: 'salute', label: 'Salute' },
 ];
 
+// ── Equipped Summary Pill ──────────────────────────────────────────────
+function EquipPill({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.equipPill}>
+      <Text style={styles.equipPillIcon}>{icon}</Text>
+      <Text style={styles.equipPillLabel} numberOfLines={1}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function CharacterCreatorScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
@@ -74,10 +91,75 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
   const [activeTab, setActiveTab] = useState<TabId>('outfit');
   const [selectedPose, setSelectedPose] = useState<PoseId>('default');
+  const [selectedItem, setSelectedItem] = useState<CharacterItem | null>(null);
+  const [previewingItem, setPreviewingItem] = useState<CharacterItem | null>(null);
 
   // Get items for the active tab
   const activeCategories = TAB_TO_CATEGORIES[activeTab];
   const tabItems = CHARACTER_ITEMS.filter(i => activeCategories.includes(i.category));
+
+  // ── Collection stats ──────────────────────────────────────────────────
+  const collectionStats = useMemo(() => {
+    const totalItems = CHARACTER_ITEMS.length;
+    const ownedItems = CHARACTER_ITEMS.filter(i => i.unlock.type === 'default').length;
+    const pct = totalItems > 0 ? Math.round((ownedItems / totalItems) * 100) : 0;
+    return { total: totalItems, owned: ownedItems, pct };
+  }, []);
+
+  // Per-tab item counts (owned / total)
+  const tabCounts = useMemo(() => {
+    const counts: Record<TabId, { owned: number; total: number }> = {
+      species: { owned: 0, total: 0 },
+      outfit: { owned: 0, total: 0 },
+      hair: { owned: 0, total: 0 },
+      shoes: { owned: 0, total: 0 },
+      colors: { owned: 0, total: 0 },
+    };
+    for (const tab of TABS) {
+      const cats = TAB_TO_CATEGORIES[tab.id];
+      const items = CHARACTER_ITEMS.filter(i => cats.includes(i.category));
+      counts[tab.id] = {
+        total: items.length,
+        owned: items.filter(i => i.unlock.type === 'default').length,
+      };
+    }
+    return counts;
+  }, []);
+
+  // ── Randomize ─────────────────────────────────────────────────────────
+  const handleRandomize = useCallback(() => {
+    haptics.tap();
+    // Pick random owned items from each category and "preview" the last one
+    const categories = ['hair', 'top', 'bottom', 'shoes'] as const;
+    let lastPicked: CharacterItem | null = null;
+    for (const cat of categories) {
+      const items = CHARACTER_ITEMS.filter(i => i.category === cat && i.unlock.type === 'default');
+      if (items.length > 0) {
+        lastPicked = items[Math.floor(Math.random() * items.length)];
+      }
+    }
+    // Also randomize pose
+    const randomPose = POSE_LIST[Math.floor(Math.random() * POSE_LIST.length)];
+    setSelectedPose(randomPose.id);
+    if (lastPicked) {
+      setPreviewingItem(lastPicked);
+      // Clear preview after 2s
+      setTimeout(() => setPreviewingItem(null), 2000);
+    }
+  }, []);
+
+  // ── Item tap handler ──────────────────────────────────────────────────
+  const handleItemTap = useCallback((item: CharacterItem) => {
+    haptics.tap();
+    setSelectedItem(item);
+    setPreviewingItem(item);
+  }, []);
+
+  // ── Close detail panel ────────────────────────────────────────────────
+  const closeDetailPanel = useCallback(() => {
+    setSelectedItem(null);
+    setPreviewingItem(null);
+  }, []);
 
   return (
     <ScreenBackground>
@@ -93,7 +175,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-          {/* ═══ CHARACTER DISPLAY ═══ */}
+          {/* ══ CHARACTER DISPLAY ══ */}
           <View style={styles.characterDisplayArea}>
             {/* Rotating spotlight glow */}
             <View style={styles.glowRingOuter} />
@@ -103,11 +185,33 @@ export function CharacterCreatorScreen({ navigation }: Props) {
               style={styles.spotlightGlow}
             />
 
+            {/* Preview tint overlay when previewing an item */}
+            {previewingItem && (
+              <View style={[
+                styles.previewTintOverlay,
+                { borderColor: RARITY_COLORS[previewingItem.rarity] + '55' },
+              ]}>
+                <LinearGradient
+                  colors={[RARITY_COLORS[previewingItem.rarity] + '18', 'transparent', RARITY_COLORS[previewingItem.rarity] + '10']}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+              </View>
+            )}
+
             {/* Character */}
             <AnimatedCharacter
               size={300}
               pose={selectedPose}
             />
+
+            {/* PREVIEWING banner */}
+            {previewingItem && (
+              <View style={[styles.previewBanner, { backgroundColor: RARITY_COLORS[previewingItem.rarity] + 'DD' }]}>
+                <Text style={styles.previewBannerText}>PREVIEWING: {previewingItem.name.toUpperCase()}</Text>
+              </View>
+            )}
 
             {/* Stage platform under character */}
             <LinearGradient
@@ -125,23 +229,36 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* Equipped badge */}
-          <View style={styles.equippedBadge}>
-            <Text style={styles.equippedLabel}>EQUIPPED</Text>
-            <Text style={styles.equippedName}>Default Outfit</Text>
+          {/* ══ EQUIPPED SUMMARY ROW (A) ══ */}
+          <View style={styles.equipRow}>
+            <EquipPill icon={'\uD83D\uDC55'} label="Default Outfit" onPress={() => { haptics.tap(); setActiveTab('outfit'); }} />
+            <EquipPill icon={'\uD83D\uDC87'} label="Short" onPress={() => { haptics.tap(); setActiveTab('hair'); }} />
+            <EquipPill icon={'\uD83D\uDC5F'} label="Sneakers" onPress={() => { haptics.tap(); setActiveTab('shoes'); }} />
+            <EquipPill icon={'\uD83C\uDFA8'} label="Default" onPress={() => { haptics.tap(); setActiveTab('colors'); }} />
           </View>
 
-          {/* ═══ SECTION DIVIDER ═══ */}
+          {/* ══ COLLECTION PROGRESS (E) ══ */}
+          <View style={styles.collectionBar}>
+            <Text style={styles.collectionLabel}>Collection: {collectionStats.pct}% complete</Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${collectionStats.pct}%` }]} />
+            </View>
+            <Text style={styles.collectionCount}>{collectionStats.owned}/{collectionStats.total} items</Text>
+          </View>
+
+          {/* ══ SECTION DIVIDER ══ */}
           <View style={styles.sectionDivider}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>CUSTOMIZE</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* ═══ OUTFIT TABS ═══ */}
+          {/* ══ OUTFIT TABS with counts (E) ══ */}
           <View style={styles.tabBar}>
             {TABS.map(tab => {
               const isActive = activeTab === tab.id;
+              const counts = tabCounts[tab.id];
+              const hasItems = counts.total > 0;
               return (
                 <Pressable
                   key={tab.id}
@@ -149,14 +266,29 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                   style={[styles.tab, isActive && styles.tabActive]}
                 >
                   <Text style={styles.tabIcon}>{tab.icon}</Text>
-                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
+                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                    {tab.label}
+                  </Text>
+                  {hasItems && (
+                    <Text style={[styles.tabCount, isActive && styles.tabCountActive]}>
+                      {counts.owned}/{counts.total}
+                    </Text>
+                  )}
                   {isActive && <View style={styles.tabIndicator} />}
                 </Pressable>
               );
             })}
           </View>
 
-          {/* ═══ ITEMS SCROLL ═══ */}
+          {/* ══ RANDOMIZE BUTTON (D) ══ */}
+          <View style={styles.randomRow}>
+            <Pressable onPress={handleRandomize} style={styles.randomButton}>
+              <Text style={styles.randomIcon}>{'\uD83C\uDFB2'}</Text>
+              <Text style={styles.randomLabel}>Random Look</Text>
+            </Pressable>
+          </View>
+
+          {/* ══ ITEMS SCROLL ══ */}
           {tabItems.length > 0 ? (
             <ScrollView
               horizontal
@@ -168,14 +300,16 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                 const isLocked = !isDefault;
                 const unlockDesc = getUnlockDescription(item.unlock);
                 const rarityColor = RARITY_COLORS[item.rarity];
+                const isSelected = selectedItem?.id === item.id;
 
                 return (
                   <Pressable
                     key={item.id}
-                    onPress={() => { haptics.tap(); }}
+                    onPress={() => handleItemTap(item)}
                     style={[
                       styles.itemCard,
                       isDefault && styles.itemCardOwned,
+                      isSelected && styles.itemCardSelected,
                     ]}
                   >
                     {/* Rarity strip at top */}
@@ -228,14 +362,14 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             </View>
           )}
 
-          {/* ═══ SECTION DIVIDER ═══ */}
+          {/* ══ SECTION DIVIDER ══ */}
           <View style={styles.sectionDivider}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>POSES</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* ═══ POSES SECTION ═══ */}
+          {/* ══ POSES SECTION ══ */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -265,10 +399,84 @@ export function CharacterCreatorScreen({ navigation }: Props) {
           <View style={{ height: 80 }} />
         </ScrollView>
 
-        {/* ═══ SAVE BUTTON (pinned bottom) ═══ */}
+        {/* ══ ITEM DETAIL PANEL (B) — bottom sheet ══ */}
+        {selectedItem && (
+          <View style={styles.detailOverlay}>
+            <Pressable style={styles.detailDismiss} onPress={closeDetailPanel} />
+            <View style={styles.detailPanel}>
+              {/* Grab handle */}
+              <View style={styles.detailHandle} />
+
+              {/* Rarity accent line */}
+              <View style={[styles.detailRarityLine, { backgroundColor: RARITY_COLORS[selectedItem.rarity] }]} />
+
+              <View style={styles.detailContent}>
+                {/* Icon + name row */}
+                <View style={styles.detailHeader}>
+                  <Text style={styles.detailEmoji}>{selectedItem.icon}</Text>
+                  <View style={styles.detailHeaderText}>
+                    <Text style={styles.detailName}>{selectedItem.name}</Text>
+                    <View style={[styles.detailRarityBadge, { backgroundColor: RARITY_COLORS[selectedItem.rarity] + '22', borderColor: RARITY_COLORS[selectedItem.rarity] + '55' }]}>
+                      <Text style={[styles.detailRarityLabel, { color: RARITY_COLORS[selectedItem.rarity] }]}>
+                        {RARITY_LABELS[selectedItem.rarity]}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Description / flavor text */}
+                <Text style={styles.detailDesc}>
+                  {RARITY_DESCRIPTIONS[selectedItem.rarity]}
+                </Text>
+
+                {/* Category */}
+                <Text style={styles.detailCategory}>
+                  Category: {selectedItem.category.charAt(0).toUpperCase() + selectedItem.category.slice(1)}
+                </Text>
+
+                {/* Action button */}
+                {selectedItem.unlock.type === 'default' ? (
+                  <Pressable
+                    onPress={() => { haptics.tap(); closeDetailPanel(); }}
+                    style={styles.detailEquipButton}
+                  >
+                    <LinearGradient
+                      colors={['#ff8c00', '#e07800']}
+                      style={styles.detailEquipGradient}
+                    >
+                      <Text style={styles.detailEquipText}>EQUIP</Text>
+                    </LinearGradient>
+                  </Pressable>
+                ) : (
+                  <View style={styles.detailLockedRow}>
+                    <Text style={styles.detailLockedIcon}>{'\uD83D\uDD12'}</Text>
+                    <View>
+                      <Text style={styles.detailLockedTitle}>UNLOCK REQUIREMENT</Text>
+                      <Text style={styles.detailLockedReq}>{getUnlockDescription(selectedItem.unlock)}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Price if coins-based */}
+                {selectedItem.unlock.type === 'coins' && (
+                  <Pressable
+                    onPress={() => { haptics.tap(); }}
+                    style={styles.detailBuyButton}
+                  >
+                    <Text style={styles.detailBuyIcon}>{'\uD83E\uDE99'}</Text>
+                    <Text style={styles.detailBuyText}>{selectedItem.unlock.price} COINS</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* ══ SAVE BUTTON (pinned bottom) — with checkmark icon (E) ══ */}
         <View style={styles.bottomBar}>
           <GlossyButton
-            label="SAVE & EXIT"
+            label="SAVE"
+            icon={'\u2713'}
             variant="orange"
             onPress={() => navigation.goBack()}
           />
@@ -278,9 +486,9 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   );
 }
 
-// ═══════════════════════════════════
+// ====================================
 // STYLES
-// ═══════════════════════════════════
+// ====================================
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -288,7 +496,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  // ─── Character Display ───
+  // --- Character Display ---
   characterDisplayArea: {
     height: 340,
     alignItems: 'center',
@@ -321,6 +529,30 @@ const styles = StyleSheet.create({
     borderRadius: 150,
     top: 20,
   },
+  previewTintOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    borderWidth: 2,
+    overflow: 'hidden',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+  previewBanner: {
+    position: 'absolute',
+    top: 12,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 8,
+    zIndex: 5,
+  },
+  previewBannerText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: '#ffffff',
+    letterSpacing: 1.5,
+  },
   displayPlatform: {
     width: 200,
     height: 16,
@@ -340,7 +572,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ─── Player Info ───
+  // --- Player Info ---
   playerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -371,35 +603,71 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // ─── Equipped Badge ───
-  equippedBadge: {
-    alignSelf: 'center',
+  // --- Equipped Summary Row (A) ---
+  equipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingHorizontal: 14,
+  },
+  equipPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  equippedLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    color: colors.green,
-    letterSpacing: 1.5,
+  equipPillIcon: {
+    fontSize: 13,
   },
-  equippedName: {
+  equipPillLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
-    fontSize: 12,
+    fontSize: 10,
     color: colors.textSecondary,
+    maxWidth: 60,
   },
 
-  // ─── Section Divider ───
+  // --- Collection Progress (E) ---
+  collectionBar: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  collectionLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: colors.orange,
+  },
+  collectionCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 9,
+    color: colors.textMuted,
+    marginTop: 3,
+  },
+
+  // --- Section Divider ---
   sectionDivider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -421,7 +689,7 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
 
-  // ─── Tabs ───
+  // --- Tabs ---
   tabBar: {
     flexDirection: 'row',
     marginHorizontal: 12,
@@ -456,6 +724,18 @@ const styles = StyleSheet.create({
     color: colors.orange,
     fontWeight: weight.bold,
   },
+  tabCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 7,
+    color: colors.textMuted,
+    marginTop: 1,
+    opacity: 0.6,
+  },
+  tabCountActive: {
+    color: colors.orange,
+    opacity: 0.8,
+  },
   tabIndicator: {
     position: 'absolute',
     bottom: 2,
@@ -465,7 +745,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.orange,
   },
 
-  // ─── Item Cards ───
+  // --- Randomize (D) ---
+  randomRow: {
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  randomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(155,89,182,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(155,89,182,0.25)',
+  },
+  randomIcon: {
+    fontSize: 16,
+  },
+  randomLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: '#bf5fff',
+    letterSpacing: 0.5,
+  },
+
+  // --- Item Cards ---
   itemsScroll: {
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -490,6 +798,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  itemCardSelected: {
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+    opacity: 1,
   },
   rarityStrip: {
     height: 4,
@@ -579,7 +897,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // ─── Empty Tab Placeholder ───
+  // --- Empty Tab Placeholder ---
   emptyTab: {
     alignItems: 'center',
     paddingVertical: 30,
@@ -603,7 +921,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ─── Poses ───
+  // --- Poses ---
   posesScroll: {
     paddingHorizontal: 14,
     gap: 10,
@@ -656,7 +974,158 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // ─── Bottom Bar ───
+  // --- Item Detail Panel (B) ---
+  detailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    justifyContent: 'flex-end',
+  },
+  detailDismiss: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  detailPanel: {
+    backgroundColor: '#0e1230',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 90, // room above save button
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderBottomWidth: 0,
+  },
+  detailHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  detailRarityLine: {
+    height: 3,
+    width: '100%',
+    marginBottom: 12,
+  },
+  detailContent: {
+    paddingHorizontal: 20,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 10,
+  },
+  detailEmoji: {
+    fontSize: 44,
+  },
+  detailHeaderText: {
+    flex: 1,
+  },
+  detailName: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 22,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  detailRarityBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  detailRarityLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    letterSpacing: 1.5,
+  },
+  detailDesc: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  detailCategory: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginBottom: 16,
+  },
+  detailEquipButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  detailEquipGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  detailEquipText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: '#ffffff',
+    letterSpacing: 2,
+  },
+  detailLockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    marginBottom: 8,
+  },
+  detailLockedIcon: {
+    fontSize: 24,
+  },
+  detailLockedTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    marginBottom: 2,
+  },
+  detailLockedReq: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: '#ffffff',
+  },
+  detailBuyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(241,196,15,0.12)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.3)',
+  },
+  detailBuyIcon: {
+    fontSize: 16,
+  },
+  detailBuyText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#f1c40f',
+    letterSpacing: 1,
+  },
+
+  // --- Bottom Bar ---
   bottomBar: {
     position: 'absolute',
     bottom: 0,
