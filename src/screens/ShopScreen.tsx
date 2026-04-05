@@ -8,6 +8,7 @@ import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
+import { useChallengeStore } from '../stores/challengeStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -169,6 +170,7 @@ export function ShopScreen() {
   const gems = useShopStore(s2 => s2.gems);
   const owned = useShopStore(s2 => s2.owned);
   const equipped = useShopStore(s2 => s2.equipped);
+  const equippedEmotes = useShopStore(s2 => s2.equippedEmotes);
   const purchaseItem = useShopStore(s2 => s2.purchaseItem);
   const equipItem = useShopStore(s2 => s2.equipItem);
   const addCoins = useShopStore(s2 => s2.addCoins);
@@ -177,6 +179,11 @@ export function ShopScreen() {
   const [dailyCollected, setDailyCollected] = useState(false);
   const insets = useSafeAreaInsets();
   const countdown = useCountdown();
+
+  // Track shop_visit challenge on mount
+  useEffect(() => {
+    useChallengeStore.getState().updateProgress('shop_visit', 1);
+  }, []);
 
   const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
   const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
@@ -229,7 +236,7 @@ export function ShopScreen() {
                    activeTab === 'effects' ? 'dropEffects' :
                    activeTab === 'wins' ? 'winAnimations' :
                    activeTab === 'accessories' ? 'boardAccessories' :
-                   activeTab === 'emotes' ? 'winAnimations' : 'pieces';
+                   activeTab === 'emotes' ? 'emotes' : 'pieces';
 
   return (
     <ScreenBackground>
@@ -405,15 +412,15 @@ export function ShopScreen() {
                   <ShopItemCard
                     key={item.id}
                     item={item}
-                    isOwned={owned[category]?.includes(item.id) ?? false}
-                    isEquipped={equipped[
+                    isOwned={category === 'emotes' ? equippedEmotes.includes(item.id) : (owned[category]?.includes(item.id) ?? false)}
+                    isEquipped={category === 'emotes' ? equippedEmotes.includes(item.id) : equipped[
                       category === 'boards' ? 'board'
                       : category === 'pieces' ? 'pieces'
                       : category === 'dropEffects' ? 'dropEffect'
                       : category === 'boardAccessories' ? 'boardAccessory'
                       : 'winAnimation'
                     ] === item.id}
-                    onPress={() => handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
+                    onPress={() => category === 'emotes' ? undefined : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
                     index={i}
                   />
                 ))}

@@ -446,7 +446,9 @@ export function GameScreen({ navigation }: Props) {
       if (difficulty === 'easy') updateChallenge('win_easy', 1);
       if (difficulty === 'medium') updateChallenge('win_medium', 1);
       if (difficulty === 'hard') updateChallenge('win_hard', 1);
-      if (moveCount < 20) updateChallenge('fast_win', 1);
+      if (moveCount < 10) updateChallenge('fast_win', 1);
+      // Win streak challenge — track each win, completes at 2
+      updateChallenge('win_streak_2', 1);
       // Season XP
       addSeasonXp(reward);
       // Career level completion
@@ -525,6 +527,10 @@ export function GameScreen({ navigation }: Props) {
       addSeasonXp(15);
       playSound('coin');
     }
+    // Local multiplayer challenge
+    if ((status === 'won' || status === 'draw') && hasAwardedRef.current && params.localPlayerNames) {
+      updateChallenge('play_local', 1);
+    }
     // Save replay on game end
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
       const cs = customSettings || { rows: 6, cols: 7, connectCount: 4 };
@@ -558,6 +564,10 @@ export function GameScreen({ navigation }: Props) {
     }
 
     if (isVsAi && currentPlayer !== 1) return;
+    // Center-first challenge: first move in center column
+    if (moveCount === 0 && col === Math.floor((customSettings?.cols ?? 7) / 2)) {
+      updateChallenge('center_first', 1);
+    }
     recordMove(col, currentPlayer, moveCount);
     dropPiece(col);
     showLastMove(col);
