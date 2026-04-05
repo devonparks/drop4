@@ -7,7 +7,7 @@ const AI: Player = 2;
 const HUMAN: Player = 1;
 
 const DIFFICULTY_CONFIG = {
-  easy:   { depth: 2, randomChance: 0.4 },
+  easy:   { depth: 1, randomChance: 0.55 },
   medium: { depth: 4, randomChance: 0.15 },
   hard:   { depth: 7, randomChance: 0 },
 };
@@ -209,7 +209,8 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
   const connectN = connectCount;
 
   // Random chance: sometimes make a random valid move (makes Easy feel beatable)
-  if (Math.random() < config.randomChance) {
+  const isRandom = Math.random() < config.randomChance;
+  if (isRandom) {
     const validCols = getValidCols(board);
     return validCols[Math.floor(Math.random() * validCols.length)];
   }
@@ -223,12 +224,16 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
     if (isWinningMove(testBoard, col, row, AI, connectN)) return col;
   }
 
-  // Check for immediate block (all difficulties)
-  for (const col of validCols) {
-    const row = getLowestEmptyRow(board, col, board[col].length);
-    const testBoard = board.map(c => [...c]);
-    testBoard[col][row] = HUMAN;
-    if (isWinningMove(testBoard, col, row, HUMAN, connectN)) return col;
+  // Check for immediate block — on Easy, the AI sometimes misses blocks
+  // to give new players a chance to win
+  const shouldBlock = difficulty === 'easy' ? Math.random() > 0.35 : true;
+  if (shouldBlock) {
+    for (const col of validCols) {
+      const row = getLowestEmptyRow(board, col, board[col].length);
+      const testBoard = board.map(c => [...c]);
+      testBoard[col][row] = HUMAN;
+      if (isWinningMove(testBoard, col, row, HUMAN, connectN)) return col;
+    }
   }
 
   // Minimax for the best strategic move

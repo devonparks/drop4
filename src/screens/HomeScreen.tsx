@@ -106,6 +106,7 @@ export function HomeScreen() {
   const equippedIdle = useShopStore(s => s.equippedIdle);
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
+  const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);

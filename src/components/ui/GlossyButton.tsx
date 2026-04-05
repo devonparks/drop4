@@ -81,9 +81,14 @@ export function GlossyButton({
 
   // On native, use Pressable which handles touch events properly.
   // On web, Pressable's responder system fails with deeply nested children
-  // (LinearGradient), so we use a transparent Pressable overlay on top.
+  // (LinearGradient), so we use both a transparent Pressable overlay AND
+  // an onClick on the wrapper View (for Modals where the overlay can fail).
+  const webClickProps = Platform.OS === 'web' && !disabled
+    ? { onClick: handlePress, style: { cursor: 'pointer' } as any }
+    : {};
+
   return (
-    <View style={[disabled && { opacity: 0.5 }, style]}>
+    <View {...webClickProps} style={[disabled && { opacity: 0.5 }, style]}>
       {buttonContent}
       <Pressable
         onPress={handlePress}

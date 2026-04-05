@@ -173,8 +173,8 @@ interface RankedState {
 
 export const useRankedStore = create<RankedState>((set, get) => ({
   elo: 500,
-  tier: 'iron',
-  division: 2,
+  tier: 'bronze',
+  division: 1,
   rankedWins: 0,
   rankedLosses: 0,
   rankedGames: 0,
@@ -346,7 +346,7 @@ export const useRankedStore = create<RankedState>((set, get) => ({
       const elo = saved.elo ?? 500;
       set({
         elo,
-        tier: saved.tier ?? eloToTier(elo),
+        tier: eloToTier(elo),
         division: getDivision(elo),
         rankedWins: saved.rankedWins ?? 0,
         rankedLosses: saved.rankedLosses ?? 0,

@@ -31,9 +31,10 @@ export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProp
 
   const handleDismiss = () => {
     haptics.tap();
-    // Fade out
+    // Mark seen IMMEDIATELY so re-renders don't re-show the tip
+    markTipSeen(tip.id);
+    // Fade out, then notify parent
     Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
-      markTipSeen(tip.id);
       onDismiss?.();
     });
   };
