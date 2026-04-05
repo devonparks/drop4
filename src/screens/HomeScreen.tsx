@@ -79,14 +79,18 @@ export function HomeScreen() {
 
           {/* Character on stage */}
           <View style={styles.characterStage}>
+            {/* Glow rings behind character (Fortnite-style platform) */}
+            <View style={styles.stageGlowOuter} />
+            <View style={styles.stageGlowInner} />
+
             <AnimatedCharacter
-              size={280}
+              size={240}
               emote={emote}
               onEmoteComplete={clearEmote}
             />
             {/* Stage platform glow */}
             <LinearGradient
-              colors={['rgba(100,180,255,0.25)', 'rgba(80,140,255,0.1)', 'transparent']}
+              colors={['rgba(100,180,255,0.3)', 'rgba(80,140,255,0.12)', 'transparent']}
               style={styles.stagePlatform}
             />
             {/* Stage outer ring */}
@@ -284,17 +288,46 @@ const styles = StyleSheet.create({
   characterStage: {
     flex: 1,
     alignItems: 'center',
-  },
-  stagePlatform: {
-    width: 180,
-    height: 14,
-    borderRadius: 90,
+    justifyContent: 'flex-end',
     marginTop: -10,
   },
+  stageGlowOuter: {
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(100,180,255,0.08)',
+    backgroundColor: 'rgba(80,140,255,0.03)',
+  },
+  stageGlowInner: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    position: 'absolute',
+    bottom: 60,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(100,180,255,0.12)',
+    backgroundColor: 'rgba(80,140,255,0.04)',
+  },
+  stagePlatform: {
+    width: 200,
+    height: 16,
+    borderRadius: 100,
+    marginTop: -10,
+    shadowColor: 'rgba(80,140,255,0.6)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
   stageRing: {
-    width: 220,
+    width: 240,
     height: 6,
-    borderRadius: 110,
+    borderRadius: 120,
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
   },
