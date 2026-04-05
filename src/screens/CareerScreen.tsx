@@ -19,6 +19,57 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Career'>;
 };
 
+// NPC avatar emojis by opponent name (first word match or full name)
+const NPC_AVATARS: Record<string, string> = {
+  'Rookie Ron': '🧢', 'Beginner Ben': '📗', 'Casual Carl': '😎',
+  'Speedy Sam': '⚡', 'Tiny Tim': '🐭', 'Lucky Luke': '🍀',
+  'Defensive Dee': '🛡️', 'Flash Fiona': '💨', 'Big Board Bob': '🦬',
+  'Tricky Tara': '🕸️', 'Iron Ivan': '🔩', 'King Kyle': '👑',
+  'Stretch Stevens': '🦒', 'Puzzle Pete': '🧩', 'Blitz Betty': '🔥',
+  'Micro Max': '🔬', 'Stone Cold Steve': '🧱', 'Copy Cat Clara': '🐱',
+  'Mega Mike': '🏔️', 'Six-Pack Sam': '💪', 'Clock Crusher': '⏰',
+  'Chaos Karen': '🌪️', 'Marathon Mel': '🏃', 'Grandmaster Grace': '♟️',
+  'Nightmare Nick': '💀', 'Lightning Lisa': '⚡', 'Maze Master Matt': '🌀',
+  'Quick Draw Quinn': '🤠', 'Upside-Down Uma': '🙃', 'Arena Alex': '🏟️',
+  'Storm Surge Sara': '🌩️', 'Old Guard Otto': '🎖️', 'Grim Reaper Gina': '💀',
+  'Ghost Greg': '👻', 'Final Boss Frank': '🗡️', 'The Dark Lord': '🌑',
+};
+
+function getNpcAvatar(opponent: string): string {
+  return NPC_AVATARS[opponent] || '🎮';
+}
+
+function getDifficultyBadge(difficulty: string, isBoss: boolean): { label: string; color: string; bgColor: string } {
+  if (isBoss) return { label: 'BOSS', color: '#ffffff', bgColor: 'rgba(231,76,60,0.9)' };
+  switch (difficulty) {
+    case 'easy': return { label: 'EASY', color: '#27ae3d', bgColor: 'rgba(39,174,61,0.15)' };
+    case 'medium': return { label: 'MEDIUM', color: '#ff8c00', bgColor: 'rgba(255,140,0,0.15)' };
+    case 'hard': return { label: 'HARD', color: '#e74c3c', bgColor: 'rgba(231,76,60,0.15)' };
+    default: return { label: 'EASY', color: '#27ae3d', bgColor: 'rgba(39,174,61,0.15)' };
+  }
+}
+
+function getRulePills(level: CareerLevel): { label: string; color: string }[] {
+  const pills: { label: string; color: string }[] = [];
+  const s = level.settings;
+  if (s.connectCount && s.connectCount !== 4) {
+    pills.push({ label: `Connect ${s.connectCount}`, color: '#9b59b6' });
+  }
+  if (s.timerSeconds) {
+    pills.push({ label: `${s.timerSeconds}s Timer`, color: '#e67e22' });
+  }
+  if (s.playerGoesFirst === false) {
+    pills.push({ label: 'Go Second', color: '#e74c3c' });
+  }
+  if (s.presetBoard) {
+    pills.push({ label: 'Pre-placed', color: '#3498db' });
+  }
+  if (s.rows && s.cols && (s.rows !== 6 || s.cols !== 7)) {
+    pills.push({ label: `${s.cols}x${s.rows}`, color: '#1abc9c' });
+  }
+  return pills;
+}
+
 function LevelNode({ level, stars, isUnlocked, onPress }: {
   level: CareerLevel;
   stars: number;
@@ -41,6 +92,9 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
     ? 'rgba(255,140,0,0.2)'
     : 'rgba(255,255,255,0.05)';
 
+  const badge = getDifficultyBadge(level.difficulty, level.isBoss);
+  const pills = getRulePills(level);
+
   return (
     <Pressable
       onPress={() => { if (isUnlocked) { haptics.tap(); playSound('click'); onPress(); } }}
@@ -51,10 +105,33 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
           <Text style={styles.levelNumText}>{level.isBoss ? '👑' : level.id}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.levelName} numberOfLines={1}>{level.name}</Text>
+          <View style={styles.levelNameRow}>
+            <Text style={styles.npcAvatar}>{getNpcAvatar(level.opponent)}</Text>
+            <Text style={styles.levelName} numberOfLines={1}>{level.name}</Text>
+            <View style={[
+              styles.diffBadge,
+              { backgroundColor: badge.bgColor },
+              level.isBoss && styles.bossBadge,
+            ]}>
+              <Text style={[
+                styles.diffBadgeText,
+                { color: badge.color },
+                level.isBoss && styles.bossBadgeText,
+              ]}>{badge.label}</Text>
+            </View>
+          </View>
           <Text style={styles.levelType}>{getChallengeTypeLabel(level.type)} • {level.opponent}</Text>
           {level.opponentPersonality && (
             <Text style={styles.levelFlavor} numberOfLines={1}>{level.opponentPersonality}</Text>
+          )}
+          {pills.length > 0 && (
+            <View style={styles.pillRow}>
+              {pills.map((pill, i) => (
+                <View key={i} style={[styles.rulePill, { backgroundColor: `${pill.color}18`, borderColor: `${pill.color}40` }]}>
+                  <Text style={[styles.rulePillText, { color: pill.color }]}>{pill.label}</Text>
+                </View>
+              ))}
+            </View>
           )}
         </View>
       </View>
@@ -402,11 +479,60 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#ffffff',
   },
+  levelNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 1,
+  },
+  npcAvatar: {
+    fontSize: 14,
+  },
   levelName: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 13,
     color: '#ffffff',
+    flex: 1,
+  },
+  diffBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  diffBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  bossBadge: {
+    backgroundColor: 'rgba(231,76,60,0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.6)',
+  },
+  bossBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 4,
+  },
+  rulePill: {
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderWidth: 1,
+  },
+  rulePillText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 9,
   },
   levelType: {
     fontFamily: fonts.body,

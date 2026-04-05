@@ -158,6 +158,22 @@ export function SettingsScreen({ navigation }: Props) {
           />
         </View>
 
+        {/* What's New */}
+        <Text style={styles.sectionTitle}>WHAT'S NEW</Text>
+        <View style={styles.section}>
+          {[
+            { icon: '🎭', text: '30 new emotes with Fortnite-style wheel' },
+            { icon: '🏟', text: 'Party Lobby — hang out with friends' },
+            { icon: '🎮', text: '36 career levels with boss battles' },
+            { icon: '🎨', text: '56+ cosmetic skins including Dark Matter' },
+          ].map((item, i) => (
+            <View key={i} style={styles.whatsNewRow}>
+              <Text style={styles.whatsNewIcon}>{item.icon}</Text>
+              <Text style={styles.whatsNewText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+
         {/* About */}
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>
@@ -372,6 +388,25 @@ const styles = StyleSheet.create({
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textMuted,
+  },
+  whatsNewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+    gap: 12,
+  },
+  whatsNewIcon: {
+    fontSize: 18,
+  },
+  whatsNewText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    color: '#ffffff',
+    flex: 1,
   },
   footer: {
     alignItems: 'center',

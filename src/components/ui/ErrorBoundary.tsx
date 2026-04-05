@@ -11,15 +11,16 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  showDetails: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, showDetails: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
@@ -35,17 +36,30 @@ export class ErrorBoundary extends Component<Props, State> {
         <View style={styles.container}>
           <View style={styles.card}>
             <View style={styles.iconCircle}>
-              <Text style={styles.icon}>😵</Text>
+              <Text style={styles.icon}>🔧</Text>
             </View>
             <Text style={styles.title}>Something went wrong</Text>
             <Text style={styles.subtitle}>
               Don't worry — this is usually a quick fix.
             </Text>
-            <Text style={styles.message}>
-              {this.state.error?.message || 'An unexpected error occurred'}
+            <Text style={styles.instruction}>
+              Tap "Try Again" to reload
             </Text>
             <Pressable
-              onPress={() => this.setState({ hasError: false, error: null })}
+              onPress={() => this.setState({ showDetails: !this.state.showDetails })}
+              style={styles.detailsToggle}
+            >
+              <Text style={styles.detailsToggleText}>
+                {this.state.showDetails ? 'Hide Details ▲' : 'Show Details ▼'}
+              </Text>
+            </Pressable>
+            {this.state.showDetails && (
+              <Text style={styles.message}>
+                {this.state.error?.message || 'An unexpected error occurred'}
+              </Text>
+            )}
+            <Pressable
+              onPress={() => this.setState({ hasError: false, error: null, showDetails: false })}
               style={({ pressed }) => [
                 styles.retryBtn,
                 pressed && styles.retryBtnPressed,
@@ -54,7 +68,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <Text style={styles.retryText}>Try Again</Text>
             </Pressable>
             <Pressable
-              onPress={() => this.setState({ hasError: false, error: null })}
+              onPress={() => this.setState({ hasError: false, error: null, showDetails: false })}
               style={styles.secondaryBtn}
             >
               <Text style={styles.secondaryText}>Go Home</Text>
@@ -119,7 +133,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+    marginBottom: 6,
+  },
+  instruction: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    color: colors.orange,
+    textAlign: 'center',
     marginBottom: 12,
+  },
+  detailsToggle: {
+    paddingVertical: 6,
+    marginBottom: 4,
+  },
+  detailsToggleText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   message: {
     fontFamily: fonts.body,

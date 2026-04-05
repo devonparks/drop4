@@ -246,10 +246,14 @@ export function ShopScreen() {
                 />
               ))}
             </View>
+          ) : rawItems.length === 0 ? (
+            <View style={styles.loadingWrap}>
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
           ) : (
             <View style={styles.comingSoon}>
               <Text style={styles.comingSoonIcon}>🚧</Text>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
+              <Text style={styles.comingSoonText}>No items match this filter</Text>
             </View>
           )}
         </ScrollView>
@@ -505,6 +509,17 @@ const styles = StyleSheet.create({
   boxName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
   boxCount: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
   boxPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
+  loadingWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+  },
+  loadingText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
   comingSoon: {
     alignItems: 'center',
     justifyContent: 'center',

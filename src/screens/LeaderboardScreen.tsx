@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -15,7 +16,21 @@ interface LeaderboardEntry {
   wins: number;
   winRate: number;
   level: number;
+  elo: number;
   isPlayer: boolean;
+}
+
+// Map a level to an approximate ELO for mock data display
+function levelToElo(lvl: number): number {
+  return Math.min(300 + lvl * 60, 2900);
+}
+
+// Get tier icon for a given ELO
+function getTierIcon(elo: number): string {
+  for (let i = RANKED_TIERS.length - 1; i >= 0; i--) {
+    if (elo >= RANKED_TIERS[i].minElo) return RANKED_TIERS[i].icon;
+  }
+  return RANKED_TIERS[0].icon;
 }
 
 // Seeded random for stable mock data across renders
@@ -28,7 +43,7 @@ function seededRandom(seed: number) {
 }
 
 // Mock leaderboard data (will be replaced with Firebase data)
-function generateGlobalLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+function generateGlobalLeaderboard(playerWins: number, playerLevel: number, playerElo: number): LeaderboardEntry[] {
   const rand = seededRandom(42);
   const names = [
     'xXDropKingXx', 'ConnectQueen', 'FourInARow99', 'BoardMaster',
@@ -38,19 +53,23 @@ function generateGlobalLeaderboard(playerWins: number, playerLevel: number): Lea
     'CenterCtrl', 'BlockParty', 'DropItLikeItsHot', 'FourReal',
   ];
 
-  const entries: LeaderboardEntry[] = names.map((name) => ({
-    rank: 0,
-    name,
-    wins: Math.floor(rand() * 500) + 100,
-    winRate: Math.floor(rand() * 40) + 45,
-    level: Math.floor(rand() * 40) + 10,
-    isPlayer: false,
-  }));
+  const entries: LeaderboardEntry[] = names.map((name) => {
+    const lvl = Math.floor(rand() * 40) + 10;
+    return {
+      rank: 0,
+      name,
+      wins: Math.floor(rand() * 500) + 100,
+      winRate: Math.floor(rand() * 40) + 45,
+      level: lvl,
+      elo: levelToElo(lvl),
+      isPlayer: false,
+    };
+  });
 
   entries.push({
     rank: 0, name: 'You', wins: playerWins,
     winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
-    level: playerLevel, isPlayer: true,
+    level: playerLevel, elo: playerElo, isPlayer: true,
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -58,7 +77,7 @@ function generateGlobalLeaderboard(playerWins: number, playerLevel: number): Lea
   return entries;
 }
 
-function generateWeeklyLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+function generateWeeklyLeaderboard(playerWins: number, playerLevel: number, playerElo: number): LeaderboardEntry[] {
   const rand = seededRandom(77);
   const names = [
     'WinStreak_', 'SpeedDemon42', 'ConnectQueen', 'DiagonalDan',
@@ -67,20 +86,24 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number): Lea
     'FourInARow99', 'PieceDropper', 'BlockParty',
   ];
 
-  const entries: LeaderboardEntry[] = names.map((name) => ({
-    rank: 0,
-    name,
-    wins: Math.floor(rand() * 30) + 5,
-    winRate: Math.floor(rand() * 35) + 40,
-    level: Math.floor(rand() * 30) + 5,
-    isPlayer: false,
-  }));
+  const entries: LeaderboardEntry[] = names.map((name) => {
+    const lvl = Math.floor(rand() * 30) + 5;
+    return {
+      rank: 0,
+      name,
+      wins: Math.floor(rand() * 30) + 5,
+      winRate: Math.floor(rand() * 35) + 40,
+      level: lvl,
+      elo: levelToElo(lvl),
+      isPlayer: false,
+    };
+  });
 
   const weeklyWins = Math.min(playerWins, Math.floor(rand() * 10) + 2);
   entries.push({
     rank: 0, name: 'You', wins: weeklyWins,
     winRate: weeklyWins > 0 ? Math.floor(rand() * 30) + 45 : 0,
-    level: playerLevel, isPlayer: true,
+    level: playerLevel, elo: playerElo, isPlayer: true,
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -88,26 +111,30 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number): Lea
   return entries;
 }
 
-function generateFriendsLeaderboard(playerWins: number, playerLevel: number): LeaderboardEntry[] {
+function generateFriendsLeaderboard(playerWins: number, playerLevel: number, playerElo: number): LeaderboardEntry[] {
   const rand = seededRandom(123);
   const names = [
     'Alex_Drops', 'Jamie4Real', 'SamConnect', 'Jordan_MVP',
     'RileyWins', 'TaylorGG', 'CaseyDrop4', 'MorganW',
   ];
 
-  const entries: LeaderboardEntry[] = names.map((name) => ({
-    rank: 0,
-    name,
-    wins: Math.floor(rand() * 80) + 10,
-    winRate: Math.floor(rand() * 35) + 35,
-    level: Math.floor(rand() * 20) + 3,
-    isPlayer: false,
-  }));
+  const entries: LeaderboardEntry[] = names.map((name) => {
+    const lvl = Math.floor(rand() * 20) + 3;
+    return {
+      rank: 0,
+      name,
+      wins: Math.floor(rand() * 80) + 10,
+      winRate: Math.floor(rand() * 35) + 35,
+      level: lvl,
+      elo: levelToElo(lvl),
+      isPlayer: false,
+    };
+  });
 
   entries.push({
     rank: 0, name: 'You', wins: playerWins,
     winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
-    level: playerLevel, isPlayer: true,
+    level: playerLevel, elo: playerElo, isPlayer: true,
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -124,6 +151,7 @@ const RANK_EMOJIS: Record<number, string> = {
 export function LeaderboardScreen() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('global');
   const level = useShopStore(s => s.level);
+  const rankedElo = useRankedStore(s => s.elo);
   const matches = useMatchHistoryStore(s => s.matches);
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;
@@ -135,9 +163,9 @@ export function LeaderboardScreen() {
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
   }, [matches]);
 
-  const globalData = useMemo(() => generateGlobalLeaderboard(stats.wins, level), [stats.wins, level]);
-  const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level), [stats.wins, level]);
-  const friendsData = useMemo(() => generateFriendsLeaderboard(stats.wins, level), [stats.wins, level]);
+  const globalData = useMemo(() => generateGlobalLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
+  const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
+  const friendsData = useMemo(() => generateFriendsLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
 
   const leaderboard = activeTab === 'global' ? globalData
     : activeTab === 'weekly' ? weeklyData
@@ -191,16 +219,19 @@ export function LeaderboardScreen() {
                 )}
               </View>
 
-              {/* Avatar + Name */}
+              {/* Tier icon + Name */}
               <View style={styles.nameCol}>
-                <Text style={[
-                  styles.entryName,
-                  entry.isPlayer && { color: colors.orange },
-                  entry.rank === 1 && { color: colors.coinGold },
-                ]}>
-                  {entry.name}
-                </Text>
-                <Text style={styles.entryLevel}>Lv.{entry.level}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.tierIcon}>{getTierIcon(entry.elo)}</Text>
+                  <Text style={[
+                    styles.entryName,
+                    entry.isPlayer && { color: colors.orange },
+                    entry.rank === 1 && { color: colors.coinGold },
+                  ]} numberOfLines={1}>
+                    {entry.name}
+                  </Text>
+                </View>
+                <Text style={styles.entryLevel}>Lv.{entry.level} • {entry.elo} ELO</Text>
               </View>
 
               {/* Stats */}
@@ -273,9 +304,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   entryRowPlayer: {
-    backgroundColor: 'rgba(255,140,0,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.25)',
+    backgroundColor: 'rgba(255,140,0,0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.45)',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   entryRowTop3: {
     backgroundColor: 'rgba(255,209,102,0.05)',
@@ -295,6 +331,14 @@ const styles = StyleSheet.create({
   },
   nameCol: {
     flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tierIcon: {
+    fontSize: 13,
   },
   entryName: {
     fontFamily: fonts.body,
