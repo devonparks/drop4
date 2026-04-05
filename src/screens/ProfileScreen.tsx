@@ -12,6 +12,7 @@ import { useAchievementStore } from '../stores/achievementStore';
 import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
+import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -196,7 +197,7 @@ export function ProfileScreen() {
           <>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RECENT MATCHES</Text>
-              <Pressable onPress={() => navigateTo('MatchHistory')}>
+              <Pressable onPress={() => { haptics.tap(); navigateTo('MatchHistory'); }}>
                 <Text style={styles.viewAllLink}>View All →</Text>
               </Pressable>
             </View>

@@ -6,6 +6,7 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
+import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -47,6 +48,11 @@ export function MainTabs() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.orange,
         tabBarInactiveTintColor: colors.textMuted,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          haptics.tap();
+        },
       }}
     >
       <Tab.Screen

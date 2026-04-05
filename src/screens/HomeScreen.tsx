@@ -78,6 +78,7 @@ function PressScaleView({ children, onPress }: { children: React.ReactNode; onPr
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
+    haptics.tap();
     Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
   };
   const handlePressOut = () => {
@@ -110,6 +111,23 @@ export function HomeScreen() {
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // FREE SPIN text pulse when spin is available
+  const spinPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (canSpin()) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(spinPulse, { toValue: 0.5, duration: 1000, useNativeDriver: true }),
+          Animated.timing(spinPulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    } else {
+      spinPulse.setValue(1);
+    }
+  }, [canSpin()]);
 
   // Show tutorial on first visit
   const homeTip = getTipById('home_tap_character')!;
@@ -241,17 +259,17 @@ export function HomeScreen() {
 
         {/* Quick action buttons */}
         <View style={styles.quickActions}>
-          <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.customizeBtn}>
+          <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.customizeBtn}>
             <Text style={styles.customizeText}>Customize</Text>
           </Pressable>
           <Pressable
             onPress={() => { haptics.tap(); setSpinWheelOpen(true); }}
             style={[styles.freeSpinBtn, !canSpin() && { opacity: 0.5 }]}
           >
-            <Text style={styles.freeSpinText}>FREE SPIN</Text>
+            <Animated.Text style={[styles.freeSpinText, canSpin() && { opacity: spinPulse }]}>FREE SPIN</Animated.Text>
             {canSpin() && <View style={styles.freeSpinBadge} />}
           </Pressable>
-          <Pressable onPress={() => navigateTo('PartyLobby')} style={styles.friendsBtn}>
+          <Pressable onPress={() => { haptics.tap(); navigateTo('PartyLobby'); }} style={styles.friendsBtn}>
             <Text style={styles.friendsBtnText}>Party</Text>
           </Pressable>
         </View>
