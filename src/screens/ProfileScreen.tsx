@@ -176,6 +176,10 @@ export function ProfileScreen() {
         {/* Quick Actions */}
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
         <View style={styles.quickActions}>
+          <GlossyButton label="Season Pass" variant="purple" icon="⭐" small onPress={() => navigateTo('SeasonPass')} style={{ flex: 1 }} />
+          <GlossyButton label="Challenges" variant="teal" icon="🎯" small onPress={() => navigateTo('Challenges')} style={{ flex: 1 }} />
+        </View>
+        <View style={[styles.quickActions, { marginTop: 0 }]}>
           <GlossyButton label="Replays" variant="navy" icon="🎬" small onPress={() => navigateTo('ReplayViewer')} style={{ flex: 1 }} />
           <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
         </View>

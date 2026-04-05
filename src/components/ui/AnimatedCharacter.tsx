@@ -1080,6 +1080,7 @@ interface AnimatedCharacterProps {
   size?: number;
   emote?: EmoteId | null;
   pose?: PoseId;
+  selectedIdle?: IdleVariantId | null;
   onEmoteComplete?: () => void;
   style?: any;
 }
@@ -1088,6 +1089,7 @@ export function AnimatedCharacter({
   size = 300,
   emote = null,
   pose = 'default',
+  selectedIdle = null,
   onEmoteComplete,
   style,
 }: AnimatedCharacterProps) {
@@ -1100,8 +1102,10 @@ export function AnimatedCharacter({
   const variantTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frameRef = useRef(0);
 
-  // ─── Schedule next idle variant ───
+  // ─── Schedule next idle variant (skipped when a specific idle is equipped) ───
   const scheduleVariant = useCallback(() => {
+    // If user has a specific idle equipped, skip random variant scheduling
+    if (selectedIdle) return;
     if (variantTimerRef.current) clearTimeout(variantTimerRef.current);
     variantTimerRef.current = setTimeout(() => {
       // Only trigger variant if we're in base idle (not playing an emote or another variant)
@@ -1118,7 +1122,7 @@ export function AnimatedCharacter({
         return prev;
       });
     }, randomVariantDelay());
-  }, []);
+  }, [selectedIdle]);
 
   // ─── Handle emote trigger from props ───
   useEffect(() => {
@@ -1182,7 +1186,8 @@ export function AnimatedCharacter({
 
     } else {
       // Base idle loop — 12 frames at 100ms, looping
-      const idleFrames = EMOTE_FRAMES.idle;
+      // If a selectedIdle is set, loop that variant's frames instead of default idle
+      const idleFrames = (selectedIdle && IDLE_VARIANTS[selectedIdle]) || EMOTE_FRAMES.idle;
       intervalRef.current = setInterval(() => {
         frameRef.current = (frameRef.current + 1) % idleFrames.length;
         setCurrentFrame(frameRef.current);
@@ -1192,7 +1197,7 @@ export function AnimatedCharacter({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [animState, activeEmote, activeVariant]);
+  }, [animState, activeEmote, activeVariant, selectedIdle]);
 
   // ─── Start the variant timer on mount ───
   useEffect(() => {
@@ -1209,7 +1214,7 @@ export function AnimatedCharacter({
   } else if (animState === 'idle_variant' && activeVariant) {
     currentFrames = IDLE_VARIANTS[activeVariant] || EMOTE_FRAMES.idle;
   } else {
-    currentFrames = EMOTE_FRAMES.idle;
+    currentFrames = (selectedIdle && IDLE_VARIANTS[selectedIdle]) || EMOTE_FRAMES.idle;
   }
   const frameIndex = currentFrame % currentFrames.length;
 
@@ -1218,12 +1223,12 @@ export function AnimatedCharacter({
       {/* Always render base idle frame 0 as fallback (prevents invisible character) */}
       <Image
         source={EMOTE_FRAMES.idle[0]}
-        style={[styles.characterImage, styles.stackedFrame, { opacity: animState !== 'idle' && animState !== 'idle_variant' ? 0 : (animState === 'idle' && frameIndex === 0 ? 1 : 0) }]}
+        style={[styles.characterImage, styles.stackedFrame, { opacity: animState !== 'idle' && animState !== 'idle_variant' ? 0 : (animState === 'idle' && !selectedIdle && frameIndex === 0 ? 1 : 0) }]}
         resizeMode="contain"
       />
 
-      {/* Base idle: render ALL frames stacked, toggle visibility via opacity. */}
-      {animState === 'idle' && EMOTE_FRAMES.idle.slice(1).map((source, i) => (
+      {/* Base idle (no selected idle): render ALL frames stacked, toggle visibility via opacity. */}
+      {animState === 'idle' && !selectedIdle && EMOTE_FRAMES.idle.slice(1).map((source, i) => (
         <Image
           key={`idle_${i + 1}`}
           source={source}
@@ -1232,7 +1237,16 @@ export function AnimatedCharacter({
         />
       ))}
 
-      {/* Idle variants: use single image swap (simpler, avoids opacity sync issues) */}
+      {/* Selected idle: loops equipped variant frames via image swap */}
+      {animState === 'idle' && selectedIdle && (
+        <Image
+          source={currentFrames[frameIndex] || currentFrames[0]}
+          style={[styles.characterImage, styles.stackedFrame]}
+          resizeMode="contain"
+        />
+      )}
+
+      {/* Random idle variants (when no idle is equipped): single image swap */}
       {animState === 'idle_variant' && activeVariant && (
         <Image
           source={currentFrames[frameIndex] || currentFrames[0]}
@@ -1296,7 +1310,7 @@ export function useEmoteTrigger() {
 // EXPORTS
 // ═══════════════════════════════════════════════════════════
 
-export { POSE_IMAGES, IDLE_VARIANTS, EMOTE_FRAMES };
+export { POSE_IMAGES, IDLE_VARIANTS, IDLE_VARIANT_IDS, EMOTE_FRAMES };
 
 const styles = StyleSheet.create({
   container: {

@@ -27,6 +27,9 @@ interface ShopState {
   // Emote wheel — 6 equipped emote slots
   equippedEmotes: string[];
 
+  // Equipped idle variant (null = base idle with random variants)
+  equippedIdle: string | null;
+
   // Actions
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
@@ -35,6 +38,7 @@ interface ShopState {
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
   setEquippedEmote: (slot: number, emoteId: string) => void;
+  setEquippedIdle: (idleId: string | null) => void;
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -63,6 +67,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
   },
 
   equippedEmotes: ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
+
+  equippedIdle: null,
 
   addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
 
@@ -115,6 +121,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
     });
   },
 
+  setEquippedIdle: (idleId) => set({ equippedIdle: idleId }),
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -143,6 +151,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
           ...saved.owned,
         },
         equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
+        equippedIdle: saved.equippedIdle ?? null,
       });
     }
   },
@@ -159,5 +168,6 @@ useShopStore.subscribe((state) => {
     equipped: state.equipped,
     owned: state.owned,
     equippedEmotes: state.equippedEmotes,
+    equippedIdle: state.equippedIdle,
   });
 });

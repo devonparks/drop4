@@ -5,8 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId } from '../components/ui/AnimatedCharacter';
+import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVariantId } from '../components/ui/AnimatedCharacter';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
+import { IdlePicker } from '../components/ui/IdlePicker';
 import { useShopStore } from '../stores/shopStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -96,8 +97,10 @@ export function HomeScreen() {
   const maxTier = useSeasonStore(s => s.maxTier);
   const seasonName = useSeasonStore(s => s.seasonName);
   const challenges = useChallengeStore(s => s.challenges);
+  const equippedIdle = useShopStore(s => s.equippedIdle);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [idlePickerOpen, setIdlePickerOpen] = useState(false);
 
   // All non-idle emotes for random idle tap
   const allEmoteIds: EmoteId[] = EMOTE_CATEGORIES.flatMap(c => c.emotes);
@@ -134,9 +137,9 @@ export function HomeScreen() {
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) */}
           <Pressable onPress={() => { haptics.tap(); setShowcaseOpen(true); }} style={styles.sideBtn}>
-            <LinearGradient colors={['rgba(255,220,50,0.3)', 'rgba(50,200,50,0.2)', 'rgba(50,100,255,0.2)']} style={styles.sideBtnGradient}>
-              <Text style={styles.sideBtnIcon}>😀</Text>
-            </LinearGradient>
+            <View style={styles.sideBtnCircle}>
+              <Text style={styles.sideBtnIcon}>E</Text>
+            </View>
             <Text style={styles.sideBtnLabel}>Emotes</Text>
           </Pressable>
 
@@ -153,6 +156,7 @@ export function HomeScreen() {
               <AnimatedCharacter
                 size={320}
                 emote={emote}
+                selectedIdle={equippedIdle as IdleVariantId | null}
                 onEmoteComplete={clearEmote}
               />
             </Pressable>
@@ -165,11 +169,11 @@ export function HomeScreen() {
             <View style={styles.stageRing} />
           </View>
 
-          {/* Pose button (right) */}
-          <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.sideBtn}>
-            <LinearGradient colors={['rgba(255,160,0,0.35)', 'rgba(255,100,0,0.2)']} style={styles.sideBtnGradient}>
-              <Text style={styles.sideBtnIcon}>🕺</Text>
-            </LinearGradient>
+          {/* Idles button (right) */}
+          <Pressable onPress={() => { haptics.tap(); setIdlePickerOpen(true); }} style={styles.sideBtn}>
+            <View style={styles.sideBtnCircle}>
+              <Text style={styles.sideBtnIcon}>I</Text>
+            </View>
             <Text style={styles.sideBtnLabel}>Idles</Text>
           </Pressable>
         </View>
@@ -177,11 +181,9 @@ export function HomeScreen() {
         {/* Quick action buttons */}
         <View style={styles.quickActions}>
           <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.customizeBtn}>
-            <Text style={styles.customizeIcon}>✏️</Text>
             <Text style={styles.customizeText}>Customize</Text>
           </Pressable>
           <Pressable onPress={() => navigateTo('PartyLobby')} style={styles.friendsBtn}>
-            <Text style={styles.customizeIcon}>🎉</Text>
             <Text style={styles.friendsBtnText}>Party</Text>
           </Pressable>
         </View>
@@ -227,6 +229,12 @@ export function HomeScreen() {
         <EmoteShowcase
           visible={showcaseOpen}
           onClose={() => setShowcaseOpen(false)}
+        />
+
+        {/* Idle Picker Modal */}
+        <IdlePicker
+          visible={idlePickerOpen}
+          onClose={() => setIdlePickerOpen(false)}
         />
       </View>
     </ScreenBackground>
@@ -337,30 +345,30 @@ const styles = StyleSheet.create({
   },
   sideBtn: {
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
-  sideBtnGradient: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+  sideBtnCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.25)',
-    shadowColor: 'rgba(255,200,0,0.4)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 6,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   sideBtnIcon: {
-    fontSize: 30,
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.7)',
   },
   sideBtnLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.5,
   },
   characterStage: {
     flex: 1,
@@ -426,7 +434,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(100,180,255,0.3)',
   },
-  customizeIcon: { fontSize: 14 },
   customizeText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,

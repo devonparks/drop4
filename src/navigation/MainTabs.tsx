@@ -90,17 +90,17 @@ export function MainTabs() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: 'rgba(8,10,30,0.95)',
+    backgroundColor: 'rgba(8,10,30,0.97)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-    height: 65,
-    paddingBottom: 6,
-    paddingTop: 6,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    height: Platform.OS === 'ios' ? 80 : 72,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
     ...(Platform.OS === 'web' ? {
       backdropFilter: 'blur(20px)',
     } as any : {}),
