@@ -155,68 +155,52 @@ export function MultiplayerScreen({ navigation }: Props) {
           {/* Full rank progress card */}
           <RankProgressCard />
 
-          {/* Three-tier structure */}
-          <Text style={styles.sectionLabel}>COMPETITIVE TIERS</Text>
+          {/* Online PvP */}
+          <Text style={styles.sectionLabel}>PLAY ONLINE</Text>
 
           <View style={styles.buttonsWrap}>
-            {/* Tier 1: Casual — local or online */}
+            {/* Quick Match — casual online, no stakes */}
             <GlossyButton
-              label="CASUAL"
-              subtitle="No timer, no pressure"
+              label="QUICK MATCH"
+              subtitle="Find an opponent • No stakes"
               variant="green"
-              icon="🎮"
-              onPress={() => navigation.navigate('LocalPlay')}
+              icon="🌐"
+              onPress={() => startSearching('casual')}
             />
 
-            {/* Tier 2: Ranked — local or online */}
+            {/* Ranked — ELO rating, chess clock */}
             <GlossyButton
               label="RANKED"
-              subtitle="Chess clock • MMR rating"
+              subtitle={`Chess clock • ${tierInfo.icon} ${tierInfo.name} (${elo} MMR)`}
               variant="purple"
               icon="🏆"
-              onPress={() => {
-                navigation.navigate('Play', {
-                  rankedMode: true,
-                  rankedClockSeconds: 180,
-                });
-              }}
+              onPress={() => startSearching('ranked')}
             />
 
-            {/* Tier 3: Gold Court (Wager) */}
+            {/* Gold Court — wager coins online */}
             <GlossyButton
               label="GOLD COURT"
-              subtitle="Wager coins • Spectators"
+              subtitle="Wager coins • High stakes"
               variant="gold"
               icon="👑"
               onPress={() => navigation.navigate('Stage')}
             />
           </View>
 
-          <Text style={styles.sectionLabel}>ONLINE</Text>
+          {/* Local play */}
+          <Text style={styles.sectionLabel}>LOCAL</Text>
 
           <View style={styles.buttonsWrap}>
-            {/* Online Casual — joins matchmaking queue */}
+            {/* Pass & Play — two players on same device */}
             <GlossyButton
-              label="CASUAL ONLINE"
-              subtitle="Play a random opponent"
+              label="PASS & PLAY"
+              subtitle="Two players, one device"
               variant="teal"
-              icon="🌐"
-              onPress={() => startSearching('casual')}
+              icon="🎮"
+              onPress={() => navigation.navigate('LocalPlay')}
             />
 
-            {/* Online Ranked — joins ranked matchmaking queue */}
-            <GlossyButton
-              label="RANKED ONLINE"
-              subtitle={`MMR ${elo} • ${tierInfo.icon} ${tierInfo.name}`}
-              variant="purple"
-              icon="🏆"
-              onPress={() => startSearching('ranked')}
-            />
-          </View>
-
-          <Text style={styles.sectionLabel}>MORE</Text>
-
-          <View style={styles.buttonsWrap}>
+            {/* Tournament — local bracket */}
             <GlossyButton
               label="TOURNAMENT"
               subtitle="4-8 Player Bracket"
