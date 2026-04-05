@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -1066,9 +1066,13 @@ const styles = StyleSheet.create({
   emoteText: {
     fontSize: 22,
   },
-  // Game Over
+  // Game Over — use fixed positioning so overlay covers viewport, not just container
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
