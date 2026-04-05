@@ -223,7 +223,8 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: -4,
+    marginBottom: 2,
   },
   logoMain: {
     fontFamily: fonts.heading,
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 28,
   },
   sideBtn: {
     alignItems: 'center',
@@ -289,7 +290,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: -10,
+    marginTop: -20,
+    marginBottom: -5,
   },
   stageGlowOuter: {
     width: 240,
