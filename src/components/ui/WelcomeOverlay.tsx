@@ -2,23 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GlossyButton } from './GlossyButton';
-import { useMatchHistoryStore } from '../../stores/matchHistoryStore';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
 export function WelcomeOverlay() {
   const [visible, setVisible] = useState(false);
-  const totalGames = useMatchHistoryStore(s => s.matches.length);
+  const [dismissed, setDismissed] = useState(true); // Start dismissed, check storage
 
   useEffect(() => {
-    if (totalGames === 0) {
-      const timer = setTimeout(() => setVisible(true), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [totalGames]);
+    AsyncStorage.getItem('welcome_dismissed').then(val => {
+      if (val === 'true') {
+        setDismissed(true);
+      } else {
+        setDismissed(false);
+        const timer = setTimeout(() => setVisible(true), 1500);
+        return () => clearTimeout(timer);
+      }
+    });
+  }, []);
 
-  if (!visible || totalGames > 0) return null;
+  const handleDismiss = () => {
+    setVisible(false);
+    setDismissed(true);
+    AsyncStorage.setItem('welcome_dismissed', 'true');
+  };
+
+  if (dismissed || !visible) return null;
 
   return (
     <Modal transparent visible={visible} animationType="none">
@@ -43,7 +54,7 @@ export function WelcomeOverlay() {
           <GlossyButton
             label="LET'S GO!"
             variant="orange"
-            onPress={() => setVisible(false)}
+            onPress={handleDismiss}
           />
         </Animated.View>
       </View>
