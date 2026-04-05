@@ -39,6 +39,10 @@ export type GameParams = {
   careerLevelId?: number;
   careerLevelReward?: CareerRewardParams;
   localPlayerNames?: { player1: string; player2: string };
+  // Online multiplayer
+  onlineMatchId?: string;
+  onlinePlayerNum?: 1 | 2;
+  onlineOpponentName?: string;
 };
 
 export type RootStackParamList = {

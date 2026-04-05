@@ -1,25 +1,168 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Animated,
+  Easing,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore } from '../stores/rankedStore';
-import { RankBadge } from '../components/ui/RankBadge';
+import { useOnlineStore } from '../stores/onlineStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { borderRadius } from '../theme/spacing';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Multiplayer'>;
 };
 
+// --- Searching Overlay ---
+
+function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
+  const {
+    isSearching,
+    queueMode,
+    searchDuration,
+    isInMatch,
+    matchId,
+    opponentName,
+    myPlayerNum,
+    stopSearching,
+    tickSearchTimer,
+    clearMatch,
+  } = useOnlineStore();
+
+  const ranked = useRankedStore();
+
+  // Animated dots
+  const dotAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!isSearching) return;
+    const loop = Animated.loop(
+      Animated.timing(dotAnim, {
+        toValue: 3,
+        duration: 1500,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isSearching, dotAnim]);
+
+  // Tick the search timer every second
+  useEffect(() => {
+    if (!isSearching) return;
+    const interval = setInterval(tickSearchTimer, 1000);
+    return () => clearInterval(interval);
+  }, [isSearching, tickSearchTimer]);
+
+  // When a match is found, navigate to Game
+  useEffect(() => {
+    if (isInMatch && matchId && myPlayerNum) {
+      const isRanked = queueMode === 'ranked';
+      clearMatch();
+      navigation.navigate('Game', {
+        onlineMatchId: matchId,
+        onlinePlayerNum: myPlayerNum,
+        onlineOpponentName: opponentName ?? 'Opponent',
+        rankedMode: isRanked,
+        rankedClockSeconds: isRanked ? 180 : undefined,
+      });
+    }
+  }, [isInMatch, matchId, myPlayerNum, queueMode, opponentName, clearMatch, navigation]);
+
+  const dots = dotAnim.interpolate({
+    inputRange: [0, 1, 2, 3],
+    outputRange: ['.', '..', '...', ''],
+  });
+
+  const minutes = Math.floor(searchDuration / 60);
+  const seconds = searchDuration % 60;
+  const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+  if (!isSearching) return null;
+
+  return (
+    <Modal transparent animationType="fade" visible={isSearching}>
+      <View style={overlayStyles.backdrop}>
+        <View style={overlayStyles.card}>
+          {/* Pulsing globe icon */}
+          <Text style={overlayStyles.globe}>🌐</Text>
+
+          {/* Title */}
+          <AnimatedDotsText />
+
+          {/* Timer */}
+          <Text style={overlayStyles.timer}>{timerText}</Text>
+
+          {/* Mode badge */}
+          <View
+            style={[
+              overlayStyles.modeBadge,
+              { backgroundColor: queueMode === 'ranked' ? colors.purple : colors.green },
+            ]}
+          >
+            <Text style={overlayStyles.modeBadgeText}>
+              {queueMode === 'ranked' ? '🏆 RANKED' : '🎮 CASUAL'}
+            </Text>
+          </View>
+
+          {/* ELO display for ranked */}
+          {queueMode === 'ranked' && (
+            <View style={overlayStyles.eloRow}>
+              <Text style={overlayStyles.eloLabel}>Your Rating</Text>
+              <Text style={overlayStyles.eloValue}>{ranked.elo}</Text>
+              <Text style={overlayStyles.tierText}>
+                {ranked.getTier().icon} {ranked.getTier().name}
+              </Text>
+            </View>
+          )}
+
+          {/* Cancel button */}
+          <TouchableOpacity style={overlayStyles.cancelBtn} onPress={stopSearching}>
+            <Text style={overlayStyles.cancelText}>CANCEL</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// Separate component for animated dots so it re-renders smoothly
+function AnimatedDotsText() {
+  const [dots, setDots] = React.useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Text style={overlayStyles.searchingText}>
+      Searching for opponent{dots}
+    </Text>
+  );
+}
+
+// --- Main Screen ---
+
 export function MultiplayerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
   const ranked = useRankedStore();
+  const { startSearching, isSearching } = useOnlineStore();
 
   return (
     <ScreenBackground>
@@ -36,7 +179,7 @@ export function MultiplayerScreen({ navigation }: Props) {
           <Text style={styles.sectionLabel}>COMPETITIVE TIERS</Text>
 
           <View style={styles.buttonsWrap}>
-            {/* Tier 1: Casual */}
+            {/* Tier 1: Casual — local or online */}
             <GlossyButton
               label="CASUAL"
               subtitle="No timer, no pressure"
@@ -45,16 +188,16 @@ export function MultiplayerScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('LocalPlay')}
             />
 
-            {/* Tier 2: Ranked */}
+            {/* Tier 2: Ranked — local or online */}
             <GlossyButton
               label="RANKED"
-              subtitle="Chess clock • MMR rating"
+              subtitle="Chess clock \u2022 MMR rating"
               variant="purple"
               icon="🏆"
               onPress={() => {
                 navigation.navigate('Play', {
                   rankedMode: true,
-                  rankedClockSeconds: 180, // 3 min per player
+                  rankedClockSeconds: 180,
                 });
               }}
             />
@@ -62,10 +205,32 @@ export function MultiplayerScreen({ navigation }: Props) {
             {/* Tier 3: Gold Court (Wager) */}
             <GlossyButton
               label="GOLD COURT"
-              subtitle="Wager coins • Spectators"
+              subtitle="Wager coins \u2022 Spectators"
               variant="gold"
               icon="👑"
               onPress={() => navigation.navigate('Stage')}
+            />
+          </View>
+
+          <Text style={styles.sectionLabel}>ONLINE</Text>
+
+          <View style={styles.buttonsWrap}>
+            {/* Online Casual — joins matchmaking queue */}
+            <GlossyButton
+              label="CASUAL ONLINE"
+              subtitle="Play a random opponent"
+              variant="teal"
+              icon="🌐"
+              onPress={() => startSearching('casual')}
+            />
+
+            {/* Online Ranked — joins ranked matchmaking queue */}
+            <GlossyButton
+              label="RANKED ONLINE"
+              subtitle={`MMR ${ranked.elo} \u2022 ${ranked.getTier().icon} ${ranked.getTier().name}`}
+              variant="purple"
+              icon="🏆"
+              onPress={() => startSearching('ranked')}
             />
           </View>
 
@@ -79,20 +244,109 @@ export function MultiplayerScreen({ navigation }: Props) {
               icon="🏟"
               onPress={() => navigation.navigate('Tournament')}
             />
-            <GlossyButton
-              label="ONLINE"
-              subtitle="Coming Soon"
-              variant="navy"
-              icon="🌐"
-              onPress={() => {}}
-              disabled
-            />
           </View>
         </View>
       </View>
+
+      {/* Searching overlay (portal-style modal) */}
+      <SearchingOverlay navigation={navigation} />
     </ScreenBackground>
   );
 }
+
+// --- Overlay Styles ---
+
+const overlayStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingHorizontal: 32,
+    paddingVertical: 28,
+    alignItems: 'center',
+    width: 300,
+    gap: 12,
+  },
+  globe: {
+    fontSize: 48,
+    marginBottom: 4,
+  },
+  searchingText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    minWidth: 220,
+  },
+  timer: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 32,
+    color: colors.textPrimary,
+    letterSpacing: 2,
+  },
+  modeBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: borderRadius.round,
+  },
+  modeBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  eloRow: {
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 4,
+  },
+  eloLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  eloValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 28,
+    color: colors.textPrimary,
+  },
+  tierText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  cancelBtn: {
+    marginTop: 8,
+    backgroundColor: colors.red,
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    borderRadius: borderRadius.lg,
+  },
+  cancelText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 2,
+  },
+});
+
+// --- Main Styles ---
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
