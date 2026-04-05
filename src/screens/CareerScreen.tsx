@@ -102,6 +102,9 @@ export function CareerScreen({ navigation }: Props) {
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
   const totalStars = getTotalStars();
   const completedCount = getCompletedCount();
+  const totalCoinsAvailable = useMemo(() =>
+    ALL_CAREER_LEVELS.reduce((sum, l) => sum + (l.reward?.type === 'coins' && l.reward.amount ? l.reward.amount : 0), 0),
+  []);
   const [chapterCelebration, setChapterCelebration] = useState<number | null>(null);
 
   // Detect which chapters are fully 3-starred (all levels have at least 1 star)
@@ -132,6 +135,7 @@ export function CareerScreen({ navigation }: Props) {
           <View style={styles.progressRow}>
             <Text style={styles.progressText}>{completedCount}/{ALL_CAREER_LEVELS.length} completed</Text>
             <Text style={styles.starsTotal}>⭐ {totalStars}/{ALL_CAREER_LEVELS.length * 3}</Text>
+            <Text style={styles.coinsTotal}>🪙 {totalCoinsAvailable.toLocaleString()} available</Text>
           </View>
         </View>
 
@@ -286,6 +290,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   starsTotal: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.coinGold,
+  },
+  coinsTotal: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 12,

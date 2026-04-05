@@ -27,7 +27,7 @@ export function TopBar({
 }: TopBarProps) {
   const formatNum = (n: number) =>
     n >= 10000 ? `${(n / 1000).toFixed(0)}k` :
-    n >= 1000 ? `${(n / 1000).toFixed(1)}k` :
+    n >= 1000 ? n.toLocaleString() :
     n.toString();
 
   return (
@@ -153,14 +153,19 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: 20,
     paddingLeft: 6,
     paddingRight: 2,
     paddingVertical: 3,
     gap: 3,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    shadowColor: 'rgba(0,0,0,0.8)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   pillEmoji: {
     fontSize: 14,
@@ -172,12 +177,17 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   plusBtn: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 1,
+    shadowColor: '#34c94d',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 3,
   },
   plusText: {
     fontFamily: fonts.body,

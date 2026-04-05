@@ -58,13 +58,13 @@ export function HomeScreen() {
             <Text style={styles.statusValue}>{currentTier}/{maxTier}</Text>
           </Pressable>
 
-          <View style={styles.statusPill}>
+          <Pressable onPress={() => navigateTo('Challenges')} style={styles.statusPill}>
             <Text style={styles.statusIcon}>📋</Text>
             <Text style={styles.statusLabel}>Daily Challenges</Text>
             <View style={styles.challengeBadge}>
               <Text style={styles.badgeNum}>{challenges.filter(c => !c.completed).length}</Text>
             </View>
-          </View>
+          </Pressable>
         </View>
 
         {/* ═══ CHARACTER LOBBY ═══ */}

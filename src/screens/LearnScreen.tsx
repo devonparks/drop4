@@ -173,6 +173,9 @@ export function LearnScreen({ navigation }: Props) {
                   <Text style={[styles.diffBadgeText, { color: DIFF_COLORS[lesson.difficulty] }]}>
                     {lesson.difficulty === 'beginner' ? '⭐' : lesson.difficulty === 'intermediate' ? '⭐⭐' : '⭐⭐⭐'}
                   </Text>
+                  <Text style={[styles.diffBadgeLabel, { color: DIFF_COLORS[lesson.difficulty] }]}>
+                    {lesson.difficulty.toUpperCase()}
+                  </Text>
                 </View>
               </LinearGradient>
             </Pressable>
@@ -202,8 +205,9 @@ const styles = StyleSheet.create({
   cardIcon: { fontSize: 28 },
   cardTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
   cardDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
-  diffBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  diffBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center' as const },
   diffBadgeText: { fontSize: 12 },
+  diffBadgeLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, letterSpacing: 0.5, marginTop: 1 },
   // Detail
   lessonDetail: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 40, gap: 6 },
   lessonIcon: { fontSize: 48, marginTop: 8 },
