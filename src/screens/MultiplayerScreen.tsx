@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
-import { useRankedStore } from '../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
 import { useOnlineStore } from '../stores/onlineStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
@@ -39,7 +39,9 @@ function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
     clearMatch,
   } = useOnlineStore();
 
-  const ranked = useRankedStore();
+  const rankedElo = useRankedStore(s => s.elo);
+  const rankedTier = useRankedStore(s => s.tier);
+  const rankedTierInfo = useMemo(() => RANKED_TIERS.find(t => t.id === rankedTier) || RANKED_TIERS[0], [rankedTier]);
 
   // Tick the search timer every second
   useEffect(() => {
@@ -98,9 +100,9 @@ function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
           {queueMode === 'ranked' && (
             <View style={overlayStyles.eloRow}>
               <Text style={overlayStyles.eloLabel}>Your Rating</Text>
-              <Text style={overlayStyles.eloValue}>{ranked.elo}</Text>
+              <Text style={overlayStyles.eloValue}>{rankedElo}</Text>
               <Text style={overlayStyles.tierText}>
-                {ranked.getTier().icon} {ranked.getTier().name}
+                {rankedTierInfo.icon} {rankedTierInfo.name}
               </Text>
             </View>
           )}
@@ -137,7 +139,9 @@ function AnimatedDotsText() {
 
 export function MultiplayerScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
-  const ranked = useRankedStore();
+  const elo = useRankedStore(s => s.elo);
+  const tier = useRankedStore(s => s.tier);
+  const tierInfo = useMemo(() => RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0], [tier]);
   const { startSearching, isSearching } = useOnlineStore();
 
   return (
@@ -167,7 +171,7 @@ export function MultiplayerScreen({ navigation }: Props) {
             {/* Tier 2: Ranked — local or online */}
             <GlossyButton
               label="RANKED"
-              subtitle="Chess clock \u2022 MMR rating"
+              subtitle="Chess clock • MMR rating"
               variant="purple"
               icon="🏆"
               onPress={() => {
@@ -181,7 +185,7 @@ export function MultiplayerScreen({ navigation }: Props) {
             {/* Tier 3: Gold Court (Wager) */}
             <GlossyButton
               label="GOLD COURT"
-              subtitle="Wager coins \u2022 Spectators"
+              subtitle="Wager coins • Spectators"
               variant="gold"
               icon="👑"
               onPress={() => navigation.navigate('Stage')}
@@ -203,7 +207,7 @@ export function MultiplayerScreen({ navigation }: Props) {
             {/* Online Ranked — joins ranked matchmaking queue */}
             <GlossyButton
               label="RANKED ONLINE"
-              subtitle={`MMR ${ranked.elo} \u2022 ${ranked.getTier().icon} ${ranked.getTier().name}`}
+              subtitle={`MMR ${elo} • ${tierInfo.icon} ${tierInfo.name}`}
               variant="purple"
               icon="🏆"
               onPress={() => startSearching('ranked')}
