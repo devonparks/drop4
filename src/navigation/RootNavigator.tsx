@@ -20,6 +20,7 @@ import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { SpectatorScreen } from '../screens/SpectatorScreen';
 import { FriendsScreen } from '../screens/FriendsScreen';
 import { StatsScreen } from '../screens/StatsScreen';
+import { MatchupScreen } from '../screens/MatchupScreen';
 
 export type WagerCourtParams = {
   name: string;
@@ -32,6 +33,22 @@ export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces';
   amount?: number;
   id?: string;
+};
+
+export type MatchupParams = {
+  mode: 'casual' | 'ranked' | 'career' | 'wager' | 'local';
+  difficulty?: string;
+  opponentName?: string;
+  opponentLevel?: number;
+  opponentTitle?: string;
+  courtName?: string;
+  connectCount?: number;
+  boardSize?: string;
+  timerSeconds?: number;
+  wagerAmount?: number;
+  careerLevelId?: number;
+  careerLevelReward?: CareerRewardParams;
+  careerChapter?: number;
 };
 
 export type GameParams = {
@@ -51,6 +68,7 @@ export type GameParams = {
 export type RootStackParamList = {
   MainTabs: undefined;
   Play: { rankedMode?: boolean; rankedClockSeconds?: number } | undefined;
+  Matchup: MatchupParams;
   Game: GameParams | undefined;
   LocalPlay: undefined;
   CustomGame: undefined;
@@ -85,6 +103,11 @@ export function RootNavigator() {
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Play" component={PlayScreen} />
+      <Stack.Screen
+        name="Matchup"
+        component={MatchupScreen}
+        options={{ animation: 'fade', gestureEnabled: false }}
+      />
       <Stack.Screen name="LocalPlay" component={LocalPlayScreen} />
       <Stack.Screen name="CustomGame" component={CustomGameScreen} />
       <Stack.Screen name="Career" component={CareerScreen} />

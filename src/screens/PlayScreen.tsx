@@ -41,17 +41,19 @@ export function PlayScreen({ navigation }: Props) {
   const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
 
   const startGame = (difficulty: Difficulty) => {
-    // Ranked mode uses chess clock timer (180 seconds per player)
+    // Initialize the game state
     if (mode === 'ranked') {
-      newGame(difficulty, true, { timerSeconds: 15 }); // 15s per move for now
-      navigation.navigate('Game', {
-        rankedMode: true,
-        rankedClockSeconds: route.params?.rankedClockSeconds || 180,
-      });
+      newGame(difficulty, true, { timerSeconds: 15 });
     } else {
       newGame(difficulty, true);
-      navigation.navigate('Game');
     }
+
+    // Navigate to Matchup screen first (VS reveal), which then navigates to Game
+    navigation.navigate('Matchup', {
+      mode: mode,
+      difficulty,
+      timerSeconds: mode === 'ranked' ? 15 : undefined,
+    });
   };
 
   return (

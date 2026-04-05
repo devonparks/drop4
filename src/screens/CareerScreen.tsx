@@ -93,9 +93,23 @@ export function CareerScreen({ navigation }: Props) {
 
     newGame(careerLevel.difficulty, true, settings);
 
-    navigation.navigate('Game', {
+    // Navigate to Matchup VS screen first, which then navigates to Game
+    const rows = careerLevel.settings.rows || 6;
+    const cols = careerLevel.settings.cols || 7;
+    const connect = careerLevel.settings.connectCount || 4;
+
+    navigation.navigate('Matchup', {
+      mode: 'career',
+      difficulty: careerLevel.difficulty,
+      opponentName: careerLevel.opponent,
+      opponentTitle: careerLevel.opponentPersonality || careerLevel.difficulty,
+      courtName: careerLevel.isBoss ? 'CAREER: BOSS BATTLE' : `CAREER: ${careerLevel.name.toUpperCase()}`,
+      connectCount: connect,
+      boardSize: `${cols}x${rows}`,
+      timerSeconds: careerLevel.settings.timerSeconds,
       careerLevelId: careerLevel.id,
-      careerLevelReward: careerLevel.reward,
+      careerLevelReward: careerLevel.reward as any,
+      careerChapter: careerLevel.chapter,
     });
   };
 
