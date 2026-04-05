@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -13,6 +13,59 @@ import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+
+// Floating sparkle dot with looping opacity + vertical drift
+function SparkleParticle({ color, size, left, bottom, delay }: {
+  color: string; size: number; left: number; bottom: number; delay: number;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fadeLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(opacity, { toValue: 0.8, duration: 1200, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ])
+    );
+    const driftLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(translateY, { toValue: -18, duration: 2400, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ])
+    );
+    fadeLoop.start();
+    driftLoop.start();
+    return () => { fadeLoop.stop(); driftLoop.stop(); };
+  }, []);
+
+  return (
+    <Animated.View style={{
+      position: 'absolute',
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      left,
+      bottom,
+      opacity,
+      transform: [{ translateY }],
+    }} />
+  );
+}
+
+function StageSparkles() {
+  return (
+    <>
+      <SparkleParticle color="rgba(255,210,80,0.9)" size={4} left={30} bottom={90} delay={0} />
+      <SparkleParticle color="rgba(100,180,255,0.9)" size={3} left={200} bottom={110} delay={600} />
+      <SparkleParticle color="rgba(255,210,80,0.9)" size={3.5} left={60} bottom={150} delay={1200} />
+      <SparkleParticle color="rgba(100,180,255,0.9)" size={4} left={180} bottom={160} delay={800} />
+    </>
+  );
+}
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -82,6 +135,9 @@ export function HomeScreen() {
             {/* Glow rings behind character (Fortnite-style platform) */}
             <View style={styles.stageGlowOuter} />
             <View style={styles.stageGlowInner} />
+
+            {/* Floating sparkle particles around stage */}
+            <StageSparkles />
 
             <AnimatedCharacter
               size={240}

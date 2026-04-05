@@ -56,11 +56,16 @@ export function TopBar({
       </View>
 
       {/* Center: Currency displays */}
-      <View style={styles.currencies}>
+      <LinearGradient
+        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0)']}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.currencies}
+      >
         <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} />
         <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} />
         <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
-      </View>
+      </LinearGradient>
 
       {/* Right: Profile avatar */}
       <Pressable
@@ -149,6 +154,9 @@ const styles = StyleSheet.create({
     gap: 5,
     flex: 1,
     justifyContent: 'center',
+    borderRadius: 20,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   pill: {
     flexDirection: 'row',
@@ -168,13 +176,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   pillEmoji: {
-    fontSize: 14,
+    fontSize: 17,
   },
   pillValue: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 13,
     color: '#ffffff',
+    textShadowColor: 'rgba(255,255,255,0.15)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 2,
   },
   plusBtn: {
     width: 24,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, ScrollView, Pressable, StyleSheet } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, Text, Image, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
@@ -39,6 +39,46 @@ interface EmoteBarProps {
   variant?: 'lobby' | 'game';
 }
 
+// Animated game emote button with tap scale feedback
+function GameEmoteButton({ emote, isActive, onPress }: {
+  emote: EmoteConfig;
+  isActive: boolean;
+  onPress: (id: EmoteId) => void;
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePress = useCallback(() => {
+    haptics.tap();
+    playSound('click');
+    onPress(emote.id);
+    // Brief scale-up feedback
+    Animated.sequence([
+      Animated.spring(scaleAnim, { toValue: 1.2, useNativeDriver: true, speed: 50, bounciness: 12 }),
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
+    ]).start();
+  }, [emote.id, onPress, scaleAnim]);
+
+  return (
+    <Pressable onPress={handlePress}>
+      <Animated.View style={[
+        styles.gameFaceBtn,
+        isActive && styles.gameFaceBtnActive,
+        { transform: [{ scale: scaleAnim }] },
+      ]}>
+        {emote.faceKey && FACE_IMAGES[emote.faceKey] ? (
+          <Image
+            source={FACE_IMAGES[emote.faceKey]}
+            style={styles.faceImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={styles.gameFaceEmoji}>{emote.icon}</Text>
+        )}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: EmoteBarProps) {
   const isGame = variant === 'game';
 
@@ -47,32 +87,17 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
     const gameEmotes = EMOTES.slice(0, 4);
 
     return (
-      <View style={styles.gameContainer}>
-        {gameEmotes.map(emote => {
-          const isActive = activeEmote === emote.id;
-
-          return (
-            <Pressable
+      <View style={styles.gameContainerOuter}>
+        <View style={styles.gameContainer}>
+          {gameEmotes.map(emote => (
+            <GameEmoteButton
               key={emote.id}
-              onPress={() => {
-                haptics.tap();
-                playSound('click');
-                onEmotePress(emote.id);
-              }}
-              style={[styles.gameFaceBtn, isActive && styles.gameFaceBtnActive]}
-            >
-              {emote.faceKey && FACE_IMAGES[emote.faceKey] ? (
-                <Image
-                  source={FACE_IMAGES[emote.faceKey]}
-                  style={styles.faceImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={styles.gameFaceEmoji}>{emote.icon}</Text>
-              )}
-            </Pressable>
-          );
-        })}
+              emote={emote}
+              isActive={activeEmote === emote.id}
+              onPress={onEmotePress}
+            />
+          ))}
+        </View>
       </View>
     );
   }
@@ -123,26 +148,35 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
 
 const styles = StyleSheet.create({
   // Game variant — Clash Royale style face circles
-  gameContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'center',
+  gameContainerOuter: {
+    alignItems: 'center',
     paddingVertical: 8,
   },
+  gameContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
   gameFaceBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     overflow: 'hidden',
     borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.2)',
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
     elevation: 4,
   },
   gameFaceBtnActive: {

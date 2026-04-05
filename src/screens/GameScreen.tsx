@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -746,167 +746,286 @@ export function GameScreen({ navigation }: Props) {
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
 
-        {/* ========== GAME OVER OVERLAY (Modal so it covers PhoneFrame) ========== */}
+        {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
-            <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.gameOverCard}>
-              {/* Result header */}
-              <LinearGradient
-                colors={
-                  status === 'won' && winner === 1
-                    ? ['#27ae3d', '#1e8a30']
-                    : status === 'won' && winner === 2
-                    ? ['#e74c3c', '#c0392b']
-                    : ['#3498db', '#2980b9']
-                }
-                style={styles.resultHeader}
-              >
-                <Text style={styles.resultEmoji}>
-                  {status === 'won' ? (winner === 1 ? '🎉' : '😞') : '🤝'}
-                </Text>
-                <Text style={styles.resultTitle}>
-                  {status === 'won' ? (winner === 1 ? 'VICTORY!' : 'DEFEAT') : 'DRAW'}
-                </Text>
-              </LinearGradient>
+            <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.goCard}>
+             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
 
-              {/* Stats */}
-              <View style={styles.resultBody}>
-                {/* Coin reward */}
-                {status === 'won' && winner === 1 && (
-                  <View style={styles.rewardRow}>
-                    <Text style={styles.rewardLabel}>Coins earned</Text>
-                    <Text style={styles.rewardValue}>+{COIN_REWARDS[difficulty]} 🪙</Text>
+              {/* Top: Mode label */}
+              <View style={styles.goModeRow}>
+                <Text style={styles.goModeText}>
+                  {isRankedMode ? 'RANKED' : wagerCourt ? wagerCourt.name?.toUpperCase() : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
+                </Text>
+              </View>
+
+              {/* ---- Characters side by side with WINNER banner ---- */}
+              <View style={styles.goCharRow}>
+                {/* Player 1 side */}
+                <View style={styles.goCharSide}>
+                  {status === 'won' && winner === 1 && (
+                    <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
+                  )}
+                  <View style={styles.goAvatarWrap}>
+                    <CharacterAvatar size="large" variant="player" />
+                    {/* Level badge */}
+                    <View style={styles.goLevelBadge}>
+                      <Text style={styles.goLevelText}>{useShopStore.getState().level}</Text>
+                    </View>
                   </View>
-                )}
-                {status === 'won' && winner === 1 && useGameStore.getState().winStreak > 1 && (
-                  <View style={[styles.rewardRow, { borderColor: 'rgba(255,140,0,0.3)', backgroundColor: 'rgba(255,140,0,0.08)' }]}>
-                    <Text style={styles.rewardLabel}>🔥 Streak Bonus (x{useGameStore.getState().winStreak})</Text>
-                    <Text style={[styles.rewardValue, { color: colors.orange }]}>
-                      +{Math.min(useGameStore.getState().winStreak * 10, 50)} 🪙
+                  <Text style={styles.goCharName} numberOfLines={1}>{p1Name}</Text>
+                  {status === 'won' && winner === 1 && (
+                    <View style={styles.goWinnerBanner}>
+                      <Text style={styles.goWinnerText}>WINNER</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Center score */}
+                <View style={styles.goCenterScore}>
+                  <Text style={styles.goScoreBig}>{scores.player1}</Text>
+                  <View style={styles.goScoreDivider}>
+                    <View style={styles.goScoreLine} />
+                    <Text style={styles.goScoreVs}>VS</Text>
+                    <View style={styles.goScoreLine} />
+                  </View>
+                  <Text style={styles.goScoreBig}>{scores.player2}</Text>
+                  {status === 'draw' && (
+                    <View style={styles.goDrawBadge}>
+                      <Text style={styles.goDrawText}>DRAW</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Player 2 / Opponent side */}
+                <View style={styles.goCharSide}>
+                  {status === 'won' && winner === 2 && (
+                    <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
+                  )}
+                  <View style={styles.goAvatarWrap}>
+                    <CharacterAvatar
+                      size="large"
+                      variant={isVsAi ? `bot_${difficulty}` as any : 'player'}
+                    />
+                    <View style={[styles.goLevelBadge, { backgroundColor: colors.surfaceLight }]}>
+                      <Text style={styles.goLevelText}>
+                        {isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.goCharName} numberOfLines={1}>{p2Name}</Text>
+                  {status === 'won' && winner === 2 && (
+                    <View style={styles.goWinnerBanner}>
+                      <Text style={styles.goWinnerText}>WINNER</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* ---- Stats comparison bars ---- */}
+              <View style={styles.goStatsBlock}>
+                {/* Moves Used */}
+                <View style={styles.goStatItem}>
+                  <View style={styles.goStatHeader}>
+                    <Text style={styles.goStatVal}>{Math.ceil(moveCount / 2)}</Text>
+                    <Text style={styles.goStatLabel}>MOVES</Text>
+                    <Text style={styles.goStatVal}>{Math.floor(moveCount / 2)}</Text>
+                  </View>
+                  <View style={styles.goBarRow}>
+                    <View style={styles.goBarTrack}>
+                      <View style={[styles.goBarFillLeft, { width: `${Math.min((Math.ceil(moveCount / 2) / Math.max(moveCount, 1)) * 100, 100)}%` }]} />
+                    </View>
+                    <View style={styles.goBarTrack}>
+                      <View style={[styles.goBarFillRight, { width: `${Math.min((Math.floor(moveCount / 2) / Math.max(moveCount, 1)) * 100, 100)}%` }]} />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Win Streak */}
+                <View style={styles.goStatItem}>
+                  <View style={styles.goStatHeader}>
+                    <Text style={[styles.goStatVal, useGameStore.getState().winStreak > 0 && { color: colors.orange }]}>
+                      {useGameStore.getState().winStreak > 0 ? `${useGameStore.getState().winStreak}` : '0'}
                     </Text>
+                    <Text style={styles.goStatLabel}>WIN STREAK</Text>
+                    <Text style={styles.goStatVal}>-</Text>
+                  </View>
+                  <View style={styles.goBarRow}>
+                    <View style={styles.goBarTrack}>
+                      <View style={[styles.goBarFillLeft, { width: `${Math.min(useGameStore.getState().winStreak * 20, 100)}%`, backgroundColor: colors.orange }]} />
+                    </View>
+                    <View style={styles.goBarTrack}>
+                      <View style={[styles.goBarFillRight, { width: '0%' }]} />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Best Streak */}
+                <View style={styles.goStatItem}>
+                  <View style={styles.goStatHeader}>
+                    <Text style={styles.goStatVal}>{useGameStore.getState().bestStreak}</Text>
+                    <Text style={styles.goStatLabel}>BEST STREAK</Text>
+                    <Text style={styles.goStatVal}>-</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* ---- Rewards section ---- */}
+              <View style={styles.goRewardsBlock}>
+                {/* Coins earned */}
+                {status === 'won' && winner === 1 && (
+                  <View style={styles.goRewardChip}>
+                    <Text style={styles.goRewardIcon}>🪙</Text>
+                    <Text style={styles.goRewardAmount}>+{COIN_REWARDS[difficulty]}</Text>
+                    <Text style={styles.goRewardDesc}>Coins</Text>
                   </View>
                 )}
-                {/* Wager note — shown if this was a wager match */}
+                {status === 'draw' && (
+                  <View style={styles.goRewardChip}>
+                    <Text style={styles.goRewardIcon}>🪙</Text>
+                    <Text style={styles.goRewardAmount}>+10</Text>
+                    <Text style={styles.goRewardDesc}>Draw Bonus</Text>
+                  </View>
+                )}
+                {/* Streak bonus */}
+                {status === 'won' && winner === 1 && useGameStore.getState().winStreak > 1 && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(255,140,0,0.3)' }]}>
+                    <Text style={styles.goRewardIcon}>🔥</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.orange }]}>+{Math.min(useGameStore.getState().winStreak * 10, 50)}</Text>
+                    <Text style={styles.goRewardDesc}>Streak</Text>
+                  </View>
+                )}
+                {/* XP earned */}
+                {status === 'won' && winner === 1 && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.3)' }]}>
+                    <Text style={styles.goRewardIcon}>⭐</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.purple }]}>+{COIN_REWARDS[difficulty]}</Text>
+                    <Text style={styles.goRewardDesc}>XP</Text>
+                  </View>
+                )}
+                {/* Season XP */}
+                {status === 'won' && winner === 1 && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.3)' }]}>
+                    <Text style={styles.goRewardIcon}>🏆</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.teal }]}>+{COIN_REWARDS[difficulty]}</Text>
+                    <Text style={styles.goRewardDesc}>Season</Text>
+                  </View>
+                )}
                 {/* Career stars */}
                 {status === 'won' && winner === 1 && wasCareerLevel && (
-                  <View style={[styles.rewardRow, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.08)' }]}>
-                    <Text style={styles.rewardLabel}>⭐ Career Stars</Text>
-                    <Text style={[styles.rewardValue, { color: '#9b59b6' }]}>
-                      {moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.3)' }]}>
+                    <Text style={styles.goRewardIcon}>⭐</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.gold }]}>
+                      {moveCount < 15 ? '3' : moveCount < 25 ? '2' : '1'}
                     </Text>
+                    <Text style={styles.goRewardDesc}>Stars</Text>
                   </View>
                 )}
-                {/* ELO change for ranked/wager matches */}
-                {(isRankedMode || wagerCourt) && (
+              </View>
+
+              {/* Wager display */}
+              {wagerCourt && wagerCourt.winnerGets > 0 && status === 'won' && winner === 1 && (
+                <View style={styles.goWagerRow}>
+                  <Text style={styles.goWagerIcon}>🪙🪙🪙</Text>
+                  <Text style={styles.goWagerText}>+{wagerCourt.winnerGets} Wager Won!</Text>
+                </View>
+              )}
+
+              {/* ELO change for ranked/wager matches */}
+              {(isRankedMode || wagerCourt) && (
+                <View style={styles.goEloWrap}>
                   <EloChangeAnimation
                     eloBefore={preGameEloRef.current}
                     eloAfter={useRankedStore.getState().elo}
                   />
-                )}
-                {status === 'draw' && (
-                  <View style={styles.rewardRow}>
-                    <Text style={styles.rewardLabel}>Draw bonus</Text>
-                    <Text style={styles.rewardValue}>+10 🪙</Text>
-                  </View>
-                )}
+                </View>
+              )}
 
-                {/* Detailed stats */}
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Moves</Text>
-                  <Text style={styles.statValue}>{moveCount}</Text>
-                </View>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Series</Text>
-                  <Text style={styles.statValue}>{scores.player1} - {scores.player2}</Text>
-                </View>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Win Streak</Text>
-                  <Text style={[styles.statValue, useGameStore.getState().winStreak > 0 && { color: colors.orange }]}>
-                    {useGameStore.getState().winStreak > 0 ? `🔥 ${useGameStore.getState().winStreak}` : '0'}
-                  </Text>
-                </View>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Best Streak</Text>
-                  <Text style={styles.statValue}>{useGameStore.getState().bestStreak}</Text>
-                </View>
-
-                {/* Tip */}
-                <Text style={styles.tipText}>💡 {getRandomTip()}</Text>
-
-                {/* Buttons */}
-                <View style={styles.resultButtons}>
-                  {isOnlineMatch ? (
-                    <>
-                      {/* Opponent wants a rematch */}
-                      {rematchState === 'opponent-requested' && (
-                        <View style={styles.rematchBanner}>
-                          <Text style={styles.rematchBannerText}>Opponent wants a rematch!</Text>
-                        </View>
-                      )}
-                      {rematchState === 'opponent-requested' ? (
-                        <>
-                          <GlossyButton
-                            label="ACCEPT REMATCH"
-                            variant="green"
-                            onPress={() => {
-                              if (onlineMatchId && myPlayerNum) {
-                                acceptRematch(onlineMatchId, myPlayerNum);
-                                setRematchState('requested');
-                              }
-                            }}
-                          />
-                          <GlossyButton
-                            label="DECLINE"
-                            variant="red"
-                            onPress={handleBack}
-                            style={{ marginTop: 10 }}
-                          />
-                        </>
-                      ) : rematchState === 'requested' ? (
-                        <GlossyButton
-                          label="WAITING FOR OPPONENT..."
-                          variant="navy"
-                          onPress={() => {}}
-                          disabled
-                        />
-                      ) : (
-                        <>
-                          <GlossyButton
-                            label="REMATCH"
-                            variant="orange"
-                            onPress={() => {
-                              if (onlineMatchId && myPlayerNum) {
-                                requestRematch(onlineMatchId, myPlayerNum);
-                                setRematchState('requested');
-                              }
-                            }}
-                          />
-                          <GlossyButton
-                            label="LEAVE"
-                            variant="navy"
-                            onPress={handleBack}
-                            style={{ marginTop: 10 }}
-                          />
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <GlossyButton
-                        label="REMATCH"
-                        variant="orange"
-                        onPress={handleRematch}
-                      />
-                      <GlossyButton
-                        label="HOME"
-                        variant="navy"
-                        onPress={handleBack}
-                        style={{ marginTop: 10 }}
-                      />
-                    </>
-                  )}
-                </View>
+              {/* Chat bubble — "Good game!" feel */}
+              <View style={styles.goChatBubble}>
+                <Text style={styles.goChatText}>
+                  {status === 'won' && winner === 1 ? 'Good game!' : status === 'won' && winner === 2 ? 'Better luck next time!' : 'Well played!'}
+                </Text>
               </View>
+
+              {/* ---- Action Buttons ---- */}
+              <View style={styles.goButtons}>
+                {isOnlineMatch ? (
+                  <>
+                    {rematchState === 'opponent-requested' && (
+                      <View style={styles.goRematchBanner}>
+                        <Text style={styles.goRematchBannerText}>Opponent wants a rematch!</Text>
+                      </View>
+                    )}
+                    {rematchState === 'opponent-requested' ? (
+                      <>
+                        <GlossyButton
+                          label="ACCEPT REMATCH"
+                          icon="🤝"
+                          variant="green"
+                          onPress={() => {
+                            if (onlineMatchId && myPlayerNum) {
+                              acceptRematch(onlineMatchId, myPlayerNum);
+                              setRematchState('requested');
+                            }
+                          }}
+                        />
+                        <GlossyButton
+                          label="DECLINE"
+                          variant="red"
+                          onPress={handleBack}
+                          style={{ marginTop: 8 }}
+                        />
+                      </>
+                    ) : rematchState === 'requested' ? (
+                      <GlossyButton
+                        label="WAITING FOR OPPONENT..."
+                        variant="navy"
+                        onPress={() => {}}
+                        disabled
+                      />
+                    ) : (
+                      <>
+                        <GlossyButton
+                          label="REMATCH"
+                          icon="🔄"
+                          variant="orange"
+                          onPress={() => {
+                            if (onlineMatchId && myPlayerNum) {
+                              requestRematch(onlineMatchId, myPlayerNum);
+                              setRematchState('requested');
+                            }
+                          }}
+                        />
+                        <GlossyButton
+                          label="LEAVE"
+                          icon="🚪"
+                          variant="navy"
+                          onPress={handleBack}
+                          style={{ marginTop: 8 }}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <GlossyButton
+                      label="REMATCH"
+                      icon="🔄"
+                      variant="orange"
+                      onPress={handleRematch}
+                    />
+                    <GlossyButton
+                      label="HOME"
+                      icon="🏠"
+                      variant="navy"
+                      onPress={handleBack}
+                      style={{ marginTop: 8 }}
+                    />
+                  </>
+                )}
+              </View>
+             </ScrollView>
             </Animated.View>
           </Animated.View>
         </Modal>
@@ -1175,115 +1294,322 @@ const styles = StyleSheet.create({
   emoteText: {
     fontSize: 22,
   },
-  // Game Over — inside Modal so it always covers the full screen
+  // ======== Basketball Stars-style Game Over ========
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  gameOverCard: {
-    width: '85%',
-    maxWidth: 340,
-    borderRadius: 24,
+  goCard: {
+    width: '92%',
+    maxWidth: 380,
+    maxHeight: '88%',
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    backgroundColor: colors.bgDark,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,215,0,0.15)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 24,
   },
-  resultHeader: {
-    paddingVertical: 24,
+  goModeRow: {
+    paddingVertical: 8,
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  resultEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  resultTitle: {
-    fontFamily: fonts.heading,
+  goModeText: {
+    fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 28,
-    color: '#ffffff',
+    fontSize: 10,
+    color: colors.textMuted,
     letterSpacing: 2,
   },
-  resultBody: {
-    padding: 20,
-  },
-  rewardRow: {
+  // Character row
+  goCharRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,209,102,0.1)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,209,102,0.2)',
-  },
-  rewardLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  rewardValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: colors.coinGold,
-  },
-  statRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  statLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 14,
-    color: colors.textSecondary,
+  goCharSide: {
+    flex: 1,
+    alignItems: 'center',
+    position: 'relative',
   },
-  statValue: {
+  goWinnerGlow: {
+    position: 'absolute',
+    top: -8,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 16,
+  },
+  goAvatarWrap: {
+    position: 'relative',
+    marginBottom: 4,
+  },
+  goLevelBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -6,
+    backgroundColor: colors.orange,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.bgDark,
+  },
+  goLevelText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 14,
+    fontSize: 10,
     color: '#ffffff',
   },
-  tipText: {
+  goCharName: {
     fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textMuted,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: '#ffffff',
+    marginTop: 4,
+    maxWidth: 90,
     textAlign: 'center',
-    lineHeight: 16,
-    marginVertical: 8,
-    paddingHorizontal: 8,
-    fontStyle: 'italic',
   },
-  resultButtons: {
-    marginTop: 16,
-  },
-  rematchBanner: {
-    backgroundColor: 'rgba(255,140,0,0.15)',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 12,
+  goWinnerBanner: {
+    marginTop: 6,
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-    alignItems: 'center',
+    borderColor: 'rgba(255,215,0,0.35)',
   },
-  rematchBannerText: {
+  goWinnerText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.coinGold,
+    letterSpacing: 2,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  // Center score
+  goCenterScore: {
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    minWidth: 80,
+  },
+  goScoreBig: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 36,
+    color: '#ffffff',
+    lineHeight: 40,
+  },
+  goScoreDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginVertical: 2,
+  },
+  goScoreLine: {
+    width: 14,
+    height: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  goScoreVs: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1,
+  },
+  goDrawBadge: {
+    marginTop: 4,
+    backgroundColor: 'rgba(52,152,219,0.2)',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(52,152,219,0.4)',
+  },
+  goDrawText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: '#3498db',
+    letterSpacing: 1.5,
+  },
+  // Stats comparison
+  goStatsBlock: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  goStatItem: {
+    marginBottom: 8,
+  },
+  goStatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  goStatLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    flex: 1,
+  },
+  goStatVal: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#ffffff',
+    width: 36,
+    textAlign: 'center',
+  },
+  goBarRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  goBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  goBarFillLeft: {
+    height: '100%',
+    backgroundColor: colors.green,
+    borderRadius: 3,
+    alignSelf: 'flex-end',
+  },
+  goBarFillRight: {
+    height: '100%',
+    backgroundColor: '#3498db',
+    borderRadius: 3,
+  },
+  // Rewards chips
+  goRewardsBlock: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  goRewardChip: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,215,0,0.06)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+    minWidth: 64,
+  },
+  goRewardIcon: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  goRewardAmount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 15,
+    color: colors.coinGold,
+  },
+  goRewardDesc: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  // Wager display
+  goWagerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.2)',
+  },
+  goWagerIcon: {
+    fontSize: 14,
+  },
+  goWagerText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 14,
+    color: colors.coinGold,
+  },
+  goEloWrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  // Chat bubble
+  goChatBubble: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  goChatText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  // Buttons
+  goButtons: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 4,
+  },
+  goRematchBanner: {
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.25)',
+    alignItems: 'center',
+  },
+  goRematchBannerText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
     color: colors.orange,
     textAlign: 'center',
   },

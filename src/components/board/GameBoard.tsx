@@ -17,7 +17,7 @@ import { colors } from '../../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 24, 380);
-const CELL_GAP = 4;
+const CELL_GAP = 3;
 const BOARD_PADDING = 10;
 
 // Default sizes for standard 7-col board (used for exports)
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     width: BOARD_WIDTH,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#3668d4', // overridden by theme inline
+    borderColor: 'rgba(100,180,255,0.15)', // subtle inner glow border
     padding: BOARD_PADDING,
     position: 'relative',
     overflow: 'hidden',
@@ -395,5 +395,10 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     marginTop: -2,
+    shadowColor: 'rgba(80,140,255,0.4)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });
