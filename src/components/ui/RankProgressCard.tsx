@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRankedStore, RANKED_TIERS, RankedTierInfo } from '../../stores/rankedStore';
@@ -12,8 +12,17 @@ interface RankProgressCardProps {
 
 export function RankProgressCard({ compact = false }: RankProgressCardProps) {
   const { elo, tier, rankedWins, rankedLosses, rankedGames, seasonHighElo, currentSeason } = useRankedStore();
-  const progress = useRankedStore(s => s.getProgress());
-  const tierInfo = useRankedStore(s => s.getTier());
+  const tierInfo = useMemo(() => {
+    return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+  }, [tier]);
+  const progress = useMemo(() => {
+    const currentTierInfo = RANKED_TIERS.find(t => t.id === tier)!;
+    const currentTierIdx = RANKED_TIERS.indexOf(currentTierInfo);
+    const nextTier = RANKED_TIERS[currentTierIdx + 1];
+    if (!nextTier) return 100;
+    const range = nextTier.minElo - currentTierInfo.minElo;
+    return Math.min(100, Math.round(((elo - currentTierInfo.minElo) / range) * 100));
+  }, [elo, tier]);
 
   // Find next tier
   const currentIdx = RANKED_TIERS.findIndex(t => t.id === tier);

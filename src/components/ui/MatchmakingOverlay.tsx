@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
@@ -22,7 +22,10 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
   const [searching, setSearching] = useState(true);
   const [dots, setDots] = useState('');
   const playerElo = useRankedStore(s => s.elo);
-  const playerTier = useRankedStore(s => s.getTier());
+  const tier = useRankedStore(s => s.tier);
+  const playerTier = useMemo(() => {
+    return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+  }, [tier]);
 
   // Simulate search animation
   useEffect(() => {

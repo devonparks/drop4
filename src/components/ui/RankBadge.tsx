@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { useRankedStore, RankedTierInfo } from '../../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, RankedTierInfo } from '../../stores/rankedStore';
 import { fonts, weight } from '../../theme/typography';
 import { colors } from '../../theme/colors';
 
@@ -33,8 +33,18 @@ export function RankBadge({
   style,
 }: RankBadgeProps) {
   const storeElo = useRankedStore(s => s.elo);
-  const storeTierInfo = useRankedStore(s => s.getTier());
-  const progress = useRankedStore(s => s.getProgress());
+  const storeTier = useRankedStore(s => s.tier);
+  const storeTierInfo = useMemo(() => {
+    return RANKED_TIERS.find(t => t.id === storeTier) || RANKED_TIERS[0];
+  }, [storeTier]);
+  const progress = useMemo(() => {
+    const currentTierInfo = RANKED_TIERS.find(t => t.id === storeTier)!;
+    const currentTierIdx = RANKED_TIERS.indexOf(currentTierInfo);
+    const nextTier = RANKED_TIERS[currentTierIdx + 1];
+    if (!nextTier) return 100;
+    const range = nextTier.minElo - currentTierInfo.minElo;
+    return Math.min(100, Math.round(((storeElo - currentTierInfo.minElo) / range) * 100));
+  }, [storeElo, storeTier]);
 
   const tierInfo = tierOverride || storeTierInfo;
   const elo = eloOverride ?? storeElo;

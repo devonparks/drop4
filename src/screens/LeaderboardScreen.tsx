@@ -124,7 +124,16 @@ const RANK_EMOJIS: Record<number, string> = {
 export function LeaderboardScreen() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('global');
   const { level } = useShopStore();
-  const stats = useMatchHistoryStore(s => s.getStats());
+  const matches = useMatchHistoryStore(s => s.matches);
+  const stats = useMemo(() => {
+    const wins = matches.filter(m => m.result === 'win').length;
+    const losses = matches.filter(m => m.result === 'loss').length;
+    const draws = matches.filter(m => m.result === 'draw').length;
+    const totalGames = matches.length;
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+    const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
+    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
+  }, [matches]);
 
   const globalData = useMemo(() => generateGlobalLeaderboard(stats.wins, level), [stats.wins, level]);
   const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level), [stats.wins, level]);

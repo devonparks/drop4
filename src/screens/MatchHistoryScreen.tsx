@@ -109,7 +109,15 @@ export function MatchHistoryScreen() {
   const navigation = useNavigation();
   const { coins, gems, level } = useShopStore();
   const allMatches = useMatchHistoryStore(s => s.matches);
-  const stats = useMatchHistoryStore(s => s.getStats());
+  const stats = useMemo(() => {
+    const wins = allMatches.filter(m => m.result === 'win').length;
+    const losses = allMatches.filter(m => m.result === 'loss').length;
+    const draws = allMatches.filter(m => m.result === 'draw').length;
+    const totalGames = allMatches.length;
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+    const totalCoinsEarned = allMatches.reduce((sum, m) => sum + m.coinsEarned, 0);
+    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
+  }, [allMatches]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [sort, setSort] = useState<SortType>('newest');
   const [page, setPage] = useState(1);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,7 +44,8 @@ export function ProfileScreen() {
   const { level, xp, coins, gems, equipped } = useShopStore();
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const { scores, winStreak, bestStreak } = useGameStore();
-  const recentMatches = useMatchHistoryStore(s => s.getRecentMatches(5));
+  const allMatches = useMatchHistoryStore(s => s.matches);
+  const recentMatches = useMemo(() => allMatches.slice(0, 5), [allMatches]);
   const achievements = useAchievementStore(s => s.achievements);
   const ranked = useRankedStore();
 

@@ -9,16 +9,16 @@ import { fonts, weight } from '../../theme/typography';
 
 export function WelcomeOverlay() {
   const [visible, setVisible] = useState(false);
-  const stats = useMatchHistoryStore(s => s.getStats());
+  const totalGames = useMatchHistoryStore(s => s.matches.length);
 
   useEffect(() => {
-    if (stats.totalGames === 0) {
+    if (totalGames === 0) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [totalGames]);
 
-  if (!visible || stats.totalGames > 0) return null;
+  if (!visible || totalGames > 0) return null;
 
   return (
     <Modal transparent visible={visible} animationType="none">

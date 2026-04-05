@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,7 +24,16 @@ export function PlayScreen({ navigation }: Props) {
   const { coins, gems, level } = useShopStore();
   const newGame = useGameStore(s => s.newGame);
   const { bestStreak } = useGameStore();
-  const stats = useMatchHistoryStore(s => s.getStats());
+  const matches = useMatchHistoryStore(s => s.matches);
+  const stats = useMemo(() => {
+    const wins = matches.filter(m => m.result === 'win').length;
+    const losses = matches.filter(m => m.result === 'loss').length;
+    const draws = matches.filter(m => m.result === 'draw').length;
+    const totalGames = matches.length;
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+    const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
+    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
+  }, [matches]);
   // If navigated here from Multiplayer with ranked flags, default to ranked mode
   const incomingRanked = route.params?.rankedMode;
   const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
