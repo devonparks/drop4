@@ -11,6 +11,11 @@ import { IdlePicker } from '../components/ui/IdlePicker';
 import { useShopStore } from '../stores/shopStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useChallengeStore } from '../stores/challengeStore';
+import { useDailySpinStore } from '../stores/dailySpinStore';
+import { useTutorialStore } from '../stores/tutorialStore';
+import { DailySpinWheel } from '../components/ui/DailySpinWheel';
+import { TutorialTooltip } from '../components/ui/TutorialTooltip';
+import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -98,9 +103,22 @@ export function HomeScreen() {
   const seasonName = useSeasonStore(s => s.seasonName);
   const challenges = useChallengeStore(s => s.challenges);
   const equippedIdle = useShopStore(s => s.equippedIdle);
+  const canSpin = useDailySpinStore(s => s.canSpin);
+  const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);
+  const [spinWheelOpen, setSpinWheelOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Show tutorial on first visit
+  const homeTip = getTipById('home_tap_character')!;
+  useEffect(() => {
+    if (!hasSeenTip('home_tap_character')) {
+      const timer = setTimeout(() => setShowTutorial(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // "Tap me!" tooltip — subtle hint that character is tappable
   const [showTapHint, setShowTapHint] = useState(false);
@@ -147,8 +165,10 @@ export function HomeScreen() {
       <View style={styles.container}>
         <TopBar
           coins={coins} gems={gems} level={level}
-          onProfilePress={() => navigateTo('CharacterCreator')}
+          onProfilePress={() => navigation.navigate('MainTabs', { screen: 'Profile' } as any)}
           onSettingsPress={() => navigateTo('Settings')}
+          onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+          onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
         />
 
         {/* ═══ DROP4 LOGO ═══ */}
@@ -224,6 +244,13 @@ export function HomeScreen() {
           <Pressable onPress={() => navigateTo('CharacterCreator')} style={styles.customizeBtn}>
             <Text style={styles.customizeText}>Customize</Text>
           </Pressable>
+          <Pressable
+            onPress={() => { haptics.tap(); setSpinWheelOpen(true); }}
+            style={[styles.freeSpinBtn, !canSpin() && { opacity: 0.5 }]}
+          >
+            <Text style={styles.freeSpinText}>FREE SPIN</Text>
+            {canSpin() && <View style={styles.freeSpinBadge} />}
+          </Pressable>
           <Pressable onPress={() => navigateTo('PartyLobby')} style={styles.friendsBtn}>
             <Text style={styles.friendsBtnText}>Party</Text>
           </Pressable>
@@ -276,6 +303,19 @@ export function HomeScreen() {
         <IdlePicker
           visible={idlePickerOpen}
           onClose={() => setIdlePickerOpen(false)}
+        />
+
+        {/* Daily Spin Wheel */}
+        <DailySpinWheel
+          visible={spinWheelOpen}
+          onClose={() => setSpinWheelOpen(false)}
+        />
+
+        {/* Tutorial tooltip */}
+        <TutorialTooltip
+          tip={homeTip}
+          visible={showTutorial && !hasSeenTip('home_tap_character')}
+          onDismiss={() => setShowTutorial(false)}
         />
       </View>
     </ScreenBackground>
@@ -500,6 +540,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,200,130,0.9)',
     letterSpacing: 0.5,
+  },
+  freeSpinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(241,196,15,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.3)',
+    position: 'relative',
+  },
+  freeSpinText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: 'rgba(241,196,15,0.9)',
+    letterSpacing: 0.5,
+  },
+  freeSpinBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#e74c3c',
+    borderWidth: 1.5,
+    borderColor: '#0a0e27',
   },
   // Menu buttons
   menuButtons: {

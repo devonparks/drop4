@@ -23,6 +23,8 @@ import { useGameStore } from './src/stores/gameStore';
 import { useChallengeStore } from './src/stores/challengeStore';
 import { useSeriesStore } from './src/stores/seriesStore';
 import { useFriendsStore } from './src/stores/friendsStore';
+import { useDailySpinStore } from './src/stores/dailySpinStore';
+import { useTutorialStore } from './src/stores/tutorialStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 // WelcomeOverlay removed — DailyRewardPopup serves as the first-time welcome
@@ -58,6 +60,8 @@ export default function App() {
         await useChallengeStore.getState().loadFromStorage();
         await useSeriesStore.getState().loadFromStorage();
         await useFriendsStore.getState().loadFromStorage();
+        await useDailySpinStore.getState().loadFromStorage();
+        await useTutorialStore.getState().loadFromStorage();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();

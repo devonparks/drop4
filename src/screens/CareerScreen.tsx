@@ -1,13 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeIn, SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
+import { TutorialTooltip } from '../components/ui/TutorialTooltip';
+import { getTipById } from '../data/tutorials';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useTutorialStore } from '../stores/tutorialStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { ALL_CAREER_LEVELS, CHAPTERS, getChallengeTypeLabel, CareerLevel } from '../data/careerLevels';
@@ -158,6 +161,18 @@ export function CareerScreen({ navigation }: Props) {
   const getCompletedCount = useCareerStore(s => s.getCompletedCount);
   const [activeChapter, setActiveChapter] = useState(1);
 
+  // Tutorial
+  const hasSeenCareerTip = useTutorialStore(s => s.hasSeenTip);
+  const careerTip = getTipById('career_stars')!;
+  const [showCareerTutorial, setShowCareerTutorial] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenCareerTip('career_stars')) {
+      const timer = setTimeout(() => setShowCareerTutorial(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const handlePlayLevel = (careerLevel: CareerLevel) => {
     // Pass career level settings to the game
     const settings = {
@@ -218,6 +233,8 @@ export function CareerScreen({ navigation }: Props) {
           level={level}
           showBack
           onBackPress={() => navigation.goBack()}
+          onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+          onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
         />
 
         {/* Header */}
@@ -350,6 +367,13 @@ export function CareerScreen({ navigation }: Props) {
             </Animated.View>
           );
         })()}
+
+        {/* Tutorial tooltip */}
+        <TutorialTooltip
+          tip={careerTip}
+          visible={showCareerTutorial && !hasSeenCareerTip('career_stars')}
+          onDismiss={() => setShowCareerTutorial(false)}
+        />
       </View>
     </ScreenBackground>
   );

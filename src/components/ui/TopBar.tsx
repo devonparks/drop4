@@ -15,6 +15,8 @@ interface TopBarProps {
   onBackPress?: () => void;
   onProfilePress?: () => void;
   onSettingsPress?: () => void;
+  onCoinPress?: () => void;
+  onGemPress?: () => void;
 }
 
 export function TopBar({
@@ -25,6 +27,8 @@ export function TopBar({
   onBackPress,
   onProfilePress,
   onSettingsPress,
+  onCoinPress,
+  onGemPress,
 }: TopBarProps) {
   const elo = useRankedStore(s => s.elo);
   const tier = useRankedStore(s => s.tier);
@@ -68,8 +72,8 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} />
-        <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} />
+        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} />
+        <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} />
         <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
       </LinearGradient>
 
@@ -95,12 +99,14 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, color }: { emoji: string; value: string; color: string }) {
+function CurrencyPill({ emoji, value, color, onPress, onPlusPress }: {
+  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void;
+}) {
   return (
-    <View style={styles.pill}>
+    <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pill}>
       <Text style={styles.pillEmoji}>{emoji}</Text>
       <Text style={styles.pillValue}>{value}</Text>
-      <Pressable onPress={() => haptics.tap()}>
+      <Pressable onPress={() => { haptics.tap(); onPlusPress?.(); }}>
         <LinearGradient
           colors={['#34c94d', '#27ae3d', '#1e8a30']}
           style={styles.plusBtn}
@@ -108,7 +114,7 @@ function CurrencyPill({ emoji, value, color }: { emoji: string; value: string; c
           <Text style={styles.plusText}>+</Text>
         </LinearGradient>
       </Pressable>
-    </View>
+    </Pressable>
   );
 }
 

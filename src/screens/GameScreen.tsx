@@ -42,6 +42,9 @@ import { sendEmote, listenForEmotes } from '../services/emotes';
 // QuickChatBar replaced by EmotePickerModal
 import { ChatBubble } from '../components/effects/ChatBubble';
 import type { QuickChatMessage } from '../data/quickChat';
+import { useTutorialStore } from '../stores/tutorialStore';
+import { TutorialTooltip } from '../components/ui/TutorialTooltip';
+import { getTipById } from '../data/tutorials';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
 type Props = {
@@ -97,6 +100,20 @@ export function GameScreen({ navigation }: Props) {
   // Emote Picker Modal
   const [emotePickerOpen, setEmotePickerOpen] = useState(false);
   const [emotePickerTab, setEmotePickerTab] = useState<'emotes' | 'chat'>('emotes');
+
+  // Tutorial
+  const hasSeenGameTip = useTutorialStore(s => s.hasSeenTip);
+  const gameTip = getTipById('game_hint')!;
+  const [showGameTutorial, setShowGameTutorial] = useState(false);
+  const [coinTooltipVisible, setCoinTooltipVisible] = useState(false);
+
+  // Show tutorial on first game
+  useEffect(() => {
+    if (!hasSeenGameTip('game_hint')) {
+      const timer = setTimeout(() => setShowGameTutorial(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Fortnite-style emote wheel
   const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
@@ -1227,20 +1244,41 @@ export function GameScreen({ navigation }: Props) {
 
               {/* ---- Rewards section ---- */}
               <View style={styles.goRewardsBlock}>
+                {/* Coin tooltip */}
+                {coinTooltipVisible && (
+                  <View style={styles.coinTooltip}>
+                    <Text style={styles.coinTooltipText}>Visit the Shop to spend your coins!</Text>
+                    <View style={styles.coinTooltipArrow} />
+                  </View>
+                )}
                 {/* Coins earned */}
                 {status === 'won' && winner === 1 && (
-                  <View style={styles.goRewardChip}>
+                  <Pressable
+                    style={styles.goRewardChip}
+                    onPress={() => {
+                      haptics.tap();
+                      setCoinTooltipVisible(true);
+                      setTimeout(() => setCoinTooltipVisible(false), 2500);
+                    }}
+                  >
                     <Text style={styles.goRewardIcon}>🪙</Text>
                     <Text style={styles.goRewardAmount}>+{COIN_REWARDS[difficulty]}</Text>
                     <Text style={styles.goRewardDesc}>Coins</Text>
-                  </View>
+                  </Pressable>
                 )}
                 {status === 'draw' && (
-                  <View style={styles.goRewardChip}>
+                  <Pressable
+                    style={styles.goRewardChip}
+                    onPress={() => {
+                      haptics.tap();
+                      setCoinTooltipVisible(true);
+                      setTimeout(() => setCoinTooltipVisible(false), 2500);
+                    }}
+                  >
                     <Text style={styles.goRewardIcon}>🪙</Text>
                     <Text style={styles.goRewardAmount}>+10</Text>
                     <Text style={styles.goRewardDesc}>Draw Bonus</Text>
-                  </View>
+                  </Pressable>
                 )}
                 {/* Streak bonus */}
                 {status === 'won' && winner === 1 && useGameStore.getState().winStreak > 1 && (
@@ -1384,6 +1422,13 @@ export function GameScreen({ navigation }: Props) {
             </Animated.View>
           </Animated.View>
         </Modal>
+
+        {/* Tutorial tooltip */}
+        <TutorialTooltip
+          tip={gameTip}
+          visible={showGameTutorial && !hasSeenGameTip('game_hint')}
+          onDismiss={() => setShowGameTutorial(false)}
+        />
       </View>
     </ScreenBackground>
   );
@@ -1964,6 +2009,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.15)',
     minWidth: 64,
+  },
+  coinTooltip: {
+    position: 'absolute',
+    top: -32,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(10,14,39,0.95)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+    zIndex: 10,
+  },
+  coinTooltipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.orange,
+  },
+  coinTooltipArrow: {
+    position: 'absolute',
+    bottom: -5,
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 5,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: 'rgba(255,140,0,0.3)',
   },
   goRewardIcon: {
     fontSize: 16,
