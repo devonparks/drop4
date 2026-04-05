@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -22,15 +23,28 @@ function SectionTitle({ title }: { title: string }) {
   return <Text style={styles.sectionTitle}>{title}</Text>;
 }
 
+const CARD_GRADIENTS: Record<string, [string, string]> = {
+  '#ffffff': ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)'],
+  [colors.green]: ['rgba(39,174,61,0.18)', 'rgba(39,174,61,0.04)'],
+  [colors.coinGold]: ['rgba(255,215,0,0.16)', 'rgba(255,215,0,0.03)'],
+  [colors.teal]: ['rgba(26,188,156,0.16)', 'rgba(26,188,156,0.03)'],
+  [colors.orange]: ['rgba(255,140,0,0.16)', 'rgba(255,140,0,0.03)'],
+  [colors.pieceRed]: ['rgba(230,57,70,0.16)', 'rgba(230,57,70,0.03)'],
+};
+
 function OverviewCard({ label, value, color = '#ffffff', icon }: {
   label: string; value: string | number; color?: string; icon?: string;
 }) {
+  const grad = CARD_GRADIENTS[color] || CARD_GRADIENTS['#ffffff'];
   return (
-    <View style={styles.overviewCard}>
+    <LinearGradient
+      colors={grad}
+      style={styles.overviewCard}
+    >
       {icon && <Text style={styles.cardIcon}>{icon}</Text>}
       <Text style={[styles.cardValue, { color }]}>{value}</Text>
       <Text style={styles.cardLabel}>{label}</Text>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -139,8 +153,13 @@ export function StatsScreen({ navigation }: Props) {
         onBackPress={() => navigation.goBack()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <Text style={styles.screenHeader}>Statistics</Text>
+        {/* Header with player level badge */}
+        <View style={styles.screenHeaderRow}>
+          <Text style={styles.screenHeader}>YOUR STATS</Text>
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelBadgeText}>LVL {level}</Text>
+          </View>
+        </View>
 
         {/* ---------- 1. Overview Cards ---------- */}
         <SectionTitle title="OVERVIEW" />
@@ -221,6 +240,48 @@ export function StatsScreen({ navigation }: Props) {
           <OverviewCard icon="📉" label="Worst Loss" value={longestLoseStreak} color={colors.pieceRed} />
         </View>
 
+        {/* ---------- 5b. Best Performance ---------- */}
+        <SectionTitle title="BEST PERFORMANCE" />
+        <View style={styles.bestPerfCard}>
+          <LinearGradient
+            colors={['rgba(255,215,0,0.12)', 'rgba(155,89,182,0.08)', 'rgba(255,140,0,0.06)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.bestPerfGradient}
+          >
+            <View style={styles.bestPerfRow}>
+              <View style={styles.bestPerfItem}>
+                <Text style={styles.bestPerfIcon}>{'\u26A1'}</Text>
+                <Text style={styles.bestPerfValue}>
+                  {matches.filter(m => m.result === 'win').length > 0
+                    ? Math.min(...matches.filter(m => m.result === 'win').map(m => m.moves))
+                    : '--'}
+                </Text>
+                <Text style={styles.bestPerfLabel}>Fastest Win</Text>
+                <Text style={styles.bestPerfSub}>(fewest moves)</Text>
+              </View>
+              <View style={styles.bestPerfDivider} />
+              <View style={styles.bestPerfItem}>
+                <Text style={styles.bestPerfIcon}>{'\uD83D\uDD25'}</Text>
+                <Text style={[styles.bestPerfValue, { color: colors.orange }]}>{bestStreak}</Text>
+                <Text style={styles.bestPerfLabel}>Longest Streak</Text>
+                <Text style={styles.bestPerfSub}>consecutive wins</Text>
+              </View>
+              <View style={styles.bestPerfDivider} />
+              <View style={styles.bestPerfItem}>
+                <Text style={styles.bestPerfIcon}>{'\uD83E\uDE99'}</Text>
+                <Text style={[styles.bestPerfValue, { color: colors.coinGold }]}>
+                  {matches.length > 0
+                    ? Math.max(...matches.map(m => m.coinsEarned || 0))
+                    : '--'}
+                </Text>
+                <Text style={styles.bestPerfLabel}>Most Coins</Text>
+                <Text style={styles.bestPerfSub}>in one game</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+
         {/* ---------- 6. Recent Form ---------- */}
         <SectionTitle title="RECENT FORM" />
         <View style={styles.card}>
@@ -238,6 +299,13 @@ export function StatsScreen({ navigation }: Props) {
                         m.result === 'win' ? colors.green
                           : m.result === 'loss' ? colors.pieceRed
                             : colors.textSecondary,
+                    },
+                    m.result === 'win' && {
+                      shadowColor: colors.green,
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.6,
+                      shadowRadius: 6,
+                      elevation: 4,
                     },
                   ]}
                 />
@@ -336,14 +404,34 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 100,
   },
+  screenHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 16,
+    marginTop: 4,
+  },
   screenHeader: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 28,
+    fontSize: 30,
     color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 16,
-    marginTop: 4,
+    letterSpacing: 2,
+  },
+  levelBadge: {
+    backgroundColor: colors.orange,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  levelBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   sectionTitle: {
     fontFamily: fonts.body,
@@ -400,11 +488,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  /* W/L bar */
+  /* W/L bar — chunkier */
   wlBar: {
     flexDirection: 'row',
-    height: 12,
-    borderRadius: 6,
+    height: 14,
+    borderRadius: 7,
     overflow: 'hidden',
     marginBottom: 10,
   },
@@ -490,7 +578,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  /* Recent form */
+  /* Recent form — bigger dots */
   formRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -498,9 +586,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   formDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
   formLegend: {
     flexDirection: 'row',
@@ -614,5 +702,57 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
     marginLeft: 'auto',
+  },
+
+  /* Best Performance highlight card */
+  bestPerfCard: {
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  bestPerfGradient: {
+    borderRadius: 16,
+    padding: 16,
+  },
+  bestPerfRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bestPerfItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  bestPerfDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  bestPerfIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  bestPerfValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 24,
+    color: colors.green,
+  },
+  bestPerfLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  bestPerfSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 9,
+    color: colors.textMuted,
   },
 });

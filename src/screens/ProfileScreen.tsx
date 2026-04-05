@@ -9,7 +9,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
-import { useRankedStore, RANKED_TIERS } from '../stores/rankedStore';
+import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
@@ -54,6 +54,8 @@ export function ProfileScreen() {
   const allMatches = useMatchHistoryStore(s => s.matches);
   const recentMatches = useMemo(() => allMatches.slice(0, 5), [allMatches]);
   const achievements = useAchievementStore(s => s.achievements);
+  const elo = useRankedStore(s => s.elo);
+  const tier = useRankedStore(s => s.tier);
   const seasonHistory = useRankedStore(s => s.seasonHistory);
 
   const totalGames = scores.player1 + scores.player2;
@@ -76,34 +78,60 @@ export function ProfileScreen() {
         {/* Profile header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarSection}>
-            <LinearGradient
-              colors={['#d4ac0d', '#f1c40f', '#d4ac0d']}
-              style={styles.avatarRing}
-            >
-              <View style={styles.avatarInner}>
-                <CharacterAvatar size="large" variant="player" />
-              </View>
-            </LinearGradient>
+            {/* Outer glow ring */}
+            <View style={styles.avatarGlow}>
+              <LinearGradient
+                colors={[colors.goldDark, colors.coinGold, colors.goldLight, colors.coinGold, colors.goldDark]}
+                style={styles.avatarRingOuter}
+              >
+                <View style={styles.avatarRingGap}>
+                  <LinearGradient
+                    colors={['#d4ac0d', '#f1c40f', '#d4ac0d']}
+                    style={styles.avatarRingInner}
+                  >
+                    <View style={styles.avatarInner}>
+                      <CharacterAvatar size="large" variant="player" />
+                    </View>
+                  </LinearGradient>
+                </View>
+              </LinearGradient>
+            </View>
           </View>
 
           <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
-          <Text style={styles.playerTitle}>Rookie</Text>
-          <RankBadge size="medium" showElo showProgress style={{ marginTop: 4 }} />
 
-          {/* Level bar */}
+          {/* Prominent ranked tier badge */}
+          {(() => {
+            const tierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+            return (
+              <View style={[styles.rankBadgeRow, { borderColor: `${tierInfo.color}40` }]}>
+                <Text style={styles.rankBadgeIcon}>{tierInfo.icon}</Text>
+                <Text style={[styles.rankBadgeName, { color: tierInfo.color }]}>
+                  {formatRank(elo)}
+                </Text>
+                <Text style={styles.rankBadgeElo}>{elo} ELO</Text>
+              </View>
+            );
+          })()}
+
+          <RankBadge size="small" showProgress style={{ marginTop: 4 }} />
+
+          {/* Level bar — chunky with XP inside */}
           <View style={styles.levelSection}>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level {level}</Text>
-              <Text style={styles.xpLabel}>{xp} / {level * 100} XP</Text>
-            </View>
-            <View style={styles.xpBar}>
+            <Text style={styles.levelLabel}>Level {level}</Text>
+            <View style={styles.xpBarChunky}>
               <LinearGradient
-                colors={[colors.orange, '#ff6600']}
+                colors={[colors.orange, '#ff6600', colors.coinGold]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.xpFill, { width: `${Math.min((xp / (level * 100)) * 100, 100)}%` }]}
-              />
+                style={[styles.xpFillChunky, { width: `${Math.max(Math.min((xp / (level * 100)) * 100, 100), 8)}%` }]}
+              >
+                <Text style={styles.xpInsideText}>{xp} / {level * 100} XP</Text>
+              </LinearGradient>
             </View>
+            <Text style={styles.nextRewardHint}>
+              Next reward at Level {level + 1}
+            </Text>
           </View>
         </View>
 
@@ -239,21 +267,36 @@ const styles = StyleSheet.create({
   avatarSection: {
     marginBottom: 12,
   },
-  avatarRing: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    padding: 3,
-    shadowColor: colors.gold,
+  avatarGlow: {
+    shadowColor: colors.coinGold,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  avatarRingOuter: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    padding: 3,
+  },
+  avatarRingGap: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 57,
+    backgroundColor: '#0a0e27',
+    padding: 3,
+  },
+  avatarRingInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 54,
+    padding: 3,
   },
   avatarInner: {
     width: '100%',
     height: '100%',
-    borderRadius: 47,
+    borderRadius: 51,
     backgroundColor: '#1a1a3a',
     alignItems: 'center',
     justifyContent: 'center',
@@ -262,69 +305,74 @@ const styles = StyleSheet.create({
   playerName: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 24,
+    fontSize: 28,
     color: '#ffffff',
   },
-  rankedBadge: {
+  rankBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     marginTop: 6,
+    borderWidth: 1,
   },
-  rankedIcon: { fontSize: 16 },
-  rankedTier: {
-    fontFamily: fonts.body,
+  rankBadgeIcon: { fontSize: 20 },
+  rankBadgeName: {
+    fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 13,
+    fontSize: 16,
   },
-  rankedElo: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  playerTitle: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  levelSection: {
-    width: '100%',
-    maxWidth: 280,
-    marginTop: 12,
-  },
-  levelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  levelLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 13,
-    color: '#ffffff',
-  },
-  xpLabel: {
+  rankBadgeElo: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
     fontSize: 12,
     color: colors.textSecondary,
   },
-  xpBar: {
-    height: 8,
+  levelSection: {
+    width: '100%',
+    maxWidth: 300,
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  levelLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  xpBarChunky: {
+    width: '100%',
+    height: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 4,
+    borderRadius: 10,
     overflow: 'hidden',
   },
-  xpFill: {
+  xpFillChunky: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
+  xpInsideText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: '#ffffff',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  nextRewardHint: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 4,
   },
   sectionTitle: {
     fontFamily: fonts.body,

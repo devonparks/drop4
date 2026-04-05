@@ -75,12 +75,18 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
       </View>
 
       {/* Free track */}
-      <View style={[styles.rewardSlot, isUnlocked && styles.rewardUnlocked]}>
+      <View style={[
+        styles.rewardSlot,
+        isUnlocked && styles.rewardUnlocked,
+        canClaimFree && styles.rewardClaimable,
+      ]}>
         {reward.freeReward ? (
           <>
             <Text style={styles.rewardIcon}>{reward.freeReward.icon}</Text>
             <Text style={styles.rewardName}>{reward.freeReward.name}</Text>
-            <Text style={styles.trackLabel}>FREE</Text>
+            <View style={styles.trackPill}>
+              <Text style={styles.trackPillText}>FREE</Text>
+            </View>
           </>
         ) : (
           <Text style={styles.emptySlot}>{'\u2014'}</Text>
@@ -103,12 +109,19 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
       </View>
 
       {/* Premium track */}
-      <View style={[styles.rewardSlot, styles.premiumSlot, isUnlocked && hasPremium && styles.rewardUnlocked]}>
+      <View style={[
+        styles.rewardSlot,
+        styles.premiumSlot,
+        isUnlocked && hasPremium && styles.rewardUnlocked,
+        canClaimPremium && styles.rewardClaimablePremium,
+      ]}>
         {reward.premiumReward ? (
           <>
             <Text style={styles.rewardIcon}>{reward.premiumReward.icon}</Text>
             <Text style={styles.rewardName}>{reward.premiumReward.name}</Text>
-            <Text style={[styles.trackLabel, { color: colors.coinGold }]}>PREMIUM</Text>
+            <View style={[styles.trackPill, styles.trackPillPremium]}>
+              <Text style={[styles.trackPillText, { color: '#1a1a00' }]}>PREMIUM</Text>
+            </View>
           </>
         ) : (
           <Text style={styles.emptySlot}>{'\u2014'}</Text>
@@ -148,53 +161,84 @@ export function SeasonPassScreen() {
   const level = useShopStore(s => s.level);
   const progressPct = (xp / xpPerTier) * 100;
 
+  // Estimate ~30 day seasons — show days remaining
+  const seasonDays = 30;
+  const dayOfSeason = Math.min(Math.floor((currentTier / Math.max(maxTier, 1)) * seasonDays), seasonDays);
+  const daysRemaining = Math.max(seasonDays - dayOfSeason, 1);
+
   return (
     <ScreenBackground>
       <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{seasonName.toUpperCase()}</Text>
-          <Text style={styles.subtitle}>Tier {currentTier} / {maxTier}</Text>
-
-          {/* XP progress */}
-          <View style={styles.xpSection}>
-            <View style={styles.xpRow}>
-              <Text style={styles.xpLabel}>Season XP</Text>
-              <Text style={styles.xpValue}>{xp} / {xpPerTier}</Text>
+        {/* Gradient header banner */}
+        <LinearGradient
+          colors={[colors.purpleDark, '#5b2d8e', colors.goldDark, colors.gold]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerBanner}
+        >
+          <View style={styles.headerBannerInner}>
+            <Text style={styles.title}>{seasonName.toUpperCase()}</Text>
+            <View style={styles.tierCountdownRow}>
+              <Text style={styles.subtitle}>Tier {currentTier} / {maxTier}</Text>
+              <View style={styles.daysRemainingBadge}>
+                <Text style={styles.daysRemainingNum}>{daysRemaining}</Text>
+                <Text style={styles.daysRemainingLabel}>DAYS LEFT</Text>
+              </View>
             </View>
-            <View style={styles.xpBar}>
-              <LinearGradient
-                colors={[colors.orange, '#ff6600']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.xpFill, { width: `${Math.min(progressPct, 100)}%` }]}
-              />
+
+            {/* XP progress */}
+            <View style={styles.xpSection}>
+              <View style={styles.xpRow}>
+                <Text style={styles.xpLabel}>Season XP</Text>
+                <Text style={styles.xpValue}>{xp} / {xpPerTier}</Text>
+              </View>
+              <View style={styles.xpBar}>
+                <LinearGradient
+                  colors={[colors.orange, '#ff6600', colors.coinGold]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.xpFill, { width: `${Math.min(progressPct, 100)}%` }]}
+                />
+              </View>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Premium upgrade CTA */}
         {!hasPremium && (
           <View style={styles.premiumCta}>
             <LinearGradient
-              colors={['rgba(255,209,102,0.15)', 'rgba(255,209,102,0.05)']}
-              style={styles.premiumGradient}
+              colors={[colors.goldDark, '#b8960a', colors.gold, colors.goldLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.premiumGradientOuter}
             >
-              <View style={styles.premiumContent}>
-                <Text style={styles.premiumTitle}>{'\uD83D\uDC51'} Upgrade to Premium</Text>
+              <View style={styles.premiumCardInner}>
+                <View style={styles.premiumSparkleRow}>
+                  <Text style={styles.premiumStar}>{'\u2728'}</Text>
+                  <Text style={styles.premiumTitle}>{'\uD83D\uDC51'} Upgrade to Premium</Text>
+                  <Text style={styles.premiumStar}>{'\u2728'}</Text>
+                </View>
                 <Text style={styles.premiumDesc}>Unlock exclusive rewards on every tier</Text>
+                <Text style={styles.premiumSubDesc}>2x coins, rare skins, and more</Text>
+                <View style={{ marginTop: 10 }}>
+                  <GlossyButton label="UPGRADE NOW" variant="gold" small onPress={() => haptics.tap()} />
+                </View>
               </View>
-              <GlossyButton label="UPGRADE" variant="gold" small onPress={() => haptics.tap()} />
             </LinearGradient>
           </View>
         )}
 
-        {/* Track labels */}
+        {/* Track labels as colored pills */}
         <View style={styles.trackHeaders}>
           <View style={{ width: 40 }} />
-          <Text style={[styles.trackHeaderText, { flex: 1 }]}>Free Track</Text>
-          <Text style={[styles.trackHeaderText, { flex: 1, color: colors.coinGold }]}>Premium Track</Text>
+          <View style={[styles.trackHeaderPill, { flex: 1 }]}>
+            <Text style={styles.trackHeaderPillText}>FREE TRACK</Text>
+          </View>
+          <View style={[styles.trackHeaderPill, styles.trackHeaderPillPremium, { flex: 1 }]}>
+            <Text style={[styles.trackHeaderPillText, { color: '#1a1a00' }]}>PREMIUM TRACK</Text>
+          </View>
         </View>
 
         {/* Reward tiers */}
@@ -215,27 +259,65 @@ export function SeasonPassScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 16,
+    paddingTop: 8,
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  header: {
-    alignItems: 'center',
+  /* --- Gradient header banner --- */
+  headerBanner: {
+    borderRadius: 18,
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  headerBannerInner: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    padding: 18,
+    alignItems: 'center',
   },
   title: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 22,
+    fontSize: 30,
     color: '#ffffff',
-    letterSpacing: 2,
+    letterSpacing: 3,
+    textAlign: 'center',
+    textShadowColor: 'rgba(241,196,15,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
+  },
+  tierCountdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 4,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
     fontSize: 14,
     color: colors.orange,
-    marginTop: 2,
+  },
+  daysRemainingBadge: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  daysRemainingNum: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: colors.coinGold,
+  },
+  daysRemainingLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.5,
   },
   xpSection: {
     width: '100%',
@@ -250,7 +332,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontWeight: weight.medium,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
   },
   xpValue: {
     fontFamily: fonts.body,
@@ -260,7 +342,7 @@ const styles = StyleSheet.create({
   },
   xpBar: {
     height: 10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 5,
     overflow: 'hidden',
   },
@@ -268,49 +350,83 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 5,
   },
+  /* --- Premium CTA golden card --- */
   premiumCta: {
     marginBottom: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  premiumGradient: {
+  premiumGradientOuter: {
+    borderRadius: 18,
+    padding: 2,
+  },
+  premiumCardInner: {
+    backgroundColor: 'rgba(30,20,0,0.85)',
+    borderRadius: 16,
+    padding: 18,
+    alignItems: 'center',
+  },
+  premiumSparkleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,209,102,0.3)',
+    gap: 8,
   },
-  premiumContent: {
-    flex: 1,
-    marginRight: 12,
+  premiumStar: {
+    fontSize: 16,
   },
   premiumTitle: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 15,
+    fontSize: 18,
     color: colors.coinGold,
+    textShadowColor: 'rgba(241,196,15,0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   premiumDesc: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  premiumSubDesc: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textSecondary,
     marginTop: 2,
+    textAlign: 'center',
   },
+  /* --- Track header pills --- */
   trackHeaders: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 10,
     paddingHorizontal: 4,
+    gap: 6,
   },
-  trackHeaderText: {
+  trackHeaderPill: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    paddingVertical: 5,
+    alignItems: 'center',
+  },
+  trackHeaderPillPremium: {
+    backgroundColor: colors.coinGold,
+  },
+  trackHeaderPillText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 10,
-    color: colors.textSecondary,
+    color: '#ffffff',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    textAlign: 'center',
   },
   tierList: {
     gap: 6,
@@ -319,7 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 6,
-    minHeight: 72,
+    minHeight: 76,
   },
   tierCardCurrent: {
     // Highlight current tier
@@ -359,8 +475,26 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(39,174,61,0.3)',
     backgroundColor: 'rgba(39,174,61,0.08)',
   },
+  rewardClaimable: {
+    borderColor: 'rgba(46,204,113,0.6)',
+    backgroundColor: 'rgba(46,204,113,0.12)',
+    shadowColor: colors.green,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  rewardClaimablePremium: {
+    borderColor: 'rgba(255,215,0,0.6)',
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    shadowColor: colors.coinGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   rewardIcon: {
-    fontSize: 20,
+    fontSize: 22,
   },
   rewardName: {
     fontFamily: fonts.body,
@@ -370,14 +504,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
-  trackLabel: {
+  trackPill: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 3,
+  },
+  trackPillPremium: {
+    backgroundColor: colors.coinGold,
+  },
+  trackPillText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 8,
-    color: colors.textMuted,
+    fontSize: 7,
+    color: '#ffffff',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 2,
   },
   emptySlot: {
     fontFamily: fonts.body,
@@ -399,9 +542,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: colors.green,
     alignItems: 'center',
     justifyContent: 'center',
@@ -409,7 +552,7 @@ const styles = StyleSheet.create({
   claimedText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
+    fontSize: 11,
     color: '#ffffff',
   },
   // Claim button
@@ -421,7 +564,7 @@ const styles = StyleSheet.create({
   },
   claimGradient: {
     borderRadius: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
     alignItems: 'center',
   },
   claimText: {

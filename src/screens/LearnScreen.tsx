@@ -98,13 +98,17 @@ export function LearnScreen({ navigation }: Props) {
   const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
   const [selected, setSelected] = useState<Lesson | null>(null);
+  const [viewedLessons, setViewedLessons] = useState<Set<string>>(new Set());
 
   if (selected) {
     return (
       <ScreenBackground>
         <View style={styles.container}>
           <TopBar coins={coins} gems={gems} level={level}
-            showBack onBackPress={() => setSelected(null)} />
+            showBack onBackPress={() => {
+              setViewedLessons(prev => new Set(prev).add(selected.id));
+              setSelected(null);
+            }} />
 
           <ScrollView contentContainerStyle={styles.lessonDetail}>
             <Text style={styles.lessonIcon}>{selected.icon}</Text>
@@ -150,36 +154,54 @@ export function LearnScreen({ navigation }: Props) {
         <TopBar coins={coins} gems={gems} level={level}
           showBack onBackPress={() => navigation.goBack()} />
 
-        <Text style={styles.title}>LEARN</Text>
-        <Text style={styles.subtitle}>Master the game</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerIcon}>{'\uD83D\uDCD6'}</Text>
+          <Text style={styles.title}>STRATEGY GUIDE</Text>
+        </View>
+        <Text style={styles.subtitle}>Master every technique</Text>
 
         <ScrollView contentContainerStyle={styles.lessonList} showsVerticalScrollIndicator={false}>
-          {LESSONS.map(lesson => (
-            <Pressable
-              key={lesson.id}
-              onPress={() => { haptics.tap(); setSelected(lesson); }}
-              style={styles.lessonCard}
-            >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
-                style={styles.lessonGradient}
+          {LESSONS.map(lesson => {
+            const isMastered = viewedLessons.has(lesson.id);
+            return (
+              <Pressable
+                key={lesson.id}
+                onPress={() => { haptics.tap(); setSelected(lesson); }}
+                style={styles.lessonCard}
               >
-                <Text style={styles.cardIcon}>{lesson.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>{lesson.title}</Text>
-                  <Text style={styles.cardDesc}>{lesson.description}</Text>
-                </View>
-                <View style={[styles.diffBadge, { backgroundColor: `${DIFF_COLORS[lesson.difficulty]}20` }]}>
-                  <Text style={[styles.diffBadgeText, { color: DIFF_COLORS[lesson.difficulty] }]}>
-                    {lesson.difficulty === 'beginner' ? '⭐' : lesson.difficulty === 'intermediate' ? '⭐⭐' : '⭐⭐⭐'}
-                  </Text>
-                  <Text style={[styles.diffBadgeLabel, { color: DIFF_COLORS[lesson.difficulty] }]}>
-                    {lesson.difficulty.toUpperCase()}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </Pressable>
-          ))}
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
+                  style={styles.lessonGradient}
+                >
+                  {/* Colored left accent bar */}
+                  <View style={[styles.accentBar, { backgroundColor: DIFF_COLORS[lesson.difficulty] }]} />
+                  <Text style={styles.cardIcon}>{lesson.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.cardTitle}>{lesson.title}</Text>
+                    <Text style={styles.cardDesc}>{lesson.description}</Text>
+                    <Text style={[styles.practiceSubtitle, { color: DIFF_COLORS[lesson.difficulty] }]}>
+                      PRACTICE NOW {'\u25B6'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardRight}>
+                    <View style={[styles.diffBadge, { backgroundColor: `${DIFF_COLORS[lesson.difficulty]}20` }]}>
+                      <Text style={styles.diffBadgeText}>
+                        {lesson.difficulty === 'beginner' ? '\u2B50' : lesson.difficulty === 'intermediate' ? '\u2B50\u2B50' : '\u2B50\u2B50\u2B50'}
+                      </Text>
+                      <Text style={[styles.diffBadgeLabel, { color: DIFF_COLORS[lesson.difficulty] }]}>
+                        {lesson.difficulty.toUpperCase()}
+                      </Text>
+                    </View>
+                    {isMastered && (
+                      <View style={styles.masteredBadge}>
+                        <Text style={styles.masteredText}>{'\u2713'} MASTERED</Text>
+                      </View>
+                    )}
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
     </ScreenBackground>
@@ -188,26 +210,62 @@ export function LearnScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  headerIcon: {
+    fontSize: 24,
+  },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold,
-    fontSize: 26, color: '#ffffff', letterSpacing: 2, textAlign: 'center', marginTop: 4,
+    fontSize: 26, color: '#ffffff', letterSpacing: 2, textAlign: 'center',
   },
   subtitle: {
     fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginBottom: 10,
   },
-  lessonList: { paddingHorizontal: 14, gap: 6, paddingBottom: 100 },
+  lessonList: { paddingHorizontal: 14, gap: 8, paddingBottom: 100 },
   lessonCard: { borderRadius: 14, overflow: 'hidden' },
   lessonGradient: {
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14,
     borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  cardIcon: { fontSize: 28 },
-  cardTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
+  accentBar: {
+    width: 4,
+    borderRadius: 2,
+    alignSelf: 'stretch',
+    marginRight: 2,
+  },
+  cardIcon: { fontSize: 30 },
+  cardTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 15, color: '#ffffff' },
   cardDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
+  practiceSubtitle: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9,
+    letterSpacing: 0.5, marginTop: 4,
+  },
+  cardRight: {
+    alignItems: 'center',
+    gap: 6,
+  },
   diffBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center' as const },
-  diffBadgeText: { fontSize: 12 },
+  diffBadgeText: { fontSize: 16 },
   diffBadgeLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, letterSpacing: 0.5, marginTop: 1 },
+  masteredBadge: {
+    backgroundColor: 'rgba(39,174,61,0.2)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(39,174,61,0.4)',
+  },
+  masteredText: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8,
+    color: colors.green, letterSpacing: 0.5,
+  },
   // Detail
   lessonDetail: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 40, gap: 6 },
   lessonIcon: { fontSize: 48, marginTop: 8 },
