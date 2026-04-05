@@ -891,18 +891,10 @@ export function GameScreen({ navigation }: Props) {
             </Pressable>
           )}
 
-          {/* Resign button — online matches only */}
-          {isOnlineMatch && status === 'playing' && (
-            <Pressable onPress={handleBack} style={styles.controlBtn}>
-              <Text style={styles.controlIcon}>🏳️</Text>
-              <Text style={styles.resignLabel}>Resign</Text>
-            </Pressable>
-          )}
-
           {/* Resign button */}
           <Pressable onPress={handleBack} style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>🏳</Text>
-            <Text style={styles.resignLabel}>Resign</Text>
+            <Text style={styles.controlIcon}>🏳️</Text>
+            <Text style={styles.resignLabel}>{isOnlineMatch ? 'Resign' : 'Quit'}</Text>
           </Pressable>
         </View>
 
@@ -1113,7 +1105,7 @@ export function GameScreen({ navigation }: Props) {
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
             <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.goCard}>
-             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+             <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
 
               {/* Top: Mode label */}
               <View style={styles.goModeRow}>

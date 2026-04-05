@@ -102,10 +102,38 @@ export function HomeScreen() {
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);
 
+  // "Tap me!" tooltip — subtle hint that character is tappable
+  const [showTapHint, setShowTapHint] = useState(false);
+  const tapHintCountRef = useRef(0);
+  const tapHintOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Only show if no emote is playing and we haven't shown 3 times yet
+      if (!emote && tapHintCountRef.current < 3) {
+        tapHintCountRef.current += 1;
+        setShowTapHint(true);
+        // Fade in
+        Animated.timing(tapHintOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start(() => {
+          // Hold for 1.5s, then fade out
+          setTimeout(() => {
+            Animated.timing(tapHintOpacity, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => {
+              setShowTapHint(false);
+            });
+          }, 1500);
+        });
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [emote]);
+
   // All non-idle emotes for random idle tap
   const allEmoteIds: EmoteId[] = EMOTE_CATEGORIES.flatMap(c => c.emotes);
   const handleCharacterTap = () => {
     haptics.tap();
+    // Hide tooltip immediately on tap
+    setShowTapHint(false);
+    tapHintOpacity.setValue(0);
     const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
     triggerEmote(randomEmote);
   };
@@ -153,6 +181,13 @@ export function HomeScreen() {
             <StageSparkles />
 
             <Pressable onPress={handleCharacterTap}>
+              {/* "Tap me!" tooltip */}
+              {showTapHint && (
+                <Animated.View style={[styles.tapHintBubble, { opacity: tapHintOpacity }]}>
+                  <Text style={styles.tapHintText}>Tap me!</Text>
+                  <View style={styles.tapHintArrow} />
+                </Animated.View>
+              )}
               <AnimatedCharacter
                 size={320}
                 emote={emote}
@@ -464,6 +499,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 6,
     paddingBottom: 8,
+  },
+  // "Tap me!" tooltip
+  tapHintBubble: {
+    position: 'absolute',
+    top: -6,
+    alignSelf: 'center',
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  tapHintText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.5,
+  },
+  tapHintArrow: {
+    position: 'absolute',
+    bottom: -5,
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 5,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: 'rgba(255,255,255,0.2)',
   },
   // Version
   version: {
