@@ -1215,28 +1215,33 @@ export function AnimatedCharacter({
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      {/* Base idle: render ALL frames stacked, toggle visibility via opacity.
-          This prevents the flash caused by Image source swapping. */}
-      {animState === 'idle' && EMOTE_FRAMES.idle.map((source, i) => (
+      {/* Always render base idle frame 0 as fallback (prevents invisible character) */}
+      <Image
+        source={EMOTE_FRAMES.idle[0]}
+        style={[styles.characterImage, styles.stackedFrame, { opacity: animState !== 'idle' && animState !== 'idle_variant' ? 0 : (animState === 'idle' && frameIndex === 0 ? 1 : 0) }]}
+        resizeMode="contain"
+      />
+
+      {/* Base idle: render ALL frames stacked, toggle visibility via opacity. */}
+      {animState === 'idle' && EMOTE_FRAMES.idle.slice(1).map((source, i) => (
         <Image
-          key={`idle_${i}`}
+          key={`idle_${i + 1}`}
           source={source}
-          style={[styles.characterImage, styles.stackedFrame, { opacity: i === frameIndex ? 1 : 0 }]}
+          style={[styles.characterImage, styles.stackedFrame, { opacity: (i + 1) === frameIndex ? 1 : 0 }]}
           resizeMode="contain"
         />
       ))}
 
-      {/* Idle variants: also stack frames for smooth playback */}
-      {animState === 'idle_variant' && activeVariant && IDLE_VARIANTS[activeVariant].map((source, i) => (
+      {/* Idle variants: use single image swap (simpler, avoids opacity sync issues) */}
+      {animState === 'idle_variant' && activeVariant && (
         <Image
-          key={`variant_${activeVariant}_${i}`}
-          source={source}
-          style={[styles.characterImage, styles.stackedFrame, { opacity: i === frameIndex ? 1 : 0 }]}
+          source={currentFrames[frameIndex] || currentFrames[0]}
+          style={[styles.characterImage, styles.stackedFrame]}
           resizeMode="contain"
         />
-      ))}
+      )}
 
-      {/* Emotes: single Image swap since they play once (flash is less noticeable) */}
+      {/* Emotes: single Image swap since they play once */}
       {animState === 'emote' && activeEmote && (
         <Image
           source={currentFrames[frameIndex] || currentFrames[0]}
