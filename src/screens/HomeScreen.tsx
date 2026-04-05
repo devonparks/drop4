@@ -5,8 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
-import { EmoteWheel } from '../components/ui/EmoteWheel';
+import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId } from '../components/ui/AnimatedCharacter';
+import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { useShopStore } from '../stores/shopStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -97,7 +97,15 @@ export function HomeScreen() {
   const seasonName = useSeasonStore(s => s.seasonName);
   const challenges = useChallengeStore(s => s.challenges);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
-  const [wheelOpen, setWheelOpen] = useState(false);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
+
+  // All non-idle emotes for random idle tap
+  const allEmoteIds: EmoteId[] = EMOTE_CATEGORIES.flatMap(c => c.emotes);
+  const handleCharacterTap = () => {
+    haptics.tap();
+    const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
+    triggerEmote(randomEmote);
+  };
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -143,7 +151,7 @@ export function HomeScreen() {
         {/* ═══ CHARACTER LOBBY ═══ */}
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) */}
-          <Pressable onPress={() => { haptics.tap(); setWheelOpen(true); }} style={styles.sideBtn}>
+          <Pressable onPress={() => { haptics.tap(); setShowcaseOpen(true); }} style={styles.sideBtn}>
             <LinearGradient colors={['rgba(255,220,50,0.3)', 'rgba(50,200,50,0.2)', 'rgba(50,100,255,0.2)']} style={styles.sideBtnGradient}>
               <Text style={styles.sideBtnIcon}>😀</Text>
             </LinearGradient>
@@ -159,11 +167,13 @@ export function HomeScreen() {
             {/* Floating sparkle particles around stage */}
             <StageSparkles />
 
-            <AnimatedCharacter
-              size={240}
-              emote={emote}
-              onEmoteComplete={clearEmote}
-            />
+            <Pressable onPress={handleCharacterTap}>
+              <AnimatedCharacter
+                size={220}
+                emote={emote}
+                onEmoteComplete={clearEmote}
+              />
+            </Pressable>
             {/* Stage platform glow */}
             <LinearGradient
               colors={['rgba(100,180,255,0.3)', 'rgba(80,140,255,0.12)', 'transparent']}
@@ -228,11 +238,10 @@ export function HomeScreen() {
         {/* Version */}
         <Text style={styles.version}>v1.0.0</Text>
 
-        {/* Emote Wheel Modal */}
-        <EmoteWheel
-          visible={wheelOpen}
-          onClose={() => setWheelOpen(false)}
-          onSelect={triggerEmote}
+        {/* Emote Showcase Modal */}
+        <EmoteShowcase
+          visible={showcaseOpen}
+          onClose={() => setShowcaseOpen(false)}
         />
       </View>
     </ScreenBackground>
@@ -372,8 +381,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: -20,
-    marginBottom: -5,
+    marginTop: -30,
+    marginBottom: -12,
   },
   stageGlowOuter: {
     width: 240,

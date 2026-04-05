@@ -5,8 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
-import { PoseDisplay, PoseId } from '../components/ui/AnimatedCharacter';
-import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
+import { PoseDisplay, PoseId, EMOTE_CATEGORIES, EmoteId } from '../components/ui/AnimatedCharacter';
+import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
+import { EMOTE_EMOJI, EMOTE_NAME, EMOTE_UNLOCKS, CATEGORY_EMOJI } from '../components/ui/EmoteShowcase';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -43,13 +44,14 @@ const RARITY_DESCRIPTIONS: Record<string, string> = {
   legendary: 'The pinnacle of style. A true collector\'s piece.',
 };
 
-type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors';
+type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors' | 'emotes';
 const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'species', icon: '\uD83E\uDDD1', label: 'Species' },
   { id: 'outfit', icon: '\uD83D\uDC55', label: 'Outfit' },
   { id: 'hair', icon: '\uD83D\uDC87', label: 'Hair' },
   { id: 'shoes', icon: '\uD83D\uDC5F', label: 'Shoes' },
   { id: 'colors', icon: '\uD83C\uDFA8', label: 'Colors' },
+  { id: 'emotes', icon: '\uD83D\uDE00', label: 'Emotes' },
 ];
 
 const TAB_TO_CATEGORIES: Record<TabId, string[]> = {
@@ -58,6 +60,7 @@ const TAB_TO_CATEGORIES: Record<TabId, string[]> = {
   hair: ['hair'],
   shoes: ['shoes'],
   colors: [],
+  emotes: [],
 };
 
 const POSE_LIST: { id: PoseId; label: string }[] = [
@@ -93,6 +96,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const [selectedPose, setSelectedPose] = useState<PoseId>('default');
   const [selectedItem, setSelectedItem] = useState<CharacterItem | null>(null);
   const [previewingItem, setPreviewingItem] = useState<CharacterItem | null>(null);
+  const { emote: previewEmote, triggerEmote: triggerPreviewEmote, clearEmote: clearPreviewEmote } = useEmoteTrigger();
+  const [playingEmoteId, setPlayingEmoteId] = useState<EmoteId | null>(null);
 
   // Get items for the active tab
   const activeCategories = TAB_TO_CATEGORIES[activeTab];
@@ -114,8 +119,15 @@ export function CharacterCreatorScreen({ navigation }: Props) {
       hair: { owned: 0, total: 0 },
       shoes: { owned: 0, total: 0 },
       colors: { owned: 0, total: 0 },
+      emotes: { owned: 0, total: 0 },
     };
     for (const tab of TABS) {
+      if (tab.id === 'emotes') {
+        const allEmotes = EMOTE_CATEGORIES.flatMap(c => c.emotes);
+        const unlocked = allEmotes.filter(e => EMOTE_UNLOCKS[e]?.unlocked);
+        counts.emotes = { total: allEmotes.length, owned: unlocked.length };
+        continue;
+      }
       const cats = TAB_TO_CATEGORIES[tab.id];
       const items = CHARACTER_ITEMS.filter(i => cats.includes(i.category));
       counts[tab.id] = {
@@ -204,6 +216,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             <AnimatedCharacter
               size={300}
               pose={selectedPose}
+              emote={previewEmote}
+              onEmoteComplete={() => { clearPreviewEmote(); setPlayingEmoteId(null); }}
             />
 
             {/* PREVIEWING banner */}
@@ -288,8 +302,62 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             </Pressable>
           </View>
 
-          {/* ══ ITEMS SCROLL ══ */}
-          {tabItems.length > 0 ? (
+          {/* ══ ITEMS SCROLL / EMOTES GRID ══ */}
+          {activeTab === 'emotes' ? (
+            <View style={styles.emotesTabContent}>
+              {EMOTE_CATEGORIES.map(category => (
+                <View key={category.name} style={styles.emoteCategorySection}>
+                  <View style={styles.emoteCategoryHeader}>
+                    <Text style={styles.emoteCategoryEmoji}>{CATEGORY_EMOJI[category.name] || '🎭'}</Text>
+                    <Text style={styles.emoteCategoryName}>{category.name.toUpperCase()}</Text>
+                    <View style={styles.emoteCategoryLine} />
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emoteHScroll}>
+                    {category.emotes.map(emoteId => {
+                      const unlock = EMOTE_UNLOCKS[emoteId];
+                      const isLocked = !unlock?.unlocked;
+                      const isPlaying = playingEmoteId === emoteId;
+
+                      return (
+                        <Pressable
+                          key={emoteId}
+                          onPress={() => {
+                            if (isLocked) { haptics.error(); return; }
+                            haptics.tap();
+                            setPlayingEmoteId(emoteId);
+                            triggerPreviewEmote(emoteId);
+                          }}
+                          style={[
+                            styles.emoteTabCard,
+                            isPlaying && styles.emoteTabCardPlaying,
+                            isLocked && styles.emoteTabCardLocked,
+                          ]}
+                        >
+                          <Text style={[styles.emoteTabCardEmoji, isLocked && { opacity: 0.3 }]}>
+                            {EMOTE_EMOJI[emoteId]}
+                          </Text>
+                          <Text style={[styles.emoteTabCardName, isLocked && { opacity: 0.4 }]} numberOfLines={1}>
+                            {EMOTE_NAME[emoteId]}
+                          </Text>
+                          {isLocked && (
+                            <View style={styles.emoteTabLockBadge}>
+                              <Text style={styles.emoteTabLockIcon}>{'\uD83D\uDD12'}</Text>
+                              <Text style={styles.emoteTabLockReq} numberOfLines={1}>{unlock?.requirement}</Text>
+                            </View>
+                          )}
+                          {isPlaying && (
+                            <View style={styles.emoteTabPlayingDot}>
+                              <Text style={{ fontSize: 8, color: colors.orange }}>{'▶'}</Text>
+                            </View>
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ))}
+            </View>
+          ) : tabItems.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -1123,6 +1191,107 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#f1c40f',
     letterSpacing: 1,
+  },
+
+  // --- Emotes Tab ---
+  emotesTabContent: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  emoteCategorySection: {
+    marginBottom: 12,
+  },
+  emoteCategoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+    paddingHorizontal: 4,
+  },
+  emoteCategoryEmoji: {
+    fontSize: 13,
+  },
+  emoteCategoryName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 2,
+  },
+  emoteCategoryLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginLeft: 6,
+  },
+  emoteHScroll: {
+    gap: 8,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  emoteTabCard: {
+    width: 90,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.06)',
+    position: 'relative',
+  },
+  emoteTabCardPlaying: {
+    borderColor: colors.orange,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255,140,0,0.08)',
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  emoteTabCardLocked: {
+    opacity: 0.45,
+  },
+  emoteTabCardEmoji: {
+    fontSize: 26,
+    marginBottom: 4,
+  },
+  emoteTabCardName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: '#ffffff',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  emoteTabLockBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 12,
+  },
+  emoteTabLockIcon: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  emoteTabLockReq: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 7,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    paddingHorizontal: 3,
+  },
+  emoteTabPlayingDot: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
   },
 
   // --- Bottom Bar ---
