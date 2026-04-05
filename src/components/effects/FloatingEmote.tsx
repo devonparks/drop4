@@ -20,6 +20,9 @@ const EMOTE_EMOJI: Record<string, string> = {
   dance: '💃',
   celebrate: '🎉',
   sad: '😢',
+  clapping: '👏',
+  laughpoint: '😂',
+  shrug: '🤷',
 };
 
 interface FloatingEmoteProps {
@@ -47,11 +50,11 @@ export function FloatingEmote({ emoteId, side, onDone }: FloatingEmoteProps) {
       withTiming(1, { duration: 150 }),
     );
 
-    // Float upward over the full duration
-    translateY.value = withTiming(-60, { duration: 2000, easing: Easing.out(Easing.ease) });
+    // Float upward over the full duration (3 seconds)
+    translateY.value = withTiming(-60, { duration: 3000, easing: Easing.out(Easing.ease) });
 
-    // Fade out (1400-2000ms), then signal done
-    opacity.value = withDelay(1400,
+    // Fade out (2400-3000ms), then signal done
+    opacity.value = withDelay(2400,
       withTiming(0, { duration: 600 }, (finished) => {
         if (finished && onDone) {
           runOnJS(onDone)();

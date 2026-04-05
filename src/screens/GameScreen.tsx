@@ -81,7 +81,7 @@ export function GameScreen({ navigation }: Props) {
   const preGameEloRef = useRef(useRankedStore.getState().elo);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
-  const [hintsUsed, setHintsUsed] = useState(0);
+  const [freeHintsRemaining, setFreeHintsRemaining] = useState(3);
   const hintPulseAnim = useRef(new RNAnimated.Value(0)).current;
   const [thinkingDots, setThinkingDots] = useState(0);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
@@ -113,8 +113,10 @@ export function GameScreen({ navigation }: Props) {
   const [showMatchmaking, setShowMatchmaking] = useState(() => !!params.wagerCourt);
   const wagerCourt = params.wagerCourt;
 
-  // Opponent emote display (online matches)
+  // Emote display — player and opponent/AI
+  const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
+  const aiEmoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Rematch state (online matches)
   const [rematchState, setRematchState] = useState<'idle' | 'requested' | 'opponent-requested'>('idle');
@@ -529,6 +531,7 @@ export function GameScreen({ navigation }: Props) {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
     setShowConfetti(false);
     setWasCareerLevel(false);
+    setFreeHintsRemaining(3);
     newGame(difficulty, isVsAi);
   };
 
@@ -586,6 +589,62 @@ export function GameScreen({ navigation }: Props) {
     const GAP = 4;
     return BOARD_PAD + col * (CELL_SIZE + GAP) + CELL_SIZE / 2 - 10;
   };
+
+  // AI reaction mapping: player emote -> possible AI responses
+  // Returns null ~50% of the time to feel natural
+  const getAiReaction = (playerEmoteId: string): string | null => {
+    if (Math.random() < 0.5) return null; // 50% chance of no reaction
+
+    const reactions: Record<string, string[]> = {
+      // Taunts → AI gets annoyed or shrugs
+      laughpoint: ['angry', 'shrug'],
+      angry: ['shrug', 'laughpoint'],
+      // Positive → AI is friendly back
+      thumbsup: ['thumbsup', 'clapping', 'happy'],
+      clapping: ['thumbsup', 'happy', 'wave'],
+      happy: ['thumbsup', 'happy', 'wave'],
+      wave: ['wave', 'happy', 'thumbsup'],
+      // Celebrations → AI is annoyed or congratulates
+      celebrate: ['angry', 'clapping', 'shrug'],
+      dab: ['angry', 'laughpoint', 'shrug'],
+      dance: ['clapping', 'angry', 'shrug'],
+      // Sad → AI shows sympathy or taunts
+      sad: ['wave', 'thumbsup', 'laughpoint'],
+      // Chat-based emotes
+      shrug: ['shrug', 'laughpoint'],
+    };
+
+    const options = reactions[playerEmoteId] || ['thumbsup', 'happy', 'shrug'];
+    return options[Math.floor(Math.random() * options.length)];
+  };
+
+  // Trigger AI emote reaction for local vs AI games
+  const triggerAiEmoteReaction = (playerEmoteId: string) => {
+    if (!isVsAi || isOnlineMatch) return;
+
+    // Clear any pending AI reaction
+    if (aiEmoteTimerRef.current) {
+      clearTimeout(aiEmoteTimerRef.current);
+      aiEmoteTimerRef.current = null;
+    }
+
+    const reaction = getAiReaction(playerEmoteId);
+    if (!reaction) return;
+
+    // AI reacts after 1-2 second delay
+    const delay = 1000 + Math.random() * 1000;
+    aiEmoteTimerRef.current = setTimeout(() => {
+      aiEmoteTimerRef.current = null;
+      setOpponentEmote({ emoteId: reaction, key: Date.now() });
+    }, delay);
+  };
+
+  // Cleanup AI emote timer on unmount
+  useEffect(() => {
+    return () => {
+      if (aiEmoteTimerRef.current) clearTimeout(aiEmoteTimerRef.current);
+    };
+  }, []);
 
   // Format time for chess clock display
   const formatClockTime = (seconds: number): string => {
@@ -730,29 +789,47 @@ export function GameScreen({ navigation }: Props) {
 
         {/* Bottom controls */}
         <View style={styles.controls}>
-          {/* Hint button — hidden in online matches */}
-          {!isOnlineMatch && (
-            <Pressable onPress={() => {
-              if (status === 'playing' && !isAiThinking && currentPlayer === 1) {
-                haptics.tap();
-                const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
-                setHintCol(bestCol);
-                setHintsUsed(prev => prev + 1);
-                setTimeout(() => setHintCol(null), 2000);
-              }
-            }} style={styles.controlBtn}>
-              <Text style={styles.controlIcon}>💡</Text>
-              <Text style={styles.controlLabel}>Hint{hintsUsed > 0 ? ` (${hintsUsed})` : ''}</Text>
-            </Pressable>
-          )}
+          {/* Hint button — hidden in online matches; 3 free per game, then 10 coins each */}
+          {!isOnlineMatch && (() => {
+            const coins = useShopStore.getState().coins;
+            const canAffordHint = freeHintsRemaining > 0 || coins >= 10;
+            const hintLabel = freeHintsRemaining > 0
+              ? `Hint (${freeHintsRemaining})`
+              : coins >= 10
+                ? 'Hint 🪙10'
+                : 'No coins';
+            return (
+              <Pressable
+                onPress={() => {
+                  if (status === 'playing' && !isAiThinking && currentPlayer === 1 && canAffordHint) {
+                    if (freeHintsRemaining > 0) {
+                      setFreeHintsRemaining(prev => prev - 1);
+                    } else {
+                      const spent = useShopStore.getState().spendCoins(10);
+                      if (!spent) return;
+                    }
+                    haptics.tap();
+                    const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
+                    setHintCol(bestCol);
+                    setTimeout(() => setHintCol(null), 2000);
+                  }
+                }}
+                style={[styles.controlBtn, !canAffordHint && { opacity: 0.4 }]}
+                disabled={!canAffordHint}
+              >
+                <Text style={styles.controlIcon}>💡</Text>
+                <Text style={styles.controlLabel}>{hintLabel}</Text>
+              </Pressable>
+            );
+          })()}
 
           {/* Move counter */}
           <View style={styles.moveCounter}>
             <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
           </View>
 
-          {/* Undo button — hidden in online matches */}
-          {!isOnlineMatch && (
+          {/* Undo button — only available on Easy difficulty, hidden in online/ranked matches */}
+          {!isOnlineMatch && !isRankedMode && difficulty === 'easy' && (
             <Pressable onPress={() => {
               if (undoMove()) {
                 haptics.tap();
@@ -793,8 +870,13 @@ export function GameScreen({ navigation }: Props) {
               onPress={() => {
                 haptics.tap();
                 playSound('click');
+                // Show player's emote locally
+                setMyEmote({ emoteId: emote.id, key: Date.now() });
                 if (isOnlineMatch && onlineMatchId && myPlayerNum) {
                   sendEmote(onlineMatchId, emote.id, myPlayerNum);
+                } else {
+                  // Local game: trigger AI reaction
+                  triggerAiEmoteReaction(emote.id);
                 }
               }}
               style={[styles.quickEmotePill, { borderColor: emote.color + '30' }]}
@@ -838,14 +920,46 @@ export function GameScreen({ navigation }: Props) {
           onClose={() => setEmotePickerOpen(false)}
           initialTab={emotePickerTab}
           onEmotePress={(id) => {
+            // Show player's emote locally
+            setMyEmote({ emoteId: id, key: Date.now() });
             if (isOnlineMatch && onlineMatchId && myPlayerNum) {
               sendEmote(onlineMatchId, id, myPlayerNum);
+            } else {
+              // Local game: trigger AI reaction
+              triggerAiEmoteReaction(id);
             }
           }}
           onChatSend={(msg: QuickChatMessage) => {
             setMyChatBubble({ text: msg.text, key: Date.now() });
             if (isOnlineMatch && onlineMatchId && myPlayerNum) {
               sendEmote(onlineMatchId, `chat:${msg.id}`, myPlayerNum);
+            } else if (isVsAi) {
+              // AI chat reaction for local games — respond with a contextual chat bubble
+              const aiChatDelay = 1000 + Math.random() * 1000;
+              setTimeout(() => {
+                if (Math.random() < 0.5) return; // 50% chance of no reaction
+                const AI_CHAT_RESPONSES: Record<string, string[]> = {
+                  gl: ['Good luck!', 'Have fun!'],
+                  hf: ['Have fun!', 'Good luck!'],
+                  nm: ['Thanks!', 'Well played!'],
+                  wp: ['Thanks!', 'Good game!'],
+                  ez: ['Bring it on!', 'Hmm...'],
+                  bm: ['Bring it on!', 'Good luck!'],
+                  uh: ['Hmm...', 'Oops!'],
+                  wow: ['Thanks!', 'Wow!'],
+                  oops: ['That was close!', 'Hmm...'],
+                  close: ['That was close!', 'Wow!'],
+                  think: ['Hmm...', 'Wait what?!'],
+                  what: ['Hmm...', 'Oops!'],
+                  gg: ['Good game!', 'Thanks!'],
+                  rematch: ['Bring it on!', 'Good luck!'],
+                  thanks: ['Good luck!', 'Have fun!'],
+                  bye: ['See ya!', 'Good game!'],
+                };
+                const options = AI_CHAT_RESPONSES[msg.id] || ['Good game!', 'Hmm...'];
+                const aiText = options[Math.floor(Math.random() * options.length)];
+                setOpponentChatBubble({ text: aiText, senderName: p2Name, key: Date.now() });
+              }, aiChatDelay);
             }
           }}
         />
@@ -874,12 +988,22 @@ export function GameScreen({ navigation }: Props) {
           />
         )}
 
-        {/* Floating emote from opponent (online matches) */}
+        {/* Floating emote from player (visible to both sides) */}
+        {myEmote && (
+          <FloatingEmote
+            key={myEmote.key}
+            emoteId={myEmote.emoteId}
+            side={isOnlineMatch && myPlayerNum === 2 ? 'right' : 'left'}
+            onDone={() => setMyEmote(null)}
+          />
+        )}
+
+        {/* Floating emote from opponent / AI */}
         {opponentEmote && (
           <FloatingEmote
             key={opponentEmote.key}
             emoteId={opponentEmote.emoteId}
-            side={myPlayerNum === 1 ? 'right' : 'left'}
+            side={isOnlineMatch && myPlayerNum === 2 ? 'left' : 'right'}
             onDone={() => setOpponentEmote(null)}
           />
         )}
