@@ -200,11 +200,24 @@ export function HomeScreen() {
   const [showTapHint, setShowTapHint] = useState(false);
   const tapHintCountRef = useRef(0);
   const tapHintOpacity = useRef(new Animated.Value(0)).current;
+  const tutorialDismissedRef = useRef(tipAlreadySeen);
+
+  // Track when tutorial gets dismissed so tap hint can start
+  useEffect(() => {
+    if (!showTutorial && tipAlreadySeen) {
+      tutorialDismissedRef.current = true;
+    }
+  }, [showTutorial, tipAlreadySeen]);
 
   useEffect(() => {
+    // Don't start tap hint interval until tutorial has been dismissed OR 10s safety timeout
+    const safetyTimeout = setTimeout(() => {
+      tutorialDismissedRef.current = true;
+    }, 10000);
+
     const interval = setInterval(() => {
-      // Only show if no emote playing, tutorial not showing, and less than 3 times
-      if (!emote && !showTutorial && tapHintCountRef.current < 3) {
+      // Only show if tutorial dismissed, no emote playing, and less than 3 times
+      if (tutorialDismissedRef.current && !emote && !showTutorial && tapHintCountRef.current < 3) {
         tapHintCountRef.current += 1;
         setShowTapHint(true);
         // Fade in
@@ -218,7 +231,7 @@ export function HomeScreen() {
         });
       }
     }, 10000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); clearTimeout(safetyTimeout); };
   }, [emote]);
 
   // All non-idle emotes for random idle tap
@@ -378,9 +391,6 @@ export function HomeScreen() {
             />
           </PressScaleView>
         </View>
-
-        {/* Version */}
-        <Text style={styles.version}>v1.0.0</Text>
 
         {/* Emote Showcase Modal */}
         <EmoteShowcase
@@ -714,15 +724,7 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Version
-  version: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  // Version (moved to Settings screen footer)
   // Coin earn animation
   coinDeltaText: {
     position: 'absolute',

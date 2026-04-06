@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated as RNAnimated } from 'react-native';
 import Animated, { FadeIn, SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -73,12 +73,42 @@ function getRulePills(level: CareerLevel): { label: string; color: string }[] {
   return pills;
 }
 
-function LevelNode({ level, stars, isUnlocked, onPress }: {
+function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
   level: CareerLevel;
   stars: number;
   isUnlocked: boolean;
   onPress: () => void;
+  justUnlocked?: boolean;
 }) {
+  // Orange glow pulse for freshly unlocked levels
+  const glowAnim = useRef(new RNAnimated.Value(0)).current;
+  useEffect(() => {
+    if (justUnlocked) {
+      const pulse = RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: false }),
+          RNAnimated.timing(glowAnim, { toValue: 0, duration: 800, useNativeDriver: false }),
+        ]),
+        { iterations: 3 }
+      );
+      pulse.start();
+    }
+  }, [justUnlocked]);
+
+  const animatedBorderColor = justUnlocked
+    ? glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['rgba(255,140,0,0.2)', 'rgba(255,140,0,0.7)'],
+      })
+    : undefined;
+
+  const animatedShadowOpacity = justUnlocked
+    ? glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 0.6],
+      })
+    : undefined;
+
   const bgColor = level.isBoss
     ? 'rgba(231,76,60,0.15)'
     : stars > 0
@@ -98,11 +128,16 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
   const badge = getDifficultyBadge(level.difficulty, level.isBoss);
   const pills = getRulePills(level);
 
+  const NodeWrapper = justUnlocked ? RNAnimated.View : View;
+  const wrapperStyle = justUnlocked
+    ? [styles.levelNode, { backgroundColor: bgColor, borderColor: animatedBorderColor, opacity: isUnlocked ? 1 : 0.35, shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: animatedShadowOpacity, shadowRadius: 12, elevation: 8 }]
+    : [styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }];
+
   return (
     <Pressable
       onPress={() => { if (isUnlocked) { haptics.tap(); playSound('click'); onPress(); } }}
-      style={[styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }]}
     >
+    <NodeWrapper style={wrapperStyle}>
       <View style={styles.levelLeft}>
         <View style={[styles.levelNumber, level.isBoss && styles.bossNumber]}>
           <Text style={styles.levelNumText}>{level.isBoss ? '👑' : level.id}</Text>
@@ -147,6 +182,7 @@ function LevelNode({ level, stars, isUnlocked, onPress }: {
           <Text style={styles.lockIcon}>🔒</Text>
         )}
       </View>
+    </NodeWrapper>
     </Pressable>
   );
 }
@@ -160,6 +196,31 @@ export function CareerScreen({ navigation }: Props) {
   const getTotalStars = useCareerStore(s => s.getTotalStars);
   const getCompletedCount = useCareerStore(s => s.getCompletedCount);
   const [activeChapter, setActiveChapter] = useState(1);
+
+  // Snapshot lock state on mount so we can detect newly unlocked levels
+  const initialLockedRef = useRef<Set<number>>(new Set());
+  const [newlyUnlockedIds, setNewlyUnlockedIds] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    const locked = new Set<number>();
+    for (const lvl of ALL_CAREER_LEVELS) {
+      const stars = getStars(lvl.id);
+      const isUnlocked = lvl.id === 1 || getStars(lvl.id - 1) > 0 || stars > 0;
+      if (!isUnlocked) locked.add(lvl.id);
+    }
+    initialLockedRef.current = locked;
+  }, []); // snapshot once on mount
+
+  // Detect newly unlocked levels when progress changes
+  useEffect(() => {
+    if (initialLockedRef.current.size === 0) return;
+    const freshlyUnlocked = new Set<number>();
+    for (const lvlId of initialLockedRef.current) {
+      const stars = getStars(lvlId);
+      const isNowUnlocked = getStars(lvlId - 1) > 0 || stars > 0;
+      if (isNowUnlocked) freshlyUnlocked.add(lvlId);
+    }
+    if (freshlyUnlocked.size > 0) setNewlyUnlockedIds(freshlyUnlocked);
+  }, [getStars, getCompletedCount()]);
 
   // Tutorial
   const hasSeenCareerTip = useTutorialStore(s => s.hasSeenTip);
@@ -302,6 +363,7 @@ export function CareerScreen({ navigation }: Props) {
                   level={lvl}
                   stars={stars}
                   isUnlocked={isUnlocked}
+                  justUnlocked={newlyUnlockedIds.has(lvl.id)}
                   onPress={() => handlePlayLevel(lvl)}
                 />
 

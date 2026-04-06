@@ -91,6 +91,8 @@ export function GameScreen({ navigation }: Props) {
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
+  const [showFirstWin, setShowFirstWin] = useState(false);
+  const firstWinOpacity = useRef(new RNAnimated.Value(0)).current;
 
   // Last move indicator
   const [lastMoveCol, setLastMoveCol] = useState<number | null>(null);
@@ -490,7 +492,7 @@ export function GameScreen({ navigation }: Props) {
       }
       const shopState = useShopStore.getState();
       const careerState = useCareerStore.getState();
-      checkAchievements({
+      const newAchievements = checkAchievements({
         totalWins,
         currentStreak: useGameStore.getState().winStreak,
         bestStreak: useGameStore.getState().bestStreak,
@@ -501,6 +503,16 @@ export function GameScreen({ navigation }: Props) {
         hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
       });
+      // First Win special celebration
+      if (newAchievements.includes('First Win')) {
+        setShowFirstWin(true);
+        playSound('level_up');
+        firstWinOpacity.setValue(1);
+        RNAnimated.sequence([
+          RNAnimated.delay(3000),
+          RNAnimated.timing(firstWinOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
+        ]).start(() => setShowFirstWin(false));
+      }
       setShowConfetti(true);
       setShowCoinBurst(true);
       haptics.win();
@@ -1131,6 +1143,12 @@ export function GameScreen({ navigation }: Props) {
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
+            {/* First Win golden banner */}
+            {showFirstWin && (
+              <RNAnimated.View style={[styles.firstWinBanner, { opacity: firstWinOpacity }]} pointerEvents="none">
+                <Text style={styles.firstWinText}>FIRST WIN!</Text>
+              </RNAnimated.View>
+            )}
             <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.goCard}>
              <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
 
@@ -1793,6 +1811,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  firstWinBanner: {
+    position: 'absolute',
+    top: '8%',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,215,0,0.2)',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(255,215,0,0.5)',
+    zIndex: 200,
+    shadowColor: 'rgba(255,215,0,0.8)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 30,
+  },
+  firstWinText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 28,
+    color: '#FFD700',
+    letterSpacing: 4,
+    textShadowColor: 'rgba(255,200,0,0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   goCard: {
     width: '92%',

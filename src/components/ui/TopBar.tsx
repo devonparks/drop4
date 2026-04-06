@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -40,6 +40,24 @@ export function TopBar({
     n >= 1000 ? n.toLocaleString() :
     n.toString();
 
+  // Coin change flash animation: green for increase, red for decrease
+  const prevCoinsRef = useRef(coins);
+  const coinFlashAnim = useRef(new Animated.Value(0)).current;
+  const [coinFlashColor, setCoinFlashColor] = useState('#27ae3d');
+  useEffect(() => {
+    if (coins !== prevCoinsRef.current) {
+      setCoinFlashColor(coins > prevCoinsRef.current ? '#27ae3d' : '#e74c3c');
+      coinFlashAnim.setValue(1);
+      Animated.timing(coinFlashAnim, { toValue: 0, duration: 500, useNativeDriver: false }).start();
+      prevCoinsRef.current = coins;
+    }
+  }, [coins]);
+
+  const coinTextColor = coinFlashAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#ffffff', coinFlashColor],
+  });
+
   return (
     <View style={styles.container}>
       {/* Left: Back or Settings */}
@@ -72,7 +90,7 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} />
+        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} />
         <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} />
         <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
       </LinearGradient>
@@ -99,13 +117,17 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, color, onPress, onPlusPress }: {
-  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void;
+function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor }: {
+  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>;
 }) {
   return (
     <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pill}>
       <Text style={styles.pillEmoji}>{emoji}</Text>
-      <Text style={styles.pillValue}>{value}</Text>
+      {animatedTextColor ? (
+        <Animated.Text style={[styles.pillValue, { color: animatedTextColor }]}>{value}</Animated.Text>
+      ) : (
+        <Text style={styles.pillValue}>{value}</Text>
+      )}
       <Pressable onPress={() => { haptics.tap(); onPlusPress?.(); }}>
         <LinearGradient
           colors={['#34c94d', '#27ae3d', '#1e8a30']}

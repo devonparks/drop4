@@ -230,7 +230,7 @@ export function SettingsScreen({ navigation }: Props) {
 
         {/* Version */}
         <View style={styles.footer}>
-          <Text style={styles.version}>Drop4 v1.0.0</Text>
+          <Text style={styles.versionBadge}>DROP4 v1.0.0</Text>
           <Text style={styles.copyright}>Created by Devon Parks</Text>
           <Text style={styles.copyright}>AMG Studios © 2026</Text>
         </View>
@@ -417,11 +417,20 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingBottom: 24,
   },
-  version: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 13,
+  versionBadge: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
     color: colors.textSecondary,
+    letterSpacing: 2,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+    marginBottom: 6,
   },
   copyright: {
     fontFamily: fonts.body,
