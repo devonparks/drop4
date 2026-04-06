@@ -30,6 +30,10 @@ interface ShopState {
   // Equipped idle variant (null = base idle with random variants)
   equippedIdle: string | null;
 
+  // Pets
+  equippedPet: string | null;
+  ownedPets: string[];
+
   // Level up celebration flag
   justLeveledUp: boolean;
 
@@ -43,6 +47,8 @@ interface ShopState {
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
   setEquippedEmote: (slot: number, emoteId: string) => void;
   setEquippedIdle: (idleId: string | null) => void;
+  equipPet: (petId: string | null) => void;
+  purchasePet: (petId: string, cost: number) => boolean;
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -73,6 +79,9 @@ export const useShopStore = create<ShopState>((set, get) => ({
   equippedEmotes: ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
 
   equippedIdle: null,
+
+  equippedPet: null,
+  ownedPets: [],
 
   justLeveledUp: false,
 
@@ -133,6 +142,19 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   setEquippedIdle: (idleId) => set({ equippedIdle: idleId }),
 
+  equipPet: (petId) => set({ equippedPet: petId }),
+
+  purchasePet: (petId, cost) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    if (state.ownedPets.includes(petId)) return false;
+    set((s) => ({
+      coins: s.coins - cost,
+      ownedPets: [...s.ownedPets, petId],
+    }));
+    return true;
+  },
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -162,6 +184,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
         },
         equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
         equippedIdle: saved.equippedIdle ?? null,
+        equippedPet: saved.equippedPet ?? null,
+        ownedPets: saved.ownedPets ?? [],
       });
     }
   },
@@ -179,5 +203,7 @@ useShopStore.subscribe((state) => {
     owned: state.owned,
     equippedEmotes: state.equippedEmotes,
     equippedIdle: state.equippedIdle,
+    equippedPet: state.equippedPet,
+    ownedPets: state.ownedPets,
   });
 });

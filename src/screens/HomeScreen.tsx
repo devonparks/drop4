@@ -8,6 +8,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVariantId } from '../components/ui/AnimatedCharacter';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { IdlePicker } from '../components/ui/IdlePicker';
+import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
@@ -118,6 +119,7 @@ export function HomeScreen() {
   const level = useShopStore(s => s.level);
   // Season & challenge details moved to tab bar — store import kept for future use
   const equippedIdle = useShopStore(s => s.equippedIdle);
+  const equippedPet = useShopStore(s => s.equippedPet);
   const winStreak = useGameStore(s => s.winStreak);
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
@@ -333,6 +335,13 @@ export function HomeScreen() {
                 emote={emote}
                 selectedIdle={equippedIdle as IdleVariantId | null}
                 onEmoteComplete={clearEmote}
+              />
+              {/* Pet display — sits at character's feet, bottom-right */}
+              <PetDisplay
+                petId={equippedPet}
+                size={80}
+                isIdle={!emote}
+                style={styles.petPosition}
               />
             </Pressable>
             {/* Stage platform glow */}
@@ -836,6 +845,13 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
+  },
+  // Pet position (bottom-right of character)
+  petPosition: {
+    position: 'absolute',
+    bottom: 10,
+    right: -10,
+    zIndex: 5,
   },
   // Version (moved to Settings screen footer)
   // Coin earn animation

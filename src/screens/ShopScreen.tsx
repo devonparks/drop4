@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -9,12 +9,13 @@ import { haptics } from '../services/haptics';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
+import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type ShopTab = 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'boxes';
+type ShopTab = 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
 
 // ─── Countdown hook ────────────────────────────────────────────
 function useCountdown() {
@@ -162,6 +163,43 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
 
 type CollectionFilter = 'All' | 'OG Collection' | 'Season 0' | 'Neon Pack' | 'Mythic Collection';
 
+// ─── Pet Card ─────────────────────────────────────────────────
+function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
+  pet: Pet; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number;
+}) {
+  const rarityColor = PET_RARITY_COLORS[pet.rarity];
+  const isEarnOnly = pet.price === 0;
+
+  return (
+    <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
+      <Pressable
+        onPress={onPress}
+        style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
+      >
+        <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
+        <View style={s.petPreview}>
+          <Image source={pet.idleImage} style={s.petPreviewImage} resizeMode="contain" />
+        </View>
+        <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
+        <Text style={s.petBreed} numberOfLines={1}>{pet.breed}</Text>
+        <Text style={[s.rarityLabel, { color: rarityColor }]}>{PET_RARITY_LABELS[pet.rarity]}</Text>
+        {isEquipped ? (
+          <View style={s.equippedBadge}><Text style={s.equippedText}>EQUIPPED</Text></View>
+        ) : isOwned ? (
+          <Text style={s.ownedText}>Tap to Equip</Text>
+        ) : isEarnOnly ? (
+          <Text style={[s.lockedText, { color: rarityColor }]}>{pet.description || 'Earn Only'}</Text>
+        ) : (
+          <View style={s.priceRow}>
+            <Text style={s.priceEmoji}>{'\u{1FA99}'}</Text>
+            <Text style={s.priceText}>{pet.price.toLocaleString()}</Text>
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SHOP SCREEN
 // ═══════════════════════════════════════════════════════════════
@@ -171,8 +209,12 @@ export function ShopScreen() {
   const owned = useShopStore(s2 => s2.owned);
   const equipped = useShopStore(s2 => s2.equipped);
   const equippedEmotes = useShopStore(s2 => s2.equippedEmotes);
+  const equippedPet = useShopStore(s2 => s2.equippedPet);
+  const ownedPets = useShopStore(s2 => s2.ownedPets);
   const purchaseItem = useShopStore(s2 => s2.purchaseItem);
   const equipItem = useShopStore(s2 => s2.equipItem);
+  const equipPet = useShopStore(s2 => s2.equipPet);
+  const purchasePet = useShopStore(s2 => s2.purchasePet);
   const addCoins = useShopStore(s2 => s2.addCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
@@ -205,6 +247,23 @@ export function ShopScreen() {
     }
   };
 
+  const handlePetPress = (pet: Pet) => {
+    if (equippedPet === pet.id) {
+      // Unequip
+      equipPet(null);
+      haptics.select();
+      return;
+    }
+    if (ownedPets.includes(pet.id)) {
+      equipPet(pet.id);
+      haptics.select();
+    } else if (pet.price > 0) {
+      const success = purchasePet(pet.id, pet.price);
+      if (success) { haptics.win(); equipPet(pet.id); }
+      else { haptics.error(); }
+    }
+  };
+
   const handleDailyCollect = () => {
     if (dailyCollected) return;
     addCoins(500);
@@ -219,6 +278,7 @@ export function ShopScreen() {
     { key: 'wins', label: 'Wins', icon: '\u{1F3C6}' },
     { key: 'accessories', label: 'Frames', icon: '\u{1F5BC}' },
     { key: 'emotes', label: 'Emotes', icon: '\u{1F60E}' },
+    { key: 'pets', label: 'Pets', icon: '\u{1F436}' },
     { key: 'boxes', label: 'Boxes', icon: '\u{1F381}' },
   ];
 
@@ -361,7 +421,7 @@ export function ShopScreen() {
             <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
 
             {/* Category tabs */}
-            <View style={s.tabRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
               {tabs.map(tab => (
                 <Pressable
                   key={tab.key}
@@ -372,10 +432,10 @@ export function ShopScreen() {
                   <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
 
             {/* Collection filters */}
-            {activeTab !== 'boxes' && (
+            {activeTab !== 'boxes' && activeTab !== 'pets' && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
                 {collectionFilters.map(cf => (
                   <Pressable
@@ -390,7 +450,20 @@ export function ShopScreen() {
             )}
 
             {/* Items */}
-            {activeTab === 'boxes' ? (
+            {activeTab === 'pets' ? (
+              <View style={s.grid}>
+                {PETS.map((pet, i) => (
+                  <PetCard
+                    key={pet.id}
+                    pet={pet}
+                    isOwned={ownedPets.includes(pet.id)}
+                    isEquipped={equippedPet === pet.id}
+                    onPress={() => handlePetPress(pet)}
+                    index={i}
+                  />
+                ))}
+              </View>
+            ) : activeTab === 'boxes' ? (
               <View style={s.boxList}>
                 {LOOT_BOXES.map(box => {
                   const count = useLootBoxStore.getState().getBoxCount(box.id);
@@ -566,8 +639,8 @@ const s = StyleSheet.create({
     flexDirection: 'row', paddingHorizontal: 16, gap: 6, marginBottom: 12,
   },
   tab: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 4, paddingVertical: 10, borderRadius: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent',
   },
   tabActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' },
@@ -626,6 +699,27 @@ const s = StyleSheet.create({
   lockedText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
     textAlign: 'center', marginTop: 4, textTransform: 'uppercase',
+  },
+
+  // ── Pet cards ──
+  petCard: {
+    width: 108, backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.surfaceBorder, paddingBottom: 10,
+  },
+  petPreview: {
+    width: '100%', height: 80, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  petPreviewImage: {
+    width: 64, height: 64,
+  },
+  petName: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: '#ffffff',
+    textAlign: 'center', marginTop: 6, paddingHorizontal: 4,
+  },
+  petBreed: {
+    fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 9, color: colors.textSecondary,
+    textAlign: 'center', marginTop: 1, paddingHorizontal: 4,
   },
 
   // ── Box list (inside tab) ──
