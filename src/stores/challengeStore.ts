@@ -29,16 +29,28 @@ interface ChallengeState {
 
 // Daily challenge pool — 3 are randomly selected each day
 const CHALLENGE_POOL: Omit<Challenge, 'progress' | 'completed'>[] = [
+  // Win challenges
   { id: 'win_3', title: 'Triple Threat', description: 'Win 3 games', icon: '🏆', target: 3, reward: 100 },
+  { id: 'win_5', title: 'Dominant Force', description: 'Win 5 games today', icon: '🏅', target: 5, reward: 200 },
   { id: 'win_easy', title: 'Warm Up', description: 'Win a game on Easy', icon: '⭐', target: 1, reward: 25 },
   { id: 'win_medium', title: 'Rising Star', description: 'Win a game on Medium', icon: '⭐⭐', target: 1, reward: 50 },
   { id: 'win_hard', title: 'Challenger', description: 'Win a game on Hard', icon: '⭐⭐⭐', target: 1, reward: 100 },
+  { id: 'win_2_hard', title: 'Hard Knocks', description: 'Win 2 games on Hard', icon: '💀', target: 2, reward: 175 },
+  { id: 'win_3_easy', title: 'Easy Street', description: 'Win 3 games on Easy', icon: '🌿', target: 3, reward: 60 },
+  // Play challenges
   { id: 'play_5', title: 'Dedicated', description: 'Play 5 games', icon: '🎮', target: 5, reward: 75 },
+  { id: 'play_10', title: 'Marathon Player', description: 'Play 10 games', icon: '🎲', target: 10, reward: 150 },
+  // Special skill challenges
   { id: 'center_first', title: 'Center Control', description: 'Drop your first piece in the center column', icon: '🎯', target: 1, reward: 30 },
   { id: 'win_streak_2', title: 'On a Roll', description: 'Win 2 games in a row', icon: '🔥', target: 2, reward: 60 },
+  { id: 'win_streak_3', title: 'Hat Trick', description: 'Win 3 games in a row', icon: '🌶️', target: 3, reward: 120 },
   { id: 'fast_win', title: 'Speed Win', description: 'Win a game in under 10 moves', icon: '⚡', target: 1, reward: 80 },
+  { id: 'blitz_win', title: 'Blitz King', description: 'Win a game in under 8 moves', icon: '💨', target: 1, reward: 120 },
+  { id: 'career_level', title: 'Career Move', description: 'Complete a career level', icon: '📍', target: 1, reward: 75 },
+  // Social / exploration
   { id: 'play_local', title: 'Social Gamer', description: 'Play a local multiplayer game', icon: '👥', target: 1, reward: 40 },
   { id: 'shop_visit', title: 'Window Shopping', description: 'Visit the shop', icon: '🛍', target: 1, reward: 15 },
+  { id: 'try_custom', title: 'Remix', description: 'Play a custom game mode', icon: '🔧', target: 1, reward: 40 },
 ];
 
 function pickRandomChallenges(count: number): Challenge[] {

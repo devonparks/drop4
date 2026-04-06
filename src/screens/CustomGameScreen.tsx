@@ -7,6 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
+import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -196,6 +197,7 @@ export function CustomGameScreen({ navigation }: Props) {
       timerSeconds: timer === 'none' ? 0 : parseInt(timer) || 0,
       startingPlayer,
     });
+    useChallengeStore.getState().updateProgress('try_custom', 1);
     navigation.navigate('Game', { gameSpeed: gameSpeed !== 'normal' ? gameSpeed : undefined } as any);
   };
 

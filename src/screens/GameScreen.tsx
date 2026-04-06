@@ -573,13 +573,19 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'win', opponent: matchOpponent, difficulty, moves: moveCount, coinsEarned: totalReward, mode: matchMode });
       // Update challenges
       updateChallenge('win_3', 1);
+      updateChallenge('win_5', 1);
       updateChallenge('play_5', 1);
-      if (difficulty === 'easy') updateChallenge('win_easy', 1);
+      updateChallenge('play_10', 1);
+      if (difficulty === 'easy') { updateChallenge('win_easy', 1); updateChallenge('win_3_easy', 1); }
       if (difficulty === 'medium') updateChallenge('win_medium', 1);
-      if (difficulty === 'hard') updateChallenge('win_hard', 1);
+      if (difficulty === 'hard') { updateChallenge('win_hard', 1); updateChallenge('win_2_hard', 1); }
       if (moveCount < 10) updateChallenge('fast_win', 1);
-      // Win streak challenge — track each win, completes at 2
+      if (moveCount < 8) updateChallenge('blitz_win', 1);
+      // Win streak challenges — track each win, reset on loss/draw
       updateChallenge('win_streak_2', 1);
+      updateChallenge('win_streak_3', 1);
+      // Career level completion
+      if (params.careerLevelId) updateChallenge('career_level', 1);
       // Detect challenge completion
       const justCompleted = useChallengeStore.getState().challenges.find(
         c => !c.completed && c.progress >= c.target
@@ -710,8 +716,10 @@ export function GameScreen({ navigation }: Props) {
       const lossOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
-      // Break win streak challenge on loss
+      updateChallenge('play_10', 1);
+      // Break win streak challenges on loss
       resetChallenge('win_streak_2');
+      resetChallenge('win_streak_3');
       // Season XP on loss — detect tier-up
       const preTierLoss = useSeasonStore.getState().currentTier;
       addSeasonXp(10);
@@ -748,7 +756,9 @@ export function GameScreen({ navigation }: Props) {
       const drawOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
+      updateChallenge('play_10', 1);
       resetChallenge('win_streak_2'); // Draw also breaks the streak
+      resetChallenge('win_streak_3');
       // Season XP on draw — detect tier-up
       const preTierDraw = useSeasonStore.getState().currentTier;
       addSeasonXp(15);
