@@ -780,6 +780,7 @@ export function GameScreen({ navigation }: Props) {
           name, icon: allAchs.find(a => a.name === name)?.icon ?? '🏆',
         }))]);
       }
+      addXp(5); // Participation XP on loss
       haptics.error();
       playSound('lose');
       // Comeback mechanic — grant pity coins on losing streak to keep players engaged
@@ -837,6 +838,7 @@ export function GameScreen({ navigation }: Props) {
           name, icon: allAchs.find(a => a.name === name)?.icon ?? '🏆',
         }))]);
       }
+      addXp(10); // Participation XP on draw
       haptics.coinEarn();
       playSound('coin');
     }

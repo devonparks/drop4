@@ -137,8 +137,11 @@ export function StatsScreen({ navigation }: Props) {
   const localGames = matches.filter(m => m.mode === 'local').length;
   const stageGames = matches.filter(m => m.mode === 'stage').length;
 
-  // Hours played estimate (avg ~3 min per game)
-  const estimatedMinutes = stats.totalGames * 3;
+  // Hours played estimate: use actual average moves × ~5 seconds per move
+  const avgMoves = matches.length > 0
+    ? matches.reduce((sum, m) => sum + (m.moves || 20), 0) / matches.length
+    : 20;
+  const estimatedMinutes = Math.round(stats.totalGames * avgMoves * 5 / 60);
   const hoursPlayed = estimatedMinutes >= 60
     ? `${(estimatedMinutes / 60).toFixed(1)}h`
     : `${estimatedMinutes}m`;
