@@ -156,6 +156,7 @@ export function SeasonPassScreen() {
   const xpPerTier = useSeasonStore(s => s.xpPerTier);
   const hasPremium = useSeasonStore(s => s.hasPremium);
   const rewards = useSeasonStore(s => s.rewards);
+  const purchasePremium = useSeasonStore(s => s.purchasePremium);
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
@@ -223,7 +224,33 @@ export function SeasonPassScreen() {
                 <Text style={styles.premiumDesc}>Unlock exclusive rewards on every tier</Text>
                 <Text style={styles.premiumSubDesc}>2x coins, rare skins, and more</Text>
                 <View style={{ marginTop: 10 }}>
-                  <GlossyButton label="UPGRADE NOW" variant="gold" small onPress={() => haptics.tap()} />
+                  <GlossyButton
+                    label={`UPGRADE NOW — 💎100`}
+                    variant="gold"
+                    small
+                    onPress={() => {
+                      haptics.tap();
+                      Alert.alert(
+                        'Upgrade to Premium',
+                        `Spend 100 💎 gems to unlock the Premium Season Pass?\n\nYou have ${gems} gems.`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Upgrade',
+                            onPress: () => {
+                              const success = purchasePremium();
+                              if (success) {
+                                haptics.win();
+                                playSound('level_up');
+                              } else {
+                                Alert.alert('Not Enough Gems', `You need 100 💎 gems to upgrade.\n\nYou have ${gems} gems.`);
+                              }
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                  />
                 </View>
               </View>
             </LinearGradient>

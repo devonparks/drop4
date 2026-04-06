@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
+import { useShopStore } from './shopStore';
 
 export interface SeasonReward {
   tier: number;
@@ -24,6 +25,7 @@ interface SeasonState {
   claimReward: (tier: number) => void;
   claimFreeReward: (tier: number) => boolean;
   claimPremiumReward: (tier: number) => boolean;
+  purchasePremium: () => boolean; // returns true if purchase successful
   isFreeClaimed: (tier: number) => boolean;
   isPremiumClaimed: (tier: number) => boolean;
   loadFromStorage: () => Promise<void>;
@@ -90,6 +92,16 @@ export const useSeasonStore = create<SeasonState>((set, get) => ({
     if (!reward?.premiumReward) return false;
 
     set({ claimedPremiumTiers: [...state.claimedPremiumTiers, tier] });
+    return true;
+  },
+
+  purchasePremium: () => {
+    if (get().hasPremium) return false;
+    const PREMIUM_GEM_COST = 100;
+    const shopState = useShopStore.getState();
+    if (shopState.gems < PREMIUM_GEM_COST) return false;
+    useShopStore.getState().spendGems(PREMIUM_GEM_COST);
+    set({ hasPremium: true });
     return true;
   },
 

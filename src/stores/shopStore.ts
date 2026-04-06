@@ -85,6 +85,7 @@ interface ShopState {
   addXp: (amount: number) => void;
   clearLevelUp: () => void;
   addGems: (amount: number) => void;
+  spendGems: (amount: number) => boolean;
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
   setEquippedEmote: (slot: number, emoteId: string) => void;
@@ -142,6 +143,12 @@ export const useShopStore = create<ShopState>((set, get) => ({
   },
 
   addGems: (amount: number) => set((s) => ({ gems: s.gems + amount })),
+
+  spendGems: (amount) => {
+    if (get().gems < amount) return false;
+    set((s) => ({ gems: s.gems - amount }));
+    return true;
+  },
 
   addXp: (amount) => {
     const state = get();
