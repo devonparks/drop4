@@ -16,6 +16,7 @@ import { useTutorialStore } from '../stores/tutorialStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useRankedStore } from '../stores/rankedStore';
+import { useSeasonStore } from '../stores/seasonStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { COIN_REWARDS } from '../engine/constants';
 import { playSound } from '../services/audio';
@@ -132,6 +133,11 @@ export function HomeScreen() {
   const canSpin = useDailySpinStore(s => s.canSpin);
   const currentSeason = useRankedStore(s => s.currentSeason);
   const rankedTier = useRankedStore(s => s.tier);
+  const seasonTier = useSeasonStore(s => s.currentTier);
+  const seasonMaxTier = useSeasonStore(s => s.maxTier);
+  const seasonRewards = useSeasonStore(s => s.rewards);
+  const seasonXp = useSeasonStore(s => s.xp);
+  const seasonXpPerTier = useSeasonStore(s => s.xpPerTier);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
@@ -397,6 +403,29 @@ export function HomeScreen() {
           <Text style={styles.seasonCountdown}>
             Season {currentSeason}: {seasonDaysRemaining} day{seasonDaysRemaining !== 1 ? 's' : ''} remaining
           </Text>
+
+          {/* Season Rewards Preview — show next unlock when close */}
+          {seasonTier < seasonMaxTier && (() => {
+            const nextTier = seasonTier + 1;
+            const nextReward = seasonRewards.find(r => r.tier === nextTier);
+            const rewardLabel = nextReward?.freeReward
+              ? `${nextReward.freeReward.icon} ${nextReward.freeReward.name}`
+              : nextReward?.premiumReward
+                ? `${nextReward.premiumReward.icon} ${nextReward.premiumReward.name} (Premium)`
+                : null;
+            const pct = seasonXpPerTier > 0 ? Math.round((seasonXp / seasonXpPerTier) * 100) : 0;
+            if (!rewardLabel) return null;
+            return (
+              <Pressable onPress={() => navigation.navigate('SeasonPass')} style={styles.seasonRewardPreview}>
+                <Text style={styles.seasonRewardText}>
+                  Next reward: {rewardLabel} (Tier {nextTier})
+                </Text>
+                {pct >= 50 && (
+                  <Text style={styles.seasonRewardProgress}>{pct}% there!</Text>
+                )}
+              </Pressable>
+            );
+          })()}
         </View>
 
         {/* Season & Challenges moved to tab bar — more room for character */}
@@ -763,6 +792,30 @@ const styles = StyleSheet.create({
     color: 'rgba(155,89,182,0.7)',
     letterSpacing: 0.5,
     marginTop: 2,
+  },
+  seasonRewardPreview: {
+    marginTop: 4,
+    backgroundColor: 'rgba(155,89,182,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(155,89,182,0.2)',
+    alignItems: 'center',
+  },
+  seasonRewardText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(200,160,240,0.85)',
+    letterSpacing: 0.3,
+  },
+  seasonRewardProgress: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(155,89,182,0.9)',
+    marginTop: 1,
   },
   logoSubRow: {
     flexDirection: 'row',

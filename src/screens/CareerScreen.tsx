@@ -394,36 +394,38 @@ export function CareerScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={styles.levelList} showsVerticalScrollIndicator={false}>
           {/* Quick Resume button */}
           {nextUncompletedLevel && (
-            <Pressable
-              onPress={() => {
-                haptics.tap();
-                playSound('click');
-                // Switch to the correct chapter tab
-                const targetChapter = CHAPTERS.find(c => c.levels.some(l => l.id === nextUncompletedLevel.id));
-                if (targetChapter && targetChapter.id !== activeChapter) {
-                  setActiveChapter(targetChapter.id);
-                }
-                handlePlayLevel(nextUncompletedLevel);
-              }}
-              style={styles.continueCard}
-            >
-              <View style={styles.continueLeft}>
-                <Text style={styles.continueArrow}>▶</Text>
-                <View>
-                  <Text style={styles.continueLabel}>CONTINUE</Text>
-                  <Text style={styles.continueSub}>Level {nextUncompletedLevel.id} — {nextUncompletedLevel.name}</Text>
+            <>
+              <Pressable
+                onPress={() => {
+                  haptics.tap();
+                  playSound('click');
+                  // Switch to the correct chapter tab
+                  const targetChapter = CHAPTERS.find(c => c.levels.some(l => l.id === nextUncompletedLevel.id));
+                  if (targetChapter && targetChapter.id !== activeChapter) {
+                    setActiveChapter(targetChapter.id);
+                  }
+                  handlePlayLevel(nextUncompletedLevel);
+                }}
+                style={styles.continueCard}
+              >
+                <View style={styles.continueLeft}>
+                  <Text style={styles.continueArrow}>▶</Text>
+                  <View>
+                    <Text style={styles.continueLabel}>CONTINUE</Text>
+                    <Text style={styles.continueSub}>Level {nextUncompletedLevel.id} — {nextUncompletedLevel.name}</Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.continueChevron}>›</Text>
-            </Pressable>
-            {/* Next Unlock hint */}
-            {nextRewardHint && (
-              <View style={styles.nextRewardHint}>
-                <Text style={styles.nextRewardText}>
-                  Next reward: {nextRewardHint.reward.icon} {nextRewardHint.reward.name} (after Level {nextRewardHint.levelId})
-                </Text>
-              </View>
-            )}
+                <Text style={styles.continueChevron}>›</Text>
+              </Pressable>
+              {/* Next Unlock hint */}
+              {nextRewardHint && (
+                <View style={styles.nextRewardHint}>
+                  <Text style={styles.nextRewardText}>
+                    Next reward: {nextRewardHint.reward.icon} {nextRewardHint.reward.name} (after Level {nextRewardHint.levelId})
+                  </Text>
+                </View>
+              )}
+            </>
           )}
 
           {chapter.levels.map((lvl, i) => {

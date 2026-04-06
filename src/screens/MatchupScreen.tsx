@@ -83,6 +83,16 @@ export function MatchupScreen({ navigation }: Props) {
   const opponentLevel = params.opponentLevel ?? botPersona.level;
   const opponentTitle = params.opponentTitle || botPersona.title;
 
+  // Fake opponent stats — generated from difficulty for immersion
+  const opponentStats = (() => {
+    const favMoves = ['Center', 'Edge', 'Corners', 'Spread', 'Mirror'];
+    const seed = (opponentName.charCodeAt(0) + opponentLevel) % favMoves.length;
+    const baseWR = difficulty === 'easy' ? 42 : difficulty === 'hard' ? 81 : 65;
+    const wr = baseWR + (opponentLevel % 10);
+    const gamesPlayed = difficulty === 'easy' ? 30 + opponentLevel * 3 : difficulty === 'hard' ? 200 + opponentLevel * 8 : 80 + opponentLevel * 5;
+    return { winRate: Math.min(wr, 95), favMove: favMoves[seed], gamesPlayed };
+  })();
+
   // Court/venue name
   const courtName = params.courtName
     || (params.mode === 'career' ? 'CAREER: BOSS BATTLE' : 'CLASSIC COURT');
@@ -319,6 +329,13 @@ export function MatchupScreen({ navigation }: Props) {
                 <Text style={styles.nameText} numberOfLines={1}>{opponentName}</Text>
               </View>
               <Text style={styles.opponentTitle}>{opponentTitle}</Text>
+
+              {/* Fake opponent stats */}
+              <View style={styles.oppStatsWrap}>
+                <Text style={styles.oppStatText}>Win Rate: {opponentStats.winRate}%</Text>
+                <Text style={styles.oppStatText}>Favorite Move: {opponentStats.favMove}</Text>
+                <Text style={styles.oppStatText}>{opponentStats.gamesPlayed} games</Text>
+              </View>
             </Animated.View>
           ) : (
             <View style={styles.playerSide}>
@@ -522,6 +539,24 @@ const styles = StyleSheet.create({
     color: 'rgba(120,170,255,0.8)',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  oppStatsWrap: {
+    marginTop: 6,
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: 'rgba(80,140,255,0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(80,140,255,0.15)',
+  },
+  oppStatText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 9,
+    color: 'rgba(160,200,255,0.7)',
+    letterSpacing: 0.3,
   },
   petNameText: {
     fontFamily: fonts.body,

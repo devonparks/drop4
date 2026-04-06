@@ -927,6 +927,22 @@ export function GameScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {/* Quick Stats bar — motivational stats below HUD */}
+        {(() => {
+          const stats = useMatchHistoryStore.getState().getStats();
+          const streak = useGameStore.getState().winStreak;
+          return (stats.totalGames > 0 || streak > 0) ? (
+            <View style={styles.quickStatsBar}>
+              {stats.totalGames > 0 && (
+                <Text style={styles.quickStatText}>{stats.winRate}% WR</Text>
+              )}
+              {streak > 0 && (
+                <Text style={styles.quickStatText}>{'\uD83D\uDD25'} {streak}</Text>
+              )}
+            </View>
+          ) : null;
+        })()}
+
         {/* Score dots (best of 5) */}
         <View style={styles.scoreDots}>
           <View style={styles.dotsGroup}>
@@ -1787,6 +1803,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 4,
     marginTop: 28,
+  },
+  quickStatsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingVertical: 2,
+    marginBottom: 2,
+  },
+  quickStatText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 0.5,
   },
   turnCenter: {
     alignItems: 'center',
