@@ -1056,6 +1056,10 @@ export function GameScreen({ navigation }: Props) {
             </RNAnimated.Text>
             <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
             <Text style={styles.boardThemeLabel}>{boardThemeName}</Text>
+            {/* Connect count indicator for non-standard (Connect 3, 5, 6, etc.) */}
+            {customSettings && customSettings.connectCount !== 4 && (
+              <Text style={styles.connectCountLabel}>Connect {customSettings.connectCount}</Text>
+            )}
             {/* Board size indicator for non-standard boards */}
             {customSettings && (customSettings.rows !== 6 || customSettings.cols !== 7) && (
               <Text style={styles.boardSizeLabel}>{customSettings.cols}x{customSettings.rows} Board</Text>
@@ -2122,6 +2126,14 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: colors.textMuted,
     marginTop: 1,
+  },
+  connectCountLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.orange,
+    marginTop: 2,
+    letterSpacing: 1,
   },
   boardSizeLabel: {
     fontFamily: fonts.body,
