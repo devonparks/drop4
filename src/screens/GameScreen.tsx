@@ -34,6 +34,7 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomGameOverQuote } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
+import { AchievementToast } from '../components/effects/AchievementToast';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
@@ -172,6 +173,18 @@ export function GameScreen({ navigation }: Props) {
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedBoard = useShopStore(s => s.equipped.board);
   const boardThemeName = BOARD_THEMES.find(b => b.id === equippedBoard)?.name || 'Classic Blue';
+
+  // Achievement toast queue
+  const [achievementQueue, setAchievementQueue] = useState<{ name: string; icon: string }[]>([]);
+  const [currentAchievementToast, setCurrentAchievementToast] = useState<{ name: string; icon: string } | null>(null);
+  // Dequeue achievements one at a time
+  useEffect(() => {
+    if (!currentAchievementToast && achievementQueue.length > 0) {
+      const [next, ...rest] = achievementQueue;
+      setCurrentAchievementToast(next);
+      setAchievementQueue(rest);
+    }
+  }, [achievementQueue, currentAchievementToast]);
 
   // Game count milestone celebration
   const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
@@ -659,6 +672,16 @@ export function GameScreen({ navigation }: Props) {
           RNAnimated.delay(3000),
           RNAnimated.timing(firstWinOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
         ]).start(() => setShowFirstWin(false));
+      }
+      // Queue achievement toasts for other unlocked achievements
+      const otherAchievements = newAchievements.filter(name => name !== 'First Win');
+      if (otherAchievements.length > 0) {
+        const allAchievements = useAchievementStore.getState().achievements;
+        const toasts = otherAchievements.map(name => {
+          const ach = allAchievements.find(a => a.name === name);
+          return { name, icon: ach?.icon ?? '🏆' };
+        });
+        setAchievementQueue(q => [...q, ...toasts]);
       }
       // Streak Rewards — bonus coins + loot boxes at milestones
       const currentStreak = useGameStore.getState().winStreak;
@@ -1494,6 +1517,16 @@ export function GameScreen({ navigation }: Props) {
           onDone={() => setShowCoinBurst(false)}
         />
 
+        {/* Achievement toast — shown when a new achievement is unlocked */}
+        {currentAchievementToast && (
+          <AchievementToast
+            name={currentAchievementToast.name}
+            icon={currentAchievementToast.icon}
+            visible={!!currentAchievementToast}
+            onDone={() => setCurrentAchievementToast(null)}
+          />
+        )}
+
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
@@ -1864,7 +1897,10 @@ export function GameScreen({ navigation }: Props) {
                 {status === 'won' && winner === 1 && completedChallengeName && (
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.5)', backgroundColor: 'rgba(26,188,156,0.12)' }]}>
                     <Text style={styles.goRewardIcon}>🎯</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>CHALLENGE{'\n'}COMPLETE!</Text>
+                    <View>
+                      <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>CHALLENGE DONE!</Text>
+                      <Text style={[styles.goRewardDesc, { color: '#ffffff', fontSize: 11, marginTop: 1 }]}>{completedChallengeName}</Text>
+                    </View>
                   </View>
                 )}
                 {/* Streak broken notification (loss only) */}
