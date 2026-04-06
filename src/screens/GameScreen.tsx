@@ -47,6 +47,7 @@ import { useTutorialStore } from '../stores/tutorialStore';
 import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
+import { BOARD_THEMES } from '../data/shopCatalog';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
 
 type Props = {
@@ -155,6 +156,11 @@ export function GameScreen({ navigation }: Props) {
   const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
   const equippedEmotes = useShopStore(s => s.equippedEmotes);
   const equippedPet = useShopStore(s => s.equippedPet);
+  const equippedBoard = useShopStore(s => s.equipped.board);
+  const boardThemeName = BOARD_THEMES.find(b => b.id === equippedBoard)?.name || 'Classic Blue';
+
+  // Game count milestone celebration
+  const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
 
   // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
@@ -641,6 +647,14 @@ export function GameScreen({ navigation }: Props) {
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current && params.localPlayerNames) {
       updateChallenge('play_local', 1);
     }
+    // Game count milestone celebration
+    if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
+      const totalGamesPlayed = useMatchHistoryStore.getState().matches.length;
+      if (totalGamesPlayed === 10) setMilestoneCelebration('Double digits! \uD83C\uDF89');
+      else if (totalGamesPlayed === 50) setMilestoneCelebration('50 games! Dedicated player!');
+      else if (totalGamesPlayed === 100) setMilestoneCelebration('Century! \uD83D\uDCAF');
+      else if (totalGamesPlayed === 500) setMilestoneCelebration('500 games! True fan!');
+    }
     // Set game-over motivational quote
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
       const quoteResult: 'win' | 'loss' | 'draw' = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
@@ -654,6 +668,7 @@ export function GameScreen({ navigation }: Props) {
     }
     if (status === 'playing') {
       hasAwardedRef.current = false;
+      setMilestoneCelebration(null);
     }
   }, [status, winner]);
 
@@ -953,6 +968,7 @@ export function GameScreen({ navigation }: Props) {
               {turnText}
             </RNAnimated.Text>
             <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
+            <Text style={styles.boardThemeLabel}>{boardThemeName}</Text>
             {/* Timer bar (casual mode turn timer) */}
             {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
               <View style={styles.timerWrap}>
@@ -1639,6 +1655,13 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={[styles.goRewardDesc, { color: colors.textSecondary }]}>Start a new one!</Text>
                   </View>
                 )}
+                {/* Game count milestone celebration */}
+                {milestoneCelebration && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.5)', backgroundColor: 'rgba(241,196,15,0.1)' }]}>
+                    <Text style={styles.goRewardIcon}>{'\uD83C\uDFC6'}</Text>
+                    <Text style={[styles.goRewardAmount, { color: '#f1c40f', fontSize: 10 }]}>{milestoneCelebration}</Text>
+                  </View>
+                )}
                 {/* Loot box progress — show how many wins until next box */}
                 {status === 'won' && winner === 1 && (() => {
                   const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
@@ -1968,6 +1991,13 @@ const styles = StyleSheet.create({
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  boardThemeLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 8,
+    color: colors.textMuted,
+    marginTop: 1,
   },
   timerWrap: {
     flexDirection: 'row',

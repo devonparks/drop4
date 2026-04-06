@@ -44,6 +44,12 @@ export function PlayScreen({ navigation }: Props) {
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, gamesToday };
   }, [matches]);
   const mastery = useMemo(() => getMasteryStats(), [matches]);
+  // Per-difficulty loss counts from match history
+  const masteryLosses = useMemo(() => {
+    const aiMatches = matches.filter(m => m.mode === 'ai');
+    const calc = (diff: string) => aiMatches.filter(m => m.difficulty === diff && m.result === 'loss').length;
+    return { easy: calc('easy'), medium: calc('medium'), hard: calc('hard') };
+  }, [matches]);
 
   // Personal bests from match history
   const personalBests = useMemo(() => {
@@ -191,9 +197,9 @@ export function PlayScreen({ navigation }: Props) {
 
           {/* Difficulty buttons */}
           <View style={styles.buttonsWrap}>
-            <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.wins > 0 ? ` • ${mastery.easy.wins}W` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
-            <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.wins > 0 ? ` • ${mastery.medium.wins}W` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
-            <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.wins > 0 ? ` • ${mastery.hard.wins}W` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
+            <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.games > 0 ? ` • ${mastery.easy.wins}W - ${masteryLosses.easy}L` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
+            <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.games > 0 ? ` • ${mastery.medium.wins}W - ${masteryLosses.medium}L` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
+            <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.games > 0 ? ` • ${mastery.hard.wins}W - ${masteryLosses.hard}L` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
           </View>
 
           {/* Tip of the day */}
