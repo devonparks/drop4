@@ -267,6 +267,7 @@ export function ShopScreen() {
   const equipPet = useShopStore(s2 => s2.equipPet);
   const purchasePet = useShopStore(s2 => s2.purchasePet);
   const addCoins = useShopStore(s2 => s2.addCoins);
+  const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
   const [dailyCollected, setDailyCollected] = useState(false);
@@ -554,7 +555,7 @@ export function ShopScreen() {
             ) : activeTab === 'boxes' ? (
               <View style={s.boxList}>
                 {LOOT_BOXES.map(box => {
-                  const count = useLootBoxStore.getState().getBoxCount(box.id);
+                  const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
                   return (
                     <View key={box.id} style={s.boxItem}>
                       <Text style={s.boxItemIcon}>{box.icon}</Text>

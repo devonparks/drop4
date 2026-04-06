@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
@@ -38,22 +39,24 @@ export function TournamentScreen({ navigation }: Props) {
     return calculatePrizePool(playerCount, entryFee);
   }, [playerCount, entryFee]);
 
-  // Check if returning from a game with a result
-  useEffect(() => {
-    if (!tournament.isActive) return;
-
-    const match = tournament.getCurrentMatch();
-    if (!match) return;
-
-    const gameStatus = useGameStore.getState().status;
-    const winner = useGameStore.getState().winner;
-
-    if (gameStatus === 'won' && winner !== null) {
-      const winnerIndex = winner === 1 ? match.player1Index : match.player2Index;
-      tournament.recordResult(winnerIndex);
-      playSound('win');
-    }
-  }, []);
+  // Check if returning from a game with a result.
+  // useFocusEffect runs each time the screen comes into focus (including when
+  // returning from GameScreen), so tournament results are properly recorded.
+  useFocusEffect(
+    useCallback(() => {
+      if (!tournament.isActive) return;
+      const match = tournament.getCurrentMatch();
+      // Guard: skip if no match pending or it's already been recorded
+      if (!match || match.winner !== null) return;
+      const gameStatus = useGameStore.getState().status;
+      const winner = useGameStore.getState().winner;
+      if (gameStatus === 'won' && winner !== null) {
+        const winnerIndex = winner === 1 ? match.player1Index : match.player2Index;
+        tournament.recordResult(winnerIndex);
+        playSound('win');
+      }
+    }, [tournament])
+  );
 
   const updatePlayerCount = (count: 4 | 8 | 16) => {
     haptics.tap();
