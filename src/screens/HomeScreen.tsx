@@ -21,6 +21,7 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { COIN_REWARDS } from '../engine/constants';
 import { playSound } from '../services/audio';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
+import { DailyRewardPopup } from '../components/ui/DailyRewardPopup';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
@@ -738,6 +739,9 @@ export function HomeScreen() {
           visible={spinWheelOpen}
           onClose={() => setSpinWheelOpen(false)}
         />
+
+        {/* Daily Login Reward — auto-shows when a new day's reward is available */}
+        <DailyRewardPopup />
 
         {/* Tutorial tooltip */}
         <TutorialTooltip
