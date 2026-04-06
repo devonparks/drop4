@@ -265,9 +265,6 @@ export function LootBoxScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const addCoins = useShopStore(s => s.addCoins);
-  const addGems = useShopStore(s => s.addGems);
-  const purchaseItem = useShopStore(s => s.purchaseItem);
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
   const [openingBox, setOpeningBox] = useState<LootBox | null>(null);
@@ -285,15 +282,13 @@ export function LootBoxScreen() {
     if (!openingBox) return;
     setIsOpening(true);
 
+    // openBox() already grants rewards (coins, gems, items) inside lootBoxStore
+    // so we only need to get the item back for the reveal UI — no double-granting
     const item = openBox(openingBox.id);
     if (item) {
       setRevealedItem(item);
       haptics.win();
       playSound('win');
-      if (item.type === 'coins' && item.value) addCoins(item.value);
-      if (item.type === 'gems' && item.value) addGems(item.value);
-      if (item.type === 'board') purchaseItem('boards', item.id.replace('board_', ''), 0);
-      if (item.type === 'pieces') purchaseItem('pieces', item.id.replace('pieces_', ''), 0);
     }
     setOpeningBox(null);
     setIsOpening(false);

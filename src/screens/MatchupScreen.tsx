@@ -156,6 +156,7 @@ export function MatchupScreen({ navigation }: Props) {
       rankedClockSeconds: params.mode === 'ranked' ? 180 : undefined,
       careerLevelId: params.careerLevelId,
       careerLevelReward: params.careerLevelReward,
+      presetBoard: params.presetBoard,
       localPlayerNames: params.localPlayerNames,
       wagerCourt: params.wagerAmount ? {
         name: courtName,

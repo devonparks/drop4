@@ -251,6 +251,17 @@ export function CareerScreen({ navigation }: Props) {
     const cols = careerLevel.settings.cols || 7;
     const connect = careerLevel.settings.connectCount || 4;
 
+    // Convert row-major presetBoard to column-major for the game engine
+    let columnMajorBoard: number[][] | undefined;
+    if (careerLevel.settings.presetBoard) {
+      const rowMajor = careerLevel.settings.presetBoard;
+      const numRows = rowMajor.length;
+      const numCols = rowMajor[0]?.length || cols;
+      columnMajorBoard = Array.from({ length: numCols }, (_, c) =>
+        Array.from({ length: numRows }, (_, r) => rowMajor[r][c])
+      );
+    }
+
     navigation.navigate('Matchup', {
       mode: 'career',
       difficulty: careerLevel.difficulty,
@@ -263,6 +274,7 @@ export function CareerScreen({ navigation }: Props) {
       careerLevelId: careerLevel.id,
       careerLevelReward: careerLevel.reward as any,
       careerChapter: careerLevel.chapter,
+      presetBoard: columnMajorBoard,
     });
   };
 
