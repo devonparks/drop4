@@ -14,6 +14,7 @@ import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
+import { PETS } from '../data/pets';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -25,6 +26,8 @@ export function PlayScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+  const equipped = useShopStore(s => s.equipped);
+  const equippedPet = useShopStore(s => s.equippedPet);
   const newGame = useGameStore(s => s.newGame);
   const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
@@ -62,6 +65,15 @@ export function PlayScreen({ navigation }: Props) {
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
+
+  // Equipped summary — prettify IDs into display names
+  const equippedSummary = useMemo(() => {
+    const prettify = (id: string) => id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const boardName = prettify(equipped.board);
+    const piecesName = prettify(equipped.pieces);
+    const petName = equippedPet ? (PETS.find(p => p.id === equippedPet)?.name ?? prettify(equippedPet)) : 'None';
+    return `Board: ${boardName}  |  Pieces: ${piecesName}  |  Pet: ${petName}`;
+  }, [equipped.board, equipped.pieces, equippedPet]);
 
   // If navigated here from Multiplayer with ranked flags, default to ranked mode
   const incomingRanked = route.params?.rankedMode;
@@ -107,6 +119,9 @@ export function PlayScreen({ navigation }: Props) {
               <Text style={[styles.modeBtnText, mode === 'ranked' && styles.modeBtnTextActive]}>🏆 RANKED</Text>
             </Pressable>
           </View>
+
+          {/* Equipped summary */}
+          <Text style={styles.equippedSummary}>{equippedSummary}</Text>
 
           {/* Character with glow */}
           <View style={styles.characterArea}>
@@ -257,6 +272,11 @@ const styles = StyleSheet.create({
   },
   modeBtnTextActive: {
     color: '#ffffff',
+  },
+  equippedSummary: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 10, color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 0.3, textAlign: 'center',
   },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold,

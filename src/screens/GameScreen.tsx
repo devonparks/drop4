@@ -100,6 +100,7 @@ export function GameScreen({ navigation }: Props) {
   // Rewards summary tracking
   const [streakReward, setStreakReward] = useState<{ coins: number; lootBox?: string; milestone: number } | null>(null);
   const [didLevelUp, setDidLevelUp] = useState(false);
+  const [seasonTierUp, setSeasonTierUp] = useState<number | null>(null);
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
@@ -461,7 +462,7 @@ export function GameScreen({ navigation }: Props) {
       recordMove(aiCol, 2, currentMoveCount);
       dropPiece(aiCol);
       showLastMove(aiCol);
-      haptics.drop();
+      haptics.tap(); // Lighter haptic for AI moves
       playSound('drop');
       setAiThinking(false);
     }, thinkTime);
@@ -526,8 +527,15 @@ export function GameScreen({ navigation }: Props) {
         c => !c.completed && c.progress >= c.target
       );
       if (justCompleted) setCompletedChallengeName(justCompleted.title);
-      // Season XP
+      // Season XP — detect tier-up
+      const preTier = useSeasonStore.getState().currentTier;
       addSeasonXp(reward);
+      const postTier = useSeasonStore.getState().currentTier;
+      if (postTier > preTier) {
+        setSeasonTierUp(postTier);
+        playSound('level_up');
+        haptics.levelUp();
+      }
       // Career level completion
       const careerLevelId = params.careerLevelId;
       if (careerLevelId) {
@@ -623,7 +631,15 @@ export function GameScreen({ navigation }: Props) {
       const lossOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
+      // Season XP on loss — detect tier-up
+      const preTierLoss = useSeasonStore.getState().currentTier;
       addSeasonXp(10);
+      const postTierLoss = useSeasonStore.getState().currentTier;
+      if (postTierLoss > preTierLoss) {
+        setSeasonTierUp(postTierLoss);
+        playSound('level_up');
+        haptics.levelUp();
+      }
       // Wager lost — coins already deducted, ranked ELO down
       if (wagerCourt) {
         recordRanked(false); // Lost wager match
@@ -640,7 +656,15 @@ export function GameScreen({ navigation }: Props) {
       const drawOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
+      // Season XP on draw — detect tier-up
+      const preTierDraw = useSeasonStore.getState().currentTier;
       addSeasonXp(15);
+      const postTierDraw = useSeasonStore.getState().currentTier;
+      if (postTierDraw > preTierDraw) {
+        setSeasonTierUp(postTierDraw);
+        playSound('level_up');
+        haptics.levelUp();
+      }
       haptics.coinEarn();
       playSound('coin');
     }
@@ -736,6 +760,7 @@ export function GameScreen({ navigation }: Props) {
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
     setDidLevelUp(false);
+    setSeasonTierUp(null);
     setStreakReward(null);
     setCompletedChallengeName(null);
     setStreakBrokenAt(null);
@@ -1653,6 +1678,14 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={styles.goRewardIcon}>🎉</Text>
                     <Text style={[styles.goRewardAmount, { color: '#b06cc7', fontSize: 11 }]}>LEVEL UP!</Text>
                     <Text style={styles.goRewardDesc}>Lv {useShopStore.getState().level}</Text>
+                  </View>
+                )}
+                {/* SEASON TIER UP! */}
+                {seasonTierUp !== null && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.5)', backgroundColor: 'rgba(26,188,156,0.12)' }]}>
+                    <Text style={styles.goRewardIcon}>🏆</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>SEASON{'\n'}TIER UP!</Text>
+                    <Text style={styles.goRewardDesc}>Tier {seasonTierUp}</Text>
                   </View>
                 )}
                 {/* CHALLENGE COMPLETE! */}

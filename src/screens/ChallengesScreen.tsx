@@ -271,6 +271,77 @@ export function ChallengesScreen() {
           ))}
         </View>
 
+        {/* ══ WEEKLY CHALLENGES ══ */}
+        <View style={styles.weeklySection}>
+          <LinearGradient
+            colors={['rgba(155,89,182,0.15)', 'rgba(155,89,182,0.04)', 'transparent']}
+            style={styles.weeklyHeaderGradient}
+          >
+            <Text style={styles.weeklyTitle}>WEEKLY CHALLENGES</Text>
+            <Text style={styles.weeklySubtitle}>Bigger goals, bigger rewards</Text>
+          </LinearGradient>
+
+          {/* Weekly Challenge 1: Win 20 games */}
+          <View style={styles.weeklyCard}>
+            <View style={styles.cardRow}>
+              <LinearGradient colors={['#9b59b6', '#7d4192']} style={styles.iconCircle}>
+                <Text style={styles.iconEmoji}>🏆</Text>
+              </LinearGradient>
+              <View style={styles.cardCenter}>
+                <Text style={styles.cardTitle}>Win 20 games this week</Text>
+                <Text style={styles.cardDesc}>Dominate across any difficulty</Text>
+                <View style={styles.progressRow}>
+                  <View style={styles.progressBg}>
+                    <LinearGradient
+                      colors={['#9b59b6', '#7d4192']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.progressFill, { width: '0%' }]}
+                    />
+                  </View>
+                  <Text style={styles.progressText}>0/20</Text>
+                </View>
+              </View>
+              <View style={styles.cardRight}>
+                <View style={[styles.rewardBubble, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
+                  <Text style={styles.rewardCoin}>🪙</Text>
+                  <Text style={[styles.rewardAmount, { color: '#b06cc7' }]}>1,000</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Weekly Challenge 2: Complete 5 career levels */}
+          <View style={styles.weeklyCard}>
+            <View style={styles.cardRow}>
+              <LinearGradient colors={['#e84393', '#c23076']} style={styles.iconCircle}>
+                <Text style={styles.iconEmoji}>⭐</Text>
+              </LinearGradient>
+              <View style={styles.cardCenter}>
+                <Text style={styles.cardTitle}>Complete 5 career levels</Text>
+                <Text style={styles.cardDesc}>Push through the career map</Text>
+                <View style={styles.progressRow}>
+                  <View style={styles.progressBg}>
+                    <LinearGradient
+                      colors={['#e84393', '#c23076']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.progressFill, { width: '0%' }]}
+                    />
+                  </View>
+                  <Text style={styles.progressText}>0/5</Text>
+                </View>
+              </View>
+              <View style={styles.cardRight}>
+                <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
+                  <Text style={styles.rewardCoin}>🪙</Text>
+                  <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* ══ DAILY BONUS CARD ══ */}
         <Animated.View style={[
           styles.bonusCard,
@@ -466,6 +537,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.green,
     letterSpacing: 1,
+  },
+
+  // ── Weekly Challenges ──────────────────────────────────────────────
+  weeklySection: {
+    marginTop: 20,
+    gap: 10,
+  },
+  weeklyHeaderGradient: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 10,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  weeklyTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 22,
+    color: '#ffffff',
+    letterSpacing: 2.5,
+    textShadowColor: 'rgba(155,89,182,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  weeklySubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 3,
+  },
+  weeklyCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(155,89,182,0.15)',
+    overflow: 'hidden',
   },
 
   // ── Challenge Cards ────────────────────────────────────────────────
