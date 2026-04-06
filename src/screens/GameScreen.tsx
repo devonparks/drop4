@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share } from 'react-native';
 import Animated, {
   FadeIn,
@@ -78,6 +78,7 @@ export function GameScreen({ navigation }: Props) {
   const addXp = useShopStore(s => s.addXp);
   const level = useShopStore(s => s.level);
   const addMatch = useMatchHistoryStore(s => s.addMatch);
+  const matches = useMatchHistoryStore(s => s.matches);
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const resetChallenge = useChallengeStore(s => s.resetProgress);
   const addSeasonXp = useSeasonStore(s => s.addSeasonXp);
@@ -149,6 +150,18 @@ export function GameScreen({ navigation }: Props) {
   const [showFirstGameMsg, setShowFirstGameMsg] = useState(false);
   const firstGameFade = useRef(new RNAnimated.Value(0)).current;
 
+  // Post-game stats — memoized to avoid calling getState() in render path
+  const personalBest = useMemo(() => {
+    const pastWins = matches.filter(m => m.result === 'win' && m.mode === 'ai' && m.difficulty === difficulty);
+    // pastWins[0] is the current game (just added); slice(1) = previous records
+    if (pastWins.length > 1) {
+      return Math.min(...pastWins.slice(1).map(m => m.moves));
+    }
+    return null;
+  }, [matches, difficulty]);
+
+  const totalWins = useMemo(() => matches.filter(m => m.result === 'win').length, [matches]);
+
   // Show tutorial on first game
   useEffect(() => {
     if (!hasSeenGameTip('game_hint')) {
@@ -159,8 +172,8 @@ export function GameScreen({ navigation }: Props) {
 
   // First-game detection — show encouragement if no match history
   useEffect(() => {
-    const matches = useMatchHistoryStore.getState().matches;
-    if (matches.length === 0 && isVsAi) {
+    const initialMatches = useMatchHistoryStore.getState().matches;
+    if (initialMatches.length === 0 && isVsAi) {
       setShowFirstGameMsg(true);
       RNAnimated.timing(firstGameFade, { toValue: 1, duration: 600, useNativeDriver: true }).start();
       const timer = setTimeout(() => {
@@ -1730,23 +1743,12 @@ export function GameScreen({ navigation }: Props) {
               </View>
 
               {/* New Personal Best indicator */}
-              {status === 'won' && winner === 1 && (() => {
-                const pastWins = useMatchHistoryStore.getState().matches
-                  .filter(m => m.result === 'win' && m.mode === 'ai' && m.difficulty === difficulty);
-                // Only show if there's a previous record and this game beats it
-                const prevBest = pastWins.length > 1
-                  ? Math.min(...pastWins.slice(1).map(m => m.moves))
-                  : null;
-                if (prevBest !== null && moveCount < prevBest) {
-                  return (
-                    <View style={styles.goPersonalBest}>
-                      <Text style={styles.goPersonalBestText}>NEW PERSONAL BEST!</Text>
-                      <Text style={styles.goPersonalBestSub}>{moveCount} moves (prev: {prevBest})</Text>
-                    </View>
-                  );
-                }
-                return null;
-              })()}
+              {status === 'won' && winner === 1 && personalBest !== null && moveCount < personalBest && (
+                <View style={styles.goPersonalBest}>
+                  <Text style={styles.goPersonalBestText}>NEW PERSONAL BEST!</Text>
+                  <Text style={styles.goPersonalBestSub}>{moveCount} moves (prev: {personalBest})</Text>
+                </View>
+              )}
 
               {/* Game Speed Badge */}
               {(() => {
@@ -1978,10 +1980,8 @@ export function GameScreen({ navigation }: Props) {
                 )}
                 {/* Loot box progress — show how many wins until next box */}
                 {status === 'won' && winner === 1 && (() => {
-                  const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
                   const winsUntilBox = 3 - (totalWins % 3);
                   if (winsUntilBox === 3) {
-                    // Just earned a box this game!
                     return (
                       <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.4)', backgroundColor: 'rgba(155,89,182,0.1)' }]}>
                         <Text style={styles.goRewardIcon}>{'\uD83D\uDCE6'}</Text>
