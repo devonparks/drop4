@@ -310,8 +310,9 @@ export function ShopScreen() {
     }
 
     const equipEmote = (id: string) => {
-      // Find a slot with a non-catalog emote (base default), or use slot 0
-      const slotIdx = equippedEmotes.findIndex(e => !EMOTE_IDS.has(e) || e === '');
+      // Prefer replacing a free (price=0) emote slot over paid ones
+      const freeEmoteIds = new Set(EMOTES.filter(e => e.price === 0).map(e => e.id));
+      const slotIdx = equippedEmotes.findIndex(e => e !== id && (freeEmoteIds.has(e) || !EMOTE_IDS.has(e) || e === ''));
       setEquippedEmote(slotIdx !== -1 ? slotIdx : 0, id);
     };
 

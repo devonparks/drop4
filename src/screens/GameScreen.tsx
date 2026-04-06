@@ -662,7 +662,7 @@ export function GameScreen({ navigation }: Props) {
         careerStars: careerState.getTotalStars(),
         lastGameMoves: moveCount,
         hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
-        ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
+        ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length + shopState.ownedEmotes.length,
         ownedPets: shopState.ownedPets,
       });
       // First Win special celebration
@@ -771,7 +771,7 @@ export function GameScreen({ navigation }: Props) {
         careerStars: lossCareer.getTotalStars(),
         lastGameMoves: 0, // speed achievements only count on wins
         hardWins: lossHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
-        ownedCosmetics: lossShop.owned.boards.length + lossShop.owned.pieces.length + lossShop.owned.dropEffects.length,
+        ownedCosmetics: lossShop.owned.boards.length + lossShop.owned.pieces.length + lossShop.owned.dropEffects.length + lossShop.ownedEmotes.length,
         ownedPets: lossShop.ownedPets,
       });
       if (lossNewAchs.length > 0) {
@@ -829,7 +829,7 @@ export function GameScreen({ navigation }: Props) {
         careerStars: drawCareer.getTotalStars(),
         lastGameMoves: 0,
         hardWins: drawHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
-        ownedCosmetics: drawShop.owned.boards.length + drawShop.owned.pieces.length + drawShop.owned.dropEffects.length,
+        ownedCosmetics: drawShop.owned.boards.length + drawShop.owned.pieces.length + drawShop.owned.dropEffects.length + drawShop.ownedEmotes.length,
         ownedPets: drawShop.ownedPets,
       });
       if (drawNewAchs.length > 0) {
