@@ -46,7 +46,7 @@ export const useMatchHistoryStore = create<MatchHistoryState>((set, get) => ({
       timestamp: Date.now(),
     };
     set(state => ({
-      matches: [newMatch, ...state.matches].slice(0, 100), // Keep last 100
+      matches: [newMatch, ...state.matches].slice(0, 500), // Keep last 500
     }));
   },
 

@@ -83,7 +83,8 @@ export function ProfileScreen() {
     const todayMs = todayStart.getTime();
     const gamesToday = allMatches.filter(m => m.timestamp >= todayMs).length;
     const completedChallenges = challenges.filter(c => c.completed).length;
-    const todayStr = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const rewardClaimed = dailyRewardLastClaim === todayStr;
     const spinUsed = !canSpin();
     return { gamesToday, completedChallenges, rewardClaimed, spinUsed };
