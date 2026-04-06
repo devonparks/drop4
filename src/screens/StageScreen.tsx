@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -91,12 +91,30 @@ export function StageScreen({ navigation }: Props) {
 
   const handleSelectCourt = (court: WagerCourt) => {
     if (court.entryFee > 0) {
-      const success = spendCoins(court.entryFee);
-      if (!success) { haptics.error(); return; }
+      // Confirm before spending coins
+      Alert.alert(
+        `Enter ${court.name}?`,
+        `Entry fee: \u{1FA99}${court.entryFee.toLocaleString()}. Winner gets \u{1FA99}${court.winnerGets.toLocaleString()}.`,
+        [
+          { text: 'CANCEL', style: 'cancel' },
+          {
+            text: "LET'S GO",
+            onPress: () => {
+              const success = spendCoins(court.entryFee);
+              if (!success) { haptics.error(); return; }
+              playSound('coin');
+              newGame('hard', true);
+              navigation.navigate('Game', { wagerCourt: court });
+            },
+          },
+        ],
+      );
+    } else {
+      // Free court — enter directly
+      playSound('coin');
+      newGame('hard', true);
+      navigation.navigate('Game', { wagerCourt: court });
     }
-    playSound('coin');
-    newGame('hard', true);
-    navigation.navigate('Game', { wagerCourt: court });
   };
 
   return (

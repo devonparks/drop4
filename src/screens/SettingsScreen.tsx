@@ -8,6 +8,15 @@ import { useRankedStore } from '../stores/rankedStore';
 import { useGameStore } from '../stores/gameStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useSeasonStore } from '../stores/seasonStore';
+import { useAchievementStore } from '../stores/achievementStore';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useReplayStore } from '../stores/replayStore';
+import { useDailyRewardStore } from '../stores/dailyRewardStore';
+import { useLootBoxStore } from '../stores/lootBoxStore';
+import { useBoardEditorStore } from '../stores/boardEditorStore';
+import { useChallengeStore } from '../stores/challengeStore';
+import { useDailySpinStore } from '../stores/dailySpinStore';
+import { useTutorialStore } from '../stores/tutorialStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted } from '../services/audio';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
@@ -218,15 +227,46 @@ export function SettingsScreen({ navigation }: Props) {
                   text: 'Reset Everything',
                   style: 'destructive',
                   onPress: () => {
+                    // Shop — reset to defaults
                     useShopStore.setState({
                       coins: 500, gems: 0, level: 1, xp: 0,
                       playerName: 'Player',
                       equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic', boardAccessory: 'none' },
                       owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'], boardAccessories: ['none'] },
                     });
-                    useRankedStore.getState().resetSeason();
+                    // Ranked — full wipe (not resetSeason which adds history)
+                    useRankedStore.setState({
+                      elo: 500, tier: 'bronze', division: 1,
+                      rankedWins: 0, rankedLosses: 0, rankedGames: 0,
+                      seasonHighElo: 500, currentSeason: 0, seasonHistory: [],
+                    });
+                    // Game scores
                     useGameStore.getState().resetScores();
+                    // Career progress
                     useCareerStore.setState({ progress: {}, currentChapter: 1 });
+                    // Achievements
+                    useAchievementStore.setState({
+                      achievements: useAchievementStore.getState().achievements.map(a => ({ ...a, unlocked: false })),
+                    });
+                    // Match history
+                    useMatchHistoryStore.setState({ matches: [] });
+                    // Replays
+                    useReplayStore.setState({ replays: [], currentMoves: [], isRecording: false });
+                    // Daily rewards
+                    useDailyRewardStore.setState({ currentStreak: 0, lastClaimDate: null });
+                    // Loot boxes
+                    useLootBoxStore.setState({ ownedBoxes: [], openHistory: [] });
+                    // Season pass
+                    useSeasonStore.setState({ currentTier: 0, xp: 0, hasPremium: false });
+                    // Board editor
+                    useBoardEditorStore.setState({ myBoards: [] });
+                    // Challenges
+                    useChallengeStore.getState().refreshChallenges();
+                    // Daily spin
+                    useDailySpinStore.setState({ lastSpinDate: '' });
+                    // Tutorial tips
+                    useTutorialStore.setState({ seenTips: [] });
+
                     haptics.tap();
                   },
                 },
