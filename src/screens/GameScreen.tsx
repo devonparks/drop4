@@ -161,6 +161,7 @@ export function GameScreen({ navigation }: Props) {
 
   // Game count milestone celebration
   const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
+  const [undoCount, setUndoCount] = useState(0);
 
   // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
@@ -1121,6 +1122,7 @@ export function GameScreen({ navigation }: Props) {
           {!isOnlineMatch && !isRankedMode && difficulty === 'easy' && (
             <Pressable onPress={() => {
               if (undoMove()) {
+                setUndoCount(c => c + 1);
                 haptics.tap();
                 playSound('swoosh');
               }
@@ -1632,6 +1634,19 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   );
                 })()}
+                {/* Undo Count badge — reward pure skill */}
+                {status === 'won' && winner === 1 && undoCount === 0 && difficulty === 'easy' && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(52,152,219,0.5)', backgroundColor: 'rgba(52,152,219,0.12)' }]}>
+                    <Text style={styles.goRewardIcon}>{'\uD83D\uDC8E'}</Text>
+                    <Text style={[styles.goRewardAmount, { color: '#3498db', fontSize: 10 }]}>{'NO UNDO\nPURE SKILL!'}</Text>
+                  </View>
+                )}
+                {status === 'won' && winner === 1 && undoCount > 0 && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' }]}>
+                    <Text style={styles.goRewardIcon}>{'\u21A9\uFE0F'}</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.textSecondary, fontSize: 10 }]}>Undo x{undoCount}</Text>
+                  </View>
+                )}
                 {/* LEVEL UP! */}
                 {status === 'won' && winner === 1 && didLevelUp && (
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.5)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>

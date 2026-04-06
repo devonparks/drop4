@@ -198,8 +198,18 @@ export function PlayScreen({ navigation }: Props) {
           {/* Difficulty buttons */}
           <View style={styles.buttonsWrap}>
             <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.games > 0 ? ` • ${mastery.easy.wins}W - ${masteryLosses.easy}L` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
-            <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.games > 0 ? ` • ${mastery.medium.wins}W - ${masteryLosses.medium}L` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
-            <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.games > 0 ? ` • ${mastery.hard.wins}W - ${masteryLosses.hard}L` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
+            <View>
+              <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.games > 0 ? ` • ${mastery.medium.wins}W - ${masteryLosses.medium}L` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
+              {level < 3 && (
+                <Text style={styles.levelGateHint}>Recommended at Level 3+</Text>
+              )}
+            </View>
+            <View>
+              <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.games > 0 ? ` • ${mastery.hard.wins}W - ${masteryLosses.hard}L` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
+              {level < 5 && (
+                <Text style={styles.levelGateHint}>Recommended at Level 5+</Text>
+              )}
+            </View>
           </View>
 
           {/* Tip of the day */}
@@ -337,6 +347,12 @@ const styles = StyleSheet.create({
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,
+  },
+  levelGateHint: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 10, color: 'rgba(255,255,255,0.35)',
+    textAlign: 'center' as const, marginTop: 2,
+    letterSpacing: 0.3,
   },
   secondaryWrap: {
     flexDirection: 'row', width: '100%', maxWidth: 340, gap: 8,

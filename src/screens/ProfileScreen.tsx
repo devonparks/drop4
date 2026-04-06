@@ -97,6 +97,15 @@ export function ProfileScreen() {
     return top ? top[0].charAt(0).toUpperCase() + top[0].slice(1) : 'N/A';
   }, [allMatches]);
 
+  // Favorite opponent (most-played)
+  const favOpponent = useMemo(() => {
+    if (allMatches.length === 0) return null;
+    const counts: Record<string, number> = {};
+    allMatches.forEach(m => { counts[m.opponent] = (counts[m.opponent] || 0) + 1; });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    return top ? { name: top[0], games: top[1] } : null;
+  }, [allMatches]);
+
   // Share Profile handler
   const [shareCopied, setShareCopied] = useState(false);
   const handleShareProfile = async () => {
@@ -285,6 +294,17 @@ export function ProfileScreen() {
           <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
           <StatCard label="Gems" value={gems} color={colors.gemGreen} />
         </View>
+
+        {/* Favorite Opponent */}
+        {favOpponent && (
+          <View style={styles.favOpponentCard}>
+            <Text style={styles.favOpponentIcon}>{'\uD83C\uDFAF'}</Text>
+            <View style={styles.favOpponentTextWrap}>
+              <Text style={styles.favOpponentLabel}>MOST PLAYED</Text>
+              <Text style={styles.favOpponentName}>{favOpponent.name} <Text style={styles.favOpponentGames}>({favOpponent.games} game{favOpponent.games !== 1 ? 's' : ''})</Text></Text>
+            </View>
+          </View>
+        )}
 
         {/* Equipped cosmetics */}
         <Text style={styles.sectionTitle}>EQUIPPED</Text>
@@ -822,6 +842,47 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     color: colors.orange,
+  },
+  // Favorite Opponent card
+  favOpponentCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: 'rgba(255,140,0,0.06)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.15)',
+    gap: 10,
+  },
+  favOpponentIcon: {
+    fontSize: 22,
+  },
+  favOpponentTextWrap: {
+    flex: 1,
+  },
+  favOpponentLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+  },
+  favOpponentName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 15,
+    color: colors.orange,
+    marginTop: 1,
+  },
+  favOpponentGames: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   // Achievement progress card
   achievementProgressCard: {
