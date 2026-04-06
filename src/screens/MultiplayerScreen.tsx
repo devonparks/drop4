@@ -170,6 +170,29 @@ export function MultiplayerScreen({ navigation }: Props) {
   const { startSearching, isSearching } = useOnlineStore();
   const playerCounts = useFakePlayerCounts();
 
+  // Calculate ELO to next division for promotion match indicator
+  const eloToNextDivision = useMemo(() => {
+    const currentTierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+    const tierIdx = RANKED_TIERS.indexOf(currentTierInfo);
+    const nextTier = RANKED_TIERS[tierIdx + 1];
+    const tierRange = nextTier ? nextTier.minElo - currentTierInfo.minElo : 300;
+
+    if (currentTierInfo.divisions === 1) {
+      // Master+ — next milestone is the next tier
+      if (!nextTier) return Infinity; // Dark Matter has no next tier
+      return nextTier.minElo - elo;
+    }
+
+    // Tiered divisions: each division is tierRange / divisions wide
+    const divisionSize = tierRange / currentTierInfo.divisions;
+    const progressInTier = elo - currentTierInfo.minElo;
+    const currentDivIndex = Math.min(currentTierInfo.divisions - 1, Math.floor(progressInTier / divisionSize));
+    const nextDivBoundary = currentTierInfo.minElo + (currentDivIndex + 1) * divisionSize;
+    return Math.ceil(nextDivBoundary - elo);
+  }, [elo, tier]);
+
+  const isPromotionMatch = eloToNextDivision <= 10 && eloToNextDivision > 0;
+
   return (
     <ScreenBackground>
       <View style={styles.container}>
@@ -180,6 +203,16 @@ export function MultiplayerScreen({ navigation }: Props) {
 
           {/* Full rank progress card */}
           <RankProgressCard />
+
+          {/* Promotion match indicator */}
+          {isPromotionMatch && (
+            <View style={styles.promotionBanner}>
+              <Text style={styles.promotionText}>PROMOTION MATCH!</Text>
+              <Text style={styles.promotionSub}>
+                {eloToNextDivision} ELO to next division
+              </Text>
+            </View>
+          )}
 
           {/* Online PvP */}
           <Text style={styles.sectionLabel}>PLAY ONLINE</Text>
@@ -381,6 +414,34 @@ const styles = StyleSheet.create({
   rankedWL: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
   rankedBar: { width: 60, height: 5, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' },
   rankedFill: { height: '100%', borderRadius: 3 },
+  promotionBanner: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: 'rgba(241, 196, 15, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(241, 196, 15, 0.4)',
+    borderRadius: borderRadius.lg,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+  },
+  promotionText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#f1c40f',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(241, 196, 15, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  promotionSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: 'rgba(241, 196, 15, 0.7)',
+    marginTop: 1,
+  },
   sectionLabel: {
     fontFamily: fonts.body, fontWeight: weight.bold,
     fontSize: 10, color: colors.textSecondary, letterSpacing: 2,

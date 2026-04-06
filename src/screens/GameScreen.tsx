@@ -120,6 +120,7 @@ export function GameScreen({ navigation }: Props) {
   const [showGameTutorial, setShowGameTutorial] = useState(false);
   const [coinTooltipVisible, setCoinTooltipVisible] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
 
   // Show tutorial on first game
   useEffect(() => {
@@ -660,6 +661,7 @@ export function GameScreen({ navigation }: Props) {
     setCompletedChallengeName(null);
     setStreakBrokenAt(null);
     setDailyStreakMultiplier(1);
+    setDoubleCoinsUsed(false);
     newGame(difficulty, isVsAi);
   };
 
@@ -1461,6 +1463,38 @@ export function GameScreen({ navigation }: Props) {
                 </View>
               )}
 
+              {/* Double Coins — UI-only ad concept */}
+              {status === 'won' && winner === 1 && !doubleCoinsUsed && (
+                <Pressable
+                  style={styles.doubleCoinsBtn}
+                  onPress={() => {
+                    const reward = COIN_REWARDS[difficulty];
+                    const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
+                    const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
+                    addCoins(total);
+                    setDoubleCoinsUsed(true);
+                    haptics.win();
+                    playSound('coin');
+                    setShowCoinBurst(true);
+                  }}
+                >
+                  <View style={styles.doubleCoinsAdBadge}>
+                    <Text style={styles.doubleCoinsAdText}>AD</Text>
+                  </View>
+                  <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
+                  <View style={styles.doubleCoinsBtnTextWrap}>
+                    <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
+                    <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
+                  </View>
+                </Pressable>
+              )}
+              {doubleCoinsUsed && status === 'won' && winner === 1 && (
+                <View style={[styles.doubleCoinsBtn, { opacity: 0.5, borderColor: 'rgba(46,204,113,0.4)' }]}>
+                  <Text style={styles.doubleCoinsBtnIcon}>✅</Text>
+                  <Text style={[styles.doubleCoinsBtnTitle, { color: colors.green }]}>COINS DOUBLED!</Text>
+                </View>
+              )}
+
               {/* Chat bubble — "Good game!" feel */}
               <View style={styles.goChatBubble}>
                 <Text style={styles.goChatText}>
@@ -2248,6 +2282,56 @@ const styles = StyleSheet.create({
   goEloWrap: {
     paddingHorizontal: 16,
     paddingVertical: 4,
+  },
+  // Double Coins button
+  doubleCoinsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(241, 196, 15, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(241, 196, 15, 0.35)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginVertical: 6,
+    gap: 8,
+  },
+  doubleCoinsAdBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -4,
+    backgroundColor: '#e74c3c',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    zIndex: 10,
+  },
+  doubleCoinsAdText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  doubleCoinsBtnIcon: {
+    fontSize: 20,
+  },
+  doubleCoinsBtnTextWrap: {
+    alignItems: 'flex-start',
+  },
+  doubleCoinsBtnTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#f1c40f',
+    letterSpacing: 1,
+  },
+  doubleCoinsBtnSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 9,
+    color: 'rgba(241, 196, 15, 0.6)',
   },
   // Chat bubble
   goChatBubble: {

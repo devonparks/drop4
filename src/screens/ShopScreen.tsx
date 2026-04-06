@@ -118,11 +118,15 @@ function BundleCard({ icon, amount, bonus, price, color, onPress }: {
 }
 
 // ─── Shop Item Card (existing, improved) ───────────────────────
-function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
-  item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number;
+function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }: {
+  item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number; playerCoins: number;
 }) {
   const rarityColor = RARITY_COLORS[item.rarity];
   const isDarkMatter = item.rarity === 'darkmatter';
+  const canAfford = playerCoins >= item.price;
+  const coinsNeeded = item.price - playerCoins;
+  // Average ~50 coins per game (medium difficulty)
+  const gamesNeeded = Math.ceil(coinsNeeded / 50);
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -152,10 +156,17 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index }: {
         ) : isDarkMatter || (item.price === 0 && item.rarity === 'mythic') ? (
           <Text style={[s.lockedText, { color: rarityColor }]}>Earn Only</Text>
         ) : (
-          <View style={s.priceRow}>
-            <Text style={s.priceEmoji}>{'\u{1FA99}'}</Text>
-            <Text style={s.priceText}>{item.price.toLocaleString()}</Text>
-          </View>
+          <>
+            <View style={s.priceRow}>
+              <Text style={s.priceEmoji}>{'\u{1FA99}'}</Text>
+              <Text style={[s.priceText, !canAfford && { color: '#e74c3c' }]}>{item.price.toLocaleString()}</Text>
+            </View>
+            {!canAfford && coinsNeeded > 0 && (
+              <Text style={s.coinGoalText} numberOfLines={2}>
+                Need {coinsNeeded.toLocaleString()} more{'\n'}{gamesNeeded} game{gamesNeeded !== 1 ? 's' : ''} to go!
+              </Text>
+            )}
+          </>
         )}
       </Pressable>
     </Animated.View>
@@ -498,6 +509,7 @@ export function ShopScreen() {
                     ] === item.id}
                     onPress={() => category === 'emotes' ? undefined : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
                     index={i}
+                    playerCoins={coins}
                   />
                 ))}
               </View>
@@ -687,6 +699,16 @@ const s = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4 },
   priceEmoji: { fontSize: 12 },
   priceText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
+  coinGoalText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 8,
+    color: '#e74c3c',
+    textAlign: 'center',
+    marginTop: 2,
+    lineHeight: 11,
+    opacity: 0.85,
+  },
   equippedBadge: {
     marginTop: 4, alignSelf: 'center', backgroundColor: 'rgba(39,174,61,0.2)',
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2,
