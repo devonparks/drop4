@@ -985,7 +985,7 @@ export function GameScreen({ navigation }: Props) {
               recordRanked(false);
               addMatch({
                 result: 'loss',
-                opponent: wagerCourt?.name || 'Ranked Bot',
+                opponent: isVsAi ? `${difficulty} Bot` : (params.onlineOpponentName || 'Ranked Player'),
                 difficulty,
                 moves: moveCount,
                 coinsEarned: 0,
