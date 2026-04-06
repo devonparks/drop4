@@ -36,9 +36,14 @@ function CourtCard({ court, coins, playerLevel, playerTier, onPress }: {
       >
         <View style={styles.courtLeft}>
           <Text style={styles.courtIcon}>{court.icon}</Text>
+          {court.id === 'rookie_park' && (
+            <View style={styles.hotBadge}>
+              <Text style={styles.hotText}>{'\uD83D\uDD25'} HOT</Text>
+            </View>
+          )}
           {court.isVIP && (
             <View style={styles.vipBadge}>
-              <Text style={styles.vipText}>VIP</Text>
+              <Text style={styles.vipText}>{'\uD83D\uDC51'} VIP</Text>
             </View>
           )}
         </View>
@@ -175,6 +180,11 @@ const styles = StyleSheet.create({
   },
   courtLeft: { alignItems: 'center', marginRight: 10, gap: 4 },
   courtIcon: { fontSize: 28 },
+  hotBadge: {
+    backgroundColor: 'rgba(255,140,0,0.2)', borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 1,
+  },
+  hotText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: '#ff8c00', letterSpacing: 1 },
   vipBadge: {
     backgroundColor: 'rgba(233,69,96,0.2)', borderRadius: 4,
     paddingHorizontal: 6, paddingVertical: 1,

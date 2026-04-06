@@ -22,6 +22,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { PetDisplay } from '../components/ui/PetDisplay';
+import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -226,7 +227,14 @@ export function MatchupScreen({ navigation }: Props) {
             </View>
             <Text style={styles.playerTitle}>YOU</Text>
             {equippedPet && (
-              <PetDisplay petId={equippedPet} size={60} style={{ marginTop: 2 }} />
+              <>
+                <PetDisplay petId={equippedPet} size={60} style={{ marginTop: 2 }} />
+                {getPetById(equippedPet) && (
+                  <Text style={styles.petNameText}>
+                    {'\uD83D\uDC15'} {getPetById(equippedPet)!.name}
+                  </Text>
+                )}
+              </>
             )}
           </Animated.View>
 
@@ -494,6 +502,14 @@ const styles = StyleSheet.create({
     color: 'rgba(120,170,255,0.8)',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  petNameText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(255,200,130,0.8)',
+    letterSpacing: 0.5,
+    marginTop: 1,
   },
 
   // Silhouette placeholder

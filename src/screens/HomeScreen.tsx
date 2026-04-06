@@ -13,6 +13,8 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
+import { useChallengeStore } from '../stores/challengeStore';
+import { useCareerStore } from '../stores/careerStore';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
@@ -121,6 +123,8 @@ export function HomeScreen() {
   const equippedIdle = useShopStore(s => s.equippedIdle);
   const equippedPet = useShopStore(s => s.equippedPet);
   const winStreak = useGameStore(s => s.winStreak);
+  const challenges = useChallengeStore(s => s.challenges);
+  const careerCompletedCount = useCareerStore(s => s.getCompletedCount)();
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
@@ -272,6 +276,25 @@ export function HomeScreen() {
     triggerEmote(randomEmote);
   };
 
+  // ═══ Smart Suggestion — contextual hint based on game state ═══
+  const smartSuggestion = (() => {
+    // Priority 1: Unclaimed challenge rewards
+    const unclaimedChallenge = challenges.find(c => c.progress >= c.target && !c.completed);
+    if (unclaimedChallenge) {
+      return { text: '\uD83C\uDFAF Claim your challenge reward!', screen: 'MainTabs', tabParams: { screen: 'Challenges' } };
+    }
+    // Priority 2: Win streak momentum (only shown when streak > 0, replaces streak text)
+    if (winStreak >= 2) {
+      return { text: `\uD83D\uDD25 You're on fire! Keep the streak going!`, screen: null };
+    }
+    // Priority 3: Career nudge — suggest continuing career
+    const nextCareerLevel = careerCompletedCount + 1;
+    if (careerCompletedCount > 0) {
+      return { text: `\uD83C\uDFC6 Continue your career \u2014 Level ${nextCareerLevel} awaits!`, screen: 'Career' };
+    }
+    return null;
+  })();
+
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
   };
@@ -420,6 +443,43 @@ export function HomeScreen() {
           <Text style={styles.streakText}>
             {'\uD83D\uDD25'} {winStreak} Win Streak!
           </Text>
+        )}
+
+        {/* Smart Suggestion — contextual nudge based on game state */}
+        {smartSuggestion && winStreak === 0 && (
+          <Pressable
+            onPress={() => {
+              if (smartSuggestion.screen) {
+                haptics.tap();
+                if (smartSuggestion.tabParams) {
+                  navigation.navigate(smartSuggestion.screen, smartSuggestion.tabParams);
+                } else {
+                  navigateTo(smartSuggestion.screen);
+                }
+              }
+            }}
+            style={styles.smartSuggestion}
+          >
+            <Text style={styles.smartSuggestionText}>{smartSuggestion.text}</Text>
+          </Pressable>
+        )}
+        {/* When streak is active, show suggestion below streak */}
+        {smartSuggestion && winStreak > 0 && smartSuggestion.text.includes('Claim') && (
+          <Pressable
+            onPress={() => {
+              if (smartSuggestion.screen) {
+                haptics.tap();
+                if (smartSuggestion.tabParams) {
+                  navigation.navigate(smartSuggestion.screen, smartSuggestion.tabParams);
+                } else {
+                  navigateTo(smartSuggestion.screen);
+                }
+              }
+            }}
+            style={styles.smartSuggestion}
+          >
+            <Text style={styles.smartSuggestionText}>{smartSuggestion.text}</Text>
+          </Pressable>
         )}
 
         {/* ═══ STARTER PACK ═══ */}
@@ -822,6 +882,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#e74c3c',
     borderWidth: 1.5,
     borderColor: '#0a0e27',
+  },
+  // Smart suggestion
+  smartSuggestion: {
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginBottom: 2,
+  },
+  smartSuggestionText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: 'rgba(200,220,255,0.7)',
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   // Win streak
   streakText: {
