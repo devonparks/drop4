@@ -40,6 +40,14 @@ function AchievementsTab() {
   return <ProfileScreen />;
 }
 
+// Reactive tab icon — subscribes to store so badge updates in real-time
+function ChallengesTabIcon({ focused }: { focused: boolean }) {
+  const claimable = useChallengeStore(s =>
+    s.challenges.filter(c => c.progress >= c.target && !c.completed).length
+  );
+  return <TabIcon icon="🎯" label="Challenges" focused={focused} badgeCount={claimable} />;
+}
+
 export function MainTabs() {
   return (
     <Tab.Navigator
@@ -74,11 +82,7 @@ export function MainTabs() {
         name="Challenges"
         component={RanksTab}
         options={{
-          tabBarIcon: ({ focused }) => {
-            const claimable = useChallengeStore.getState().challenges
-              .filter(c => c.progress >= c.target && !c.completed).length;
-            return <TabIcon icon="🎯" label="Challenges" focused={focused} badgeCount={claimable} />;
-          },
+          tabBarIcon: ({ focused }) => <ChallengesTabIcon focused={focused} />,
         }}
       />
       <Tab.Screen
