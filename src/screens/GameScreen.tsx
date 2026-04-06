@@ -687,6 +687,33 @@ export function GameScreen({ navigation }: Props) {
       );
       return;
     }
+    // Quit penalty for ranked / wager games
+    if ((isRankedMode || wagerCourt) && status === 'playing') {
+      Alert.alert(
+        'Quit Ranked Match?',
+        'Quitting a ranked match counts as a loss! You\'ll lose ELO.',
+        [
+          { text: 'Keep Playing', style: 'cancel' },
+          {
+            text: 'Quit & Forfeit',
+            style: 'destructive',
+            onPress: () => {
+              recordRanked(false);
+              addMatch({
+                result: 'loss',
+                opponent: wagerCourt?.name || 'Ranked Bot',
+                difficulty,
+                moves: moveCount,
+                coinsEarned: 0,
+                mode: 'stage',
+              });
+              navigation.goBack();
+            },
+          },
+        ]
+      );
+      return;
+    }
     navigation.goBack();
   };
 

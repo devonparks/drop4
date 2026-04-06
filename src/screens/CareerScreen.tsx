@@ -175,7 +175,12 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
       </View>
       <View style={styles.levelRight}>
         {stars > 0 ? (
-          <Text style={styles.stars}>{'⭐'.repeat(stars)}{'☆'.repeat(3 - stars)}</Text>
+          <View style={styles.trophyContainer}>
+            <Text style={styles.trophyIcon}>
+              {stars === 3 ? '🏆' : stars === 2 ? '🥈' : '🥉'}
+            </Text>
+            <Text style={styles.stars}>{'⭐'.repeat(stars)}{'☆'.repeat(3 - stars)}</Text>
+          </View>
         ) : isUnlocked ? (
           <Text style={styles.playIcon}>▶</Text>
         ) : (
@@ -725,6 +730,13 @@ const styles = StyleSheet.create({
   },
   levelRight: {
     marginLeft: 8,
+  },
+  trophyContainer: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  trophyIcon: {
+    fontSize: 18,
   },
   stars: { fontSize: 12 },
   playIcon: {

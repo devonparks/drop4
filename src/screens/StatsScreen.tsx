@@ -9,6 +9,8 @@ import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useCareerStore } from '../stores/careerStore';
+import { BOARD_THEMES, PIECE_THEMES } from '../data/shopCatalog';
+import { PETS } from '../data/pets';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -84,6 +86,9 @@ export function StatsScreen({ navigation }: Props) {
   const seasonHighElo = useRankedStore(s => s.seasonHighElo);
   const seasonHistory = useRankedStore(s => s.seasonHistory);
   const careerProgress = useCareerStore(s => s.progress);
+  const equippedBoard = useShopStore(s => s.equipped.board);
+  const equippedPieces = useShopStore(s => s.equipped.pieces);
+  const equippedPet = useShopStore(s => s.equippedPet);
 
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;
@@ -106,6 +111,19 @@ export function StatsScreen({ navigation }: Props) {
   const totalStars = useMemo(() => {
     return Object.values(careerProgress).reduce((sum, p) => sum + p.stars, 0);
   }, [careerProgress]);
+
+  // Equipped cosmetic display names
+  const boardName = useMemo(() =>
+    BOARD_THEMES.find(b => b.id === equippedBoard)?.name || 'Classic Blue',
+  [equippedBoard]);
+  const piecesName = useMemo(() =>
+    PIECE_THEMES.find(p => p.id === equippedPieces)?.name || 'Classic',
+  [equippedPieces]);
+  const petName = useMemo(() => {
+    if (!equippedPet) return null;
+    const pet = PETS.find(p => p.id === equippedPet);
+    return pet ? `${pet.name} the ${pet.breed}` : null;
+  }, [equippedPet]);
 
   // Difficulty breakdown from match history
   const easyWins = matches.filter(m => m.result === 'win' && m.difficulty === 'easy').length;
@@ -374,6 +392,28 @@ export function StatsScreen({ navigation }: Props) {
             </View>
           </>
         )}
+
+        {/* ---------- Equipped Loadout ---------- */}
+        <SectionTitle title="EQUIPPED LOADOUT" />
+        <View style={styles.card}>
+          <View style={styles.loadoutRow}>
+            <Text style={styles.loadoutIcon}>🎨</Text>
+            <Text style={styles.loadoutLabel}>Board</Text>
+            <Text style={styles.loadoutValue}>{boardName}</Text>
+          </View>
+          <View style={styles.loadoutRow}>
+            <Text style={styles.loadoutIcon}>🔵</Text>
+            <Text style={styles.loadoutLabel}>Pieces</Text>
+            <Text style={styles.loadoutValue}>{piecesName}</Text>
+          </View>
+          {petName && (
+            <View style={[styles.loadoutRow, { borderBottomWidth: 0 }]}>
+              <Text style={styles.loadoutIcon}>🐕</Text>
+              <Text style={styles.loadoutLabel}>Pet</Text>
+              <Text style={styles.loadoutValue}>{petName}</Text>
+            </View>
+          )}
+        </View>
 
         {/* ---------- Career ---------- */}
         <SectionTitle title="CAREER" />
@@ -702,6 +742,35 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
     marginLeft: 'auto',
+  },
+
+  /* Equipped Loadout */
+  loadoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  loadoutIcon: {
+    fontSize: 16,
+    width: 24,
+    textAlign: 'center',
+  },
+  loadoutLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 13,
+    color: colors.textSecondary,
+    width: 60,
+  },
+  loadoutValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#ffffff',
+    flex: 1,
   },
 
   /* Best Performance highlight card */
