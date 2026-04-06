@@ -25,6 +25,7 @@ interface CategoryData {
 export function CollectionScreen() {
   const navigation = useNavigation<any>();
   const owned = useShopStore(s => s.owned);
+  const ownedEmotes = useShopStore(s => s.ownedEmotes);
   const ownedPets = useShopStore(s => s.ownedPets);
   const achievements = useAchievementStore(s => s.achievements);
 
@@ -83,7 +84,7 @@ export function CollectionScreen() {
         id: e.id,
         name: e.name,
         rarity: e.rarity,
-        owned: true, // emotes are available to all, tracked differently
+        owned: ownedEmotes.includes(e.id) || e.price === 0,
       })),
     },
     {
@@ -108,7 +109,7 @@ export function CollectionScreen() {
         owned: a.unlocked,
       })),
     },
-  ], [owned, ownedPets, achievements]);
+  ], [owned, ownedEmotes, ownedPets, achievements]);
 
   // Totals
   const totalOwned = categories.reduce((sum, cat) => sum + cat.items.filter(i => i.owned).length, 0);
