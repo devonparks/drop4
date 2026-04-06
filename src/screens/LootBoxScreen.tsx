@@ -201,8 +201,9 @@ function ItemRevealScreen({ item, onContinue }: { item: LootBoxItem; onContinue:
 }
 
 // ── Box card for the list ──────────────────────────────────────
-function BoxCard({ box, count, isOpening, onOpen, index }: {
-  box: LootBox; count: number; isOpening: boolean; onOpen: () => void; index: number;
+function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
+  box: LootBox; count: number; isOpening: boolean;
+  onOpen: () => void; onBuy: () => void; playerCoins: number; index: number;
 }) {
   const tier = TIER_STYLES[box.tier];
 
@@ -240,13 +241,23 @@ function BoxCard({ box, count, isOpening, onOpen, index }: {
                     <Text style={st.openBtnText}>OPEN</Text>
                   </LinearGradient>
                 </Pressable>
+              ) : box.cost > 0 ? (
+                <Pressable
+                  onPress={onBuy}
+                  disabled={playerCoins < box.cost}
+                  style={{ opacity: playerCoins < box.cost ? 0.5 : 1 }}
+                >
+                  <LinearGradient
+                    colors={playerCoins >= box.cost ? ['#d4ac0d', '#b8960a'] : ['#555', '#444']}
+                    style={st.openBtnGradient}
+                  >
+                    <Text style={[st.openBtnText, { color: '#1a1a00' }]}>{'\u{1FA99}'} {box.cost.toLocaleString()}</Text>
+                  </LinearGradient>
+                </Pressable>
               ) : (
                 <View style={st.emptyWrap}>
                   <Text style={st.emptyText}>Empty</Text>
                 </View>
-              )}
-              {box.cost > 0 && (
-                <Text style={st.buyPrice}>{'\u{1FA99}'} {box.cost.toLocaleString()}</Text>
               )}
             </View>
           </View>
@@ -261,13 +272,26 @@ function BoxCard({ box, count, isOpening, onOpen, index }: {
 // ═══════════════════════════════════════════════════════════════
 export function LootBoxScreen() {
   const navigation = useNavigation();
-  const { openBox, getBoxCount } = useLootBoxStore();
+  const { openBox, getBoxCount, addBox } = useLootBoxStore();
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+  const spendCoins = useShopStore(s => s.spendCoins);
   const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
   const [isOpening, setIsOpening] = useState(false);
   const [openingBox, setOpeningBox] = useState<LootBox | null>(null);
+
+  const handleBuyBox = (box: LootBox) => {
+    if (box.cost <= 0) return;
+    const success = spendCoins(box.cost);
+    if (success) {
+      addBox(box.id);
+      haptics.win();
+      playSound('coin');
+    } else {
+      haptics.error();
+    }
+  };
 
   const handleStartOpen = (box: LootBox) => {
     if (isOpening) return;
@@ -330,6 +354,8 @@ export function LootBoxScreen() {
                 count={count}
                 isOpening={isOpening}
                 onOpen={() => handleStartOpen(box)}
+                onBuy={() => handleBuyBox(box)}
+                playerCoins={coins}
                 index={index}
               />
             );

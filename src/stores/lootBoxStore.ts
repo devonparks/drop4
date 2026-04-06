@@ -150,7 +150,7 @@ export const useLootBoxStore = create<LootBoxState>((set, get) => ({
     } else if (item.type === 'pieces') {
       useShopStore.getState().purchaseItem('pieces', item.id, 0);
     } else if (item.type === 'emote') {
-      // emotes don't have a shopStore category yet, skip
+      useShopStore.getState().purchaseEmote(item.id, 0); // free grant from loot box
     }
 
     // Add to history
