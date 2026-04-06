@@ -143,7 +143,7 @@ export function ChallengesScreen() {
 
   const weeklyWins = (() => {
     const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7)); // Monday
     weekStart.setHours(0, 0, 0, 0);
     return matches.filter(m => m.result === 'win' && m.timestamp >= weekStart.getTime()).length;
   })();

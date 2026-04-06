@@ -180,7 +180,7 @@ export function LeaderboardScreen() {
     const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
     const startOfWeek = new Date();
     startOfWeek.setHours(0, 0, 0, 0);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7)); // Monday
     const weeklyWins = matches.filter(m => m.timestamp >= startOfWeek.getTime() && m.result === 'win').length;
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, weeklyWins };
   }, [matches]);
