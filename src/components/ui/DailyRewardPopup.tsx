@@ -61,6 +61,7 @@ export function DailyRewardPopup() {
   const [reward, setReward] = useState<any>(null);
   const { checkAndShowReward, claimReward, currentStreak } = useDailyRewardStore();
   const addCoins = useShopStore(s => s.addCoins);
+  const addGems = useShopStore(s => s.addGems);
   const { addBox } = useLootBoxStore();
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export function DailyRewardPopup() {
     const claimed = claimReward();
     if (claimed) {
       if (claimed.type === 'coins') addCoins(claimed.amount);
+      if (claimed.type === 'gems') addGems(claimed.amount);
       if (claimed.type === 'lootbox') addBox(claimed.day === 7 ? 'gold_box' : 'bronze_box');
       haptics.win();
       playSound('coin');

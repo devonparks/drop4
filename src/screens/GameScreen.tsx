@@ -637,7 +637,9 @@ export function GameScreen({ navigation }: Props) {
       // Wager court winnings + ranked ELO update
       if (wagerCourt) {
         if (wagerCourt.winnerGets > 0) addCoins(wagerCourt.winnerGets);
-        recordRanked(true); // Won wager match — ELO goes up
+        recordRanked(true);
+      } else if (isRankedMode) {
+        recordRanked(true); // Ranked mode win — ELO goes up
       }
       // Check achievements
       const matchHistory = useMatchHistoryStore.getState();
@@ -752,9 +754,9 @@ export function GameScreen({ navigation }: Props) {
         playSound('level_up');
         haptics.levelUp();
       }
-      // Wager lost — coins already deducted, ranked ELO down
-      if (wagerCourt) {
-        recordRanked(false); // Lost wager match
+      // Wager lost — coins already deducted; ranked ELO down
+      if (wagerCourt || isRankedMode) {
+        recordRanked(false);
       }
       haptics.error();
       playSound('lose');
