@@ -75,7 +75,7 @@ function getRarityLabel(rarity: SpinSegment['rarity']): string {
 }
 
 export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
-  const canSpin = useDailySpinStore(s => s.canSpin);
+  const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
   const pickReward = useDailySpinStore(s => s.pickReward);
   const pickGoldenReward = useDailySpinStore(s => s.pickGoldenReward);
   const recordSpin = useDailySpinStore(s => s.recordSpin);
@@ -84,6 +84,10 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   const spendGems = useShopStore(s => s.spendGems);
   const gems = useShopStore(s => s.gems);
   const addBox = useLootBoxStore(s => s.addBox);
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const canSpin = lastSpinDate !== todayStr;
 
   const [spinning, setSpinning] = useState(false);
   const [resultSegment, setResultSegment] = useState<SpinSegment | null>(null);
@@ -124,12 +128,12 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   // Countdown timer
   useEffect(() => {
     if (!visible) return;
-    if (canSpin()) { setCountdown(''); return; }
+    if (canSpin) { setCountdown(''); return; }
     const update = () => setCountdown(getTimeUntilMidnight());
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [visible, canSpin()]);
+  }, [visible, canSpin]);
 
   // Glow pulse for result
   useEffect(() => {
@@ -145,7 +149,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   }, [showResult]);
 
   const handleSpin = () => {
-    if (spinning || !canSpin()) return;
+    if (spinning || !canSpin) return;
     haptics.tap();
     setSpinning(true);
     setShowResult(false);
@@ -266,7 +270,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
     outputRange: ['0deg', '360deg'],
   });
 
-  const isSpinAvailable = canSpin();
+  const isSpinAvailable = canSpin;
 
   // Generate light dots around the wheel
   const lightDots = Array.from({ length: 20 }, (_, i) => {

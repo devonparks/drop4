@@ -23,6 +23,7 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
   const [dots, setDots] = useState('');
   const playerElo = useRankedStore(s => s.elo);
   const tier = useRankedStore(s => s.tier);
+  const level = useShopStore(s => s.level);
   const playerTier = useMemo(() => {
     return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
   }, [tier]);
@@ -69,7 +70,7 @@ export function MatchmakingOverlay({ visible, onAccept, onDecline, opponentName,
               <View style={styles.vsSection}>
                 <PlayerProfileCard
                   name="You"
-                  level={useShopStore.getState().level}
+                  level={level}
                   elo={playerElo}
                   tier={formatRank(playerElo)}
                   tierIcon={playerTier.icon}

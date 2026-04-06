@@ -72,8 +72,11 @@ export function GameScreen({ navigation }: Props) {
   const setAiThinking = useGameStore(s => s.setAiThinking);
   const newGame = useGameStore(s => s.newGame);
   const scores = useGameStore(s => s.scores);
+  const winStreak = useGameStore(s => s.winStreak);
+  const bestStreak = useGameStore(s => s.bestStreak);
   const addCoins = useShopStore(s => s.addCoins);
   const addXp = useShopStore(s => s.addXp);
+  const level = useShopStore(s => s.level);
   const addMatch = useMatchHistoryStore(s => s.addMatch);
   const updateChallenge = useChallengeStore(s => s.updateProgress);
   const resetChallenge = useChallengeStore(s => s.resetProgress);
@@ -85,6 +88,7 @@ export function GameScreen({ navigation }: Props) {
   const recordMove = useReplayStore(s => s.recordMove);
   const saveReplay = useReplayStore(s => s.saveReplay);
   const recordRanked = useRankedStore(s => s.recordRankedResult);
+  const elo = useRankedStore(s => s.elo);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const preGameEloRef = useRef(useRankedStore.getState().elo);
@@ -1162,7 +1166,7 @@ export function GameScreen({ navigation }: Props) {
           <PlayerHUD
             name={p1Name}
             avatar={<CharacterAvatar size="medium" variant="player" />}
-            level={useShopStore.getState().level}
+            level={level}
             pieceColor="red"
             score={scores.player1}
             isActive={currentPlayer === 1 && status === 'playing'}
@@ -1210,7 +1214,7 @@ export function GameScreen({ navigation }: Props) {
                 ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
                 : <CharacterAvatar size="medium" variant="player" />
               }
-              level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
+              level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
               pieceColor="yellow"
               score={scores.player2}
               isActive={currentPlayer === 2 && status === 'playing'}
@@ -1614,7 +1618,7 @@ export function GameScreen({ navigation }: Props) {
                     <CharacterAvatar size="large" variant="player" />
                     {/* Level badge */}
                     <View style={styles.goLevelBadge}>
-                      <Text style={styles.goLevelText}>{useShopStore.getState().level}</Text>
+                      <Text style={styles.goLevelText}>{level}</Text>
                     </View>
                   </View>
                   <Text style={styles.goCharName} numberOfLines={1}>{p1Name}</Text>
@@ -1656,7 +1660,7 @@ export function GameScreen({ navigation }: Props) {
                     />
                     <View style={[styles.goLevelBadge, { backgroundColor: colors.surfaceLight }]}>
                       <Text style={styles.goLevelText}>
-                        {isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : useShopStore.getState().level}
+                        {isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
                       </Text>
                     </View>
                   </View>
@@ -1696,15 +1700,15 @@ export function GameScreen({ navigation }: Props) {
                 {/* Win Streak */}
                 <View style={styles.goStatItem}>
                   <View style={styles.goStatHeader}>
-                    <Text style={[styles.goStatVal, useGameStore.getState().winStreak > 0 && { color: colors.orange }]}>
-                      {useGameStore.getState().winStreak > 0 ? `${useGameStore.getState().winStreak}` : '0'}
+                    <Text style={[styles.goStatVal, winStreak > 0 && { color: colors.orange }]}>
+                      {winStreak > 0 ? `${winStreak}` : '0'}
                     </Text>
                     <Text style={styles.goStatLabel}>WIN STREAK</Text>
                     <Text style={styles.goStatVal}>-</Text>
                   </View>
                   <View style={styles.goBarRow}>
                     <View style={styles.goBarTrack}>
-                      <View style={[styles.goBarFillLeft, { width: `${Math.min(useGameStore.getState().winStreak * 20, 100)}%`, backgroundColor: colors.orange }]} />
+                      <View style={[styles.goBarFillLeft, { width: `${Math.min(winStreak * 20, 100)}%`, backgroundColor: colors.orange }]} />
                     </View>
                     <View style={styles.goBarTrack}>
                       <View style={[styles.goBarFillRight, { width: '0%' }]} />
@@ -1715,7 +1719,7 @@ export function GameScreen({ navigation }: Props) {
                 {/* Best Streak */}
                 <View style={styles.goStatItem}>
                   <View style={styles.goStatHeader}>
-                    <Text style={styles.goStatVal}>{useGameStore.getState().bestStreak}</Text>
+                    <Text style={styles.goStatVal}>{bestStreak}</Text>
                     <Text style={styles.goStatLabel}>BEST STREAK</Text>
                     <Text style={styles.goStatVal}>-</Text>
                   </View>
@@ -1832,10 +1836,10 @@ export function GameScreen({ navigation }: Props) {
                   </Pressable>
                 )}
                 {/* Streak bonus */}
-                {status === 'won' && winner === 1 && useGameStore.getState().winStreak > 1 && (
+                {status === 'won' && winner === 1 && winStreak > 1 && (
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(255,140,0,0.3)' }]}>
                     <Text style={styles.goRewardIcon}>🔥</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.orange }]}>+{Math.min(useGameStore.getState().winStreak * 10, 50)}</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.orange }]}>+{Math.min(winStreak * 10, 50)}</Text>
                     <Text style={styles.goRewardDesc}>Streak</Text>
                   </View>
                 )}
@@ -1933,7 +1937,7 @@ export function GameScreen({ navigation }: Props) {
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.5)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
                     <Text style={styles.goRewardIcon}>🎉</Text>
                     <Text style={[styles.goRewardAmount, { color: '#b06cc7', fontSize: 11 }]}>LEVEL UP!</Text>
-                    <Text style={styles.goRewardDesc}>Lv {useShopStore.getState().level}</Text>
+                    <Text style={styles.goRewardDesc}>Lv {level}</Text>
                   </View>
                 )}
                 {/* SEASON TIER UP! */}
@@ -2005,7 +2009,7 @@ export function GameScreen({ navigation }: Props) {
                 <View style={styles.goEloWrap}>
                   <EloChangeAnimation
                     eloBefore={preGameEloRef.current}
-                    eloAfter={useRankedStore.getState().elo}
+                    eloAfter={elo}
                   />
                 </View>
               )}
