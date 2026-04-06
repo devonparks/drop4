@@ -1,6 +1,44 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 
+// ── Player Title System ──
+export type PlayerTitle =
+  | 'Rookie' | 'Player' | 'Veteran' | 'Expert'
+  | 'Champion' | 'Legend' | 'Grandmaster'
+  | 'Dark Matter' | 'Mogul';
+
+/** Compute the player's title based on level, rank tier, and coins */
+export function getPlayerTitle(level: number, rankTier: string | undefined, coins: number): PlayerTitle {
+  // Override: Dark Matter rank trumps all
+  if (rankTier === 'darkmatter') return 'Dark Matter';
+  // Override: 100k+ coins = Mogul
+  if (coins >= 100_000) return 'Mogul';
+  // Level-based titles
+  if (level >= 26) return 'Grandmaster';
+  if (level >= 21) return 'Legend';
+  if (level >= 16) return 'Champion';
+  if (level >= 11) return 'Expert';
+  if (level >= 6) return 'Veteran';
+  if (level >= 3) return 'Player';
+  return 'Rookie';
+}
+
+/** Color associated with each player title */
+export function getPlayerTitleColor(title: PlayerTitle): string {
+  switch (title) {
+    case 'Dark Matter': return '#e94560';
+    case 'Mogul':       return '#ffd700';
+    case 'Grandmaster': return '#ff6b6b';
+    case 'Legend':      return '#f1c40f';
+    case 'Champion':    return '#9b59b6';
+    case 'Expert':      return '#3498db';
+    case 'Veteran':     return '#2ecc71';
+    case 'Player':      return '#8892b0';
+    case 'Rookie':      return '#8892b0';
+    default:            return '#8892b0';
+  }
+}
+
 interface ShopState {
   playerName: string;
   coins: number;

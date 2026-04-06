@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { useAchievementStore } from '../stores/achievementStore';
-import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, EMOTES, RARITY_COLORS, RARITY_LABELS } from '../data/shopCatalog';
+import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS } from '../data/shopCatalog';
 import { PETS, PET_RARITY_COLORS } from '../data/pets';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -115,6 +115,36 @@ export function CollectionScreen() {
   const totalAvailable = categories.reduce((sum, cat) => sum + cat.items.length, 0);
   const overallPct = totalAvailable > 0 ? Math.round((totalOwned / totalAvailable) * 100) : 0;
 
+  // Collection value — sum prices of all owned items across every catalog
+  const collectionValue = useMemo(() => {
+    let total = 0;
+    // Boards
+    for (const b of BOARD_THEMES) {
+      if (owned.boards.includes(b.id)) total += b.price;
+    }
+    // Pieces
+    for (const p of PIECE_THEMES) {
+      if (owned.pieces.includes(p.id)) total += p.price;
+    }
+    // Drop effects
+    for (const d of DROP_EFFECTS) {
+      if (owned.dropEffects.includes(d.id)) total += d.price;
+    }
+    // Win animations
+    for (const w of WIN_ANIMATIONS) {
+      if (owned.winAnimations.includes(w.id)) total += w.price;
+    }
+    // Board accessories
+    for (const a of BOARD_ACCESSORIES) {
+      if (owned.boardAccessories.includes(a.id)) total += a.price;
+    }
+    // Pets
+    for (const p of PETS) {
+      if (ownedPets.includes(p.id)) total += p.price;
+    }
+    return total;
+  }, [owned, ownedPets]);
+
   // Rarity distribution — count owned vs total per rarity tier across all categories
   const rarityDistribution = useMemo(() => {
     const allItems = categories.flatMap(cat => cat.items);
@@ -155,6 +185,12 @@ export function CollectionScreen() {
           />
         </View>
         <Text style={styles.progressPct}>{overallPct}% Complete</Text>
+
+        {/* Collection Value */}
+        <View style={styles.collectionValueCard}>
+          <Text style={styles.collectionValueLabel}>Collection Value</Text>
+          <Text style={styles.collectionValueAmount}>{'\uD83E\uDE99'} {collectionValue.toLocaleString()}</Text>
+        </View>
 
         {/* Rarity Distribution */}
         <View style={styles.rarityCard}>
@@ -439,6 +475,33 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.2)',
   },
+  // Collection Value
+  collectionValueCard: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: 'rgba(241,196,15,0.06)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.15)',
+  },
+  collectionValueLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  collectionValueAmount: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: colors.coinGold,
+  },
+
   // Rarity Distribution
   rarityCard: {
     marginHorizontal: 16,

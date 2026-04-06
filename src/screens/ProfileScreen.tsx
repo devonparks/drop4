@@ -7,10 +7,10 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
-import { useShopStore, getCoinMilestoneInfo } from '../stores/shopStore';
+import { useShopStore, getCoinMilestoneInfo, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
-import { useAchievementStore } from '../stores/achievementStore';
+import { useAchievementStore, getAchievementScore, getMaxAchievementPoints } from '../stores/achievementStore';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
@@ -129,6 +129,17 @@ export function ProfileScreen() {
           </View>
 
           <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
+
+          {/* Player Title */}
+          {(() => {
+            const title = getPlayerTitle(level, tier, coins);
+            const titleColor = getPlayerTitleColor(title);
+            return (
+              <View style={[styles.playerTitleBadge, { borderColor: `${titleColor}40` }]}>
+                <Text style={[styles.playerTitleText, { color: titleColor }]}>{title}</Text>
+              </View>
+            );
+          })()}
 
           {/* Prominent ranked tier badge */}
           {(() => {
@@ -253,6 +264,14 @@ export function ProfileScreen() {
 
         {/* Achievements */}
         <Text style={styles.sectionTitle}>ACHIEVEMENTS ({achievements.filter(a => a.unlocked).length}/{achievements.length})</Text>
+
+        {/* Achievement Score */}
+        <View style={styles.achievementScoreCard}>
+          <Text style={styles.achievementScoreLabel}>Achievement Score</Text>
+          <Text style={styles.achievementScoreValue}>
+            {getAchievementScore(achievements)} / {getMaxAchievementPoints()} pts
+          </Text>
+        </View>
 
         {/* Achievement Progress Card */}
         {(() => {
@@ -485,6 +504,46 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 28,
     color: '#ffffff',
+  },
+  playerTitleBadge: {
+    marginTop: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  playerTitleText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+  },
+  achievementScoreCard: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.15)',
+  },
+  achievementScoreLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  achievementScoreValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: colors.coinGold,
   },
   rankBadgeRow: {
     flexDirection: 'row',

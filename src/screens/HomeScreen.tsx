@@ -9,7 +9,7 @@ import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVari
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { IdlePicker } from '../components/ui/IdlePicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
-import { useShopStore } from '../stores/shopStore';
+import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
@@ -131,6 +131,7 @@ export function HomeScreen() {
   const careerCompletedCount = useCareerStore(s => s.getCompletedCount)();
   const canSpin = useDailySpinStore(s => s.canSpin);
   const currentSeason = useRankedStore(s => s.currentSeason);
+  const rankedTier = useRankedStore(s => s.tier);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
@@ -383,6 +384,16 @@ export function HomeScreen() {
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
           <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
+          {/* Player title badge */}
+          {(() => {
+            const title = getPlayerTitle(level, rankedTier, coins);
+            const titleColor = getPlayerTitleColor(title);
+            return (
+              <View style={[styles.homeTitleBadge, { borderColor: `${titleColor}40` }]}>
+                <Text style={[styles.homeTitleText, { color: titleColor }]}>Lv.{level} {title}</Text>
+              </View>
+            );
+          })()}
           <Text style={styles.seasonCountdown}>
             Season {currentSeason}: {seasonDaysRemaining} day{seasonDaysRemaining !== 1 ? 's' : ''} remaining
           </Text>
@@ -765,6 +776,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(200,220,255,0.5)',
     letterSpacing: 3,
+  },
+  homeTitleBadge: {
+    marginTop: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  homeTitleText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
   },
   onlineIndicator: {
     flexDirection: 'row',
