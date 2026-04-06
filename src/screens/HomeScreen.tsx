@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -90,6 +90,24 @@ function PressScaleView({ children, onPress }: { children: React.ReactNode; onPr
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {children}
       </Animated.View>
+    </Pressable>
+  );
+}
+
+const NEWS_ITEMS = [
+  { id: 'emotes', emoji: '🕺', text: 'NEW: 30 Emotes!', screen: 'CharacterCreator', gradient: ['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.12)'] as const },
+  { id: 'season', emoji: '⭐', text: 'Season 0 Rewards', screen: 'SeasonPass', gradient: ['rgba(155,89,182,0.25)', 'rgba(155,89,182,0.12)'] as const },
+  { id: 'spin', emoji: '🎰', text: 'Daily Spin!', screen: null, gradient: ['rgba(241,196,15,0.25)', 'rgba(241,196,15,0.12)'] as const },
+  { id: 'ranked', emoji: '🏆', text: 'Ranked Mode', screen: 'Multiplayer', gradient: ['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.12)'] as const },
+];
+
+function NewsCard({ item, onPress }: { item: typeof NEWS_ITEMS[0]; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress}>
+      <LinearGradient colors={[...item.gradient]} style={styles.newsCard}>
+        <Text style={styles.newsEmoji}>{item.emoji}</Text>
+        <Text style={styles.newsText} numberOfLines={1}>{item.text}</Text>
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -340,6 +358,28 @@ export function HomeScreen() {
             <Text style={styles.sideBtnLabel}>Idles</Text>
           </Pressable>
         </View>
+
+        {/* ═══ NEWS BANNER ═══ */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.newsBanner}
+        >
+          {NEWS_ITEMS.map(item => (
+            <NewsCard
+              key={item.id}
+              item={item}
+              onPress={() => {
+                haptics.tap();
+                if (item.screen) {
+                  navigateTo(item.screen);
+                } else if (item.id === 'spin') {
+                  setSpinWheelOpen(true);
+                }
+              }}
+            />
+          ))}
+        </ScrollView>
 
         {/* Quick action buttons */}
         <View style={styles.quickActions}>
@@ -611,6 +651,33 @@ const styles = StyleSheet.create({
     borderRadius: 140,
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
+  },
+  // News banner
+  newsBanner: {
+    paddingHorizontal: 16,
+    gap: 8,
+    marginBottom: 6,
+  },
+  newsCard: {
+    width: 105,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  newsEmoji: {
+    fontSize: 18,
+  },
+  newsText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   // Quick action buttons
   quickActions: {

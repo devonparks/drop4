@@ -148,8 +148,11 @@ const RANK_EMOJIS: Record<number, string> = {
   3: '🥉',
 };
 
+type SortMode = 'wins' | 'elo';
+
 export function LeaderboardScreen() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('global');
+  const [sortMode, setSortMode] = useState<SortMode>('wins');
   const level = useShopStore(s => s.level);
   const rankedElo = useRankedStore(s => s.elo);
   const matches = useMatchHistoryStore(s => s.matches);
@@ -167,9 +170,24 @@ export function LeaderboardScreen() {
   const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
   const friendsData = useMemo(() => generateFriendsLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
 
-  const leaderboard = activeTab === 'global' ? globalData
+  const rawData = activeTab === 'global' ? globalData
     : activeTab === 'weekly' ? weeklyData
     : friendsData;
+
+  // Re-sort by ELO if needed, otherwise keep wins-based order
+  const leaderboard = useMemo(() => {
+    if (sortMode === 'elo') {
+      const sorted = [...rawData].sort((a, b) => b.elo - a.elo);
+      sorted.forEach((e, i) => e.rank = i + 1);
+      return sorted;
+    }
+    return rawData;
+  }, [rawData, sortMode]);
+
+  // Find player rank
+  const playerEntry = leaderboard.find(e => e.isPlayer);
+  const playerRank = playerEntry?.rank ?? 0;
+  const totalPlayers = leaderboard.length;
 
   const tabs: { key: LeaderboardTab; label: string }[] = [
     { key: 'global', label: 'Global' },
@@ -195,6 +213,29 @@ export function LeaderboardScreen() {
               </Text>
             </Pressable>
           ))}
+        </View>
+
+        {/* Sort toggle + Player rank */}
+        <View style={styles.sortRow}>
+          <View style={styles.sortToggle}>
+            <Pressable
+              onPress={() => { haptics.tap(); setSortMode('wins'); }}
+              style={[styles.sortBtn, sortMode === 'wins' && styles.sortBtnActive]}
+            >
+              <Text style={[styles.sortBtnText, sortMode === 'wins' && styles.sortBtnTextActive]}>By Wins</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => { haptics.tap(); setSortMode('elo'); }}
+              style={[styles.sortBtn, sortMode === 'elo' && styles.sortBtnActive]}
+            >
+              <Text style={[styles.sortBtnText, sortMode === 'elo' && styles.sortBtnTextActive]}>By ELO</Text>
+            </Pressable>
+          </View>
+          {playerRank > 0 && (
+            <Text style={styles.playerRankText}>
+              You are <Text style={styles.playerRankHighlight}>#{playerRank}</Text> of {totalPlayers}
+            </Text>
+          )}
         </View>
 
         {/* Leaderboard */}
@@ -287,6 +328,48 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   tabLabelActive: {
+    color: colors.orange,
+  },
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  sortToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  sortBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  sortBtnActive: {
+    backgroundColor: 'rgba(255,140,0,0.15)',
+  },
+  sortBtnText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  sortBtnTextActive: {
+    color: colors.orange,
+  },
+  playerRankText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  playerRankHighlight: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
     color: colors.orange,
   },
   listContent: {

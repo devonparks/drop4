@@ -196,7 +196,18 @@ export function SettingsScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.section}>
           <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
-          <SettingLink label="Reset Progress" icon="⚠️" onPress={() => {
+          <View style={styles.playerIdRow}>
+            <Text style={styles.settingIcon}>🆔</Text>
+            <Text style={styles.settingLabel}>Player ID</Text>
+            <Text style={styles.playerIdValue}>{useShopStore.getState().playerName || 'Player'}</Text>
+          </View>
+        </View>
+
+        {/* Danger Zone */}
+        <View style={styles.dangerDivider} />
+        <Text style={styles.dangerTitle}>DANGER ZONE</Text>
+        <View style={styles.dangerSection}>
+          <Pressable onPress={() => {
             haptics.error();
             Alert.alert(
               'Reset All Progress',
@@ -207,25 +218,28 @@ export function SettingsScreen({ navigation }: Props) {
                   text: 'Reset Everything',
                   style: 'destructive',
                   onPress: () => {
-                    // Reset shop (coins, gems, level, xp, equipped, owned)
                     useShopStore.setState({
                       coins: 500, gems: 0, level: 1, xp: 0,
                       playerName: 'Player',
                       equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic', boardAccessory: 'none' },
                       owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'], boardAccessories: ['none'] },
                     });
-                    // Reset ranked stats
                     useRankedStore.getState().resetSeason();
-                    // Reset game scores
                     useGameStore.getState().resetScores();
-                    // Reset career progress
                     useCareerStore.setState({ progress: {}, currentChapter: 1 });
                     haptics.tap();
                   },
                 },
               ],
             );
-          }} />
+          }} style={styles.dangerRow}>
+            <Text style={styles.settingIcon}>🗑️</Text>
+            <Text style={styles.dangerLabel}>Reset All Progress</Text>
+            <Text style={styles.dangerChevron}>›</Text>
+          </Pressable>
+          <Text style={styles.dangerHint}>
+            Permanently erases coins, gems, levels, career, ranked stats, and all game data.
+          </Text>
         </View>
 
         {/* Version */}
@@ -411,6 +425,76 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#ffffff',
     flex: 1,
+  },
+  // Player ID row
+  playerIdRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  playerIdValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.orange,
+    letterSpacing: 0.5,
+  },
+  // Danger zone
+  dangerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(231,76,60,0.15)',
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  dangerTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: '#e74c3c',
+    letterSpacing: 2,
+    paddingHorizontal: 20,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  dangerSection: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(231,76,60,0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(231,76,60,0.2)',
+    overflow: 'hidden',
+  },
+  dangerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  dangerLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 15,
+    color: '#e74c3c',
+    flex: 1,
+  },
+  dangerChevron: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 20,
+    color: 'rgba(231,76,60,0.5)',
+  },
+  dangerHint: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: 'rgba(231,76,60,0.5)',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    marginTop: -4,
   },
   footer: {
     alignItems: 'center',

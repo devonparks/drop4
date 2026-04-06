@@ -157,6 +157,42 @@ export function ProfileScreen() {
 
         {/* Achievements */}
         <Text style={styles.sectionTitle}>ACHIEVEMENTS ({achievements.filter(a => a.unlocked).length}/{achievements.length})</Text>
+
+        {/* Achievement Progress Card */}
+        {(() => {
+          const unlocked = achievements.filter(a => a.unlocked).length;
+          const total = achievements.length;
+          const pct = total > 0 ? Math.round((unlocked / total) * 100) : 0;
+          const nextAch = achievements.find(a => !a.unlocked);
+          const progressWidth = `${Math.max(pct, 4)}%`;
+          return (
+            <View style={styles.achievementProgressCard}>
+              {/* Progress bar */}
+              <View style={styles.achProgressBarOuter}>
+                <LinearGradient
+                  colors={[colors.orange, colors.coinGold]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.achProgressBarFill, { width: progressWidth as any }]}
+                />
+              </View>
+              <Text style={styles.achProgressPct}>
+                {pct}% Complete {pct < 100 ? '— Keep playing to unlock more!' : '— All unlocked!'}
+              </Text>
+              {nextAch && (
+                <View style={styles.achNextRow}>
+                  <Text style={styles.achNextLabel}>Next:</Text>
+                  <Text style={styles.achNextIcon}>{nextAch.icon}</Text>
+                  <Text style={styles.achNextName}>{nextAch.description}</Text>
+                  <Text style={styles.achNextReward}>
+                    ({nextAch.name})
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
+
         <View style={styles.achievementsList}>
           {achievements.map((ach) => (
             <View key={ach.id} style={[styles.achievementRow, ach.unlocked && styles.achievementDone]}>
@@ -219,6 +255,51 @@ export function ProfileScreen() {
         <View style={[styles.quickActions, { marginTop: 0 }]}>
           <GlossyButton label="Stats" variant="navy" icon="📈" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
         </View>
+
+        {/* Recent Activity */}
+        {(() => {
+          const activities: { icon: string; text: string; color: string }[] = [];
+          // Build from match history
+          if (allMatches.length > 0) {
+            const last = allMatches[0];
+            if (last.result === 'win') {
+              activities.push({ icon: '🏆', text: `Won vs ${last.opponent} (+${last.coinsEarned} coins)`, color: colors.green });
+            } else if (last.result === 'loss') {
+              activities.push({ icon: '💔', text: `Lost vs ${last.opponent}`, color: colors.pieceRed });
+            } else {
+              activities.push({ icon: '🤝', text: `Draw vs ${last.opponent}`, color: colors.textSecondary });
+            }
+          }
+          // Level milestone
+          if (level > 1) {
+            activities.push({ icon: '📈', text: `Reached Level ${level}!`, color: colors.orange });
+          }
+          // Achievement progress
+          const unlockedAch = achievements.filter(a => a.unlocked);
+          if (unlockedAch.length > 0) {
+            const lastAch = unlockedAch[unlockedAch.length - 1];
+            activities.push({ icon: lastAch.icon, text: `Unlocked "${lastAch.name}"`, color: colors.coinGold });
+          }
+          // Coin balance hint
+          if (coins >= 1000) {
+            activities.push({ icon: '💰', text: `Sitting on ${coins.toLocaleString()} coins`, color: colors.coinGold });
+          }
+          const display = activities.slice(0, 3);
+          if (display.length === 0) return null;
+          return (
+            <>
+              <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
+              <View style={styles.activityList}>
+                {display.map((a, i) => (
+                  <View key={i} style={styles.activityRow}>
+                    <Text style={styles.activityIcon}>{a.icon}</Text>
+                    <Text style={[styles.activityText, { color: a.color }]} numberOfLines={1}>{a.text}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          );
+        })()}
 
         {/* Match History */}
         {recentMatches.length > 0 && (
@@ -547,5 +628,93 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     color: colors.orange,
+  },
+  // Achievement progress card
+  achievementProgressCard: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,209,102,0.12)',
+  },
+  achProgressBarOuter: {
+    width: '100%',
+    height: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  achProgressBarFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  achProgressPct: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  achNextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  achNextLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.orange,
+  },
+  achNextIcon: {
+    fontSize: 14,
+  },
+  achNextName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: '#ffffff',
+    flex: 1,
+  },
+  achNextReward: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: colors.coinGold,
+  },
+  // Recent Activity
+  activityList: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  activityIcon: {
+    fontSize: 18,
+  },
+  activityText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    flex: 1,
   },
 });
