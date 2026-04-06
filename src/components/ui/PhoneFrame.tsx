@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useShopStore } from '../../stores/shopStore';
+import { BOARD_THEME_VISUALS } from '../../data/boardThemeColors';
 
 const PHONE_WIDTH = 390;
 const PHONE_HEIGHT = 844;
@@ -16,6 +18,11 @@ interface PhoneFrameProps {
  * On native, renders children directly with no wrapper.
  */
 export function PhoneFrame({ children }: PhoneFrameProps) {
+  // Read board accent color for phone frame glow (hook called unconditionally)
+  const equippedBoard = useShopStore(s => s.equipped.board);
+  const theme = BOARD_THEME_VISUALS[equippedBoard] || BOARD_THEME_VISUALS.default;
+  const accentColor = theme.frameBorder;
+
   // Only show the frame on web
   if (Platform.OS !== 'web') {
     return <>{children}</>;
@@ -24,7 +31,10 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
   return (
     <View style={styles.desktop}>
       {/* Phone housing */}
-      <View style={styles.phone}>
+      <View style={[styles.phone, {
+        borderColor: accentColor,
+        shadowColor: accentColor,
+      } as any]}>
         {/* Top bezel with notch */}
         <View style={styles.topBezel}>
           <View style={styles.notch}>
@@ -75,15 +85,15 @@ const styles = StyleSheet.create({
     height: PHONE_HEIGHT,
     borderRadius: FRAME_RADIUS,
     backgroundColor: '#000000',
-    borderWidth: 3,
-    borderColor: '#333',
+    borderWidth: 2,
+    borderColor: '#333', // overridden inline by board accent
     overflow: 'hidden',
     position: 'relative',
-    // Phone shadow
+    // Phone glow — color overridden inline by board accent
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.5,
-    shadowRadius: 40,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 30,
     elevation: 30,
   },
   topBezel: {

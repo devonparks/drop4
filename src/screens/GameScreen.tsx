@@ -784,13 +784,20 @@ export function GameScreen({ navigation }: Props) {
   }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, isOnlineMatch, onlineMatchId, myPlayerNum]);
 
   const handleShareScore = async () => {
-    const resultText = status === 'won'
-      ? (winner === 1 ? 'won' : 'lost')
-      : 'drew';
-    const coinsText = status === 'won' && winner === 1
-      ? `, ${Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)} coins earned`
-      : '';
-    const shareMessage = `I just ${resultText} on Drop4! ${winner === 1 ? '\u{1F3C6}' : '\u{1F3AE}'} ${moveCount} moves${coinsText}. Beat me at drop4.game!`;
+    const isWin = status === 'won' && winner === 1;
+    const isLoss = status === 'won' && winner === 2;
+    const resultLine = isWin ? 'VICTORY' : isLoss ? 'DEFEAT' : 'DRAW';
+    const opponentLabel = isVsAi
+      ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot`
+      : isOnlineMatch ? (params.onlineOpponentName || 'Online') : 'Local';
+    const resultEmoji = isWin ? '\u{1F3C6}' : isLoss ? '\u{1F61E}' : '\u{1F91D}';
+    const speedTag = moveCount <= 7 ? ' | \u26A1 Lightning Win' : moveCount <= 12 ? ' | \u{1F525} Quick Win' : '';
+    const coinsLine = isWin ? `\n\u{1FA99} +${totalCoinsEarned || Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)} coins earned` : '';
+    const streak = useGameStore.getState().winStreak;
+    const streakLine = streak > 1 ? `\n\u{1F525} ${streak} Win Streak` : '';
+    const stats = useMatchHistoryStore.getState().getStats();
+    const rateLine = stats.totalGames > 2 ? `\n\u{1F4CA} Win Rate: ${stats.winRate}%` : '';
+    const shareMessage = `\u{1F3AE} Drop4 \u2014 Game Result\n${resultEmoji} ${resultLine} vs ${opponentLabel}\n\u23F1 ${moveCount} moves${speedTag}${coinsLine}${streakLine}${rateLine}\nPlay Drop4: drop4.game`;
 
     if (Platform.OS === 'web') {
       try {

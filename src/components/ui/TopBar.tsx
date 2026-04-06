@@ -40,15 +40,20 @@ export function TopBar({
     n >= 1000 ? n.toLocaleString() :
     n.toString();
 
-  // Coin change flash animation: green for increase, red for decrease
+  // Coin change flash animation: green for increase, red for decrease + scale pop
   const prevCoinsRef = useRef(coins);
   const coinFlashAnim = useRef(new Animated.Value(0)).current;
+  const coinScaleAnim = useRef(new Animated.Value(1)).current;
   const [coinFlashColor, setCoinFlashColor] = useState('#27ae3d');
   useEffect(() => {
     if (coins !== prevCoinsRef.current) {
       setCoinFlashColor(coins > prevCoinsRef.current ? '#27ae3d' : '#e74c3c');
+      // Color flash
       coinFlashAnim.setValue(1);
       Animated.timing(coinFlashAnim, { toValue: 0, duration: 500, useNativeDriver: false }).start();
+      // Scale pop: 1 -> 1.15 -> 1
+      coinScaleAnim.setValue(1.15);
+      Animated.spring(coinScaleAnim, { toValue: 1, friction: 5, tension: 200, useNativeDriver: true }).start();
       prevCoinsRef.current = coins;
     }
   }, [coins]);
@@ -90,7 +95,7 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} />
+        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} />
         <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} />
         <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
       </LinearGradient>
@@ -117,11 +122,11 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor }: {
-  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>;
+function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor, scaleAnim }: {
+  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value;
 }) {
-  return (
-    <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pill}>
+  const inner = (
+    <>
       <Text style={styles.pillEmoji}>{emoji}</Text>
       {animatedTextColor ? (
         <Animated.Text style={[styles.pillValue, { color: animatedTextColor }]}>{value}</Animated.Text>
@@ -136,6 +141,22 @@ function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextC
           <Text style={styles.plusText}>+</Text>
         </LinearGradient>
       </Pressable>
+    </>
+  );
+
+  if (scaleAnim) {
+    return (
+      <Animated.View style={[styles.pill, { transform: [{ scale: scaleAnim }] }]}>
+        <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pillInner}>
+          {inner}
+        </Pressable>
+      </Animated.View>
+    );
+  }
+
+  return (
+    <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pill}>
+      {inner}
     </Pressable>
   );
 }
@@ -209,6 +230,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 3,
+  },
+  pillInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   pillEmoji: {
     fontSize: 17,
