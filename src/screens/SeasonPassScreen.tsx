@@ -18,6 +18,46 @@ function parseCoinAmount(name: string): number {
   return match ? parseInt(match[1], 10) : 0;
 }
 
+type RewardItem = { type: string; name: string; icon: string; id?: string };
+type GrantHelpers = {
+  addCoins: (n: number) => void;
+  purchaseItem: (cat: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', id: string, cost: number) => boolean;
+  purchaseEmote: (id: string, cost: number) => boolean;
+  purchasePet: (id: string, cost: number) => boolean;
+};
+
+function grantReward(reward: RewardItem, helpers: GrantHelpers) {
+  const { addCoins, purchaseItem, purchaseEmote, purchasePet } = helpers;
+  switch (reward.type) {
+    case 'coins': {
+      const amount = parseCoinAmount(reward.name);
+      if (amount > 0) addCoins(amount);
+      break;
+    }
+    case 'pieces':
+      if (reward.id) purchaseItem('pieces', reward.id, 0);
+      break;
+    case 'board':
+      if (reward.id) purchaseItem('boards', reward.id, 0);
+      break;
+    case 'dropEffect':
+      if (reward.id) purchaseItem('dropEffects', reward.id, 0);
+      break;
+    case 'winAnimation':
+      if (reward.id) purchaseItem('winAnimations', reward.id, 0);
+      break;
+    case 'boardAccessory':
+      if (reward.id) purchaseItem('boardAccessories', reward.id, 0);
+      break;
+    case 'emote':
+      if (reward.id) purchaseEmote(reward.id, 0);
+      break;
+    case 'pet':
+      if (reward.id) purchasePet(reward.id, 0);
+      break;
+  }
+}
+
 function RewardTierCard({ reward, currentTier, hasPremium }: {
   reward: SeasonReward;
   currentTier: number;
@@ -31,6 +71,9 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
   const claimFreeReward = useSeasonStore(s => s.claimFreeReward);
   const claimPremiumReward = useSeasonStore(s => s.claimPremiumReward);
   const addCoins = useShopStore(s => s.addCoins);
+  const purchaseItem = useShopStore(s => s.purchaseItem);
+  const purchaseEmote = useShopStore(s => s.purchaseEmote);
+  const purchasePet = useShopStore(s => s.purchasePet);
 
   const canClaimFree = isUnlocked && reward.freeReward && !isFreeClaimed;
   const canClaimPremium = isUnlocked && hasPremium && reward.premiumReward && !isPremiumClaimed;
@@ -42,15 +85,9 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
       haptics.win();
       playSound('coin');
       playSound('level_up');
-      // Grant the reward
-      if (reward.freeReward.type === 'coins') {
-        const amount = parseCoinAmount(reward.freeReward.name);
-        if (amount > 0) addCoins(amount);
-      }
-      // For skins/boards, the shop store owns those — the caller would need
-      // to add them to owned. For now, coin rewards are auto-granted.
+      grantReward(reward.freeReward, { addCoins, purchaseItem, purchaseEmote, purchasePet });
     }
-  }, [reward, claimFreeReward, addCoins]);
+  }, [reward, claimFreeReward, addCoins, purchaseItem, purchaseEmote, purchasePet]);
 
   const handleClaimPremium = useCallback(() => {
     if (!reward.premiumReward) return;
@@ -59,13 +96,9 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
       haptics.win();
       playSound('coin');
       playSound('level_up');
-      // Grant premium rewards similarly
-      if (reward.premiumReward.type === 'coins') {
-        const amount = parseCoinAmount(reward.premiumReward.name);
-        if (amount > 0) addCoins(amount);
-      }
+      grantReward(reward.premiumReward, { addCoins, purchaseItem, purchaseEmote, purchasePet });
     }
-  }, [reward, claimPremiumReward, addCoins]);
+  }, [reward, claimPremiumReward, addCoins, purchaseItem, purchaseEmote, purchasePet]);
 
   return (
     <View style={[styles.tierCard, isCurrent && styles.tierCardCurrent]}>

@@ -4,8 +4,8 @@ import { useShopStore } from './shopStore';
 
 export interface SeasonReward {
   tier: number;
-  freeReward: { type: string; name: string; icon: string } | null;
-  premiumReward: { type: string; name: string; icon: string } | null;
+  freeReward: { type: string; name: string; icon: string; id?: string } | null;
+  premiumReward: { type: string; name: string; icon: string; id?: string } | null;
 }
 
 interface SeasonState {
@@ -32,14 +32,14 @@ interface SeasonState {
 }
 
 const SEASON_REWARDS: SeasonReward[] = [
-  { tier: 1, freeReward: { type: 'coins', name: '100 Coins', icon: '🪙' }, premiumReward: { type: 'skin', name: 'Chrome Pieces', icon: '🔴' } },
-  { tier: 2, freeReward: { type: 'coins', name: '200 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Wood Board', icon: '🎨' } },
-  { tier: 3, freeReward: null, premiumReward: { type: 'emote', name: 'Dance Emote', icon: '💃' } },
-  { tier: 4, freeReward: { type: 'coins', name: '300 Coins', icon: '🪙' }, premiumReward: { type: 'effect', name: 'Spark Drop', icon: '✨' } },
-  { tier: 5, freeReward: { type: 'skin', name: 'Fire & Ice', icon: '🔥' }, premiumReward: { type: 'board', name: 'Neon Board', icon: '🎨' } },
-  { tier: 6, freeReward: { type: 'coins', name: '500 Coins', icon: '🪙' }, premiumReward: { type: 'pet', name: 'Shiba Pet', icon: '🐕' } },
-  { tier: 7, freeReward: null, premiumReward: { type: 'emote', name: 'Crown Pose', icon: '👑' } },
-  { tier: 8, freeReward: { type: 'coins', name: '1000 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Galaxy Board', icon: '🌌' } },
+  { tier: 1, freeReward: { type: 'coins', name: '100 Coins', icon: '🪙' }, premiumReward: { type: 'pieces', name: 'Chrome Pieces', icon: '🔴', id: 'chrome' } },
+  { tier: 2, freeReward: { type: 'coins', name: '200 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Wood Board', icon: '🎨', id: 'wood' } },
+  { tier: 3, freeReward: null, premiumReward: { type: 'emote', name: 'Dance Emote', icon: '💃', id: 'dancechestpump' } },
+  { tier: 4, freeReward: { type: 'coins', name: '300 Coins', icon: '🪙' }, premiumReward: { type: 'dropEffect', name: 'Spark Drop', icon: '✨', id: 'sparks' } },
+  { tier: 5, freeReward: { type: 'pieces', name: 'Fire & Ice', icon: '🔥', id: 'fire_ice' }, premiumReward: { type: 'board', name: 'Neon Board', icon: '🎨', id: 'neon' } },
+  { tier: 6, freeReward: { type: 'coins', name: '500 Coins', icon: '🪙' }, premiumReward: { type: 'pet', name: 'Shiba Pet', icon: '🐕', id: 'shiba' } },
+  { tier: 7, freeReward: null, premiumReward: { type: 'emote', name: 'Arms Raised', icon: '🙌', id: 'armsraised' } },
+  { tier: 8, freeReward: { type: 'coins', name: '1000 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Galaxy Board', icon: '🌌', id: 'galaxy' } },
 ];
 
 export const useSeasonStore = create<SeasonState>((set, get) => ({
