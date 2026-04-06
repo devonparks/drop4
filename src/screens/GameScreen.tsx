@@ -97,6 +97,7 @@ export function GameScreen({ navigation }: Props) {
   const firstWinOpacity = useRef(new RNAnimated.Value(0)).current;
 
   // Rewards summary tracking
+  const [streakReward, setStreakReward] = useState<{ coins: number; lootBox?: string; milestone: number } | null>(null);
   const [didLevelUp, setDidLevelUp] = useState(false);
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
@@ -472,7 +473,9 @@ export function GameScreen({ navigation }: Props) {
         haptics.levelUp();
       }
       setDailyStreakMultiplier(dailyMultiplier);
-      addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
+      const matchMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
+      const matchOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      addMatch({ result: 'win', opponent: matchOpponent, difficulty, moves: moveCount, coinsEarned: totalReward, mode: matchMode });
       // Update challenges
       updateChallenge('win_3', 1);
       updateChallenge('play_5', 1);
@@ -549,6 +552,24 @@ export function GameScreen({ navigation }: Props) {
           RNAnimated.timing(firstWinOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
         ]).start(() => setShowFirstWin(false));
       }
+      // Streak Rewards — bonus coins + loot boxes at milestones
+      const currentStreak = useGameStore.getState().winStreak;
+      if (currentStreak === 3) {
+        addCoins(50);
+        setStreakReward({ coins: 50, milestone: 3 });
+      } else if (currentStreak === 5) {
+        addCoins(200);
+        addLootBox('bronze_box');
+        setStreakReward({ coins: 200, lootBox: 'Bronze', milestone: 5 });
+      } else if (currentStreak === 10) {
+        addCoins(1000);
+        addLootBox('silver_box');
+        setStreakReward({ coins: 1000, lootBox: 'Silver', milestone: 10 });
+      } else if (currentStreak === 15) {
+        addCoins(5000);
+        addLootBox('gold_box');
+        setStreakReward({ coins: 5000, lootBox: 'Gold', milestone: 15 });
+      }
       setShowConfetti(true);
       setShowCoinBurst(true);
       haptics.win();
@@ -562,7 +583,9 @@ export function GameScreen({ navigation }: Props) {
       if (preStreakRef.current >= 3) {
         setStreakBrokenAt(preStreakRef.current);
       }
-      addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
+      const lossMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
+      const lossOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
       addSeasonXp(10);
       // Wager lost — coins already deducted, ranked ELO down
@@ -577,7 +600,9 @@ export function GameScreen({ navigation }: Props) {
       const drawMultiplier = getStreakMultiplier();
       const drawReward = Math.round(10 * drawMultiplier);
       addCoins(drawReward);
-      addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: drawReward, mode: 'ai' });
+      const drawMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
+      const drawOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
       addSeasonXp(15);
       haptics.coinEarn();
@@ -666,6 +691,7 @@ export function GameScreen({ navigation }: Props) {
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
     setDidLevelUp(false);
+    setStreakReward(null);
     setCompletedChallengeName(null);
     setStreakBrokenAt(null);
     setDailyStreakMultiplier(1);
@@ -710,7 +736,7 @@ export function GameScreen({ navigation }: Props) {
                 difficulty,
                 moves: moveCount,
                 coinsEarned: 0,
-                mode: 'stage',
+                mode: wagerCourt ? 'wager' : 'ranked',
               });
               navigation.goBack();
             },
@@ -1442,6 +1468,24 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={styles.goRewardIcon}>🔥</Text>
                     <Text style={[styles.goRewardAmount, { color: colors.orange }]}>+{Math.min(useGameStore.getState().winStreak * 10, 50)}</Text>
                     <Text style={styles.goRewardDesc}>Streak</Text>
+                  </View>
+                )}
+                {/* Streak Milestone Reward */}
+                {status === 'won' && winner === 1 && streakReward && (
+                  <View style={[styles.goRewardChip, {
+                    borderColor: streakReward.milestone >= 10 ? 'rgba(241,196,15,0.5)' : 'rgba(255,140,0,0.4)',
+                    backgroundColor: streakReward.milestone >= 10 ? 'rgba(241,196,15,0.1)' : 'rgba(255,140,0,0.08)',
+                  }]}>
+                    <Text style={styles.goRewardIcon}>🔥</Text>
+                    <Text style={[styles.goRewardAmount, {
+                      color: streakReward.milestone >= 10 ? '#f1c40f' : colors.orange,
+                      fontSize: 10,
+                    }]}>
+                      STREAK{'\n'}BONUS!
+                    </Text>
+                    <Text style={[styles.goRewardDesc, { color: streakReward.milestone >= 10 ? '#f1c40f' : colors.orange }]}>
+                      +{streakReward.coins.toLocaleString()}{streakReward.lootBox ? ` + ${streakReward.lootBox} Box` : ''}
+                    </Text>
                   </View>
                 )}
                 {/* XP earned */}

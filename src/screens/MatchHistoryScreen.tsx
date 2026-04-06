@@ -68,6 +68,16 @@ function formatDate(timestamp: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+const MODE_BADGES: Record<string, { label: string; color: string }> = {
+  ai: { label: 'AI', color: '#6c7a89' },
+  local: { label: 'Local', color: '#8e44ad' },
+  stage: { label: 'Stage', color: '#2980b9' },
+  career: { label: 'Career', color: '#f39c12' },
+  ranked: { label: 'Ranked', color: '#e74c3c' },
+  wager: { label: 'Wager', color: '#e67e22' },
+  online: { label: 'Online', color: '#1abc9c' },
+};
+
 function MatchRow({ match }: { match: MatchRecord }) {
   const resultColors = {
     win: colors.green,
@@ -75,7 +85,12 @@ function MatchRow({ match }: { match: MatchRecord }) {
     draw: colors.textSecondary,
   };
   const resultLabels = { win: 'WIN', loss: 'LOSS', draw: 'DRAW' };
-  const modeLabels = { ai: 'vs AI', local: 'Local', stage: 'Stage' };
+
+  const modeBadge = MODE_BADGES[match.mode] || MODE_BADGES.ai;
+  // Build difficulty label: show "Easy"/"Medium"/"Hard" for AI, or just difficulty as-is
+  const diffLabel = match.difficulty
+    ? match.difficulty.charAt(0).toUpperCase() + match.difficulty.slice(1)
+    : '';
 
   return (
     <View style={styles.matchRow}>
@@ -89,9 +104,15 @@ function MatchRow({ match }: { match: MatchRecord }) {
       {/* Match info */}
       <View style={styles.matchInfo}>
         <Text style={styles.opponent}>vs {match.opponent}</Text>
-        <Text style={styles.matchMeta}>
-          {modeLabels[match.mode]} {'\u00B7'} {match.difficulty} {'\u00B7'} {match.moves} moves
-        </Text>
+        <View style={styles.matchMetaRow}>
+          <View style={[styles.modeBadge, { backgroundColor: modeBadge.color + '20', borderColor: modeBadge.color + '40' }]}>
+            <Text style={[styles.modeBadgeText, { color: modeBadge.color }]}>{modeBadge.label}</Text>
+          </View>
+          {diffLabel && match.mode === 'ai' && (
+            <Text style={styles.matchMeta}>{diffLabel}</Text>
+          )}
+          <Text style={styles.matchMeta}>{match.moves} moves</Text>
+        </View>
       </View>
 
       {/* Right side: coins + time */}
@@ -384,12 +405,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
   },
+  matchMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 3,
+  },
+  modeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  modeBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
   matchMeta: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textSecondary,
-    marginTop: 1,
   },
   matchRight: {
     alignItems: 'flex-end',
