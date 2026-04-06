@@ -74,6 +74,7 @@ function ProgressBar({ label, value, max, color, showPct = true }: {
 export function StatsScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const level = useShopStore(s => s.level);
+  const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
   const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
   const bestStreak = useGameStore(s => s.bestStreak);
@@ -184,7 +185,7 @@ export function StatsScreen({ navigation }: Props) {
         <View style={styles.grid}>
           <OverviewCard icon="🎮" label="Total Games" value={stats.totalGames} />
           <OverviewCard icon="🏆" label="Win Rate" value={`${stats.winRate}%`} color={colors.green} />
-          <OverviewCard icon="🪙" label="Coins Earned" value={stats.totalCoinsEarned.toLocaleString()} color={colors.coinGold} />
+          <OverviewCard icon="🪙" label="Lifetime Earnings" value={Math.max(lifetimeCoinsEarned, stats.totalCoinsEarned).toLocaleString()} color={colors.coinGold} />
           <OverviewCard icon="⏱" label="Time Played" value={hoursPlayed} color={colors.teal} />
         </View>
 

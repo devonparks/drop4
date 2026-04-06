@@ -208,6 +208,7 @@ export function MatchupScreen({ navigation }: Props) {
   // Render
   // ═══════════════════════════════════
   const showVS = phase === 'reveal' || phase === 'ready';
+  const isBossMatch = params.mode === 'career' && courtName.includes('BOSS');
 
   return (
     <ScreenBackground>
@@ -215,19 +216,38 @@ export function MatchupScreen({ navigation }: Props) {
         {/* Coin/gem display */}
         <TopBar coins={coins} gems={gems} level={playerLevel} />
 
+        {/* Boss battle red gradient overlay */}
+        {isBossMatch && (
+          <LinearGradient
+            colors={['rgba(180,30,30,0.25)', 'rgba(80,10,10,0.15)', 'transparent']}
+            style={styles.bossOverlay}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 0.6 }}
+          />
+        )}
+
         {/* Halftone dot pattern overlay */}
         {Platform.OS === 'web' && <View style={styles.halftoneOverlay} />}
 
         {/* ── Top area: Court name + mode badge ── */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.topArea}>
-          <Text style={styles.courtName}>{courtName}</Text>
-          <View style={[styles.modeBadge, params.mode === 'ranked' && styles.modeBadgeRanked]}>
-            <Text style={styles.modeBadgeText}>{modeBadge}</Text>
+          <Text style={[styles.courtName, isBossMatch && styles.courtNameBoss]}>{courtName}</Text>
+          {isBossMatch && (
+            <View style={styles.bossBadge}>
+              <Text style={styles.bossBadgeText}>BOSS BATTLE</Text>
+            </View>
+          )}
+          <View style={[
+            styles.modeBadge,
+            params.mode === 'ranked' && styles.modeBadgeRanked,
+            isBossMatch && styles.modeBadgeBoss,
+          ]}>
+            <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
           </View>
         </Animated.View>
 
         {/* ── Main VS area ── */}
-        <View style={styles.vsArea}>
+        <View style={[styles.vsArea, isBossMatch && styles.vsAreaBoss]}>
 
           {/* ── LEFT: Player ── */}
           <Animated.View
@@ -420,6 +440,42 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(100,180,255,0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+  },
+  courtNameBoss: {
+    color: '#e94560',
+    textShadowColor: 'rgba(233,69,96,0.6)',
+    textShadowRadius: 16,
+  },
+  bossOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  bossBadge: {
+    backgroundColor: 'rgba(233,69,96,0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(233,69,96,0.5)',
+  },
+  bossBadgeText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: '#e94560',
+    letterSpacing: 3,
+  },
+  modeBadgeBoss: {
+    backgroundColor: 'rgba(233,69,96,0.12)',
+    borderColor: 'rgba(233,69,96,0.3)',
+  },
+  modeBadgeTextBoss: {
+    color: '#e94560',
+  },
+  vsAreaBoss: {
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(233,69,96,0.1)',
   },
   modeBadge: {
     backgroundColor: 'rgba(255,140,0,0.15)',

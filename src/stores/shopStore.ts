@@ -45,6 +45,7 @@ interface ShopState {
   gems: number;
   level: number;
   xp: number;
+  lifetimeCoinsEarned: number;
 
   equipped: {
     board: string;
@@ -101,6 +102,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
   gems: 0,
   level: 1,
   xp: 0,
+  lifetimeCoinsEarned: 500,
 
   equipped: {
     board: 'default',
@@ -128,7 +130,10 @@ export const useShopStore = create<ShopState>((set, get) => ({
   justLeveledUp: false,
   claimedStarterPack: false,
 
-  addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
+  addCoins: (amount) => set((s) => ({
+    coins: s.coins + amount,
+    lifetimeCoinsEarned: s.lifetimeCoinsEarned + amount,
+  })),
 
   spendCoins: (amount) => {
     if (get().coins < amount) return false;
@@ -204,6 +209,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
     set((s) => ({
       claimedStarterPack: true,
       coins: s.coins + 500,
+      lifetimeCoinsEarned: s.lifetimeCoinsEarned + 500,
       ownedPets: s.ownedPets.includes('labrador') ? s.ownedPets : [...s.ownedPets, 'labrador'],
       equippedPet: 'labrador',
     }));
@@ -220,6 +226,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
         gems: saved.gems ?? 0,
         level: saved.level ?? 1,
         xp: saved.xp ?? 0,
+        lifetimeCoinsEarned: (saved as any).lifetimeCoinsEarned ?? saved.coins ?? 500,
         equipped: {
           board: 'default',
           pieces: 'classic',
@@ -302,6 +309,7 @@ useShopStore.subscribe((state) => {
     gems: state.gems,
     level: state.level,
     xp: state.xp,
+    lifetimeCoinsEarned: state.lifetimeCoinsEarned,
     equipped: state.equipped,
     owned: state.owned,
     equippedEmotes: state.equippedEmotes,

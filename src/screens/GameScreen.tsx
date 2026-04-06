@@ -995,6 +995,10 @@ export function GameScreen({ navigation }: Props) {
             </RNAnimated.Text>
             <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
             <Text style={styles.boardThemeLabel}>{boardThemeName}</Text>
+            {/* Board size indicator for non-standard boards */}
+            {customSettings && (customSettings.rows !== 6 || customSettings.cols !== 7) && (
+              <Text style={styles.boardSizeLabel}>{customSettings.cols}x{customSettings.rows} Board</Text>
+            )}
             {/* Timer bar (casual mode turn timer) */}
             {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
               <View style={styles.timerWrap}>
@@ -2046,6 +2050,14 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: colors.textMuted,
     marginTop: 1,
+  },
+  boardSizeLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 9,
+    color: colors.orange,
+    marginTop: 1,
+    letterSpacing: 0.5,
   },
   timerWrap: {
     flexDirection: 'row',
