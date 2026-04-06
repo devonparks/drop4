@@ -166,8 +166,13 @@ export function HomeScreen() {
   const equippedPet = useShopStore(s => s.equippedPet);
   const winStreak = useGameStore(s => s.winStreak);
   const challenges = useChallengeStore(s => s.challenges);
-  const careerCompletedCount = useCareerStore(s => s.getCompletedCount)();
-  const canSpin = useDailySpinStore(s => s.canSpin);
+  const careerCompletedCount = useCareerStore(s => Object.values(s.progress).filter(p => p.completed).length);
+  const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
+  const spinAvailable = (() => {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return lastSpinDate !== today;
+  })();
   const currentSeason = useRankedStore(s => s.currentSeason);
   const rankedTier = useRankedStore(s => s.tier);
   const seasonTier = useSeasonStore(s => s.currentTier);
@@ -298,7 +303,7 @@ export function HomeScreen() {
   // FREE SPIN text pulse when spin is available
   const spinPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    if (canSpin()) {
+    if (spinAvailable) {
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(spinPulse, { toValue: 0.5, duration: 1000, useNativeDriver: true }),
@@ -310,7 +315,7 @@ export function HomeScreen() {
     } else {
       spinPulse.setValue(1);
     }
-  }, [canSpin()]);
+  }, [spinAvailable]);
 
   // Show tutorial on first visit — delay enough for stores to load from AsyncStorage
   const homeTip = getTipById('home_tap_character')!;
@@ -584,10 +589,10 @@ export function HomeScreen() {
           </Pressable>
           <Pressable
             onPress={() => { haptics.tap(); setSpinWheelOpen(true); }}
-            style={[styles.freeSpinBtn, !canSpin() && { opacity: 0.5 }]}
+            style={[styles.freeSpinBtn, !spinAvailable && { opacity: 0.5 }]}
           >
-            <Animated.Text style={[styles.freeSpinText, canSpin() && { opacity: spinPulse }]}>FREE SPIN</Animated.Text>
-            {canSpin() && <View style={styles.freeSpinBadge} />}
+            <Animated.Text style={[styles.freeSpinText, spinAvailable && { opacity: spinPulse }]}>FREE SPIN</Animated.Text>
+            {spinAvailable && <View style={styles.freeSpinBadge} />}
           </Pressable>
           <Pressable onPress={() => { haptics.tap(); navigateTo('PartyLobby'); }} style={styles.friendsBtn}>
             <Text style={styles.friendsBtnText}>Party</Text>
