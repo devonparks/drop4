@@ -11,6 +11,7 @@ import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSO
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
+import { BOARD_THEME_VISUALS } from '../data/boardThemeColors';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -141,11 +142,20 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
               <View style={[s.miniPiece, { backgroundColor: item.preview.p1Color }]} />
               <View style={[s.miniPiece, { backgroundColor: item.preview.p2Color }]} />
             </View>
-          ) : (
-            <View style={s.boardPreviewGrid}>
-              {[0, 1, 2, 3, 4, 5].map(i => <View key={i} style={s.miniHole} />)}
-            </View>
-          )}
+          ) : (() => {
+            const tv = BOARD_THEME_VISUALS[item.id];
+            const frameColor = tv?.frameGradient?.[0] || item.preview.boardColor || colors.surface;
+            const holeColor = tv?.holeColor || 'rgba(0,0,0,0.4)';
+            const holeBorder = tv?.holeBorder || 'rgba(0,0,0,0.2)';
+            const frameBorder = tv?.frameBorder || 'rgba(255,255,255,0.1)';
+            return (
+              <View style={[s.boardPreviewFrame, { backgroundColor: frameColor, borderColor: frameBorder }]}>
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <View key={i} style={[s.boardPreviewHole, { backgroundColor: holeColor, borderColor: holeBorder }]} />
+                ))}
+              </View>
+            );
+          })()}
         </View>
         <Text style={s.itemName} numberOfLines={1}>{item.name}</Text>
         <Text style={[s.rarityLabel, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
@@ -688,6 +698,14 @@ const s = StyleSheet.create({
   },
   boardPreviewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, width: 60, justifyContent: 'center' },
   miniHole: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.4)' },
+  boardPreviewFrame: {
+    width: 54, height: 54, borderRadius: 8, borderWidth: 1.5,
+    flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
+    gap: 3, padding: 5,
+  },
+  boardPreviewHole: {
+    width: 12, height: 12, borderRadius: 6, borderWidth: 1,
+  },
   itemName: {
     fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, color: '#ffffff',
     textAlign: 'center', marginTop: 6, paddingHorizontal: 6,

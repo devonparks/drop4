@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
 import { playSound } from '../../services/audio';
+import { haptics } from '../../services/haptics';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -19,6 +20,7 @@ export function AchievementToast({ name, icon = '🏆', visible, onDone }: Achie
     if (visible && name) {
       setShow(true);
       playSound('achievement');
+      haptics.achievement();
       const timer = setTimeout(() => {
         setShow(false);
         onDone?.();

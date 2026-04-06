@@ -469,6 +469,7 @@ export function GameScreen({ navigation }: Props) {
       if (newLevel > preLevelRef.current) {
         setDidLevelUp(true);
         playSound('level_up');
+        haptics.levelUp();
       }
       setDailyStreakMultiplier(dailyMultiplier);
       addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
@@ -551,6 +552,7 @@ export function GameScreen({ navigation }: Props) {
       setShowConfetti(true);
       setShowCoinBurst(true);
       haptics.win();
+      haptics.coinEarn();
       playSound('win');
       playSound('coin');
     }
@@ -578,6 +580,7 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: drawReward, mode: 'ai' });
       updateChallenge('play_5', 1);
       addSeasonXp(15);
+      haptics.coinEarn();
       playSound('coin');
     }
     // Local multiplayer challenge
@@ -1401,14 +1404,27 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={styles.goRewardDesc}>XP</Text>
                   </View>
                 )}
-                {/* Season XP */}
-                {status === 'won' && winner === 1 && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.3)' }]}>
-                    <Text style={styles.goRewardIcon}>🏆</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.teal }]}>+{COIN_REWARDS[difficulty]}</Text>
-                    <Text style={styles.goRewardDesc}>Season</Text>
-                  </View>
-                )}
+                {/* Season XP — shown for win, loss, and draw */}
+                {(() => {
+                  const seasonXpEarned = status === 'won' && winner === 1
+                    ? COIN_REWARDS[difficulty]
+                    : status === 'draw' ? 15 : 10;
+                  const seasonState = useSeasonStore.getState();
+                  const xpToNext = seasonState.xpPerTier - seasonState.xp;
+                  const isCloseToTier = xpToNext > 0 && xpToNext <= 150 && seasonState.currentTier < seasonState.maxTier;
+                  return (
+                    <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.3)' }]}>
+                      <Text style={styles.goRewardIcon}>🏆</Text>
+                      <Text style={[styles.goRewardAmount, { color: colors.teal }]}>+{seasonXpEarned}</Text>
+                      <Text style={styles.goRewardDesc}>Season XP</Text>
+                      {isCloseToTier && (
+                        <Text style={[styles.goRewardDesc, { color: colors.teal, fontSize: 8, marginTop: 2 }]}>
+                          {xpToNext} to next tier!
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })()}
                 {/* Career stars — dramatic display */}
                 {status === 'won' && winner === 1 && wasCareerLevel && (
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.4)', backgroundColor: 'rgba(241,196,15,0.08)' }]}>
@@ -1572,6 +1588,13 @@ export function GameScreen({ navigation }: Props) {
                       icon="🔄"
                       variant="orange"
                       onPress={handleRematch}
+                    />
+                    <GlossyButton
+                      label="NEW GAME"
+                      icon="🎮"
+                      variant="green"
+                      onPress={() => navigation.navigate('Play')}
+                      style={{ marginTop: 8 }}
                     />
                     <GlossyButton
                       label="HOME"

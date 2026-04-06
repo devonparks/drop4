@@ -25,4 +25,19 @@ export const haptics = {
   win: () => { if (_enabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); },
   error: () => { if (_enabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); },
   select: () => { if (_enabled) Haptics.selectionAsync(); },
+  /** Strong double vibration for level-ups */
+  levelUp: () => {
+    if (!_enabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 150);
+  },
+  /** Triple pulse for achievements */
+  achievement: () => {
+    if (!_enabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 120);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 240);
+  },
+  /** Light tap for coin earning */
+  coinEarn: () => { if (_enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); },
 };
