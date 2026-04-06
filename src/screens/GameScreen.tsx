@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share } from 'react-native';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -108,6 +108,7 @@ export function GameScreen({ navigation }: Props) {
   const gameTip = getTipById('game_hint')!;
   const [showGameTutorial, setShowGameTutorial] = useState(false);
   const [coinTooltipVisible, setCoinTooltipVisible] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Show tutorial on first game
   useEffect(() => {
@@ -586,6 +587,30 @@ export function GameScreen({ navigation }: Props) {
     haptics.drop();
     playSound('drop');
   }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, isOnlineMatch, onlineMatchId, myPlayerNum]);
+
+  const handleShareScore = async () => {
+    const resultText = status === 'won'
+      ? (winner === 1 ? 'won' : 'lost')
+      : 'drew';
+    const coinsText = status === 'won' && winner === 1
+      ? `, ${COIN_REWARDS[difficulty]} coins earned`
+      : '';
+    const shareMessage = `I just ${resultText} on Drop4! ${winner === 1 ? '\u{1F3C6}' : '\u{1F3AE}'} ${moveCount} moves${coinsText}. Beat me at drop4.game!`;
+
+    if (Platform.OS === 'web') {
+      try {
+        if (navigator?.clipboard) {
+          await navigator.clipboard.writeText(shareMessage);
+        }
+      } catch {}
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } else {
+      try {
+        await Share.share({ message: shareMessage });
+      } catch {}
+    }
+  };
 
   const handleRematch = () => {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
@@ -1445,6 +1470,12 @@ export function GameScreen({ navigation }: Props) {
                     />
                   </>
                 )}
+                {/* Share Score */}
+                <Pressable style={styles.shareButton} onPress={handleShareScore}>
+                  <Text style={styles.shareButtonText}>
+                    {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
+                  </Text>
+                </Pressable>
               </View>
              </ScrollView>
             </Animated.View>
@@ -2164,6 +2195,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     paddingTop: 4,
+  },
+  shareButton: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  shareButtonText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: colors.textMuted,
   },
   goRematchBanner: {
     backgroundColor: 'rgba(255,140,0,0.12)',

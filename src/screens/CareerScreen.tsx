@@ -266,6 +266,16 @@ export function CareerScreen({ navigation }: Props) {
     });
   };
 
+  // Quick Resume: find first uncompleted level across all chapters
+  const nextUncompletedLevel = useMemo(() => {
+    for (const lvl of ALL_CAREER_LEVELS) {
+      const stars = getStars(lvl.id);
+      const isUnlocked = lvl.id === 1 || getStars(lvl.id - 1) > 0 || stars > 0;
+      if (isUnlocked && stars === 0) return lvl;
+    }
+    return null;
+  }, [getStars]);
+
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
   const totalStars = getTotalStars();
   const completedCount = getCompletedCount();
@@ -352,6 +362,32 @@ export function CareerScreen({ navigation }: Props) {
 
         {/* Level list */}
         <ScrollView contentContainerStyle={styles.levelList} showsVerticalScrollIndicator={false}>
+          {/* Quick Resume button */}
+          {nextUncompletedLevel && (
+            <Pressable
+              onPress={() => {
+                haptics.tap();
+                playSound('click');
+                // Switch to the correct chapter tab
+                const targetChapter = CHAPTERS.find(c => c.levels.some(l => l.id === nextUncompletedLevel.id));
+                if (targetChapter && targetChapter.id !== activeChapter) {
+                  setActiveChapter(targetChapter.id);
+                }
+                handlePlayLevel(nextUncompletedLevel);
+              }}
+              style={styles.continueCard}
+            >
+              <View style={styles.continueLeft}>
+                <Text style={styles.continueArrow}>▶</Text>
+                <View>
+                  <Text style={styles.continueLabel}>CONTINUE</Text>
+                  <Text style={styles.continueSub}>Level {nextUncompletedLevel.id} — {nextUncompletedLevel.name}</Text>
+                </View>
+              </View>
+              <Text style={styles.continueChevron}>›</Text>
+            </Pressable>
+          )}
+
           {chapter.levels.map((lvl, i) => {
             const stars = getStars(lvl.id);
             // Level is unlocked if it's the first level, or the previous level has been completed
@@ -528,6 +564,46 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: colors.coinGold,
     marginTop: 2,
+  },
+  // Quick Resume
+  continueCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.35)',
+  },
+  continueLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  continueArrow: {
+    fontSize: 20,
+    color: colors.orange,
+  },
+  continueLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 15,
+    color: colors.orange,
+    letterSpacing: 1,
+  },
+  continueSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  continueChevron: {
+    fontSize: 24,
+    color: colors.orange,
+    fontWeight: weight.bold as any,
   },
   // Level list
   levelList: {

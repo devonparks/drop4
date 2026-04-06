@@ -137,6 +137,29 @@ function AnimatedDotsText() {
 
 // --- Main Screen ---
 
+// Fake player counts that feel alive — seeded from the current minute so they
+// shift periodically but stay stable within the same render cycle.
+function useFakePlayerCounts() {
+  const [counts, setCounts] = React.useState(() => generateCounts());
+
+  function generateCounts() {
+    const base = Math.floor(Date.now() / 60000); // changes each minute
+    const hash = (seed: number) => ((seed * 9301 + 49297) % 233280) / 233280;
+    return {
+      quickMatch: 380 + Math.floor(hash(base) * 120),       // 380-500
+      ranked: 150 + Math.floor(hash(base + 1) * 80),        // 150-230
+      goldCourt: 40 + Math.floor(hash(base + 2) * 35),      // 40-75
+    };
+  }
+
+  useEffect(() => {
+    const interval = setInterval(() => setCounts(generateCounts()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return counts;
+}
+
 export function MultiplayerScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
@@ -145,6 +168,7 @@ export function MultiplayerScreen({ navigation }: Props) {
   const tier = useRankedStore(s => s.tier);
   const tierInfo = useMemo(() => RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0], [tier]);
   const { startSearching, isSearching } = useOnlineStore();
+  const playerCounts = useFakePlayerCounts();
 
   return (
     <ScreenBackground>
@@ -173,6 +197,10 @@ export function MultiplayerScreen({ navigation }: Props) {
               <View style={styles.betaBadge}>
                 <Text style={styles.betaBadgeText}>BETA</Text>
               </View>
+              <View style={styles.playerCountBadge}>
+                <View style={styles.playerCountDot} />
+                <Text style={styles.playerCountText}>{playerCounts.quickMatch} online</Text>
+              </View>
             </View>
 
             {/* Ranked — ELO rating, chess clock */}
@@ -187,16 +215,26 @@ export function MultiplayerScreen({ navigation }: Props) {
               <View style={styles.betaBadge}>
                 <Text style={styles.betaBadgeText}>BETA</Text>
               </View>
+              <View style={styles.playerCountBadge}>
+                <View style={styles.playerCountDot} />
+                <Text style={styles.playerCountText}>{playerCounts.ranked} searching</Text>
+              </View>
             </View>
 
             {/* Gold Court — wager coins online */}
-            <GlossyButton
-              label="GOLD COURT"
-              subtitle="Wager coins • High stakes"
-              variant="gold"
-              icon="👑"
-              onPress={() => navigation.navigate('Stage')}
-            />
+            <View style={styles.btnWithBadge}>
+              <GlossyButton
+                label="GOLD COURT"
+                subtitle="Wager coins • High stakes"
+                variant="gold"
+                icon="👑"
+                onPress={() => navigation.navigate('Stage')}
+              />
+              <View style={styles.playerCountBadge}>
+                <View style={[styles.playerCountDot, { backgroundColor: '#f1c40f' }]} />
+                <Text style={styles.playerCountText}>{playerCounts.goldCourt} wagering</Text>
+              </View>
+            </View>
           </View>
 
           {/* Local play */}
@@ -368,5 +406,25 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#ffffff',
     letterSpacing: 1,
+  },
+  playerCountBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-end',
+    marginTop: 2,
+    marginRight: 4,
+  },
+  playerCountDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2ecc71',
+  },
+  playerCountText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: colors.textMuted,
   },
 });
