@@ -265,6 +265,7 @@ export function ProfileScreen() {
         </View>
         <View style={[styles.quickActions, { marginTop: 0 }]}>
           <GlossyButton label="Stats" variant="navy" icon="📈" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
+          <GlossyButton label="Collection" variant="gold" icon="🗂️" small onPress={() => navigateTo('Collection')} style={{ flex: 1 }} />
         </View>
 
         {/* Recent Activity */}

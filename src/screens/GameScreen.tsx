@@ -96,6 +96,13 @@ export function GameScreen({ navigation }: Props) {
   const [showFirstWin, setShowFirstWin] = useState(false);
   const firstWinOpacity = useRef(new RNAnimated.Value(0)).current;
 
+  // Rewards summary tracking
+  const [didLevelUp, setDidLevelUp] = useState(false);
+  const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
+  const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
+  const preLevelRef = useRef(useShopStore.getState().level);
+  const preStreakRef = useRef(useGameStore.getState().winStreak);
+
   // Last move indicator
   const [lastMoveCol, setLastMoveCol] = useState<number | null>(null);
   const lastMoveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -436,6 +443,14 @@ export function GameScreen({ navigation }: Props) {
     };
   }, [currentPlayer, status, isVsAi, isOnlineMatch]);
 
+  // Track streak before game ends (streak resets to 0 in gameStore on loss)
+  useEffect(() => {
+    if (status === 'playing') {
+      preStreakRef.current = useGameStore.getState().winStreak;
+      preLevelRef.current = useShopStore.getState().level;
+    }
+  }, [status, moveCount]);
+
   // Award coins on win
   useEffect(() => {
     if (status === 'won' && winner === 1 && !hasAwardedRef.current) {
@@ -445,6 +460,11 @@ export function GameScreen({ navigation }: Props) {
       const totalReward = reward + streakBonus;
       addCoins(totalReward);
       addXp(reward);
+      // Detect level-up
+      const newLevel = useShopStore.getState().level;
+      if (newLevel > preLevelRef.current) {
+        setDidLevelUp(true);
+      }
       addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
       // Update challenges
       updateChallenge('win_3', 1);
@@ -455,6 +475,11 @@ export function GameScreen({ navigation }: Props) {
       if (moveCount < 10) updateChallenge('fast_win', 1);
       // Win streak challenge — track each win, completes at 2
       updateChallenge('win_streak_2', 1);
+      // Detect challenge completion
+      const justCompleted = useChallengeStore.getState().challenges.find(
+        c => !c.completed && c.progress >= c.target
+      );
+      if (justCompleted) setCompletedChallengeName(justCompleted.title);
       // Season XP
       addSeasonXp(reward);
       // Career level completion
@@ -525,6 +550,10 @@ export function GameScreen({ navigation }: Props) {
     }
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
+      // Detect broken streak (preStreakRef captured while game was playing)
+      if (preStreakRef.current >= 3) {
+        setStreakBrokenAt(preStreakRef.current);
+      }
       addMatch({ result: 'loss', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 0, mode: 'ai' });
       updateChallenge('play_5', 1);
       addSeasonXp(10);
@@ -620,6 +649,9 @@ export function GameScreen({ navigation }: Props) {
     setShowConfetti(false);
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
+    setDidLevelUp(false);
+    setCompletedChallengeName(null);
+    setStreakBrokenAt(null);
     newGame(difficulty, isVsAi);
   };
 
@@ -1363,14 +1395,38 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={styles.goRewardDesc}>Season</Text>
                   </View>
                 )}
-                {/* Career stars */}
+                {/* Career stars — dramatic display */}
                 {status === 'won' && winner === 1 && wasCareerLevel && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.3)' }]}>
-                    <Text style={styles.goRewardIcon}>⭐</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.gold }]}>
-                      {moveCount < 15 ? '3' : moveCount < 25 ? '2' : '1'}
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.4)', backgroundColor: 'rgba(241,196,15,0.08)' }]}>
+                    <Text style={styles.goRewardIcon}>
+                      {moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}
                     </Text>
-                    <Text style={styles.goRewardDesc}>Stars</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.gold, fontSize: 11 }]}>
+                      {moveCount < 15 ? 'PERFECT!' : moveCount < 25 ? 'Great!' : 'Cleared'}
+                    </Text>
+                  </View>
+                )}
+                {/* LEVEL UP! */}
+                {status === 'won' && winner === 1 && didLevelUp && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.5)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
+                    <Text style={styles.goRewardIcon}>🎉</Text>
+                    <Text style={[styles.goRewardAmount, { color: '#b06cc7', fontSize: 11 }]}>LEVEL UP!</Text>
+                    <Text style={styles.goRewardDesc}>Lv {useShopStore.getState().level}</Text>
+                  </View>
+                )}
+                {/* CHALLENGE COMPLETE! */}
+                {status === 'won' && winner === 1 && completedChallengeName && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.5)', backgroundColor: 'rgba(26,188,156,0.12)' }]}>
+                    <Text style={styles.goRewardIcon}>🎯</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>CHALLENGE{'\n'}COMPLETE!</Text>
+                  </View>
+                )}
+                {/* Streak broken notification (loss only) */}
+                {status === 'won' && winner === 2 && streakBrokenAt !== null && (
+                  <View style={[styles.goRewardChip, { borderColor: 'rgba(231,76,60,0.4)', backgroundColor: 'rgba(231,76,60,0.08)' }]}>
+                    <Text style={styles.goRewardIcon}>💔</Text>
+                    <Text style={[styles.goRewardAmount, { color: colors.pieceRed, fontSize: 11 }]}>Streak broken{'\n'}at {streakBrokenAt}!</Text>
+                    <Text style={[styles.goRewardDesc, { color: colors.textSecondary }]}>Start a new one!</Text>
                   </View>
                 )}
               </View>
@@ -1396,7 +1452,11 @@ export function GameScreen({ navigation }: Props) {
               {/* Chat bubble — "Good game!" feel */}
               <View style={styles.goChatBubble}>
                 <Text style={styles.goChatText}>
-                  {status === 'won' && winner === 1 ? 'Good game!' : status === 'won' && winner === 2 ? 'Better luck next time!' : 'Well played!'}
+                  {status === 'won' && winner === 1
+                    ? (didLevelUp ? 'Level up! Keep it going!' : 'Good game!')
+                    : status === 'won' && winner === 2
+                    ? (streakBrokenAt !== null ? `Streak broken at ${streakBrokenAt}! Start a new one!` : 'Better luck next time!')
+                    : 'Well played!'}
                 </Text>
               </View>
 
