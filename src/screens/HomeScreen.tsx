@@ -291,13 +291,7 @@ export function HomeScreen() {
           <Text style={styles.logoMain}>
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
-          <View style={styles.logoSubRow}>
-            <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
-            <View style={styles.onlineIndicator}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Online</Text>
-            </View>
-          </View>
+          <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
         </View>
 
         {/* Season & Challenges moved to tab bar — more room for character */}
@@ -360,7 +354,7 @@ export function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* ═══ NEWS BANNER ═══ */}
+        {/* News banner removed — character is the focus. News accessible via tabs.
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -381,6 +375,7 @@ export function HomeScreen() {
             />
           ))}
         </ScrollView>
+        */}
 
         {/* Quick action buttons */}
         <View style={styles.quickActions}>
