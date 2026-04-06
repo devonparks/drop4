@@ -47,6 +47,7 @@ function EquippedItem({ label, name, rarity }: { label: string; name: string; ra
 
 export function ProfileScreen() {
   const navigation = useNavigation<any>();
+  const playerName = useShopStore(s => s.playerName);
   const level = useShopStore(s => s.level);
   const xp = useShopStore(s => s.xp);
   const coins = useShopStore(s => s.coins);
@@ -69,7 +70,7 @@ export function ProfileScreen() {
   // Daily goals data
   const challenges = useChallengeStore(s => s.challenges);
   const dailyRewardLastClaim = useDailyRewardStore(s => s.lastClaimDate);
-  const canSpin = useDailySpinStore(s => s.canSpin);
+  const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
 
   // Use lifetime match history for accurate stats (not session scores which reset on local play)
   const totalGames = allMatches.length;
@@ -86,9 +87,9 @@ export function ProfileScreen() {
     const d = new Date();
     const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const rewardClaimed = dailyRewardLastClaim === todayStr;
-    const spinUsed = !canSpin();
+    const spinUsed = lastSpinDate === todayStr;
     return { gamesToday, completedChallenges, rewardClaimed, spinUsed };
-  }, [allMatches, challenges, dailyRewardLastClaim, canSpin]);
+  }, [allMatches, challenges, dailyRewardLastClaim, lastSpinDate]);
 
   // Coin milestone
   const milestoneInfo = useMemo(() => getCoinMilestoneInfo(coins), [coins]);
@@ -173,7 +174,7 @@ export function ProfileScreen() {
             )}
           </View>
 
-          <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
+          <Text style={styles.playerName}>{playerName}</Text>
 
           {/* Player Title */}
           {(() => {
