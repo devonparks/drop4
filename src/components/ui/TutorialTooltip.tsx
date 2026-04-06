@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { TutorialTip } from '../../data/tutorials';
@@ -12,10 +13,35 @@ interface TutorialTooltipProps {
   onDismiss?: () => void;
 }
 
+/** Floating toast that appears when all 10 tips have been seen */
+function TutorialCompleteBanner() {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, speed: 12, bounciness: 10 }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      Animated.timing(opacity, { toValue: 0, duration: 600, useNativeDriver: true }).start();
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Animated.View style={[styles.completeBanner, { opacity, transform: [{ translateY }] }]}>
+      <Text style={styles.completeBannerText}>Tutorial Complete! +100 coins</Text>
+    </Animated.View>
+  );
+}
+
 export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProps) {
   const markTipSeen = useTutorialStore(s => s.markTipSeen);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const [showComplete, setShowComplete] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -31,15 +57,24 @@ export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProp
 
   const handleDismiss = () => {
     haptics.tap();
+    const wasDone = useTutorialStore.getState().allTipsSeen();
     // Mark seen IMMEDIATELY so re-renders don't re-show the tip
     markTipSeen(tip.id);
+    const nowDone = useTutorialStore.getState().allTipsSeen();
     // Fade out, then notify parent
     Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
       onDismiss?.();
+      // Show completion banner if this was the last tip
+      if (!wasDone && nowDone) {
+        haptics.win();
+        playSound('coin');
+        setShowComplete(true);
+      }
     });
   };
 
-  if (!visible) return null;
+  if (!visible && !showComplete) return null;
+  if (!visible && showComplete) return <TutorialCompleteBanner />;
 
   const positionStyle = tip.position === 'top'
     ? styles.positionTop
@@ -154,6 +189,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.orange,
     letterSpacing: 1,
+  },
+  // Tutorial complete banner
+  completeBanner: {
+    position: 'absolute',
+    top: 80,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(46,204,113,0.15)',
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(46,204,113,0.4)',
+    zIndex: 60,
+    shadowColor: '#2ecc71',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  completeBannerText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: '#2ecc71',
+    textAlign: 'center',
   },
   // Arrows for directional hints
   arrowDown: {

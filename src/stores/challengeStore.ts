@@ -39,7 +39,12 @@ const CHALLENGE_POOL: Omit<Challenge, 'progress' | 'completed'>[] = [
 ];
 
 function pickRandomChallenges(count: number): Challenge[] {
-  const shuffled = [...CHALLENGE_POOL].sort(() => Math.random() - 0.5);
+  // Fisher-Yates shuffle for uniform distribution
+  const shuffled = [...CHALLENGE_POOL];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   return shuffled.slice(0, count).map(c => ({
     ...c,
     progress: 0,

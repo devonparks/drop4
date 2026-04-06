@@ -142,7 +142,10 @@ function minimax(
   connectN: number
 ): [number | null, number] {
   const { cols, rows } = getBoardDims(board);
-  const validCols = getValidCols(board);
+  const rawCols = getValidCols(board);
+  // Move ordering: try center columns first for better alpha-beta pruning
+  const mid = Math.floor(cols / 2);
+  const validCols = [...rawCols].sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid));
   const terminal = isTerminal(board, connectN);
 
   if (depth === 0 || terminal) {
@@ -207,6 +210,19 @@ function minimax(
 export function getAIMove(board: Board, difficulty: Difficulty, connectCount: number = 4): number {
   const config = DIFFICULTY_CONFIG[difficulty];
   const connectN = connectCount;
+  const { cols } = getBoardDims(board);
+
+  // Opening book: prefer center column on first few moves for stronger play
+  const totalPieces = board.reduce((sum, col) => sum + col.filter(c => c !== 0).length, 0);
+  if (totalPieces <= 1) {
+    const centerCol = Math.floor(cols / 2);
+    if (board[centerCol][0] === 0) {
+      // Easy AI has 40% chance to NOT play center (feels more natural)
+      if (difficulty !== 'easy' || Math.random() > 0.4) {
+        return centerCol;
+      }
+    }
+  }
 
   // Random chance: sometimes make a random valid move (makes Easy feel beatable)
   const isRandom = Math.random() < config.randomChance;
@@ -236,7 +252,11 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
     }
   }
 
-  // Minimax for the best strategic move
+  // Sort columns center-first for better alpha-beta pruning (center cuts are stronger)
+  const centerCol = Math.floor(cols / 2);
+  const orderedCols = [...validCols].sort((a, b) => Math.abs(a - centerCol) - Math.abs(b - centerCol));
+
+  // Minimax for the best strategic move (using center-ordered columns)
   const [bestCol] = minimax(board, config.depth, -Infinity, Infinity, true, connectN);
-  return bestCol ?? validCols[Math.floor(Math.random() * validCols.length)];
+  return bestCol ?? orderedCols[0] ?? validCols[0];
 }

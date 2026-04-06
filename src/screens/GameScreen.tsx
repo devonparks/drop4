@@ -127,6 +127,9 @@ export function GameScreen({ navigation }: Props) {
   const [gameOverQuote, setGameOverQuote] = useState('');
   const [isFirstWinOfDay, setIsFirstWinOfDay] = useState(false);
 
+  // Comeback mechanic — pity coins after losing streak
+  const [comebackCoins, setComebackCoins] = useState<number | null>(null);
+
   // Win celebration variety
   const [celebrationText, setCelebrationText] = useState<string | null>(null);
 
@@ -450,16 +453,38 @@ export function GameScreen({ navigation }: Props) {
   const [, setSeriesGame] = useState(1);
   const totalGames = 3;
 
-  // AI personality phrases by difficulty
+  // AI personality phrases by difficulty + situational
   const AI_PERSONALITY: Record<string, string[]> = {
-    easy: ['Hmm, where should I go?', 'I like this column!', 'This looks fun!', 'Here I go!', 'Ooh, what about here?'],
-    medium: ['Interesting move...', 'I see what you\'re doing...', 'Let me think...', 'Not bad!', 'Watch this!'],
-    hard: ['Is that your best move?', 'You can\'t beat me.', 'Too predictable.', 'I\'m always one step ahead.', 'Nice try.'],
+    easy: ['Hmm, where should I go?', 'I like this column!', 'This looks fun!', 'Here I go!', 'Ooh, what about here?', 'Eenie meenie...', 'This one feels right!', 'Am I doing good?'],
+    medium: ['Interesting move...', 'I see what you\'re doing...', 'Let me think...', 'Not bad!', 'Watch this!', 'Clever...', 'I see your plan.', 'This is getting good!', 'Okay okay...'],
+    hard: ['Is that your best move?', 'You can\'t beat me.', 'Too predictable.', 'I\'m always one step ahead.', 'Nice try.', 'Pathetic.', 'I\'ve already won.', 'You call that strategy?', 'Check. Mate.'],
+  };
+  const AI_REACTIONS: Record<string, { blocking: string[]; winning: string[]; opening: string[] }> = {
+    easy: {
+      blocking: ['Oops, almost missed that!', 'Wait, I should block!'],
+      winning: ['Yay, I did it!', 'Did I win?!'],
+      opening: ['I\'ll start here!', 'Hmm, the middle looks nice!'],
+    },
+    medium: {
+      blocking: ['Not so fast!', 'I see your trap.', 'Blocked!'],
+      winning: ['Got you!', 'That\'s game!', 'Well played... but not enough.'],
+      opening: ['Standard opening.', 'Let\'s see what you\'ve got.'],
+    },
+    hard: {
+      blocking: ['Did you really think that would work?', 'Predictable.', 'Too slow.'],
+      winning: ['GG. Easy.', 'Never had a chance.', 'As expected.'],
+      opening: ['Your move.', 'I\'ll let you go first... this time.'],
+    },
   };
 
-  const showAiPersonality = useCallback(() => {
-    if (Math.random() > 0.4) return; // ~40% chance to show
-    const phrases = AI_PERSONALITY[difficulty] || AI_PERSONALITY.easy;
+  const showAiPersonality = useCallback((context?: 'blocking' | 'winning' | 'opening') => {
+    if (Math.random() > 0.45) return; // ~45% chance to show
+    let phrases: string[];
+    if (context && AI_REACTIONS[difficulty]) {
+      phrases = AI_REACTIONS[difficulty][context];
+    } else {
+      phrases = AI_PERSONALITY[difficulty] || AI_PERSONALITY.easy;
+    }
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
     setAiPersonalityText(phrase);
     aiPersonalityFade.setValue(0);
@@ -469,7 +494,7 @@ export function GameScreen({ navigation }: Props) {
       RNAnimated.timing(aiPersonalityFade, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
         setAiPersonalityText(null);
       });
-    }, 1500);
+    }, 1800);
   }, [difficulty]);
 
   // AI move logic — fixed: no dependency on isAiThinking
@@ -699,6 +724,17 @@ export function GameScreen({ navigation }: Props) {
       }
       haptics.error();
       playSound('lose');
+      // Comeback mechanic — grant pity coins on losing streak to keep players engaged
+      const recentMatches = useMatchHistoryStore.getState().matches.slice(0, 5);
+      const consecutiveLosses = recentMatches.findIndex(m => m.result !== 'loss');
+      const lossStreak = consecutiveLosses === -1 ? recentMatches.length : consecutiveLosses;
+      if (lossStreak >= 3) {
+        const pity = lossStreak >= 5 ? 50 : lossStreak >= 4 ? 30 : 15;
+        addCoins(pity);
+        setComebackCoins(pity);
+      } else {
+        setComebackCoins(null);
+      }
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
@@ -827,6 +863,7 @@ export function GameScreen({ navigation }: Props) {
     setDailyStreakMultiplier(1);
     setDoubleCoinsUsed(false);
     setIsFirstWinOfDay(false);
+    setComebackCoins(null);
     newGame(difficulty, isVsAi);
   };
 
@@ -1108,8 +1145,10 @@ export function GameScreen({ navigation }: Props) {
         {(() => {
           const stats = useMatchHistoryStore.getState().getStats();
           const streak = useGameStore.getState().winStreak;
-          return (stats.totalGames > 0 || streak > 0) ? (
+          return (
             <View style={styles.quickStatsBar}>
+              {/* Move counter */}
+              <Text style={styles.quickStatText}>Move {moveCount}</Text>
               {stats.totalGames > 0 && (
                 <Text style={styles.quickStatText}>{stats.winRate}% WR</Text>
               )}
@@ -1117,7 +1156,7 @@ export function GameScreen({ navigation }: Props) {
                 <Text style={styles.quickStatText}>{'\uD83D\uDD25'} {streak}</Text>
               )}
             </View>
-          ) : null;
+          );
         })()}
 
         {/* First game encouragement */}
@@ -1524,6 +1563,11 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   </View>
                   <Text style={styles.goCharName} numberOfLines={1}>{p2Name}</Text>
+                  {isVsAi && (
+                    <Text style={styles.goDiffStars}>
+                      {difficulty === 'easy' ? '⭐' : difficulty === 'medium' ? '⭐⭐' : '⭐⭐⭐'}
+                    </Text>
+                  )}
                   {status === 'won' && winner === 2 && (
                     <View style={styles.goWinnerBanner}>
                       <Text style={styles.goWinnerText}>WINNER</Text>
@@ -1579,6 +1623,40 @@ export function GameScreen({ navigation }: Props) {
                   </View>
                 </View>
               </View>
+
+              {/* New Personal Best indicator */}
+              {status === 'won' && winner === 1 && (() => {
+                const pastWins = useMatchHistoryStore.getState().matches
+                  .filter(m => m.result === 'win' && m.mode === 'ai' && m.difficulty === difficulty);
+                // Only show if there's a previous record and this game beats it
+                const prevBest = pastWins.length > 1
+                  ? Math.min(...pastWins.slice(1).map(m => m.moves))
+                  : null;
+                if (prevBest !== null && moveCount < prevBest) {
+                  return (
+                    <View style={styles.goPersonalBest}>
+                      <Text style={styles.goPersonalBestText}>NEW PERSONAL BEST!</Text>
+                      <Text style={styles.goPersonalBestSub}>{moveCount} moves (prev: {prevBest})</Text>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Game Speed Badge */}
+              {(() => {
+                const speed = moveCount <= 8 ? { label: 'BLITZ', color: '#e74c3c', emoji: '\u26A1' }
+                  : moveCount <= 14 ? { label: 'FAST', color: colors.orange, emoji: '\uD83D\uDE80' }
+                  : moveCount <= 24 ? { label: 'STANDARD', color: colors.teal, emoji: '\u23F1\uFE0F' }
+                  : { label: 'MARATHON', color: '#9b59b6', emoji: '\uD83C\uDFC3' };
+                return (
+                  <View style={[styles.goSpeedBadge, { borderColor: `${speed.color}30` }]}>
+                    <Text style={styles.goSpeedEmoji}>{speed.emoji}</Text>
+                    <Text style={[styles.goSpeedLabel, { color: speed.color }]}>{speed.label}</Text>
+                    <Text style={styles.goSpeedMoves}>{moveCount} moves</Text>
+                  </View>
+                );
+              })()}
 
               {/* ---- Replay Highlight: Winning Move ---- */}
               {status === 'won' && (() => {
@@ -1863,6 +1941,17 @@ export function GameScreen({ navigation }: Props) {
                 </View>
               )}
 
+              {/* Comeback coins for losing streaks */}
+              {comebackCoins !== null && status === 'won' ? null : comebackCoins !== null && (
+                <View style={styles.goComebackBanner}>
+                  <Text style={styles.goComebackIcon}>💪</Text>
+                  <View style={styles.goComebackTextWrap}>
+                    <Text style={styles.goComebackTitle}>COMEBACK BONUS</Text>
+                    <Text style={styles.goComebackSub}>+{comebackCoins} coins — don't give up!</Text>
+                  </View>
+                </View>
+              )}
+
               {/* Motivational quote */}
               <View style={styles.goChatBubble}>
                 <Text style={styles.goChatText}>
@@ -1937,6 +2026,51 @@ export function GameScreen({ navigation }: Props) {
                       variant="orange"
                       onPress={handleRematch}
                     />
+                    {/* Quick difficulty switch for AI matches */}
+                    {isVsAi && !wasCareerLevel && (
+                      <View style={styles.goDiffSwitchRow}>
+                        {(['easy', 'medium', 'hard'] as const).map((d) => {
+                          const isActive = d === difficulty;
+                          const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : (colors.pieceRed || '#e74c3c');
+                          return (
+                            <Pressable
+                              key={d}
+                              onPress={() => {
+                                if (!isActive) {
+                                  haptics.tap();
+                                  // Reset state and start new game with the selected difficulty
+                                  setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
+                                  setShowConfetti(false);
+                                  setWasCareerLevel(false);
+                                  setFreeHintsRemaining(3);
+                                  setDidLevelUp(false);
+                                  setSeasonTierUp(null);
+                                  setStreakReward(null);
+                                  setCompletedChallengeName(null);
+                                  setStreakBrokenAt(null);
+                                  setDailyStreakMultiplier(1);
+                                  setDoubleCoinsUsed(false);
+                                  setIsFirstWinOfDay(false);
+                                  newGame(d, isVsAi);
+                                }
+                              }}
+                              style={[
+                                styles.goDiffBtn,
+                                isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
+                              ]}
+                            >
+                              <Text style={[
+                                styles.goDiffBtnText,
+                                { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
+                                isActive && { fontWeight: '800' as any },
+                              ]}>
+                                {d.toUpperCase()}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    )}
                     <GlossyButton
                       label="NEW GAME"
                       icon="🎮"
@@ -1959,6 +2093,23 @@ export function GameScreen({ navigation }: Props) {
                     {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
                   </Text>
                 </Pressable>
+
+                {/* Quick Actions */}
+                <View style={styles.quickActionsRow}>
+                  <Pressable
+                    style={styles.quickActionLink}
+                    onPress={() => navigation.navigate('Stats' as any)}
+                  >
+                    <Text style={styles.quickActionText}>View Stats</Text>
+                  </Pressable>
+                  <Text style={styles.quickActionDot}>·</Text>
+                  <Pressable
+                    style={styles.quickActionLink}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+                  >
+                    <Text style={styles.quickActionText}>Shop</Text>
+                  </Pressable>
+                </View>
               </View>
              </ScrollView>
             </Animated.View>
@@ -2914,6 +3065,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
   },
+  quickActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  quickActionLink: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  quickActionText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium as any,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  quickActionDot: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.2)',
+  },
   goRematchBanner: {
     backgroundColor: 'rgba(255,140,0,0.12)',
     borderRadius: 10,
@@ -2930,5 +3104,121 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.orange,
     textAlign: 'center',
+  },
+  goComebackBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(46,204,113,0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(46,204,113,0.3)',
+  },
+  goComebackIcon: {
+    fontSize: 20,
+  },
+  goComebackTextWrap: {
+    flex: 1,
+  },
+  goComebackTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.green,
+    letterSpacing: 1.5,
+  },
+  goComebackSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(46,204,113,0.8)',
+    marginTop: 1,
+  },
+  goDiffStars: {
+    fontSize: 10,
+    marginTop: 2,
+    letterSpacing: -1,
+  },
+  goPersonalBest: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 6,
+    borderRadius: 10,
+    backgroundColor: 'rgba(241,196,15,0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(241,196,15,0.4)',
+  },
+  goPersonalBestText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#f1c40f',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(241,196,15,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  goPersonalBestSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(241,196,15,0.7)',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  goSpeedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 6,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+  },
+  goSpeedEmoji: {
+    fontSize: 14,
+  },
+  goSpeedLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    letterSpacing: 2,
+  },
+  goSpeedMoves: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  goDiffSwitchRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  goDiffBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  goDiffBtnText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    letterSpacing: 1,
   },
 });

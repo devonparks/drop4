@@ -7,6 +7,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { haptics } from '../services/haptics';
+import { useChallengeStore } from '../stores/challengeStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -73,7 +74,11 @@ export function MainTabs() {
         name="Challenges"
         component={RanksTab}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🎯" label="Challenges" focused={focused} />,
+          tabBarIcon: ({ focused }) => {
+            const claimable = useChallengeStore.getState().challenges
+              .filter(c => c.progress >= c.target && !c.completed).length;
+            return <TabIcon icon="🎯" label="Challenges" focused={focused} badgeCount={claimable} />;
+          },
         }}
       />
       <Tab.Screen

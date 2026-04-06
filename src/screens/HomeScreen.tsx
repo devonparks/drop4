@@ -24,6 +24,7 @@ import { DailySpinWheel } from '../components/ui/DailySpinWheel';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
+import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -101,6 +102,42 @@ function PressScaleView({ children, onPress }: { children: React.ReactNode; onPr
   );
 }
 
+// Animated fire streak banner — flickers orange/red with pulse
+function StreakFireBanner({ streak }: { streak: number }) {
+  const flicker = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Flicker loop
+    const flickerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flicker, { toValue: 0.7, duration: 200 + Math.random() * 100, useNativeDriver: true }),
+        Animated.timing(flicker, { toValue: 1, duration: 200 + Math.random() * 100, useNativeDriver: true }),
+      ])
+    );
+    // Pulse scale
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.03, duration: 800, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    flickerLoop.start();
+    pulseLoop.start();
+    return () => { flickerLoop.stop(); pulseLoop.stop(); };
+  }, []);
+
+  const fireEmojis = streak >= 5 ? '\uD83D\uDD25\uD83D\uDD25\uD83D\uDD25' : streak >= 3 ? '\uD83D\uDD25\uD83D\uDD25' : '\uD83D\uDD25';
+
+  return (
+    <Animated.View style={[styles.streakBanner, { opacity: flicker, transform: [{ scale: scaleAnim }] }]}>
+      <Text style={styles.streakFireEmoji}>{fireEmojis}</Text>
+      <Text style={styles.streakText}>{streak} Win Streak!</Text>
+      <Text style={styles.streakFireEmoji}>{fireEmojis}</Text>
+    </Animated.View>
+  );
+}
+
 const NEWS_ITEMS = [
   { id: 'emotes', emoji: '🕺', text: 'NEW: 30 Emotes!', screen: 'CharacterCreator', gradient: ['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.12)'] as const },
   { id: 'season', emoji: '⭐', text: 'Season 0 Rewards', screen: 'SeasonPass', gradient: ['rgba(155,89,182,0.25)', 'rgba(155,89,182,0.12)'] as const },
@@ -147,6 +184,10 @@ export function HomeScreen() {
   const claimStarterPack = useShopStore(s => s.claimStarterPack);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const matches = useMatchHistoryStore(s => s.matches);
+
+  // ═══ Play Counts for menu buttons ═══
+  const aiGameCount = matches.filter(m => m.mode === 'ai' || m.mode === 'local').length;
+  const totalCareerLevels = ALL_CAREER_LEVELS.length;
 
   // ═══ XP Earned Today ═══
   const xpEarnedToday = (() => {
@@ -551,11 +592,9 @@ export function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Win streak indicator */}
+        {/* Win streak indicator — animated fire */}
         {winStreak > 0 && (
-          <Text style={styles.streakText}>
-            {'\uD83D\uDD25'} {winStreak} Win Streak!
-          </Text>
+          <StreakFireBanner streak={winStreak} />
         )}
 
         {/* XP Earned Today */}
@@ -623,20 +662,39 @@ export function HomeScreen() {
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
-          <PressScaleView onPress={() => navigateTo('Play')}>
-            <GlossyButton
-              label="PLAY"
-              subtitle="Quick Match"
-              variant="orange"
-              small
-              iconRight="›"
-              onPress={() => navigateTo('Play')}
-            />
-          </PressScaleView>
+          <View style={styles.playButtonRow}>
+            <View style={{ flex: 1 }}>
+              <PressScaleView onPress={() => navigateTo('Play')}>
+                <GlossyButton
+                  label="PLAY"
+                  subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'Quick Match'}
+                  variant="orange"
+                  small
+                  iconRight="›"
+                  onPress={() => navigateTo('Play')}
+                />
+              </PressScaleView>
+            </View>
+            {/* Quick Play — instant rematch at last difficulty */}
+            {aiGameCount > 0 && (
+              <PressScaleView onPress={() => {
+                const lastDiff = useGameStore.getState().difficulty;
+                useGameStore.getState().newGame(lastDiff, true);
+                navigation.dispatch(CommonActions.navigate({
+                  name: 'Matchup',
+                  params: { mode: 'casual', difficulty: lastDiff },
+                }));
+              }}>
+                <View style={styles.quickPlayBtn}>
+                  <Text style={styles.quickPlayIcon}>▶</Text>
+                </View>
+              </PressScaleView>
+            )}
+          </View>
           <PressScaleView onPress={() => navigateTo('Career')}>
             <GlossyButton
               label="CAREER"
-              subtitle="Progress & Unlocks"
+              subtitle={`${careerCompletedCount}/${totalCareerLevels} levels`}
               variant="purple"
               small
               iconRight="›"
@@ -646,7 +704,7 @@ export function HomeScreen() {
           <PressScaleView onPress={() => navigateTo('Multiplayer')}>
             <GlossyButton
               label="MULTIPLAYER"
-              subtitle="Wager & Compete"
+              subtitle="Ranked, Wagers & Online"
               variant="teal"
               small
               iconRight="›"
@@ -1083,24 +1141,58 @@ const styles = StyleSheet.create({
     fontSize: 22,
     zIndex: 20,
   },
-  // Win streak
+  // Win streak fire banner
+  streakBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,100,0,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+  },
+  streakFireEmoji: {
+    fontSize: 14,
+  },
   streakText: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 13,
+    fontSize: 14,
     color: '#ff8c00',
     textAlign: 'center',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-    textShadowColor: 'rgba(255,140,0,0.4)',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(255,140,0,0.6)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 10,
   },
   // Menu buttons
   menuButtons: {
     paddingHorizontal: 20,
     gap: 6,
     paddingBottom: 8,
+  },
+  playButtonRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'stretch',
+  },
+  quickPlayBtn: {
+    width: 48,
+    backgroundColor: 'rgba(255,140,0,0.2)',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.4)',
+  },
+  quickPlayIcon: {
+    fontSize: 20,
+    color: colors.orange,
   },
   // Starter Pack banner
   starterPackBanner: {

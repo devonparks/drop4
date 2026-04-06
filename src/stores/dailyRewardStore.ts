@@ -32,7 +32,9 @@ const DAILY_REWARDS: Omit<DailyReward, 'claimed'>[] = [
 ];
 
 function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  // Use local date to avoid UTC timezone issues (e.g. claiming at 11pm local = next day in UTC)
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
@@ -62,7 +64,8 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
     // Check if streak is consecutive (yesterday or first time)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = yesterday.toISOString().split('T')[0];
+    const y = yesterday;
+    const yesterdayString = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
     const isConsecutive = lastClaimDate === null || lastClaimDate === yesterdayString;
 
     set({

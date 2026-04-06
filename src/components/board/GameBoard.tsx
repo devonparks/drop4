@@ -153,13 +153,46 @@ function GhostPiecePulse({ color }: { color: string }) {
   );
 }
 
-// Win highlight ring
+// Pulsing win highlight — golden glow ring that pulses after connect
 function WinHighlight({ delay }: { delay: number }) {
+  const pulseScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0);
+
+  React.useEffect(() => {
+    // Fade in first
+    glowOpacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
+    // Then start pulsing
+    const startPulse = () => {
+      pulseScale.value = withDelay(delay + 300,
+        withSequence(
+          withTiming(1.08, { duration: 600 }),
+          withTiming(1.0, { duration: 600 }),
+        )
+      );
+      glowOpacity.value = withDelay(delay + 300,
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(0.7, { duration: 600 }),
+        )
+      );
+    };
+    startPulse();
+    const interval = setInterval(startPulse, 1200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [{ scale: pulseScale.value }],
+  }));
+
   return (
-    <Animated.View
-      entering={FadeIn.delay(delay).duration(300)}
-      style={styles.winRing}
-    />
+    <>
+      {/* Outer golden glow */}
+      <Animated.View style={[styles.winGlowOuter, ringStyle]} />
+      {/* Inner crisp ring */}
+      <Animated.View style={[styles.winRing, ringStyle]} />
+    </>
   );
 }
 
@@ -468,6 +501,22 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
+  winGlowOuter: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    borderRadius: CELL_SIZE / 2 + 6,
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
   winRing: {
     position: 'absolute',
     top: -3,
@@ -475,9 +524,9 @@ const styles = StyleSheet.create({
     right: -3,
     bottom: -3,
     borderRadius: CELL_SIZE / 2 + 3,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    shadowColor: '#ffffff',
+    borderWidth: 2.5,
+    borderColor: '#FFD700',
+    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 8,

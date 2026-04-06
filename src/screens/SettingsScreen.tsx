@@ -187,6 +187,48 @@ export function SettingsScreen({ navigation }: Props) {
           ))}
         </View>
 
+        {/* Your Journey */}
+        <Text style={styles.sectionTitle}>YOUR JOURNEY</Text>
+        <View style={styles.section}>
+          {(() => {
+            const matches = useMatchHistoryStore.getState().matches;
+            const totalGames = matches.length;
+            const wins = matches.filter(m => m.result === 'win').length;
+            const lifetime = useShopStore.getState().lifetimeCoinsEarned;
+            const achievements = useAchievementStore.getState().achievements;
+            const unlocked = achievements.filter(a => a.unlocked).length;
+            const careerDone = useCareerStore.getState().getCompletedCount();
+            return (
+              <View style={styles.journeyGrid}>
+                <View style={styles.journeyItem}>
+                  <Text style={styles.journeyValue}>{totalGames}</Text>
+                  <Text style={styles.journeyLabel}>Games Played</Text>
+                </View>
+                <View style={styles.journeyItem}>
+                  <Text style={[styles.journeyValue, { color: colors.green }]}>{wins}</Text>
+                  <Text style={styles.journeyLabel}>Victories</Text>
+                </View>
+                <View style={styles.journeyItem}>
+                  <Text style={[styles.journeyValue, { color: colors.coinGold }]}>{lifetime.toLocaleString()}</Text>
+                  <Text style={styles.journeyLabel}>Coins Earned</Text>
+                </View>
+                <View style={styles.journeyItem}>
+                  <Text style={[styles.journeyValue, { color: colors.orange }]}>{unlocked}/{achievements.length}</Text>
+                  <Text style={styles.journeyLabel}>Achievements</Text>
+                </View>
+                <View style={styles.journeyItem}>
+                  <Text style={[styles.journeyValue, { color: '#9b59b6' }]}>{careerDone}</Text>
+                  <Text style={styles.journeyLabel}>Career Levels</Text>
+                </View>
+                <View style={styles.journeyItem}>
+                  <Text style={[styles.journeyValue, { color: colors.teal }]}>Lv.{useShopStore.getState().level}</Text>
+                  <Text style={styles.journeyLabel}>Player Level</Text>
+                </View>
+              </View>
+            );
+          })()}
+        </View>
+
         {/* About */}
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>
@@ -562,5 +604,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  journeyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 2,
+  },
+  journeyItem: {
+    width: '32%',
+    alignItems: 'center',
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  journeyValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  journeyLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 9,
+    color: colors.textMuted,
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
 });

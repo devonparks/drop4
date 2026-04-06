@@ -484,6 +484,22 @@ export function ProfileScreen() {
                 <Text style={styles.viewAllLink}>View All →</Text>
               </Pressable>
             </View>
+
+            {/* Form guide — last 10 results as colored dots */}
+            {allMatches.length >= 3 && (
+              <View style={styles.formGuideRow}>
+                <Text style={styles.formGuideLabel}>Form:</Text>
+                {allMatches.slice(0, 10).reverse().map((m, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.formDot,
+                      { backgroundColor: m.result === 'win' ? colors.green : m.result === 'loss' ? (colors.pieceRed || '#e74c3c') : '#3498db' },
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
             <View style={styles.matchList}>
               {recentMatches.map(match => (
                 <View key={match.id} style={styles.matchRow}>
@@ -842,6 +858,37 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     color: colors.orange,
+  },
+  // Form guide dots
+  formGuideRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  formGuideLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginRight: 4,
+  },
+  formDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 2,
   },
   // Favorite Opponent card
   favOpponentCard: {
