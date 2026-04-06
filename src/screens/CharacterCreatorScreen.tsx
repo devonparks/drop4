@@ -15,6 +15,8 @@ import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { CHARACTER_ITEMS, CharacterItem, getUnlockDescription } from '../data/characterCatalog';
+import { PETS, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
+import { PetDisplay } from '../components/ui/PetDisplay';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -45,7 +47,7 @@ const RARITY_DESCRIPTIONS: Record<string, string> = {
 };
 
 // ── Category Grid Config ─────────────────────────────────────────────
-type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors' | 'emotes';
+type TabId = 'species' | 'outfit' | 'hair' | 'shoes' | 'colors' | 'emotes' | 'pets';
 
 const CATEGORY_CARDS: { id: TabId; icon: string; label: string; color: [string, string]; }[] = [
   { id: 'outfit', icon: '\uD83D\uDC55', label: 'OUTFITS', color: ['#3498db', '#2176ae'] },
@@ -54,6 +56,7 @@ const CATEGORY_CARDS: { id: TabId; icon: string; label: string; color: [string, 
   { id: 'colors', icon: '\uD83C\uDFA8', label: 'COLORS', color: [colors.orange, colors.orangeDark] },
   { id: 'emotes', icon: '\uD83D\uDD7A', label: 'EMOTES', color: ['#e74c3c', '#c0392b'] },
   { id: 'species', icon: '\uD83E\uDDD1', label: 'SPECIES', color: ['#1abc9c', '#15967d'] },
+  { id: 'pets', icon: '\uD83D\uDC36', label: 'PETS', color: ['#e67e22', '#cf6d17'] },
 ];
 
 const TAB_TO_CATEGORIES: Record<TabId, string[]> = {
@@ -63,6 +66,7 @@ const TAB_TO_CATEGORIES: Record<TabId, string[]> = {
   shoes: ['shoes'],
   colors: [],
   emotes: [],
+  pets: [],
 };
 
 const POSE_LIST: { id: PoseId; label: string }[] = [
@@ -95,6 +99,10 @@ export function CharacterCreatorScreen({ navigation }: Props) {
   const totalGamesPlayed = useGameStore(s => s.totalGamesPlayed);
   const equippedEmotes = useShopStore(s => s.equippedEmotes);
   const setEquippedEmote = useShopStore(s => s.setEquippedEmote);
+  const equippedPet = useShopStore(s => s.equippedPet);
+  const ownedPets = useShopStore(s => s.ownedPets);
+  const equipPet = useShopStore(s => s.equipPet);
+  const purchasePet = useShopStore(s => s.purchasePet);
 
   // 'grid' = category grid view, TabId = browsing a specific category
   const [viewMode, setViewMode] = useState<'grid' | TabId>('grid');
@@ -106,6 +114,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
   // Emote wheel assignment: which wheel slot is selected for assignment
   const [selectedWheelSlot, setSelectedWheelSlot] = useState<number | null>(null);
+  // Pet preview state
+  const [previewPetId, setPreviewPetId] = useState<string | null>(null);
 
   // Get items for the active tab
   const activeCategories = viewMode !== 'grid' ? TAB_TO_CATEGORIES[viewMode] : [];
@@ -128,6 +138,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
       shoes: { owned: 0, total: 0 },
       colors: { owned: 0, total: 0 },
       emotes: { owned: 0, total: 0 },
+      pets: { owned: ownedPets.length, total: PETS.length },
     };
     for (const card of CATEGORY_CARDS) {
       if (card.id === 'emotes') {
@@ -258,6 +269,13 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             {previewingItem && (
               <View style={[styles.previewBanner, { backgroundColor: RARITY_COLORS[previewingItem.rarity] + 'DD' }]}>
                 <Text style={styles.previewBannerText}>PREVIEWING: {previewingItem.name.toUpperCase()}</Text>
+              </View>
+            )}
+
+            {/* Pet preview next to character */}
+            {(previewPetId || equippedPet) && (
+              <View style={styles.petPreviewWrap}>
+                <PetDisplay petId={previewPetId || equippedPet} size={70} />
               </View>
             )}
 
@@ -549,6 +567,79 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                     </View>
                   ))}
                 </View>
+              ) : viewMode === 'pets' ? (
+                /* ── PETS GRID ── */
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.itemsScroll}
+                >
+                  {PETS.map(pet => {
+                    const isOwned = ownedPets.includes(pet.id);
+                    const isEquipped = equippedPet === pet.id;
+                    const rarityColor = PET_RARITY_COLORS[pet.rarity];
+
+                    return (
+                      <Pressable
+                        key={pet.id}
+                        onPress={() => {
+                          haptics.tap();
+                          setPreviewPetId(pet.id);
+                          if (isEquipped) {
+                            equipPet(null);
+                            setPreviewPetId(null);
+                          } else if (isOwned) {
+                            equipPet(pet.id);
+                          } else if (pet.price > 0) {
+                            const success = purchasePet(pet.id, pet.price);
+                            if (success) { haptics.win(); equipPet(pet.id); }
+                            else { haptics.error(); }
+                          }
+                        }}
+                        style={[
+                          styles.itemCard,
+                          isOwned && styles.itemCardOwned,
+                          isEquipped && styles.itemCardSelected,
+                        ]}
+                      >
+                        {/* Rarity strip at top */}
+                        <View style={[styles.rarityStrip, { backgroundColor: rarityColor }]} />
+
+                        {/* Pet image */}
+                        <View style={styles.itemPreview}>
+                          <PetDisplay petId={pet.id} size={64} />
+                        </View>
+
+                        {/* Info */}
+                        <Text style={styles.itemName} numberOfLines={1}>{pet.name}</Text>
+                        <Text style={[styles.itemRarity, { color: rarityColor }]}>
+                          {PET_RARITY_LABELS[pet.rarity]}
+                        </Text>
+
+                        {/* Status */}
+                        {isEquipped ? (
+                          <View style={[styles.ownedTag, { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' }]}>
+                            <Text style={[styles.ownedTagText, { color: colors.orange }]}>EQUIPPED</Text>
+                          </View>
+                        ) : isOwned ? (
+                          <View style={styles.ownedTag}>
+                            <Text style={styles.ownedTagText}>OWNED</Text>
+                          </View>
+                        ) : pet.price > 0 ? (
+                          <Text style={styles.unlockReq} numberOfLines={1}>{pet.price} coins</Text>
+                        ) : (
+                          <Text style={styles.unlockReq} numberOfLines={1}>{pet.description || 'Earn only'}</Text>
+                        )}
+
+                        {isEquipped && (
+                          <View style={styles.checkmark}>
+                            <Text style={styles.checkmarkText}>{'\u2713'}</Text>
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
               ) : tabItems.length > 0 ? (
                 /* ── ITEM SCROLL ── */
                 <ScrollView
@@ -803,6 +894,12 @@ const styles = StyleSheet.create({
     borderRadius: 130,
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
+  },
+  petPreviewWrap: {
+    position: 'absolute',
+    right: 40,
+    bottom: 30,
+    zIndex: 3,
   },
 
   // --- Player Info ---

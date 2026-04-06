@@ -12,6 +12,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { PetDisplay } from '../components/ui/PetDisplay';
 import { EmotePickerModal } from '../components/ui/EmotePickerModal';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
 import { useGameStore } from '../stores/gameStore';
@@ -121,6 +122,7 @@ export function GameScreen({ navigation }: Props) {
   // Fortnite-style emote wheel
   const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
   const equippedEmotes = useShopStore(s => s.equippedEmotes);
+  const equippedPet = useShopStore(s => s.equippedPet);
 
   // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
@@ -1199,6 +1201,9 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   </View>
                   <Text style={styles.goCharName} numberOfLines={1}>{p1Name}</Text>
+                  {equippedPet && (
+                    <PetDisplay petId={equippedPet} size={40} style={{ marginTop: 2 }} />
+                  )}
                   {status === 'won' && winner === 1 && (
                     <View style={styles.goWinnerBanner}>
                       <Text style={styles.goWinnerText}>WINNER</Text>

@@ -21,6 +21,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -49,6 +50,7 @@ export function MatchupScreen({ navigation }: Props) {
   const playerLevel = useShopStore(s => s.level);
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
+  const equippedPet = useShopStore(s => s.equippedPet);
 
   // State
   const [phase, setPhase] = useState<'searching' | 'reveal' | 'ready'>('searching');
@@ -223,6 +225,9 @@ export function MatchupScreen({ navigation }: Props) {
               </Text>
             </View>
             <Text style={styles.playerTitle}>YOU</Text>
+            {equippedPet && (
+              <PetDisplay petId={equippedPet} size={60} style={{ marginTop: 2 }} />
+            )}
           </Animated.View>
 
           {/* ── CENTER: VS ── */}

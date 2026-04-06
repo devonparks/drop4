@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { PetDisplay } from '../components/ui/PetDisplay';
+import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
@@ -47,6 +49,7 @@ export function ProfileScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const equipped = useShopStore(s => s.equipped);
+  const equippedPet = useShopStore(s => s.equippedPet);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
@@ -96,6 +99,9 @@ export function ProfileScreen() {
                 </View>
               </LinearGradient>
             </View>
+            {equippedPet && (
+              <PetDisplay petId={equippedPet} size={50} style={{ position: 'absolute', right: -10, bottom: -5 }} />
+            )}
           </View>
 
           <Text style={styles.playerName}>{useShopStore.getState().playerName}</Text>
@@ -153,6 +159,11 @@ export function ProfileScreen() {
           <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
           <EquippedItem label="Drop Effect" name="None" rarity="common" />
           <EquippedItem label="Win Animation" name="Basic" rarity="common" />
+          <EquippedItem
+            label="Pet"
+            name={equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None'}
+            rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
+          />
         </View>
 
         {/* Achievements */}
