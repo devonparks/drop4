@@ -54,6 +54,42 @@ export function PlayScreen({ navigation }: Props) {
     return { easy: calc('easy'), medium: calc('medium'), hard: calc('hard') };
   }, [matches]);
 
+  // Smart difficulty suggestion based on performance
+  const difficultySuggestion = useMemo(() => {
+    const aiMatches = matches.filter(m => m.mode === 'ai');
+    const calcWinRate = (diff: string) => {
+      const diffMatches = aiMatches.filter(m => m.difficulty === diff);
+      if (diffMatches.length < 3) return null; // Need at least 3 games for a suggestion
+      const wins = diffMatches.filter(m => m.result === 'win').length;
+      return Math.round((wins / diffMatches.length) * 100);
+    };
+    const easyWR = calcWinRate('easy');
+    const mediumWR = calcWinRate('medium');
+    const hardWR = calcWinRate('hard');
+
+    // Check from hardest to easiest for upgrade suggestions
+    if (mediumWR !== null && mediumWR > 70) {
+      return { text: 'Try Hard mode!', emoji: '\uD83D\uDD25', color: colors.pieceRed || '#e74c3c' };
+    }
+    if (easyWR !== null && easyWR > 80) {
+      return { text: 'Ready for Medium!', emoji: '\uD83D\uDCC8', color: colors.orange };
+    }
+    // Check for struggling — recent 5 games on current difficulty
+    const recentAi = aiMatches.slice(0, 5);
+    if (recentAi.length >= 3) {
+      const recentLosses = recentAi.filter(m => m.result === 'loss').length;
+      const playingHard = recentAi.filter(m => m.difficulty === 'hard').length >= 2;
+      const playingMedium = recentAi.filter(m => m.difficulty === 'medium').length >= 2;
+      if (recentLosses >= 4 && playingHard) {
+        return { text: 'No shame in Medium!', emoji: '\uD83D\uDCAA', color: colors.orange };
+      }
+      if (recentLosses >= 4 && playingMedium) {
+        return { text: 'No shame in Easy!', emoji: '\uD83D\uDCAA', color: colors.green };
+      }
+    }
+    return null;
+  }, [matches]);
+
   // Personal bests from match history
   const personalBests = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win');
@@ -207,6 +243,15 @@ export function PlayScreen({ navigation }: Props) {
                   <Text style={styles.pbLabel}>Best Coins</Text>
                 </View>
               )}
+            </View>
+          )}
+
+          {/* Smart difficulty suggestion */}
+          {difficultySuggestion && (
+            <View style={[styles.suggestionBanner, { borderColor: `${difficultySuggestion.color}33` }]}>
+              <Text style={[styles.suggestionText, { color: difficultySuggestion.color }]}>
+                {difficultySuggestion.emoji} {difficultySuggestion.text}
+              </Text>
             </View>
           )}
 
@@ -364,6 +409,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
+  },
+  suggestionBanner: {
+    width: '100%', maxWidth: 340,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 6,
+    alignItems: 'center',
+  },
+  suggestionText: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 13, letterSpacing: 0.3,
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,
