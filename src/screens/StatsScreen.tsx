@@ -73,6 +73,7 @@ function ProgressBar({ label, value, max, color, showPct = true }: {
 
 export function StatsScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
+  const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
   const scores = useGameStore(s => s.scores);
@@ -135,7 +136,7 @@ export function StatsScreen({ navigation }: Props) {
   // Mode breakdown
   const aiGames = matches.filter(m => m.mode === 'ai').length;
   const localGames = matches.filter(m => m.mode === 'local').length;
-  const stageGames = matches.filter(m => m.mode === 'stage').length;
+  const wagerGames = matches.filter(m => m.mode === 'wager').length;
 
   // Hours played estimate: use actual average moves × ~5 seconds per move
   const avgMoves = matches.length > 0
@@ -169,7 +170,7 @@ export function StatsScreen({ navigation }: Props) {
     <ScreenBackground>
       <TopBar
         coins={coins}
-        gems={useShopStore.getState().gems}
+        gems={gems}
         level={level}
         showBack
         onBackPress={() => navigation.goBack()}
@@ -244,7 +245,7 @@ export function StatsScreen({ navigation }: Props) {
           <View style={styles.modeRow}>
             <ModeItem label="vs AI" count={aiGames} icon="🤖" />
             <ModeItem label="Local" count={localGames} icon="👥" />
-            <ModeItem label="Wager" count={stageGames} icon="💰" />
+            <ModeItem label="Wager" count={wagerGames} icon="💰" />
             <ModeItem label="Ranked" count={rankedGames} icon="🏅" />
           </View>
         </View>
