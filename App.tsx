@@ -27,7 +27,7 @@ import { useDailySpinStore } from './src/stores/dailySpinStore';
 import { useTutorialStore } from './src/stores/tutorialStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
-// WelcomeOverlay removed — DailyRewardPopup serves as the first-time welcome
+// WelcomeOverlay is rendered in HomeScreen (first-launch only, AsyncStorage-gated)
 import { SplashAnimation } from './src/components/ui/SplashAnimation';
 
 // Keep splash screen visible while loading
