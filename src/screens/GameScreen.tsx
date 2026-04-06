@@ -1504,6 +1504,27 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={[styles.goRewardDesc, { color: colors.textSecondary }]}>Start a new one!</Text>
                   </View>
                 )}
+                {/* Loot box progress — show how many wins until next box */}
+                {status === 'won' && winner === 1 && (() => {
+                  const totalWins = useMatchHistoryStore.getState().matches.filter(m => m.result === 'win').length;
+                  const winsUntilBox = 3 - (totalWins % 3);
+                  if (winsUntilBox === 3) {
+                    // Just earned a box this game!
+                    return (
+                      <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.4)', backgroundColor: 'rgba(155,89,182,0.1)' }]}>
+                        <Text style={styles.goRewardIcon}>{'\uD83D\uDCE6'}</Text>
+                        <Text style={[styles.goRewardAmount, { color: colors.purple, fontSize: 10 }]}>LOOT BOX{'\n'}EARNED!</Text>
+                      </View>
+                    );
+                  }
+                  return (
+                    <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.2)', backgroundColor: 'rgba(155,89,182,0.04)' }]}>
+                      <Text style={styles.goRewardIcon}>{'\uD83D\uDCE6'}</Text>
+                      <Text style={[styles.goRewardAmount, { color: 'rgba(155,89,182,0.7)', fontSize: 10 }]}>Win {winsUntilBox}{'\n'}more!</Text>
+                      <Text style={[styles.goRewardDesc, { color: colors.textMuted }]}>Loot Box</Text>
+                    </View>
+                  );
+                })()}
               </View>
 
               {/* Wager display */}

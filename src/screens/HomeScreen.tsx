@@ -15,6 +15,9 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { COIN_REWARDS } from '../engine/constants';
+import { playSound } from '../services/audio';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
@@ -134,6 +137,47 @@ export function HomeScreen() {
   const claimedStarterPack = useShopStore(s => s.claimedStarterPack);
   const claimStarterPack = useShopStore(s => s.claimStarterPack);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
+  const matches = useMatchHistoryStore(s => s.matches);
+
+  // ═══ XP Earned Today ═══
+  const xpEarnedToday = (() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    return matches
+      .filter(m => m.timestamp >= todayMs && m.result === 'win')
+      .reduce((sum, m) => {
+        const diff = m.difficulty as keyof typeof COIN_REWARDS;
+        return sum + (COIN_REWARDS[diff] || 0);
+      }, 0);
+  })();
+
+  // ═══ Pet tap interaction ═══
+  const petBounce = useRef(new Animated.Value(1)).current;
+  const heartOpacity = useRef(new Animated.Value(0)).current;
+  const heartTranslateY = useRef(new Animated.Value(0)).current;
+  const [showPetHeart, setShowPetHeart] = useState(false);
+
+  const handlePetTap = () => {
+    haptics.tap();
+    playSound('tap');
+    // Bounce the pet
+    Animated.sequence([
+      Animated.spring(petBounce, { toValue: 1.25, useNativeDriver: true, speed: 50, bounciness: 12 }),
+      Animated.spring(petBounce, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }),
+    ]).start();
+    // Float heart emoji
+    setShowPetHeart(true);
+    heartOpacity.setValue(1);
+    heartTranslateY.setValue(0);
+    Animated.parallel([
+      Animated.timing(heartTranslateY, { toValue: -40, duration: 1000, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(600),
+        Animated.timing(heartOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+      ]),
+    ]).start(() => setShowPetHeart(false));
+  };
 
   // Starter Pack — show for level 1-2 players with no pets who haven't claimed yet
   const showStarterPack = level <= 2 && ownedPets.length === 0 && !claimedStarterPack;
@@ -369,14 +413,30 @@ export function HomeScreen() {
                 selectedIdle={equippedIdle as IdleVariantId | null}
                 onEmoteComplete={clearEmote}
               />
-              {/* Pet display — sits at character's feet, bottom-right */}
-              <PetDisplay
-                petId={equippedPet}
-                size={80}
-                isIdle={!emote}
-                style={styles.petPosition}
-              />
             </Pressable>
+            {/* Pet display — tappable with bounce + heart */}
+            {equippedPet && (
+              <Pressable onPress={handlePetTap} style={styles.petPosition}>
+                <Animated.View style={{ transform: [{ scale: petBounce }] }}>
+                  <PetDisplay
+                    petId={equippedPet}
+                    size={80}
+                    isIdle={!emote}
+                  />
+                </Animated.View>
+                {showPetHeart && (
+                  <Animated.Text
+                    style={[
+                      styles.petHeart,
+                      { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] },
+                    ]}
+                    pointerEvents="none"
+                  >
+                    {'\u2764\uFE0F'}
+                  </Animated.Text>
+                )}
+              </Pressable>
+            )}
             {/* Stage platform glow */}
             <LinearGradient
               colors={['rgba(100,180,255,0.3)', 'rgba(80,140,255,0.12)', 'transparent']}
@@ -442,6 +502,13 @@ export function HomeScreen() {
         {winStreak > 0 && (
           <Text style={styles.streakText}>
             {'\uD83D\uDD25'} {winStreak} Win Streak!
+          </Text>
+        )}
+
+        {/* XP Earned Today */}
+        {xpEarnedToday > 0 && (
+          <Text style={styles.xpTodayText}>
+            Today: +{xpEarnedToday} XP earned
           </Text>
         )}
 
@@ -897,6 +964,24 @@ const styles = StyleSheet.create({
     color: 'rgba(200,220,255,0.7)',
     textAlign: 'center',
     letterSpacing: 0.3,
+  },
+  // XP Earned Today
+  xpTodayText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(155,89,182,0.8)',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  // Pet heart animation
+  petHeart: {
+    position: 'absolute',
+    top: -10,
+    alignSelf: 'center',
+    fontSize: 22,
+    zIndex: 20,
   },
   // Win streak
   streakText: {

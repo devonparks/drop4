@@ -293,6 +293,19 @@ export function CareerScreen({ navigation }: Props) {
     return null;
   }, [getStars]);
 
+  // "Next Unlock" hint — find the next reward the player will earn
+  const nextRewardHint = useMemo(() => {
+    if (!nextUncompletedLevel) return null;
+    // Look for the next level with a reward, starting from the current uncompleted level
+    for (let i = nextUncompletedLevel.id - 1; i < ALL_CAREER_LEVELS.length; i++) {
+      const lvl = ALL_CAREER_LEVELS[i];
+      if (lvl && lvl.reward && getStars(lvl.id) === 0) {
+        return { reward: lvl.reward, levelId: lvl.id };
+      }
+    }
+    return null;
+  }, [getStars, nextUncompletedLevel]);
+
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
   const totalStars = getTotalStars();
   const completedCount = getCompletedCount();
@@ -403,6 +416,14 @@ export function CareerScreen({ navigation }: Props) {
               </View>
               <Text style={styles.continueChevron}>›</Text>
             </Pressable>
+            {/* Next Unlock hint */}
+            {nextRewardHint && (
+              <View style={styles.nextRewardHint}>
+                <Text style={styles.nextRewardText}>
+                  Next reward: {nextRewardHint.reward.icon} {nextRewardHint.reward.name} (after Level {nextRewardHint.levelId})
+                </Text>
+              </View>
+            )}
           )}
 
           {chapter.levels.map((lvl, i) => {
@@ -621,6 +642,26 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.orange,
     fontWeight: weight.bold as any,
+  },
+  // Next reward hint
+  nextRewardHint: {
+    alignSelf: 'center',
+    marginBottom: 8,
+    marginTop: -4,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(241,196,15,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.12)',
+  },
+  nextRewardText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.coinGold,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   // Level list
   levelList: {
