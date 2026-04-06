@@ -69,8 +69,10 @@ export function ProfileScreen() {
   const dailyRewardLastClaim = useDailyRewardStore(s => s.lastClaimDate);
   const canSpin = useDailySpinStore(s => s.canSpin);
 
-  const totalGames = scores.player1 + scores.player2;
-  const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
+  // Use lifetime match history for accurate stats (not session scores which reset on local play)
+  const totalGames = allMatches.length;
+  const lifetimeWins = allMatches.filter(m => m.result === 'win').length;
+  const winRate = totalGames > 0 ? Math.round((lifetimeWins / totalGames) * 100) : 0;
 
   // Daily goals calculations
   const dailyGoals = useMemo(() => {
@@ -287,8 +289,8 @@ export function ProfileScreen() {
         {/* Stats grid */}
         <Text style={styles.sectionTitle}>STATISTICS</Text>
         <View style={styles.statsGrid}>
-          <StatCard label="Wins" value={scores.player1} color={colors.green} />
-          <StatCard label="Losses" value={scores.player2} color={colors.pieceRed} />
+          <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
+          <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
           <StatCard label="Win Rate" value={`${winRate}%`} color={colors.orange} />
           <StatCard label="Games" value={totalGames} />
           <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
