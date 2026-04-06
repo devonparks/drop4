@@ -1436,6 +1436,24 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {/* Move Efficiency badge */}
+                {status === 'won' && winner === 1 && (() => {
+                  const playerMoves = Math.ceil(moveCount / 2);
+                  const badge = playerMoves <= 4
+                    ? { icon: '\u26A1', label: 'PERFECT\nGAME!', color: '#f1c40f', bg: 'rgba(241,196,15,0.12)', border: 'rgba(241,196,15,0.5)' }
+                    : playerMoves <= 8
+                    ? { icon: '\uD83D\uDD25', label: 'QUICK WIN', color: colors.orange, bg: 'rgba(255,140,0,0.08)', border: 'rgba(255,140,0,0.4)' }
+                    : playerMoves <= 13
+                    ? { icon: '\uD83D\uDC4D', label: 'GOOD GAME', color: colors.green, bg: 'rgba(39,174,61,0.08)', border: 'rgba(39,174,61,0.3)' }
+                    : { icon: '\uD83C\uDFAF', label: 'HARD\nFOUGHT', color: colors.textSecondary, bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)' };
+                  return (
+                    <View style={[styles.goRewardChip, { borderColor: badge.border, backgroundColor: badge.bg }]}>
+                      <Text style={styles.goRewardIcon}>{badge.icon}</Text>
+                      <Text style={[styles.goRewardAmount, { color: badge.color, fontSize: 10 }]}>{badge.label}</Text>
+                      <Text style={styles.goRewardDesc}>{playerMoves} moves</Text>
+                    </View>
+                  );
+                })()}
                 {/* LEVEL UP! */}
                 {status === 'won' && winner === 1 && didLevelUp && (
                   <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.5)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>

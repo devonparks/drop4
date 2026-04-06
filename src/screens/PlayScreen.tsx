@@ -28,6 +28,7 @@ export function PlayScreen({ navigation }: Props) {
   const newGame = useGameStore(s => s.newGame);
   const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
+  const getMasteryStats = useMatchHistoryStore(s => s.getMasteryStats);
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;
     const losses = matches.filter(m => m.result === 'loss').length;
@@ -42,6 +43,7 @@ export function PlayScreen({ navigation }: Props) {
     const gamesToday = matches.filter(m => m.timestamp >= todayMs).length;
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, gamesToday };
   }, [matches]);
+  const mastery = useMemo(() => getMasteryStats(), [matches]);
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
@@ -135,11 +137,27 @@ export function PlayScreen({ navigation }: Props) {
             </Text>
           )}
 
+          {/* AI Mastery tracker */}
+          <View style={styles.masteryRow}>
+            <View style={[styles.masteryPill, { borderColor: 'rgba(39,174,61,0.3)' }]}>
+              <Text style={[styles.masteryWins, { color: colors.green }]}>{mastery.easy.wins}</Text>
+              <Text style={styles.masteryLabel}>Easy</Text>
+            </View>
+            <View style={[styles.masteryPill, { borderColor: 'rgba(255,140,0,0.3)' }]}>
+              <Text style={[styles.masteryWins, { color: colors.orange }]}>{mastery.medium.wins}</Text>
+              <Text style={styles.masteryLabel}>Medium</Text>
+            </View>
+            <View style={[styles.masteryPill, { borderColor: 'rgba(231,76,60,0.3)' }]}>
+              <Text style={[styles.masteryWins, { color: colors.pieceRed || '#e74c3c' }]}>{mastery.hard.wins}</Text>
+              <Text style={styles.masteryLabel}>Hard</Text>
+            </View>
+          </View>
+
           {/* Difficulty buttons */}
           <View style={styles.buttonsWrap}>
-            <GlossyButton label="EASY" subtitle="Casual & Fun" variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
-            <GlossyButton label="MEDIUM" subtitle="Think Ahead" variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
-            <GlossyButton label="HARD" subtitle="No Mercy" variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
+            <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.wins > 0 ? ` • ${mastery.easy.wins}W` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
+            <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.wins > 0 ? ` • ${mastery.medium.wins}W` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
+            <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.wins > 0 ? ` • ${mastery.hard.wins}W` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
           </View>
 
           {/* Tip of the day */}
@@ -223,6 +241,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.semibold,
     fontSize: 11, color: colors.textSecondary,
     letterSpacing: 0.3,
+  },
+  masteryRow: {
+    flexDirection: 'row', gap: 8, width: '100%', maxWidth: 340,
+    justifyContent: 'center',
+  },
+  masteryPill: {
+    flex: 1, alignItems: 'center', paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  masteryWins: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 18, color: '#ffffff',
+  },
+  masteryLabel: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 9, color: colors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 0.3,
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,

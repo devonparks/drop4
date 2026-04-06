@@ -18,6 +18,8 @@ interface LeaderboardEntry {
   level: number;
   elo: number;
   isPlayer: boolean;
+  streak: number;
+  favDifficulty: string;
 }
 
 // Map a level to an approximate ELO for mock data display
@@ -53,6 +55,7 @@ function generateGlobalLeaderboard(playerWins: number, playerLevel: number, play
     'CenterCtrl', 'BlockParty', 'DropItLikeItsHot', 'FourReal',
   ];
 
+  const diffs = ['Easy', 'Medium', 'Hard'];
   const entries: LeaderboardEntry[] = names.map((name) => {
     const lvl = Math.floor(rand() * 40) + 10;
     return {
@@ -63,6 +66,8 @@ function generateGlobalLeaderboard(playerWins: number, playerLevel: number, play
       level: lvl,
       elo: levelToElo(lvl),
       isPlayer: false,
+      streak: Math.floor(rand() * 12),
+      favDifficulty: diffs[Math.floor(rand() * 3)],
     };
   });
 
@@ -70,6 +75,7 @@ function generateGlobalLeaderboard(playerWins: number, playerLevel: number, play
     rank: 0, name: 'You', wins: playerWins,
     winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
     level: playerLevel, elo: playerElo, isPlayer: true,
+    streak: 0, favDifficulty: 'Easy', // Overridden below
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -86,6 +92,7 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number, play
     'FourInARow99', 'PieceDropper', 'BlockParty',
   ];
 
+  const diffs = ['Easy', 'Medium', 'Hard'];
   const entries: LeaderboardEntry[] = names.map((name) => {
     const lvl = Math.floor(rand() * 30) + 5;
     return {
@@ -96,6 +103,8 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number, play
       level: lvl,
       elo: levelToElo(lvl),
       isPlayer: false,
+      streak: Math.floor(rand() * 8),
+      favDifficulty: diffs[Math.floor(rand() * 3)],
     };
   });
 
@@ -104,6 +113,7 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number, play
     rank: 0, name: 'You', wins: weeklyWins,
     winRate: weeklyWins > 0 ? Math.floor(rand() * 30) + 45 : 0,
     level: playerLevel, elo: playerElo, isPlayer: true,
+    streak: 0, favDifficulty: 'Easy',
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -118,6 +128,7 @@ function generateFriendsLeaderboard(playerWins: number, playerLevel: number, pla
     'RileyWins', 'TaylorGG', 'CaseyDrop4', 'MorganW',
   ];
 
+  const diffs = ['Easy', 'Medium', 'Hard'];
   const entries: LeaderboardEntry[] = names.map((name) => {
     const lvl = Math.floor(rand() * 20) + 3;
     return {
@@ -128,6 +139,8 @@ function generateFriendsLeaderboard(playerWins: number, playerLevel: number, pla
       level: lvl,
       elo: levelToElo(lvl),
       isPlayer: false,
+      streak: Math.floor(rand() * 6),
+      favDifficulty: diffs[Math.floor(rand() * 3)],
     };
   });
 
@@ -135,6 +148,7 @@ function generateFriendsLeaderboard(playerWins: number, playerLevel: number, pla
     rank: 0, name: 'You', wins: playerWins,
     winRate: playerWins > 0 ? Math.floor(rand() * 30) + 50 : 0,
     level: playerLevel, elo: playerElo, isPlayer: true,
+    streak: 0, favDifficulty: 'Easy',
   });
 
   entries.sort((a, b) => b.wins - a.wins);
@@ -156,6 +170,8 @@ export function LeaderboardScreen() {
   const level = useShopStore(s => s.level);
   const rankedElo = useRankedStore(s => s.elo);
   const matches = useMatchHistoryStore(s => s.matches);
+  const getCurrentStreak = useMatchHistoryStore(s => s.getCurrentStreak);
+  const getFavoriteDifficulty = useMatchHistoryStore(s => s.getFavoriteDifficulty);
   const stats = useMemo(() => {
     const wins = matches.filter(m => m.result === 'win').length;
     const losses = matches.filter(m => m.result === 'loss').length;
@@ -165,10 +181,22 @@ export function LeaderboardScreen() {
     const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
   }, [matches]);
+  const playerStreak = useMemo(() => getCurrentStreak(), [matches]);
+  const playerFavDiff = useMemo(() => getFavoriteDifficulty(), [matches]);
 
-  const globalData = useMemo(() => generateGlobalLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
-  const weeklyData = useMemo(() => generateWeeklyLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
-  const friendsData = useMemo(() => generateFriendsLeaderboard(stats.wins, level, rankedElo), [stats.wins, level, rankedElo]);
+  // Generate leaderboard and patch player entry with real stats
+  const patchPlayer = (entries: LeaderboardEntry[]) => {
+    const you = entries.find(e => e.isPlayer);
+    if (you) {
+      you.winRate = stats.winRate;
+      you.streak = playerStreak;
+      you.favDifficulty = playerFavDiff;
+    }
+    return entries;
+  };
+  const globalData = useMemo(() => patchPlayer(generateGlobalLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
+  const weeklyData = useMemo(() => patchPlayer(generateWeeklyLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
+  const friendsData = useMemo(() => patchPlayer(generateFriendsLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
 
   const rawData = activeTab === 'global' ? globalData
     : activeTab === 'weekly' ? weeklyData
@@ -272,13 +300,18 @@ export function LeaderboardScreen() {
                     {entry.name}
                   </Text>
                 </View>
-                <Text style={styles.entryLevel}>Lv.{entry.level} • {entry.elo} ELO</Text>
+                <Text style={styles.entryLevel}>Lv.{entry.level} • {entry.elo} ELO • {entry.favDifficulty}</Text>
               </View>
 
               {/* Stats */}
               <View style={styles.statsCol}>
                 <Text style={styles.entryWins}>{entry.wins}W</Text>
-                <Text style={styles.entryRate}>{entry.winRate}%</Text>
+                <View style={styles.entrySubRow}>
+                  <Text style={styles.entryRate}>{entry.winRate}%</Text>
+                  {entry.streak > 0 && (
+                    <Text style={styles.entryStreak}>{'\uD83D\uDD25'}{entry.streak}</Text>
+                  )}
+                </View>
               </View>
             </View>
           ))}
@@ -449,5 +482,16 @@ const styles = StyleSheet.create({
     fontWeight: weight.regular,
     fontSize: 10,
     color: colors.textSecondary,
+  },
+  entrySubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  entryStreak: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.orange,
   },
 });
