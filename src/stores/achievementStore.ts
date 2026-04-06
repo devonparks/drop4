@@ -141,6 +141,8 @@ export const useAchievementStore = create<AchievementState>((set, get) => ({
     for (const reward of rewardsToGrant) {
       if (reward.type === 'coins' && typeof reward.value === 'number') {
         useShopStore.getState().addCoins(reward.value);
+      } else if (reward.type === 'title' && typeof reward.value === 'string') {
+        useShopStore.getState().unlockCustomTitle(reward.value);
       }
     }
 

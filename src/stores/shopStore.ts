@@ -80,6 +80,10 @@ interface ShopState {
   // Starter pack (one-time claim for new players)
   claimedStarterPack: boolean;
 
+  // Custom achievement titles
+  unlockedTitles: string[];
+  equippedCustomTitle: string | null;
+
   // Actions
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
@@ -96,6 +100,8 @@ interface ShopState {
   equipPet: (petId: string | null) => void;
   purchasePet: (petId: string, cost: number) => boolean;
   claimStarterPack: () => void;
+  unlockCustomTitle: (title: string) => void;
+  setEquippedCustomTitle: (title: string | null) => void;
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -134,6 +140,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   justLeveledUp: false,
   claimedStarterPack: false,
+  unlockedTitles: [],
+  equippedCustomTitle: null,
 
   addCoins: (amount) => set((s) => ({
     coins: s.coins + amount,
@@ -247,6 +255,15 @@ export const useShopStore = create<ShopState>((set, get) => ({
     }));
   },
 
+  unlockCustomTitle: (title) => {
+    set((s) => ({
+      unlockedTitles: s.unlockedTitles.includes(title) ? s.unlockedTitles : [...s.unlockedTitles, title],
+      equippedCustomTitle: title, // auto-equip most recently earned
+    }));
+  },
+
+  setEquippedCustomTitle: (title) => set({ equippedCustomTitle: title }),
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -278,6 +295,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
         equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
         ownedEmotes: (saved as any).ownedEmotes ?? [],
         equippedIdle: saved.equippedIdle ?? null,
+        unlockedTitles: (saved as any).unlockedTitles ?? [],
+        equippedCustomTitle: (saved as any).equippedCustomTitle ?? null,
         equippedPet: saved.equippedPet ?? null,
         ownedPets: saved.ownedPets ?? [],
         claimedStarterPack: (saved as any).claimedStarterPack ?? false,
@@ -348,6 +367,8 @@ useShopStore.subscribe((state) => {
     equippedEmotes: state.equippedEmotes,
     ownedEmotes: state.ownedEmotes,
     equippedIdle: state.equippedIdle,
+    unlockedTitles: state.unlockedTitles,
+    equippedCustomTitle: state.equippedCustomTitle,
     equippedPet: state.equippedPet,
     ownedPets: state.ownedPets,
     claimedStarterPack: state.claimedStarterPack,

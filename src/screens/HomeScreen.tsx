@@ -177,6 +177,7 @@ export function HomeScreen() {
   const seasonXpPerTier = useSeasonStore(s => s.xpPerTier);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
+  const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
   const clearLevelUp = useShopStore(s => s.clearLevelUp);
   const ownedPets = useShopStore(s => s.ownedPets);
@@ -433,11 +434,12 @@ export function HomeScreen() {
           <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
           {/* Player title badge */}
           {(() => {
-            const title = getPlayerTitle(level, rankedTier, coins);
-            const titleColor = getPlayerTitleColor(title);
+            const computedTitle = getPlayerTitle(level, rankedTier, coins);
+            const displayTitle = equippedCustomTitle ?? computedTitle;
+            const titleColor = equippedCustomTitle ? '#f1c40f' : getPlayerTitleColor(computedTitle);
             return (
               <View style={[styles.homeTitleBadge, { borderColor: `${titleColor}40` }]}>
-                <Text style={[styles.homeTitleText, { color: titleColor }]}>Lv.{level} {title}</Text>
+                <Text style={[styles.homeTitleText, { color: titleColor }]}>Lv.{level} {displayTitle}</Text>
               </View>
             );
           })()}

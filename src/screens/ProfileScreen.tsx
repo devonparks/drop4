@@ -53,6 +53,7 @@ export function ProfileScreen() {
   const gems = useShopStore(s => s.gems);
   const equipped = useShopStore(s => s.equipped);
   const equippedPet = useShopStore(s => s.equippedPet);
+  const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
@@ -173,11 +174,12 @@ export function ProfileScreen() {
 
           {/* Player Title */}
           {(() => {
-            const title = getPlayerTitle(level, tier, coins);
-            const titleColor = getPlayerTitleColor(title);
+            const computedTitle = getPlayerTitle(level, tier, coins);
+            const displayTitle = equippedCustomTitle ?? computedTitle;
+            const titleColor = equippedCustomTitle ? '#f1c40f' : getPlayerTitleColor(computedTitle);
             return (
               <View style={[styles.playerTitleBadge, { borderColor: `${titleColor}40` }]}>
-                <Text style={[styles.playerTitleText, { color: titleColor }]}>{title}</Text>
+                <Text style={[styles.playerTitleText, { color: titleColor }]}>{displayTitle}</Text>
               </View>
             );
           })()}
