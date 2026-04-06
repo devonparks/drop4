@@ -322,7 +322,7 @@ export function MatchupScreen({ navigation }: Props) {
           )}
 
           <Pressable onPress={handleBack} style={styles.backBtn}>
-            <Text style={styles.backText}>BACK</Text>
+            <Text style={styles.backText}>{'< '}BACK</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -626,14 +626,18 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     alignSelf: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   backText: {
     fontFamily: fonts.body,
-    fontWeight: weight.semibold,
+    fontWeight: weight.bold,
     fontSize: 13,
-    color: colors.textMuted,
+    color: colors.textSecondary,
     letterSpacing: 1,
   },
 });

@@ -9,8 +9,6 @@ import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVari
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { IdlePicker } from '../components/ui/IdlePicker';
 import { useShopStore } from '../stores/shopStore';
-import { useSeasonStore } from '../stores/seasonStore';
-import { useChallengeStore } from '../stores/challengeStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
@@ -117,10 +115,7 @@ export function HomeScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const currentTier = useSeasonStore(s => s.currentTier);
-  const maxTier = useSeasonStore(s => s.maxTier);
-  const seasonName = useSeasonStore(s => s.seasonName);
-  const challenges = useChallengeStore(s => s.challenges);
+  // Season & challenge details moved to tab bar — store import kept for future use
   const equippedIdle = useShopStore(s => s.equippedIdle);
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
@@ -296,7 +291,13 @@ export function HomeScreen() {
           <Text style={styles.logoMain}>
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
-          <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
+          <View style={styles.logoSubRow}>
+            <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
+            <View style={styles.onlineIndicator}>
+              <View style={styles.onlineDot} />
+              <Text style={styles.onlineText}>Online</Text>
+            </View>
+          </View>
         </View>
 
         {/* Season & Challenges moved to tab bar — more room for character */}
@@ -562,13 +563,41 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 25,
   },
+  logoSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 0,
+  },
   logoTagline: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
     fontSize: 13,
     color: 'rgba(200,220,255,0.5)',
     letterSpacing: 3,
-    marginTop: 0,
+  },
+  onlineIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  onlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#27ae3d',
+    shadowColor: '#27ae3d',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  onlineText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(39,174,61,0.7)',
+    letterSpacing: 0.5,
   },
   // Character lobby
   lobbyArea: {

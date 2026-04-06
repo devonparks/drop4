@@ -130,7 +130,7 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
 
   const NodeWrapper = justUnlocked ? RNAnimated.View : View;
   const wrapperStyle = justUnlocked
-    ? [styles.levelNode, { backgroundColor: bgColor, borderColor: animatedBorderColor, opacity: isUnlocked ? 1 : 0.35, shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: animatedShadowOpacity, shadowRadius: 12, elevation: 8 }]
+    ? [styles.levelNode, { backgroundColor: bgColor, borderColor: animatedBorderColor, opacity: isUnlocked ? 1 : 0.35, shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: animatedShadowOpacity, shadowRadius: 12, elevation: 8 }] as any
     : [styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }];
 
   return (
