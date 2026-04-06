@@ -463,9 +463,12 @@ export function GameScreen({ navigation }: Props) {
     return () => clearInterval(interval);
   }, [isAiThinking]);
 
-  // Best of 3 series tracking
-  const [, setSeriesGame] = useState(1);
-  const totalGames = 3;
+  // Series mode tracking (bo3/bo5/bo7)
+  const seriesWinsNeeded = params.seriesWinsNeeded ?? 1;
+  const isSeriesMode = seriesWinsNeeded > 1;
+  const [seriesGame, setSeriesGame] = useState(1);
+  const totalGames = isSeriesMode ? seriesWinsNeeded * 2 - 1 : 3;
+  const seriesOver = isSeriesMode && (scores.player1 >= seriesWinsNeeded || scores.player2 >= seriesWinsNeeded);
 
   // AI personality phrases by difficulty + situational
   const AI_PERSONALITY: Record<string, string[]> = {
@@ -1596,7 +1599,7 @@ export function GameScreen({ navigation }: Props) {
               {/* Top: Mode label */}
               <View style={styles.goModeRow}>
                 <Text style={styles.goModeText}>
-                  {isRankedMode ? 'RANKED' : wagerCourt ? wagerCourt.name?.toUpperCase() : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
+                  {isRankedMode ? 'RANKED' : wagerCourt ? wagerCourt.name?.toUpperCase() : isSeriesMode ? `BEST OF ${totalGames} — GAME ${seriesGame}` : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
                 </Text>
               </View>
 
@@ -2116,16 +2119,43 @@ export function GameScreen({ navigation }: Props) {
                       </>
                     )}
                   </>
+                ) : isSeriesMode && seriesOver ? (
+                  <>
+                    {/* Series complete banner */}
+                    <View style={styles.seriesCompleteRow}>
+                      <Text style={styles.seriesCompleteTitle}>SERIES COMPLETE</Text>
+                      <Text style={[
+                        styles.seriesCompleteResult,
+                        { color: scores.player1 >= seriesWinsNeeded ? colors.coinGold : scores.player2 >= seriesWinsNeeded ? '#e74c3c' : colors.teal },
+                      ]}>
+                        {scores.player1 >= seriesWinsNeeded ? '🏆 YOU WIN THE SERIES!' : scores.player2 >= seriesWinsNeeded ? '💀 YOU LOSE THE SERIES' : '🤝 SERIES TIED'}
+                      </Text>
+                      <Text style={styles.seriesScoreDisplay}>{scores.player1} — {scores.player2}</Text>
+                    </View>
+                    <GlossyButton
+                      label="NEW GAME"
+                      icon="🎮"
+                      variant="green"
+                      onPress={() => navigation.navigate('Play')}
+                    />
+                    <GlossyButton
+                      label="HOME"
+                      icon="🏠"
+                      variant="navy"
+                      onPress={handleGoHome}
+                      style={{ marginTop: 8 }}
+                    />
+                  </>
                 ) : (
                   <>
                     <GlossyButton
-                      label="REMATCH"
+                      label={isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
                       icon="🔄"
                       variant="orange"
                       onPress={handleRematch}
                     />
-                    {/* Quick difficulty switch for AI matches */}
-                    {isVsAi && !wasCareerLevel && (
+                    {/* Quick difficulty switch for AI matches — hide in series mode */}
+                    {isVsAi && !wasCareerLevel && !isSeriesMode && (
                       <View style={styles.goDiffSwitchRow}>
                         {(['easy', 'medium', 'hard'] as const).map((d) => {
                           const isActive = d === difficulty;
@@ -3318,5 +3348,38 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 11,
     letterSpacing: 1,
+  },
+  // Series complete banner
+  seriesCompleteRow: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  seriesCompleteTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 3,
+    marginBottom: 4,
+  },
+  seriesCompleteResult: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  seriesScoreDisplay: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 28,
+    color: '#ffffff',
+    letterSpacing: 4,
   },
 });

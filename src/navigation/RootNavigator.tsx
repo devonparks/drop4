@@ -74,6 +74,8 @@ export type GameParams = {
   onlineOpponentName?: string;
   // Game speed (private match)
   gameSpeed?: 'normal' | 'fast' | 'instant';
+  // Series mode: wins needed to win the series (1 = no series, 2 = bo3, 3 = bo5, 4 = bo7)
+  seriesWinsNeeded?: number;
 };
 
 export type RootStackParamList = {

@@ -59,12 +59,18 @@ export function SettingsScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+  const playerName = useShopStore(s => s.playerName);
+  const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
   const rankedElo = useRankedStore(s => s.elo);
   const rankedWins = useRankedStore(s => s.rankedWins);
   const rankedLosses = useRankedStore(s => s.rankedLosses);
   const seasonHighElo = useRankedStore(s => s.seasonHighElo);
   const rankedSeasonHistory = useRankedStore(s => s.seasonHistory);
   const seasonNumber = useSeasonStore(s => s.seasonNumber);
+  const matches = useMatchHistoryStore(s => s.matches);
+  const achievements = useAchievementStore(s => s.achievements);
+  const careerProgress = useCareerStore(s => s.progress);
+  const careerDone = Object.values(careerProgress).filter(p => p.completed).length;
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
@@ -190,43 +196,32 @@ export function SettingsScreen({ navigation }: Props) {
         {/* Your Journey */}
         <Text style={styles.sectionTitle}>YOUR JOURNEY</Text>
         <View style={styles.section}>
-          {(() => {
-            const matches = useMatchHistoryStore.getState().matches;
-            const totalGames = matches.length;
-            const wins = matches.filter(m => m.result === 'win').length;
-            const lifetime = useShopStore.getState().lifetimeCoinsEarned;
-            const achievements = useAchievementStore.getState().achievements;
-            const unlocked = achievements.filter(a => a.unlocked).length;
-            const careerDone = useCareerStore.getState().getCompletedCount();
-            return (
-              <View style={styles.journeyGrid}>
-                <View style={styles.journeyItem}>
-                  <Text style={styles.journeyValue}>{totalGames}</Text>
-                  <Text style={styles.journeyLabel}>Games Played</Text>
-                </View>
-                <View style={styles.journeyItem}>
-                  <Text style={[styles.journeyValue, { color: colors.green }]}>{wins}</Text>
-                  <Text style={styles.journeyLabel}>Victories</Text>
-                </View>
-                <View style={styles.journeyItem}>
-                  <Text style={[styles.journeyValue, { color: colors.coinGold }]}>{lifetime.toLocaleString()}</Text>
-                  <Text style={styles.journeyLabel}>Coins Earned</Text>
-                </View>
-                <View style={styles.journeyItem}>
-                  <Text style={[styles.journeyValue, { color: colors.orange }]}>{unlocked}/{achievements.length}</Text>
-                  <Text style={styles.journeyLabel}>Achievements</Text>
-                </View>
-                <View style={styles.journeyItem}>
-                  <Text style={[styles.journeyValue, { color: '#9b59b6' }]}>{careerDone}</Text>
-                  <Text style={styles.journeyLabel}>Career Levels</Text>
-                </View>
-                <View style={styles.journeyItem}>
-                  <Text style={[styles.journeyValue, { color: colors.teal }]}>Lv.{useShopStore.getState().level}</Text>
-                  <Text style={styles.journeyLabel}>Player Level</Text>
-                </View>
-              </View>
-            );
-          })()}
+          <View style={styles.journeyGrid}>
+            <View style={styles.journeyItem}>
+              <Text style={styles.journeyValue}>{matches.length}</Text>
+              <Text style={styles.journeyLabel}>Games Played</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: colors.green }]}>{matches.filter(m => m.result === 'win').length}</Text>
+              <Text style={styles.journeyLabel}>Victories</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: colors.coinGold }]}>{lifetimeCoinsEarned.toLocaleString()}</Text>
+              <Text style={styles.journeyLabel}>Coins Earned</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: colors.orange }]}>{achievements.filter(a => a.unlocked).length}/{achievements.length}</Text>
+              <Text style={styles.journeyLabel}>Achievements</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: '#9b59b6' }]}>{careerDone}</Text>
+              <Text style={styles.journeyLabel}>Career Levels</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: colors.teal }]}>Lv.{level}</Text>
+              <Text style={styles.journeyLabel}>Player Level</Text>
+            </View>
+          </View>
         </View>
 
         {/* About */}
@@ -250,7 +245,7 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.playerIdRow}>
             <Text style={styles.settingIcon}>🆔</Text>
             <Text style={styles.settingLabel}>Player ID</Text>
-            <Text style={styles.playerIdValue}>{useShopStore.getState().playerName || 'Player'}</Text>
+            <Text style={styles.playerIdValue}>{playerName || 'Player'}</Text>
           </View>
         </View>
 

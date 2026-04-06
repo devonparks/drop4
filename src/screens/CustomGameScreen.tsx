@@ -198,7 +198,14 @@ export function CustomGameScreen({ navigation }: Props) {
       startingPlayer,
     });
     useChallengeStore.getState().updateProgress('try_custom', 1);
-    navigation.navigate('Game', { gameSpeed: gameSpeed !== 'normal' ? gameSpeed : undefined } as any);
+    const seriesWinsNeeded = winCondition === 'bo3' ? 2
+      : winCondition === 'bo5' ? 3
+      : winCondition === 'bo7' ? 4
+      : undefined;
+    navigation.navigate('Game', {
+      gameSpeed: gameSpeed !== 'normal' ? gameSpeed : undefined,
+      seriesWinsNeeded,
+    } as any);
   };
 
   const activeModCount = [gravityFlip, randomStart, suddenDeath, blindMode, sniperMode].filter(Boolean).length;
