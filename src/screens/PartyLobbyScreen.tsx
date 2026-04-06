@@ -15,6 +15,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { AnimatedCharacter, useEmoteTrigger, EmoteId } from '../components/ui/AnimatedCharacter';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
+import { PetDisplay } from '../components/ui/PetDisplay';
 import { RankBadge } from '../components/ui/RankBadge';
 import { EMOTE_EMOJI, EMOTE_NAME } from '../components/ui/EmoteShowcase';
 import { useShopStore } from '../stores/shopStore';
@@ -47,6 +48,7 @@ interface BotFriend {
   rankTier: RankedTierInfo;
   ready: boolean;
   emote: EmoteId | null;
+  petId: string | null;
 }
 
 const BOT_EMOTES: EmoteId[] = [
@@ -59,6 +61,7 @@ export function PartyLobbyScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const playerName = useShopStore(s => s.playerName);
+  const equippedPet = useShopStore(s => s.equippedPet);
   const equippedEmotes = useShopStore(s => s.equippedEmotes) as EmoteId[];
 
   const [roomCode] = useState(generateRoomCode);
@@ -79,6 +82,7 @@ export function PartyLobbyScreen({ navigation }: Props) {
       rankTier: RANKED_TIERS.find(t => t.id === 'silver')!,
       ready: false,
       emote: null,
+      petId: 'husky',
     },
     {
       name: 'JamieConnect',
@@ -86,6 +90,7 @@ export function PartyLobbyScreen({ navigation }: Props) {
       rankTier: RANKED_TIERS.find(t => t.id === 'gold')!,
       ready: false,
       emote: null,
+      petId: 'shiba',
     },
   ]);
 
@@ -256,6 +261,12 @@ export function PartyLobbyScreen({ navigation }: Props) {
                   emote={myEmote}
                   onEmoteComplete={clearMyEmote}
                 />
+                <PetDisplay
+                  petId={equippedPet}
+                  size={50}
+                  isIdle={!myEmote}
+                  style={styles.lobbyPetPosition}
+                />
               </View>
 
               {/* Emote bubble */}
@@ -303,6 +314,12 @@ export function PartyLobbyScreen({ navigation }: Props) {
                         prev.map((b, i) => i === index ? { ...b, emote: null } : b)
                       );
                     }}
+                  />
+                  <PetDisplay
+                    petId={bot.petId}
+                    size={50}
+                    isIdle={!bot.emote}
+                    style={styles.lobbyPetPosition}
                   />
                 </View>
 
@@ -649,6 +666,12 @@ const styles = StyleSheet.create({
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  lobbyPetPosition: {
+    position: 'absolute',
+    bottom: 0,
+    right: 4,
+    zIndex: 5,
   },
   emoteBubble: {
     position: 'absolute',

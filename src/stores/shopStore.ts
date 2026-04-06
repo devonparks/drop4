@@ -37,6 +37,9 @@ interface ShopState {
   // Level up celebration flag
   justLeveledUp: boolean;
 
+  // Starter pack (one-time claim for new players)
+  claimedStarterPack: boolean;
+
   // Actions
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
@@ -49,6 +52,7 @@ interface ShopState {
   setEquippedIdle: (idleId: string | null) => void;
   equipPet: (petId: string | null) => void;
   purchasePet: (petId: string, cost: number) => boolean;
+  claimStarterPack: () => void;
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -84,6 +88,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
   ownedPets: [],
 
   justLeveledUp: false,
+  claimedStarterPack: false,
 
   addCoins: (amount) => set((s) => ({ coins: s.coins + amount })),
 
@@ -155,6 +160,17 @@ export const useShopStore = create<ShopState>((set, get) => ({
     return true;
   },
 
+  claimStarterPack: () => {
+    const state = get();
+    if (state.claimedStarterPack) return;
+    set((s) => ({
+      claimedStarterPack: true,
+      coins: s.coins + 500,
+      ownedPets: s.ownedPets.includes('labrador') ? s.ownedPets : [...s.ownedPets, 'labrador'],
+      equippedPet: 'labrador',
+    }));
+  },
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -186,6 +202,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
         equippedIdle: saved.equippedIdle ?? null,
         equippedPet: saved.equippedPet ?? null,
         ownedPets: saved.ownedPets ?? [],
+        claimedStarterPack: (saved as any).claimedStarterPack ?? false,
       });
     }
   },
@@ -205,5 +222,6 @@ useShopStore.subscribe((state) => {
     equippedIdle: state.equippedIdle,
     equippedPet: state.equippedPet,
     ownedPets: state.ownedPets,
+    claimedStarterPack: state.claimedStarterPack,
   });
 });

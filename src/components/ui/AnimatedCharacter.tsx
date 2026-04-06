@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Image, StyleSheet, ImageSourcePropType } from 'react-native';
-import { SpriteSheetAnimator } from './SpriteSheetAnimator';
+import { ScaledSpriteSheet } from './SpriteSheetAnimator';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -276,7 +276,7 @@ function randomIdleVariant(): IdleVariantId {
 type AnimState = 'idle' | 'idle_variant' | 'emote';
 
 // ═══════════════════════════════════════════════════════════
-// COMPONENT — Now uses SpriteSheetAnimator for rendering
+// COMPONENT — Uses ScaledSpriteSheet for properly scaled rendering
 // ═══════════════════════════════════════════════════════════
 
 interface AnimatedCharacterProps {
@@ -383,7 +383,7 @@ export function AnimatedCharacter({
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      <SpriteSheetAnimator
+      <ScaledSpriteSheet
         source={sheetSource}
         frameWidth={config.frameWidth}
         frameHeight={config.frameHeight}

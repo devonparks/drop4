@@ -126,7 +126,17 @@ export function HomeScreen() {
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
   const clearLevelUp = useShopStore(s => s.clearLevelUp);
+  const ownedPets = useShopStore(s => s.ownedPets);
+  const claimedStarterPack = useShopStore(s => s.claimedStarterPack);
+  const claimStarterPack = useShopStore(s => s.claimStarterPack);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
+
+  // Starter Pack — show for level 1-2 players with no pets who haven't claimed yet
+  const showStarterPack = level <= 2 && ownedPets.length === 0 && !claimedStarterPack;
+  const handleClaimStarterPack = () => {
+    haptics.win();
+    claimStarterPack();
+  };
 
   // ═══ Coin earn animation ═══
   const prevCoinsRef = useRef(coins);
@@ -410,6 +420,25 @@ export function HomeScreen() {
           <Text style={styles.streakText}>
             {'\uD83D\uDD25'} {winStreak} Win Streak!
           </Text>
+        )}
+
+        {/* ═══ STARTER PACK ═══ */}
+        {showStarterPack && (
+          <Pressable onPress={handleClaimStarterPack} style={styles.starterPackBanner}>
+            <LinearGradient
+              colors={['rgba(46,204,113,0.2)', 'rgba(39,174,61,0.08)']}
+              style={styles.starterPackGradient}
+            >
+              <Text style={styles.starterPackEmoji}>{'\uD83D\uDC15'}</Text>
+              <View style={styles.starterPackInfo}>
+                <Text style={styles.starterPackTitle}>STARTER PACK</Text>
+                <Text style={styles.starterPackDesc}>Buddy the Labrador + 500 Coins</Text>
+              </View>
+              <View style={styles.starterPackClaim}>
+                <Text style={styles.starterPackClaimText}>FREE</Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
         )}
 
         {/* ═══ MENU BUTTONS ═══ */}
@@ -813,6 +842,58 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingBottom: 8,
   },
+  // Starter Pack banner
+  starterPackBanner: {
+    marginHorizontal: 20,
+    marginBottom: 6,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  starterPackGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(46,204,113,0.35)',
+    gap: 10,
+  },
+  starterPackEmoji: {
+    fontSize: 28,
+  },
+  starterPackInfo: {
+    flex: 1,
+  },
+  starterPackTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#2ecc71',
+    letterSpacing: 2,
+  },
+  starterPackDesc: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(200,230,200,0.8)',
+    marginTop: 1,
+  },
+  starterPackClaim: {
+    backgroundColor: 'rgba(46,204,113,0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(46,204,113,0.5)',
+  },
+  starterPackClaimText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#2ecc71',
+    letterSpacing: 1,
+  },
   // "Tap me!" tooltip
   tapHintBubble: {
     position: 'absolute',
@@ -846,12 +927,18 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Pet position (bottom-right of character)
+  // Pet position (bottom-right of character, prominent showcase)
   petPosition: {
     position: 'absolute',
-    bottom: 10,
-    right: -10,
+    bottom: 2,
+    right: -20,
     zIndex: 5,
+    // Glow effect to make pet pop
+    shadowColor: 'rgba(255,200,80,0.6)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 6,
   },
   // Version (moved to Settings screen footer)
   // Coin earn animation
