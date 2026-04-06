@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useChallengeStore, Challenge } from '../stores/challengeStore';
 import { useShopStore } from '../stores/shopStore';
+import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useCareerStore } from '../stores/careerStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -131,11 +133,20 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export function ChallengesScreen() {
-  const { challenges, claimReward, refreshChallenges, lastRefresh } = useChallengeStore();
-  const addCoins = useShopStore(s => s.addCoins);
+  const { challenges, claimReward, claimDailyBonus, refreshChallenges, lastRefresh, bonusClaimed } = useChallengeStore();
   const hasAutoRefreshed = useRef(false);
-  const [bonusClaimed, setBonusClaimed] = useState(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
+
+  // Weekly progress — wins this week + career completions
+  const matches = useMatchHistoryStore(s => s.matches);
+  const careerCompletedCount = useCareerStore(s => s.getCompletedCount());
+
+  const weeklyWins = (() => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+    weekStart.setHours(0, 0, 0, 0);
+    return matches.filter(m => m.result === 'win' && m.timestamp >= weekStart.getTime()).length;
+  })();
 
   // Daily auto-refresh: if lastRefresh date differs from today, refresh challenges
   useEffect(() => {
@@ -151,6 +162,14 @@ export function ChallengesScreen() {
   const handleClaim = (challengeId: string) => {
     const reward = claimReward(challengeId);
     if (reward > 0) {
+      haptics.win();
+      playSound('coin');
+    }
+  };
+
+  const handleClaimBonus = () => {
+    const claimed = claimDailyBonus();
+    if (claimed) {
       haptics.win();
       playSound('coin');
     }
@@ -173,14 +192,6 @@ export function ChallengesScreen() {
     }
   }, [allComplete, bonusClaimed, glowAnim]);
 
-  const handleClaimBonus = () => {
-    if (!allComplete || bonusClaimed) return;
-    addCoins(200);
-    setBonusClaimed(true);
-    haptics.win();
-    playSound('coin');
-  };
-
   const bagGlowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 0.6],
@@ -188,7 +199,11 @@ export function ChallengesScreen() {
 
   return (
     <ScreenBackground>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollRoot}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         {/* ══ HEADER SECTION ══ */}
         <LinearGradient
           colors={['rgba(255,140,0,0.15)', 'rgba(255,100,0,0.06)', 'transparent']}
@@ -240,7 +255,7 @@ export function ChallengesScreen() {
 
           {/* Claim reward bag button */}
           {allComplete && !bonusClaimed && (
-            <Pressable onPress={handleClaimBonus} style={styles.claimBagBtn}>
+            <Pressable onPress={() => { haptics.tap(); handleClaimBonus(); }} style={styles.claimBagBtn}>
               <LinearGradient
                 colors={['#34c94d', '#27ae3d', '#1e8a30']}
                 start={{ x: 0, y: 0 }}
@@ -281,65 +296,91 @@ export function ChallengesScreen() {
             <Text style={styles.weeklySubtitle}>Bigger goals, bigger rewards</Text>
           </LinearGradient>
 
-          {/* Weekly Challenge 1: Win 20 games */}
-          <View style={styles.weeklyCard}>
-            <View style={styles.cardRow}>
-              <LinearGradient colors={['#9b59b6', '#7d4192']} style={styles.iconCircle}>
-                <Text style={styles.iconEmoji}>🏆</Text>
-              </LinearGradient>
-              <View style={styles.cardCenter}>
-                <Text style={styles.cardTitle}>Win 20 games this week</Text>
-                <Text style={styles.cardDesc}>Dominate across any difficulty</Text>
-                <View style={styles.progressRow}>
-                  <View style={styles.progressBg}>
-                    <LinearGradient
-                      colors={['#9b59b6', '#7d4192']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={[styles.progressFill, { width: '0%' }]}
-                    />
+          {/* Weekly Challenge 1: Win 20 games this week */}
+          {(() => {
+            const target = 20;
+            const progress = Math.min(weeklyWins, target);
+            const pct = (progress / target) * 100;
+            const done = progress >= target;
+            return (
+              <View style={[styles.weeklyCard, done && { borderColor: 'rgba(155,89,182,0.4)' }]}>
+                <View style={styles.cardRow}>
+                  <LinearGradient colors={done ? ['#7d4192', '#5a2d70'] : ['#9b59b6', '#7d4192']} style={styles.iconCircle}>
+                    <Text style={styles.iconEmoji}>🏆</Text>
+                    {done && (
+                      <View style={styles.iconCheckOverlay}>
+                        <Text style={styles.iconCheckMark}>✓</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                  <View style={styles.cardCenter}>
+                    <Text style={[styles.cardTitle, done && styles.cardTitleDone]}>Win 20 games this week</Text>
+                    <Text style={styles.cardDesc}>Dominate across any difficulty</Text>
+                    <View style={styles.progressRow}>
+                      <View style={styles.progressBg}>
+                        <LinearGradient
+                          colors={done ? ['#27ae3d', '#1e8a30'] : ['#9b59b6', '#7d4192']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.progressFill, { width: `${pct}%` }]}
+                        />
+                      </View>
+                      <Text style={[styles.progressText, done && { color: colors.green }]}>{progress}/{target}</Text>
+                    </View>
                   </View>
-                  <Text style={styles.progressText}>0/20</Text>
+                  <View style={styles.cardRight}>
+                    <View style={[styles.rewardBubble, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
+                      <Text style={styles.rewardCoin}>🪙</Text>
+                      <Text style={[styles.rewardAmount, { color: '#b06cc7' }]}>1,000</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
-              <View style={styles.cardRight}>
-                <View style={[styles.rewardBubble, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
-                  <Text style={styles.rewardCoin}>🪙</Text>
-                  <Text style={[styles.rewardAmount, { color: '#b06cc7' }]}>1,000</Text>
-                </View>
-              </View>
-            </View>
-          </View>
+            );
+          })()}
 
           {/* Weekly Challenge 2: Complete 5 career levels */}
-          <View style={styles.weeklyCard}>
-            <View style={styles.cardRow}>
-              <LinearGradient colors={['#e84393', '#c23076']} style={styles.iconCircle}>
-                <Text style={styles.iconEmoji}>⭐</Text>
-              </LinearGradient>
-              <View style={styles.cardCenter}>
-                <Text style={styles.cardTitle}>Complete 5 career levels</Text>
-                <Text style={styles.cardDesc}>Push through the career map</Text>
-                <View style={styles.progressRow}>
-                  <View style={styles.progressBg}>
-                    <LinearGradient
-                      colors={['#e84393', '#c23076']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={[styles.progressFill, { width: '0%' }]}
-                    />
+          {(() => {
+            const target = 5;
+            const progress = Math.min(careerCompletedCount, target);
+            const pct = (progress / target) * 100;
+            const done = progress >= target;
+            return (
+              <View style={[styles.weeklyCard, done && { borderColor: 'rgba(232,67,147,0.4)' }]}>
+                <View style={styles.cardRow}>
+                  <LinearGradient colors={done ? ['#c23076', '#8e1f54'] : ['#e84393', '#c23076']} style={styles.iconCircle}>
+                    <Text style={styles.iconEmoji}>⭐</Text>
+                    {done && (
+                      <View style={styles.iconCheckOverlay}>
+                        <Text style={styles.iconCheckMark}>✓</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                  <View style={styles.cardCenter}>
+                    <Text style={[styles.cardTitle, done && styles.cardTitleDone]}>Complete 5 career levels</Text>
+                    <Text style={styles.cardDesc}>Push through the career map</Text>
+                    <View style={styles.progressRow}>
+                      <View style={styles.progressBg}>
+                        <LinearGradient
+                          colors={done ? ['#27ae3d', '#1e8a30'] : ['#e84393', '#c23076']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.progressFill, { width: `${pct}%` }]}
+                        />
+                      </View>
+                      <Text style={[styles.progressText, done && { color: colors.green }]}>{progress}/{target}</Text>
+                    </View>
                   </View>
-                  <Text style={styles.progressText}>0/5</Text>
+                  <View style={styles.cardRight}>
+                    <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
+                      <Text style={styles.rewardCoin}>🪙</Text>
+                      <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
-              <View style={styles.cardRight}>
-                <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
-                  <Text style={styles.rewardCoin}>🪙</Text>
-                  <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
-                </View>
-              </View>
-            </View>
-          </View>
+            );
+          })()}
         </View>
 
         {/* ══ DAILY BONUS CARD ══ */}
@@ -379,7 +420,7 @@ export function ChallengesScreen() {
             </View>
           </LinearGradient>
         </Animated.View>
-      </View>
+      </ScrollView>
     </ScreenBackground>
   );
 }
@@ -389,10 +430,13 @@ export function ChallengesScreen() {
 // ══════════════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
-  container: {
+  scrollRoot: {
     flex: 1,
+  },
+  container: {
     paddingTop: 8,
     paddingHorizontal: 16,
+    paddingBottom: 100,
   },
 
   // ── Header ─────────────────────────────────────────────────────────

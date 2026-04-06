@@ -8,16 +8,20 @@ const COMPLETION_REWARD = 100;
 interface TutorialState {
   seenTips: string[];
   completionAwarded: boolean;
+  viewedLessons: string[]; // strategy guide lesson IDs that have been read
 
   hasSeenTip: (id: string) => boolean;
   markTipSeen: (id: string) => void;
   allTipsSeen: () => boolean;
+  markLessonViewed: (id: string) => void;
+  hasViewedLesson: (id: string) => boolean;
   loadFromStorage: () => Promise<void>;
 }
 
 export const useTutorialStore = create<TutorialState>((set, get) => ({
   seenTips: [],
   completionAwarded: false,
+  viewedLessons: [],
 
   hasSeenTip: (id: string) => {
     return get().seenTips.includes(id);
@@ -47,12 +51,24 @@ export const useTutorialStore = create<TutorialState>((set, get) => ({
     return get().seenTips.length >= TOTAL_TIPS;
   },
 
+  markLessonViewed: (id: string) => {
+    const { viewedLessons } = get();
+    if (!viewedLessons.includes(id)) {
+      set({ viewedLessons: [...viewedLessons, id] });
+    }
+  },
+
+  hasViewedLesson: (id: string) => {
+    return get().viewedLessons.includes(id);
+  },
+
   loadFromStorage: async () => {
-    const saved = await loadState<{ seenTips: string[]; completionAwarded?: boolean }>('tutorial');
+    const saved = await loadState<{ seenTips: string[]; completionAwarded?: boolean; viewedLessons?: string[] }>('tutorial');
     if (saved) {
       set({
         seenTips: saved.seenTips || [],
         completionAwarded: saved.completionAwarded || false,
+        viewedLessons: saved.viewedLessons || [],
       });
     }
   },
@@ -63,5 +79,6 @@ useTutorialStore.subscribe((state) => {
   saveState('tutorial', {
     seenTips: state.seenTips,
     completionAwarded: state.completionAwarded,
+    viewedLessons: state.viewedLessons,
   });
 });

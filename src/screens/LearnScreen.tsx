@@ -7,6 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
+import { useTutorialStore } from '../stores/tutorialStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -97,8 +98,9 @@ export function LearnScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
+  const markLessonViewed = useTutorialStore(s => s.markLessonViewed);
+  const hasViewedLesson = useTutorialStore(s => s.hasViewedLesson);
   const [selected, setSelected] = useState<Lesson | null>(null);
-  const [viewedLessons, setViewedLessons] = useState<Set<string>>(new Set());
 
   if (selected) {
     return (
@@ -106,7 +108,7 @@ export function LearnScreen({ navigation }: Props) {
         <View style={styles.container}>
           <TopBar coins={coins} gems={gems} level={level}
             showBack onBackPress={() => {
-              setViewedLessons(prev => new Set(prev).add(selected.id));
+              markLessonViewed(selected.id);
               setSelected(null);
             }} />
 
@@ -136,6 +138,7 @@ export function LearnScreen({ navigation }: Props) {
               variant="green"
               iconRight="▶"
               onPress={() => {
+                markLessonViewed(selected.id);
                 const diff = selected.difficulty === 'beginner' ? 'easy'
                   : selected.difficulty === 'intermediate' ? 'medium' : 'hard';
                 newGame(diff as any, true);
@@ -162,7 +165,7 @@ export function LearnScreen({ navigation }: Props) {
 
         <ScrollView contentContainerStyle={styles.lessonList} showsVerticalScrollIndicator={false}>
           {LESSONS.map(lesson => {
-            const isMastered = viewedLessons.has(lesson.id);
+            const isMastered = hasViewedLesson(lesson.id);
             return (
               <Pressable
                 key={lesson.id}

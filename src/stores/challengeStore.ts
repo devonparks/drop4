@@ -16,11 +16,14 @@ export interface Challenge {
 interface ChallengeState {
   challenges: Challenge[];
   lastRefresh: number; // timestamp
+  bonusClaimed: boolean; // all-challenges bonus (prevents re-claiming same day)
 
   // Actions
   refreshChallenges: () => void;
   updateProgress: (challengeId: string, amount: number) => void;
+  resetProgress: (challengeId: string) => void; // reset to 0 (e.g. streak broken)
   claimReward: (challengeId: string) => number; // returns coins earned
+  claimDailyBonus: () => boolean; // returns true if newly claimed
   loadFromStorage: () => Promise<void>;
 }
 
@@ -55,11 +58,13 @@ function pickRandomChallenges(count: number): Challenge[] {
 export const useChallengeStore = create<ChallengeState>((set, get) => ({
   challenges: pickRandomChallenges(3),
   lastRefresh: Date.now(),
+  bonusClaimed: false,
 
   refreshChallenges: () => {
     set({
       challenges: pickRandomChallenges(3),
       lastRefresh: Date.now(),
+      bonusClaimed: false, // reset on daily refresh
     });
   },
 
@@ -68,6 +73,16 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
       challenges: state.challenges.map(c =>
         c.id === challengeId && !c.completed
           ? { ...c, progress: Math.min(c.progress + amount, c.target) }
+          : c
+      ),
+    }));
+  },
+
+  resetProgress: (challengeId) => {
+    set(state => ({
+      challenges: state.challenges.map(c =>
+        c.id === challengeId && !c.completed
+          ? { ...c, progress: 0 }
           : c
       ),
     }));
@@ -91,12 +106,24 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
     return amount;
   },
 
+  claimDailyBonus: () => {
+    const { bonusClaimed, challenges } = get();
+    if (bonusClaimed) return false;
+    const allDone = challenges.every(c => c.completed);
+    if (!allDone) return false;
+
+    set({ bonusClaimed: true });
+    useShopStore.getState().addCoins(200);
+    return true;
+  },
+
   loadFromStorage: async () => {
-    const saved = await loadState<{ challenges: Challenge[]; lastRefresh: number }>('challenges');
+    const saved = await loadState<{ challenges: Challenge[]; lastRefresh: number; bonusClaimed?: boolean }>('challenges');
     if (saved) {
       set({
         challenges: saved.challenges ?? pickRandomChallenges(3),
         lastRefresh: saved.lastRefresh ?? Date.now(),
+        bonusClaimed: saved.bonusClaimed ?? false,
       });
     }
   },
@@ -104,5 +131,9 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
 
 // Auto-save
 useChallengeStore.subscribe((state) => {
-  saveState('challenges', { challenges: state.challenges, lastRefresh: state.lastRefresh });
+  saveState('challenges', {
+    challenges: state.challenges,
+    lastRefresh: state.lastRefresh,
+    bonusClaimed: state.bonusClaimed,
+  });
 });
