@@ -197,9 +197,10 @@ export function CareerScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
-  const getStars = useCareerStore(s => s.getStars);
-  const getTotalStars = useCareerStore(s => s.getTotalStars);
-  const getCompletedCount = useCareerStore(s => s.getCompletedCount);
+  const progress = useCareerStore(s => s.progress);
+  const getStars = (levelId: number) => progress[levelId]?.stars || 0;
+  const totalStars = Object.values(progress).reduce((sum, p) => sum + p.stars, 0);
+  const completedCount = Object.values(progress).filter(p => p.completed).length;
   const [activeChapter, setActiveChapter] = useState(1);
 
   // Snapshot lock state on mount so we can detect newly unlocked levels
@@ -225,7 +226,7 @@ export function CareerScreen({ navigation }: Props) {
       if (isNowUnlocked) freshlyUnlocked.add(lvlId);
     }
     if (freshlyUnlocked.size > 0) setNewlyUnlockedIds(freshlyUnlocked);
-  }, [getStars, getCompletedCount()]);
+  }, [progress]);
 
   // Tutorial
   const hasSeenCareerTip = useTutorialStore(s => s.hasSeenTip);
@@ -291,7 +292,7 @@ export function CareerScreen({ navigation }: Props) {
       if (isUnlocked && stars === 0) return lvl;
     }
     return null;
-  }, [getStars]);
+  }, [progress]);
 
   // "Next Unlock" hint — find the next reward the player will earn
   const nextRewardHint = useMemo(() => {
@@ -304,11 +305,9 @@ export function CareerScreen({ navigation }: Props) {
       }
     }
     return null;
-  }, [getStars, nextUncompletedLevel]);
+  }, [progress, nextUncompletedLevel]);
 
   const chapter = CHAPTERS.find(c => c.id === activeChapter)!;
-  const totalStars = getTotalStars();
-  const completedCount = getCompletedCount();
   const totalCoinsAvailable = useMemo(() =>
     ALL_CAREER_LEVELS.reduce((sum, l) => sum + (l.reward?.type === 'coins' && l.reward.amount ? l.reward.amount : 0), 0),
   []);
@@ -323,7 +322,7 @@ export function CareerScreen({ navigation }: Props) {
       result[ch.id] = { complete: allDone, totalStars: chStars, maxStars: ch.levels.length * 3 };
     }
     return result;
-  }, [getStars, completedCount]);
+  }, [progress]);
 
   return (
     <ScreenBackground>
@@ -353,7 +352,7 @@ export function CareerScreen({ navigation }: Props) {
           {CHAPTERS.map(ch => {
             const isActive = activeChapter === ch.id;
             const chapterStars = ch.levels.reduce((sum, l) => sum + getStars(l.id), 0);
-            const isUnlocked = ch.id === 1 || getCompletedCount() >= ch.unlockLevel - 1;
+            const isUnlocked = ch.id === 1 || completedCount >= ch.unlockLevel - 1;
 
             return (
               <Pressable
