@@ -386,7 +386,7 @@ export function HomeScreen() {
   };
 
   // ═══ Smart Suggestion — contextual hint based on game state ═══
-  const smartSuggestion = (() => {
+  const smartSuggestion = useMemo(() => {
     // Priority 1: Unclaimed challenge rewards
     const unclaimedChallenge = challenges.find(c => c.progress >= c.target && !c.completed);
     if (unclaimedChallenge) {
@@ -402,7 +402,7 @@ export function HomeScreen() {
       return { text: `\uD83C\uDFC6 Continue your career \u2014 Level ${nextCareerLevel} awaits!`, screen: 'Career' };
     }
     return null;
-  })();
+  }, [challenges, winStreak, careerCompletedCount]);
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));

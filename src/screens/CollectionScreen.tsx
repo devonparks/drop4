@@ -111,10 +111,12 @@ export function CollectionScreen() {
     },
   ], [owned, ownedEmotes, ownedPets, achievements]);
 
-  // Totals
-  const totalOwned = categories.reduce((sum, cat) => sum + cat.items.filter(i => i.owned).length, 0);
-  const totalAvailable = categories.reduce((sum, cat) => sum + cat.items.length, 0);
-  const overallPct = totalAvailable > 0 ? Math.round((totalOwned / totalAvailable) * 100) : 0;
+  // Totals — derived from memoized categories
+  const { totalOwned, totalAvailable, overallPct } = useMemo(() => {
+    const owned = categories.reduce((sum, cat) => sum + cat.items.filter(i => i.owned).length, 0);
+    const available = categories.reduce((sum, cat) => sum + cat.items.length, 0);
+    return { totalOwned: owned, totalAvailable: available, overallPct: available > 0 ? Math.round((owned / available) * 100) : 0 };
+  }, [categories]);
 
   // Collection value — sum prices of all owned items across every catalog
   const collectionValue = useMemo(() => {
