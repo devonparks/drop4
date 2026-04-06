@@ -89,6 +89,7 @@ export function GameScreen({ navigation }: Props) {
   const saveReplay = useReplayStore(s => s.saveReplay);
   const recordRanked = useRankedStore(s => s.recordRankedResult);
   const elo = useRankedStore(s => s.elo);
+  const resetScores = useGameStore(s => s.resetScores);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
   const preGameEloRef = useRef(useRankedStore.getState().elo);
@@ -1010,6 +1011,7 @@ export function GameScreen({ navigation }: Props) {
 
   /** Navigate all the way back to the Home tab (used by HOME / LEAVE buttons after game over) */
   const handleGoHome = () => {
+    resetScores();
     navigation.popToTop();
   };
 

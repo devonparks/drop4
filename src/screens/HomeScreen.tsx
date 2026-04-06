@@ -686,6 +686,7 @@ export function HomeScreen() {
             {aiGameCount > 0 && (
               <PressScaleView onPress={() => {
                 const lastDiff = useGameStore.getState().difficulty;
+                useGameStore.getState().resetScores();
                 useGameStore.getState().newGame(lastDiff, true);
                 navigation.dispatch(CommonActions.navigate({
                   name: 'Matchup',

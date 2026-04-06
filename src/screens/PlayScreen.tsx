@@ -29,6 +29,7 @@ export function PlayScreen({ navigation }: Props) {
   const equipped = useShopStore(s => s.equipped);
   const equippedPet = useShopStore(s => s.equippedPet);
   const newGame = useGameStore(s => s.newGame);
+  const resetScores = useGameStore(s => s.resetScores);
   const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
   const getMasteryStats = useMatchHistoryStore(s => s.getMasteryStats);
@@ -116,6 +117,8 @@ export function PlayScreen({ navigation }: Props) {
   const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
 
   const startGame = (difficulty: Difficulty) => {
+    // Reset scores from any previous session before starting fresh
+    resetScores();
     // Initialize the game state
     if (mode === 'ranked') {
       newGame(difficulty, true, { timerSeconds: 15 });
