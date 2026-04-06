@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -141,12 +141,12 @@ export function ChallengesScreen() {
   const matches = useMatchHistoryStore(s => s.matches);
   const careerCompletedCount = useCareerStore(s => s.getCompletedCount());
 
-  const weeklyWins = (() => {
+  const weeklyWins = useMemo(() => {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7)); // Monday
     weekStart.setHours(0, 0, 0, 0);
     return matches.filter(m => m.result === 'win' && m.timestamp >= weekStart.getTime()).length;
-  })();
+  }, [matches]);
 
   // Daily auto-refresh: if lastRefresh date differs from today, refresh challenges
   useEffect(() => {
