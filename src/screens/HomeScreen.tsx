@@ -22,6 +22,7 @@ import { COIN_REWARDS } from '../engine/constants';
 import { playSound } from '../services/audio';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
 import { DailyRewardPopup } from '../components/ui/DailyRewardPopup';
+import { WelcomeOverlay } from '../components/ui/WelcomeOverlay';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
@@ -734,6 +735,9 @@ export function HomeScreen() {
 
         {/* Daily Login Reward — auto-shows once per day */}
         <DailyRewardPopup />
+
+        {/* Welcome overlay — shows once on first launch */}
+        <WelcomeOverlay />
 
         {/* Tutorial tooltip */}
         <TutorialTooltip
