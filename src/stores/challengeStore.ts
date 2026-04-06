@@ -18,12 +18,17 @@ interface ChallengeState {
   lastRefresh: number; // timestamp
   bonusClaimed: boolean; // all-challenges bonus (prevents re-claiming same day)
 
+  // Weekly challenge state
+  weeklyLastRefresh: number; // timestamp of last Monday 00:00
+  weeklyClaimed: Record<string, boolean>; // 'wins20' | 'career5'
+
   // Actions
   refreshChallenges: () => void;
   updateProgress: (challengeId: string, amount: number) => void;
   resetProgress: (challengeId: string) => void; // reset to 0 (e.g. streak broken)
   claimReward: (challengeId: string) => number; // returns coins earned
   claimDailyBonus: () => boolean; // returns true if newly claimed
+  claimWeeklyReward: (id: string, amount: number) => boolean; // returns true if claimed
   loadFromStorage: () => Promise<void>;
 }
 
@@ -67,10 +72,21 @@ function pickRandomChallenges(count: number): Challenge[] {
   }));
 }
 
+function getStartOfWeek(): number {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 1=Mon...
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((day + 6) % 7)); // roll back to Monday
+  monday.setHours(0, 0, 0, 0);
+  return monday.getTime();
+}
+
 export const useChallengeStore = create<ChallengeState>((set, get) => ({
   challenges: pickRandomChallenges(3),
   lastRefresh: Date.now(),
   bonusClaimed: false,
+  weeklyLastRefresh: getStartOfWeek(),
+  weeklyClaimed: {},
 
   refreshChallenges: () => {
     set({
@@ -129,23 +145,47 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
     return true;
   },
 
+  claimWeeklyReward: (id, amount) => {
+    const { weeklyClaimed } = get();
+    if (weeklyClaimed[id]) return false;
+    set(state => ({ weeklyClaimed: { ...state.weeklyClaimed, [id]: true } }));
+    useShopStore.getState().addCoins(amount);
+    return true;
+  },
+
   loadFromStorage: async () => {
-    const saved = await loadState<{ challenges: Challenge[]; lastRefresh: number; bonusClaimed?: boolean }>('challenges');
+    const saved = await loadState<{
+      challenges: Challenge[];
+      lastRefresh: number;
+      bonusClaimed?: boolean;
+      weeklyLastRefresh?: number;
+      weeklyClaimed?: Record<string, boolean>;
+    }>('challenges');
     if (saved) {
       const lastRefresh = saved.lastRefresh ?? 0;
       const msPerDay = 24 * 60 * 60 * 1000;
       const isStale = Date.now() - lastRefresh > msPerDay;
+
+      // Reset weekly claims if we're in a new week
+      const savedWeeklyRefresh = saved.weeklyLastRefresh ?? 0;
+      const currentWeekStart = getStartOfWeek();
+      const isNewWeek = savedWeeklyRefresh < currentWeekStart;
+
       if (isStale) {
         set({
           challenges: pickRandomChallenges(3),
           lastRefresh: Date.now(),
           bonusClaimed: false,
+          weeklyLastRefresh: isNewWeek ? currentWeekStart : (savedWeeklyRefresh || currentWeekStart),
+          weeklyClaimed: isNewWeek ? {} : (saved.weeklyClaimed ?? {}),
         });
       } else {
         set({
           challenges: saved.challenges ?? pickRandomChallenges(3),
           lastRefresh,
           bonusClaimed: saved.bonusClaimed ?? false,
+          weeklyLastRefresh: isNewWeek ? currentWeekStart : (savedWeeklyRefresh || currentWeekStart),
+          weeklyClaimed: isNewWeek ? {} : (saved.weeklyClaimed ?? {}),
         });
       }
     }
@@ -158,5 +198,7 @@ useChallengeStore.subscribe((state) => {
     challenges: state.challenges,
     lastRefresh: state.lastRefresh,
     bonusClaimed: state.bonusClaimed,
+    weeklyLastRefresh: state.weeklyLastRefresh,
+    weeklyClaimed: state.weeklyClaimed,
   });
 });

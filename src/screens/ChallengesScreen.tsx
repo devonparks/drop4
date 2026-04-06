@@ -133,7 +133,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export function ChallengesScreen() {
-  const { challenges, claimReward, claimDailyBonus, refreshChallenges, lastRefresh, bonusClaimed } = useChallengeStore();
+  const { challenges, claimReward, claimDailyBonus, claimWeeklyReward, refreshChallenges, lastRefresh, bonusClaimed, weeklyClaimed } = useChallengeStore();
   const hasAutoRefreshed = useRef(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
@@ -169,6 +169,14 @@ export function ChallengesScreen() {
 
   const handleClaimBonus = () => {
     const claimed = claimDailyBonus();
+    if (claimed) {
+      haptics.win();
+      playSound('coin');
+    }
+  };
+
+  const handleClaimWeekly = (id: string, amount: number) => {
+    const claimed = claimWeeklyReward(id, amount);
     if (claimed) {
       haptics.win();
       playSound('coin');
@@ -302,37 +310,51 @@ export function ChallengesScreen() {
             const progress = Math.min(weeklyWins, target);
             const pct = (progress / target) * 100;
             const done = progress >= target;
+            const claimed = weeklyClaimed['wins20'] ?? false;
+            const canClaim = done && !claimed;
             return (
-              <View style={[styles.weeklyCard, done && { borderColor: 'rgba(155,89,182,0.4)' }]}>
+              <View style={[styles.weeklyCard, (done || canClaim) && { borderColor: 'rgba(155,89,182,0.4)' }]}>
                 <View style={styles.cardRow}>
-                  <LinearGradient colors={done ? ['#7d4192', '#5a2d70'] : ['#9b59b6', '#7d4192']} style={styles.iconCircle}>
+                  <LinearGradient colors={(done || claimed) ? ['#7d4192', '#5a2d70'] : ['#9b59b6', '#7d4192']} style={styles.iconCircle}>
                     <Text style={styles.iconEmoji}>🏆</Text>
-                    {done && (
+                    {claimed && (
                       <View style={styles.iconCheckOverlay}>
                         <Text style={styles.iconCheckMark}>✓</Text>
                       </View>
                     )}
                   </LinearGradient>
                   <View style={styles.cardCenter}>
-                    <Text style={[styles.cardTitle, done && styles.cardTitleDone]}>Win 20 games this week</Text>
+                    <Text style={[styles.cardTitle, claimed && styles.cardTitleDone]}>Win 20 games this week</Text>
                     <Text style={styles.cardDesc}>Dominate across any difficulty</Text>
                     <View style={styles.progressRow}>
                       <View style={styles.progressBg}>
                         <LinearGradient
-                          colors={done ? ['#27ae3d', '#1e8a30'] : ['#9b59b6', '#7d4192']}
+                          colors={claimed ? ['#27ae3d', '#1e8a30'] : ['#9b59b6', '#7d4192']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={[styles.progressFill, { width: `${pct}%` }]}
                         />
                       </View>
-                      <Text style={[styles.progressText, done && { color: colors.green }]}>{progress}/{target}</Text>
+                      <Text style={[styles.progressText, claimed && { color: colors.green }]}>{progress}/{target}</Text>
                     </View>
                   </View>
                   <View style={styles.cardRight}>
-                    <View style={[styles.rewardBubble, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
-                      <Text style={styles.rewardCoin}>🪙</Text>
-                      <Text style={[styles.rewardAmount, { color: '#b06cc7' }]}>1,000</Text>
-                    </View>
+                    {canClaim ? (
+                      <Pressable onPress={() => handleClaimWeekly('wins20', 1000)} style={styles.claimBtnSmall}>
+                        <LinearGradient colors={['#9b59b6', '#7d4192', '#5a2d70']} style={styles.claimBtnGradient}>
+                          <Text style={styles.claimBtnText}>CLAIM</Text>
+                        </LinearGradient>
+                      </Pressable>
+                    ) : claimed ? (
+                      <View style={styles.doneBadge}>
+                        <Text style={styles.doneBadgeCheck}>✓</Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.rewardBubble, { borderColor: 'rgba(155,89,182,0.3)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
+                        <Text style={styles.rewardCoin}>🪙</Text>
+                        <Text style={[styles.rewardAmount, { color: '#b06cc7' }]}>1,000</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
@@ -345,37 +367,51 @@ export function ChallengesScreen() {
             const progress = Math.min(careerCompletedCount, target);
             const pct = (progress / target) * 100;
             const done = progress >= target;
+            const claimed = weeklyClaimed['career5'] ?? false;
+            const canClaim = done && !claimed;
             return (
-              <View style={[styles.weeklyCard, done && { borderColor: 'rgba(232,67,147,0.4)' }]}>
+              <View style={[styles.weeklyCard, (done || canClaim) && { borderColor: 'rgba(232,67,147,0.4)' }]}>
                 <View style={styles.cardRow}>
-                  <LinearGradient colors={done ? ['#c23076', '#8e1f54'] : ['#e84393', '#c23076']} style={styles.iconCircle}>
+                  <LinearGradient colors={(done || claimed) ? ['#c23076', '#8e1f54'] : ['#e84393', '#c23076']} style={styles.iconCircle}>
                     <Text style={styles.iconEmoji}>⭐</Text>
-                    {done && (
+                    {claimed && (
                       <View style={styles.iconCheckOverlay}>
                         <Text style={styles.iconCheckMark}>✓</Text>
                       </View>
                     )}
                   </LinearGradient>
                   <View style={styles.cardCenter}>
-                    <Text style={[styles.cardTitle, done && styles.cardTitleDone]}>Complete 5 career levels</Text>
+                    <Text style={[styles.cardTitle, claimed && styles.cardTitleDone]}>Complete 5 career levels</Text>
                     <Text style={styles.cardDesc}>Push through the career map</Text>
                     <View style={styles.progressRow}>
                       <View style={styles.progressBg}>
                         <LinearGradient
-                          colors={done ? ['#27ae3d', '#1e8a30'] : ['#e84393', '#c23076']}
+                          colors={claimed ? ['#27ae3d', '#1e8a30'] : ['#e84393', '#c23076']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={[styles.progressFill, { width: `${pct}%` }]}
                         />
                       </View>
-                      <Text style={[styles.progressText, done && { color: colors.green }]}>{progress}/{target}</Text>
+                      <Text style={[styles.progressText, claimed && { color: colors.green }]}>{progress}/{target}</Text>
                     </View>
                   </View>
                   <View style={styles.cardRight}>
-                    <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
-                      <Text style={styles.rewardCoin}>🪙</Text>
-                      <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
-                    </View>
+                    {canClaim ? (
+                      <Pressable onPress={() => handleClaimWeekly('career5', 2000)} style={styles.claimBtnSmall}>
+                        <LinearGradient colors={['#e84393', '#c23076', '#8e1f54']} style={styles.claimBtnGradient}>
+                          <Text style={styles.claimBtnText}>CLAIM</Text>
+                        </LinearGradient>
+                      </Pressable>
+                    ) : claimed ? (
+                      <View style={styles.doneBadge}>
+                        <Text style={styles.doneBadgeCheck}>✓</Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
+                        <Text style={styles.rewardCoin}>🪙</Text>
+                        <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
