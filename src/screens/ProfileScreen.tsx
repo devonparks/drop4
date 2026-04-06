@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -88,6 +88,36 @@ export function ProfileScreen() {
   // Coin milestone
   const milestoneInfo = useMemo(() => getCoinMilestoneInfo(coins), [coins]);
 
+  // Favorite difficulty (most-played)
+  const favDifficulty = useMemo(() => {
+    if (allMatches.length === 0) return 'N/A';
+    const counts: Record<string, number> = {};
+    allMatches.forEach(m => { counts[m.difficulty] = (counts[m.difficulty] || 0) + 1; });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    return top ? top[0].charAt(0).toUpperCase() + top[0].slice(1) : 'N/A';
+  }, [allMatches]);
+
+  // Share Profile handler
+  const [shareCopied, setShareCopied] = useState(false);
+  const handleShareProfile = async () => {
+    haptics.tap();
+    const playerName = useShopStore.getState().playerName;
+    const title = getPlayerTitle(level, tier, coins);
+    const tierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
+    const petName = equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None';
+    const card = [
+      '\uD83C\uDFAE Drop4 Player Card',
+      `${playerName} (Lv.${level} ${title})`,
+      `${tierInfo.icon} ${formatRank(elo)} \u2014 ${elo} ELO`,
+      `\uD83D\uDCCA ${winRate}% Win Rate (${totalGames} games)`,
+      `\u2B50 Favorite: ${favDifficulty}`,
+      petName !== 'None' ? `\uD83D\uDC3E Pet: ${petName}` : null,
+    ].filter(Boolean).join('\n');
+    try {
+      await Share.share({ message: card });
+    } catch {}
+  };
+
   // Map equipped IDs to display names
   const boardNames: Record<string, string> = {
     default: 'Classic Blue', wood: 'Wooden', neon: 'Neon Glow',
@@ -156,6 +186,14 @@ export function ProfileScreen() {
           })()}
 
           <RankBadge size="small" showProgress style={{ marginTop: 4 }} />
+
+          {/* Share Profile button */}
+          <Pressable
+            onPress={handleShareProfile}
+            style={({ pressed }) => [styles.shareProfileBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={styles.shareProfileText}>{'\uD83D\uDCE4'} SHARE PROFILE</Text>
+          </Pressable>
 
           {/* Level bar — chunky with XP inside */}
           <View style={styles.levelSection}>
@@ -934,6 +972,24 @@ const styles = StyleSheet.create({
   },
   dailyGoalCheck: {
     fontSize: 16,
+  },
+
+  // Share Profile button
+  shareProfileBtn: {
+    marginTop: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,150,0,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,150,0,0.3)',
+  },
+  shareProfileText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold as any,
+    fontSize: 12,
+    color: colors.orange,
+    letterSpacing: 1.5,
   },
 
   // Recent Activity

@@ -123,10 +123,29 @@ export function GameScreen({ navigation }: Props) {
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
 
+  // First-game encouragement
+  const [showFirstGameMsg, setShowFirstGameMsg] = useState(false);
+  const firstGameFade = useRef(new RNAnimated.Value(0)).current;
+
   // Show tutorial on first game
   useEffect(() => {
     if (!hasSeenGameTip('game_hint')) {
       const timer = setTimeout(() => setShowGameTutorial(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // First-game detection — show encouragement if no match history
+  useEffect(() => {
+    const matches = useMatchHistoryStore.getState().matches;
+    if (matches.length === 0 && isVsAi) {
+      setShowFirstGameMsg(true);
+      RNAnimated.timing(firstGameFade, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+      const timer = setTimeout(() => {
+        RNAnimated.timing(firstGameFade, { toValue: 0, duration: 800, useNativeDriver: true }).start(() => {
+          setShowFirstGameMsg(false);
+        });
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -973,6 +992,13 @@ export function GameScreen({ navigation }: Props) {
             </View>
           ) : null;
         })()}
+
+        {/* First game encouragement */}
+        {showFirstGameMsg && (
+          <RNAnimated.View style={[styles.firstGameBanner, { opacity: firstGameFade }]} pointerEvents="none">
+            <Text style={styles.firstGameText}>Your first game! Don't worry {'\u2014'} Easy Bot will go easy on you {'\uD83D\uDE0A'}</Text>
+          </RNAnimated.View>
+        )}
 
         {/* Score dots (best of 5) */}
         <View style={styles.scoreDots}>
@@ -1863,6 +1889,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,255,255,0.45)',
     letterSpacing: 0.5,
+  },
+  firstGameBanner: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(46,204,113,0.12)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(46,204,113,0.3)',
+  },
+  firstGameText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium as any,
+    fontSize: 12,
+    color: '#2ecc71',
+    textAlign: 'center' as const,
   },
   turnCenter: {
     alignItems: 'center',
