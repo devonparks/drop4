@@ -45,6 +45,7 @@ import { ChatBubble } from '../components/effects/ChatBubble';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import type { QuickChatMessage } from '../data/quickChat';
 import { useTutorialStore } from '../stores/tutorialStore';
+import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import type { RootStackParamList, GameParams } from '../navigation/RootNavigator';
@@ -100,6 +101,7 @@ export function GameScreen({ navigation }: Props) {
   const [didLevelUp, setDidLevelUp] = useState(false);
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
+  const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
   const preLevelRef = useRef(useShopStore.getState().level);
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
@@ -457,14 +459,17 @@ export function GameScreen({ navigation }: Props) {
       hasAwardedRef.current = true;
       const reward = COIN_REWARDS[difficulty];
       const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
-      const totalReward = reward + streakBonus;
+      const dailyMultiplier = getStreakMultiplier();
+      const totalReward = Math.round((reward + streakBonus) * dailyMultiplier);
       addCoins(totalReward);
       addXp(reward);
       // Detect level-up
       const newLevel = useShopStore.getState().level;
       if (newLevel > preLevelRef.current) {
         setDidLevelUp(true);
+        playSound('level_up');
       }
+      setDailyStreakMultiplier(dailyMultiplier);
       addMatch({ result: 'win', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: totalReward, mode: 'ai' });
       // Update challenges
       updateChallenge('win_3', 1);
@@ -566,8 +571,10 @@ export function GameScreen({ navigation }: Props) {
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
-      addCoins(10);
-      addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: 10, mode: 'ai' });
+      const drawMultiplier = getStreakMultiplier();
+      const drawReward = Math.round(10 * drawMultiplier);
+      addCoins(drawReward);
+      addMatch({ result: 'draw', opponent: `${difficulty} Bot`, difficulty, moves: moveCount, coinsEarned: drawReward, mode: 'ai' });
       updateChallenge('play_5', 1);
       addSeasonXp(15);
       playSound('coin');
@@ -625,7 +632,7 @@ export function GameScreen({ navigation }: Props) {
       ? (winner === 1 ? 'won' : 'lost')
       : 'drew';
     const coinsText = status === 'won' && winner === 1
-      ? `, ${COIN_REWARDS[difficulty]} coins earned`
+      ? `, ${Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)} coins earned`
       : '';
     const shareMessage = `I just ${resultText} on Drop4! ${winner === 1 ? '\u{1F3C6}' : '\u{1F3AE}'} ${moveCount} moves${coinsText}. Beat me at drop4.game!`;
 
@@ -652,6 +659,7 @@ export function GameScreen({ navigation }: Props) {
     setDidLevelUp(false);
     setCompletedChallengeName(null);
     setStreakBrokenAt(null);
+    setDailyStreakMultiplier(1);
     newGame(difficulty, isVsAi);
   };
 
@@ -1353,8 +1361,10 @@ export function GameScreen({ navigation }: Props) {
                     }}
                   >
                     <Text style={styles.goRewardIcon}>🪙</Text>
-                    <Text style={styles.goRewardAmount}>+{COIN_REWARDS[difficulty]}</Text>
-                    <Text style={styles.goRewardDesc}>Coins</Text>
+                    <Text style={styles.goRewardAmount}>+{Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)}</Text>
+                    <Text style={styles.goRewardDesc}>
+                      {dailyStreakMultiplier > 1 ? `Coins (x${dailyStreakMultiplier} streak!)` : 'Coins'}
+                    </Text>
                   </Pressable>
                 )}
                 {status === 'draw' && (
@@ -1367,8 +1377,10 @@ export function GameScreen({ navigation }: Props) {
                     }}
                   >
                     <Text style={styles.goRewardIcon}>🪙</Text>
-                    <Text style={styles.goRewardAmount}>+10</Text>
-                    <Text style={styles.goRewardDesc}>Draw Bonus</Text>
+                    <Text style={styles.goRewardAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
+                    <Text style={styles.goRewardDesc}>
+                      {getStreakMultiplier() > 1 ? `Draw (x${getStreakMultiplier()} streak!)` : 'Draw Bonus'}
+                    </Text>
                   </Pressable>
                 )}
                 {/* Streak bonus */}

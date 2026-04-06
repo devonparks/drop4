@@ -6,6 +6,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -242,7 +243,7 @@ export function ShopScreen() {
       haptics.select();
     } else if (item.rarity !== 'darkmatter' && !(item.price === 0 && item.rarity === 'mythic')) {
       const success = purchaseItem(category, item.id, item.price);
-      if (success) { haptics.win(); equipItem(equipKey, item.id); }
+      if (success) { haptics.win(); playSound('coin'); equipItem(equipKey, item.id); }
       else { haptics.error(); }
     }
   };
@@ -252,14 +253,16 @@ export function ShopScreen() {
       // Unequip
       equipPet(null);
       haptics.select();
+      playSound('whoosh');
       return;
     }
     if (ownedPets.includes(pet.id)) {
       equipPet(pet.id);
       haptics.select();
+      playSound('whoosh');
     } else if (pet.price > 0) {
       const success = purchasePet(pet.id, pet.price);
-      if (success) { haptics.win(); equipPet(pet.id); }
+      if (success) { haptics.win(); playSound('coin'); equipPet(pet.id); }
       else { haptics.error(); }
     }
   };

@@ -84,6 +84,18 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
   },
 }));
 
+/**
+ * Returns a coin multiplier based on the daily login streak.
+ * Day 1: 1x | Day 2-3: 1.2x | Day 4-5: 1.5x | Day 6-7: 2x
+ */
+export function getStreakMultiplier(): number {
+  const streak = useDailyRewardStore.getState().currentStreak;
+  if (streak >= 6) return 2;
+  if (streak >= 4) return 1.5;
+  if (streak >= 2) return 1.2;
+  return 1;
+}
+
 // Auto-save
 useDailyRewardStore.subscribe((state) => {
   saveState('dailyReward', {

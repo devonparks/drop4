@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { getRandomTip } from '../data/tips';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -41,6 +42,10 @@ export function PlayScreen({ navigation }: Props) {
     const gamesToday = matches.filter(m => m.timestamp >= todayMs).length;
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, gamesToday };
   }, [matches]);
+  // Tip of the day — changes each time the screen is visited
+  const [tip, setTip] = useState(getRandomTip);
+  useEffect(() => { setTip(getRandomTip()); }, []);
+
   // If navigated here from Multiplayer with ranked flags, default to ranked mode
   const incomingRanked = route.params?.rankedMode;
   const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
@@ -137,6 +142,11 @@ export function PlayScreen({ navigation }: Props) {
             <GlossyButton label="HARD" subtitle="No Mercy" variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
           </View>
 
+          {/* Tip of the day */}
+          <View style={styles.tipCard}>
+            <Text style={styles.tipText}>{'\uD83D\uDCA1'} {tip}</Text>
+          </View>
+
           {/* Secondary buttons */}
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="purple" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
@@ -219,5 +229,16 @@ const styles = StyleSheet.create({
   },
   secondaryWrap: {
     flexDirection: 'row', width: '100%', maxWidth: 340, gap: 8,
+  },
+  tipCard: {
+    width: '100%', maxWidth: 340,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+  },
+  tipText: {
+    fontFamily: fonts.body, fontWeight: weight.regular,
+    fontSize: 11, color: colors.textSecondary,
+    lineHeight: 16, textAlign: 'center',
   },
 });
