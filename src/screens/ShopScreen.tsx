@@ -266,11 +266,15 @@ export function ShopScreen() {
   const purchaseEmote = useShopStore(s2 => s2.purchaseEmote);
   const equipPet = useShopStore(s2 => s2.equipPet);
   const purchasePet = useShopStore(s2 => s2.purchasePet);
-  const addCoins = useShopStore(s2 => s2.addCoins);
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
+  const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
+  const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
-  const [dailyCollected, setDailyCollected] = useState(false);
+
+  // Derive collected state from persisted store (resets at midnight, not on navigation)
+  const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+  const dailyCollected = lastShopCoinCollect === today;
   const insets = useSafeAreaInsets();
   const countdown = useCountdown();
 
@@ -354,10 +358,9 @@ export function ShopScreen() {
   };
 
   const handleDailyCollect = () => {
-    if (dailyCollected) return;
-    addCoins(500);
-    setDailyCollected(true);
-    haptics.win();
+    const collected = collectDailyShopCoins();
+    if (collected) { haptics.win(); playSound('coin'); }
+    else { haptics.error(); }
   };
 
   const tabs: { key: ShopTab; label: string; icon: string }[] = [

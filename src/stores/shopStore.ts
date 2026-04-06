@@ -102,6 +102,10 @@ interface ShopState {
   claimStarterPack: () => void;
   unlockCustomTitle: (title: string) => void;
   setEquippedCustomTitle: (title: string | null) => void;
+  // Daily free coin collect (shop screen)
+  lastShopCoinCollect: string | null;
+  collectDailyShopCoins: () => boolean; // returns false if already collected today
+
   setPlayerName: (name: string) => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -142,6 +146,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
   claimedStarterPack: false,
   unlockedTitles: [],
   equippedCustomTitle: null,
+  lastShopCoinCollect: null,
 
   addCoins: (amount) => set((s) => ({
     coins: s.coins + amount,
@@ -264,6 +269,20 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   setEquippedCustomTitle: (title) => set({ equippedCustomTitle: title }),
 
+  collectDailyShopCoins: () => {
+    const today = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+    if (get().lastShopCoinCollect === today) return false;
+    set((s) => ({
+      lastShopCoinCollect: today,
+      coins: s.coins + 500,
+      lifetimeCoinsEarned: s.lifetimeCoinsEarned + 500,
+    }));
+    return true;
+  },
+
   setPlayerName: (name) => set({ playerName: name }),
 
   loadFromStorage: async () => {
@@ -300,6 +319,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
         equippedPet: saved.equippedPet ?? null,
         ownedPets: saved.ownedPets ?? [],
         claimedStarterPack: (saved as any).claimedStarterPack ?? false,
+        lastShopCoinCollect: (saved as any).lastShopCoinCollect ?? null,
       });
     }
   },
@@ -372,5 +392,6 @@ useShopStore.subscribe((state) => {
     equippedPet: state.equippedPet,
     ownedPets: state.ownedPets,
     claimedStarterPack: state.claimedStarterPack,
+    lastShopCoinCollect: state.lastShopCoinCollect,
   });
 });
