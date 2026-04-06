@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
 import { useAchievementStore } from '../stores/achievementStore';
-import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, EMOTES, RARITY_COLORS } from '../data/shopCatalog';
+import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, EMOTES, RARITY_COLORS, RARITY_LABELS } from '../data/shopCatalog';
 import { PETS, PET_RARITY_COLORS } from '../data/pets';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -115,6 +115,19 @@ export function CollectionScreen() {
   const totalAvailable = categories.reduce((sum, cat) => sum + cat.items.length, 0);
   const overallPct = totalAvailable > 0 ? Math.round((totalOwned / totalAvailable) * 100) : 0;
 
+  // Rarity distribution — count owned vs total per rarity tier across all categories
+  const rarityDistribution = useMemo(() => {
+    const allItems = categories.flatMap(cat => cat.items);
+    const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'darkmatter'];
+    return rarities
+      .map(rarity => {
+        const total = allItems.filter(i => i.rarity === rarity).length;
+        const ownedCount = allItems.filter(i => i.rarity === rarity && i.owned).length;
+        return { rarity, owned: ownedCount, total };
+      })
+      .filter(r => r.total > 0); // only show tiers that have items
+  }, [categories]);
+
   const toggleSection = (key: string) => {
     haptics.tap();
     setExpandedSection(prev => (prev === key ? null : key));
@@ -142,6 +155,31 @@ export function CollectionScreen() {
           />
         </View>
         <Text style={styles.progressPct}>{overallPct}% Complete</Text>
+
+        {/* Rarity Distribution */}
+        <View style={styles.rarityCard}>
+          <Text style={styles.raritySectionTitle}>RARITY BREAKDOWN</Text>
+          {rarityDistribution.map(r => {
+            const rarityColor = RARITY_COLORS[r.rarity] || '#8892b0';
+            const label = RARITY_LABELS[r.rarity] || r.rarity;
+            const pct = r.total > 0 ? Math.round((r.owned / r.total) * 100) : 0;
+            return (
+              <View key={r.rarity} style={styles.rarityRow}>
+                <View style={[styles.rarityDot, { backgroundColor: rarityColor }]} />
+                <Text style={[styles.rarityLabel, { color: rarityColor }]}>{label}</Text>
+                <View style={styles.rarityBarOuter}>
+                  <View
+                    style={[
+                      styles.rarityBarFill,
+                      { width: `${Math.max(pct, 4)}%`, backgroundColor: rarityColor },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.rarityCount, { color: rarityColor }]}>{r.owned}/{r.total}</Text>
+              </View>
+            );
+          })}
+        </View>
 
         {/* Category sections */}
         {categories.map(cat => {
@@ -401,6 +439,61 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.2)',
   },
+  // Rarity Distribution
+  rarityCard: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  raritySectionTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.textSecondary,
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  rarityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  rarityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  rarityLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    width: 80,
+  },
+  rarityBarOuter: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  rarityBarFill: {
+    height: '100%',
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  rarityCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    width: 40,
+    textAlign: 'right',
+  },
+
   footer: {
     marginHorizontal: 24,
     marginTop: 16,

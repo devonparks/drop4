@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +15,7 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useRankedStore } from '../stores/rankedStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { COIN_REWARDS } from '../engine/constants';
 import { playSound } from '../services/audio';
@@ -129,6 +130,7 @@ export function HomeScreen() {
   const challenges = useChallengeStore(s => s.challenges);
   const careerCompletedCount = useCareerStore(s => s.getCompletedCount)();
   const canSpin = useDailySpinStore(s => s.canSpin);
+  const currentSeason = useRankedStore(s => s.currentSeason);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
@@ -151,6 +153,14 @@ export function HomeScreen() {
         return sum + (COIN_REWARDS[diff] || 0);
       }, 0);
   })();
+
+  // ═══ Season Countdown (~30 day seasons) ═══
+  const seasonDaysRemaining = useMemo(() => {
+    const seasonLengthDays = 30;
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const dayInSeason = dayOfYear % seasonLengthDays;
+    return Math.max(seasonLengthDays - dayInSeason, 1);
+  }, []);
 
   // ═══ Pet tap interaction ═══
   const petBounce = useRef(new Animated.Value(1)).current;
@@ -373,6 +383,9 @@ export function HomeScreen() {
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
           <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
+          <Text style={styles.seasonCountdown}>
+            Season {currentSeason}: {seasonDaysRemaining} day{seasonDaysRemaining !== 1 ? 's' : ''} remaining
+          </Text>
         </View>
 
         {/* Season & Challenges moved to tab bar — more room for character */}
@@ -731,6 +744,14 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(255,140,0,0.7)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 25,
+  },
+  seasonCountdown: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(155,89,182,0.7)',
+    letterSpacing: 0.5,
+    marginTop: 2,
   },
   logoSubRow: {
     flexDirection: 'row',

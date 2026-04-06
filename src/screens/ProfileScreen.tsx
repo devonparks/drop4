@@ -12,6 +12,9 @@ import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
+import { useChallengeStore } from '../stores/challengeStore';
+import { useDailyRewardStore } from '../stores/dailyRewardStore';
+import { useDailySpinStore } from '../stores/dailySpinStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
@@ -61,8 +64,26 @@ export function ProfileScreen() {
   const tier = useRankedStore(s => s.tier);
   const seasonHistory = useRankedStore(s => s.seasonHistory);
 
+  // Daily goals data
+  const challenges = useChallengeStore(s => s.challenges);
+  const dailyRewardLastClaim = useDailyRewardStore(s => s.lastClaimDate);
+  const canSpin = useDailySpinStore(s => s.canSpin);
+
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
+
+  // Daily goals calculations
+  const dailyGoals = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    const gamesToday = allMatches.filter(m => m.timestamp >= todayMs).length;
+    const completedChallenges = challenges.filter(c => c.completed).length;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const rewardClaimed = dailyRewardLastClaim === todayStr;
+    const spinUsed = !canSpin();
+    return { gamesToday, completedChallenges, rewardClaimed, spinUsed };
+  }, [allMatches, challenges, dailyRewardLastClaim, canSpin]);
 
   // Coin milestone
   const milestoneInfo = useMemo(() => getCoinMilestoneInfo(coins), [coins]);
@@ -140,6 +161,39 @@ export function ProfileScreen() {
             </View>
             <Text style={styles.nextRewardHint}>
               Next reward at Level {level + 1}
+            </Text>
+          </View>
+        </View>
+
+        {/* Daily Goals */}
+        <Text style={styles.sectionTitle}>DAILY GOALS</Text>
+        <View style={styles.dailyGoalsCard}>
+          <View style={styles.dailyGoalRow}>
+            <Text style={styles.dailyGoalIcon}>🎮</Text>
+            <Text style={styles.dailyGoalLabel}>Games played today</Text>
+            <Text style={[styles.dailyGoalValue, dailyGoals.gamesToday > 0 && { color: colors.green }]}>
+              {dailyGoals.gamesToday}
+            </Text>
+          </View>
+          <View style={styles.dailyGoalRow}>
+            <Text style={styles.dailyGoalIcon}>🎯</Text>
+            <Text style={styles.dailyGoalLabel}>Challenges completed</Text>
+            <Text style={[styles.dailyGoalValue, dailyGoals.completedChallenges >= 3 && { color: colors.green }]}>
+              {dailyGoals.completedChallenges}/3
+            </Text>
+          </View>
+          <View style={styles.dailyGoalRow}>
+            <Text style={styles.dailyGoalIcon}>🎁</Text>
+            <Text style={styles.dailyGoalLabel}>Daily reward claimed</Text>
+            <Text style={[styles.dailyGoalCheck, dailyGoals.rewardClaimed && { color: colors.green }]}>
+              {dailyGoals.rewardClaimed ? '✅' : '❌'}
+            </Text>
+          </View>
+          <View style={[styles.dailyGoalRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.dailyGoalIcon}>🎰</Text>
+            <Text style={styles.dailyGoalLabel}>Daily spin used</Text>
+            <Text style={[styles.dailyGoalCheck, dailyGoals.spinUsed && { color: colors.green }]}>
+              {dailyGoals.spinUsed ? '✅' : '❌'}
             </Text>
           </View>
         </View>
@@ -782,6 +836,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.coinGold,
     textAlign: 'center',
+  },
+
+  // Daily Goals
+  dailyGoalsCard: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(100,180,255,0.06)',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(100,180,255,0.15)',
+  },
+  dailyGoalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  dailyGoalIcon: {
+    fontSize: 16,
+  },
+  dailyGoalLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    color: '#ffffff',
+    flex: 1,
+  },
+  dailyGoalValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
+  dailyGoalCheck: {
+    fontSize: 16,
   },
 
   // Recent Activity
