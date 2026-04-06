@@ -108,10 +108,9 @@ function generateWeeklyLeaderboard(playerWins: number, playerLevel: number, play
     };
   });
 
-  const weeklyWins = Math.min(playerWins, Math.floor(rand() * 10) + 2);
   entries.push({
-    rank: 0, name: 'You', wins: weeklyWins,
-    winRate: weeklyWins > 0 ? Math.floor(rand() * 30) + 45 : 0,
+    rank: 0, name: 'You', wins: playerWins,
+    winRate: playerWins > 0 ? Math.floor(rand() * 30) + 45 : 0,
     level: playerLevel, elo: playerElo, isPlayer: true,
     streak: 0, favDifficulty: 'Easy',
   });
@@ -179,7 +178,11 @@ export function LeaderboardScreen() {
     const totalGames = matches.length;
     const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
     const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
-    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const weeklyWins = matches.filter(m => m.timestamp >= startOfWeek.getTime() && m.result === 'win').length;
+    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, weeklyWins };
   }, [matches]);
   const playerStreak = useMemo(() => getCurrentStreak(), [matches]);
   const playerFavDiff = useMemo(() => getFavoriteDifficulty(), [matches]);
@@ -195,7 +198,7 @@ export function LeaderboardScreen() {
     return entries;
   };
   const globalData = useMemo(() => patchPlayer(generateGlobalLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
-  const weeklyData = useMemo(() => patchPlayer(generateWeeklyLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
+  const weeklyData = useMemo(() => patchPlayer(generateWeeklyLeaderboard(stats.weeklyWins, level, rankedElo)), [stats.weeklyWins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
   const friendsData = useMemo(() => patchPlayer(generateFriendsLeaderboard(stats.wins, level, rankedElo)), [stats.wins, stats.winRate, level, rankedElo, playerStreak, playerFavDiff]);
 
   const rawData = activeTab === 'global' ? globalData
@@ -205,8 +208,8 @@ export function LeaderboardScreen() {
   // Re-sort by ELO if needed, otherwise keep wins-based order
   const leaderboard = useMemo(() => {
     if (sortMode === 'elo') {
-      const sorted = [...rawData].sort((a, b) => b.elo - a.elo);
-      sorted.forEach((e, i) => e.rank = i + 1);
+      const sorted = rawData.map(e => ({ ...e })).sort((a, b) => b.elo - a.elo);
+      sorted.forEach((e, i) => { e.rank = i + 1; });
       return sorted;
     }
     return rawData;
