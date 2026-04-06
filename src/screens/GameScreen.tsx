@@ -30,10 +30,9 @@ import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
 import { listenToMatch, makeMove, resignMatch, requestRematch, listenForRematch, acceptRematch } from '../services/matchmaking';
-import type { RematchRequest } from '../services/matchmaking';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
-import { getRandomTip } from '../data/tips';
+import { getRandomGameOverQuote } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
@@ -121,6 +120,7 @@ export function GameScreen({ navigation }: Props) {
   const [coinTooltipVisible, setCoinTooltipVisible] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
+  const [gameOverQuote, setGameOverQuote] = useState('');
 
   // Show tutorial on first game
   useEffect(() => {
@@ -586,6 +586,11 @@ export function GameScreen({ navigation }: Props) {
     // Local multiplayer challenge
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current && params.localPlayerNames) {
       updateChallenge('play_local', 1);
+    }
+    // Set game-over motivational quote
+    if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
+      const quoteResult: 'win' | 'loss' | 'draw' = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
+      setGameOverQuote(getRandomGameOverQuote(quoteResult));
     }
     // Save replay on game end
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
@@ -1593,14 +1598,10 @@ export function GameScreen({ navigation }: Props) {
                 </View>
               )}
 
-              {/* Chat bubble — "Good game!" feel */}
+              {/* Motivational quote */}
               <View style={styles.goChatBubble}>
                 <Text style={styles.goChatText}>
-                  {status === 'won' && winner === 1
-                    ? (didLevelUp ? 'Level up! Keep it going!' : 'Good game!')
-                    : status === 'won' && winner === 2
-                    ? (streakBrokenAt !== null ? `Streak broken at ${streakBrokenAt}! Start a new one!` : 'Better luck next time!')
-                    : 'Well played!'}
+                  {gameOverQuote || 'Good game!'}
                 </Text>
               </View>
 

@@ -22,3 +22,45 @@ export const LOADING_TIPS: string[] = [
 export function getRandomTip(): string {
   return LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
 }
+
+// Game-over quotes shown in the results modal
+export const GAME_OVER_WIN_QUOTES: string[] = [
+  'The center column is key to victory!',
+  'Every master was once a beginner.',
+  'Your pet is proud of you! 🐕',
+  'That was close! One more move could have changed everything.',
+  'Victory looks good on you! 🏆',
+  'A well-earned win — your strategy paid off!',
+  'Keep that streak alive! 🔥',
+  'Champions play one more. Ready for a rematch?',
+  'Dominant performance! Your opponent never stood a chance.',
+  'Pro tip: diagonal traps are the hardest to spot!',
+];
+
+export const GAME_OVER_LOSS_QUOTES: string[] = [
+  'Every loss is a lesson. You\'ll get them next time!',
+  'The best players learn more from losses than wins.',
+  'That was close! One more move could have changed everything.',
+  'Watch for double traps — they\'re the key to leveling up.',
+  'Shake it off and go again! 💪',
+  'Even the pros lose sometimes. Rematch?',
+  'Try controlling the center column next round!',
+  'Tip: always check for your opponent\'s three-in-a-row first.',
+];
+
+export const GAME_OVER_DRAW_QUOTES: string[] = [
+  'Well played! A draw means you were evenly matched.',
+  'Nobody wins, nobody loses — a true battle of equals!',
+  'So close! One move could have swung it either way.',
+  'A draw is just a rematch waiting to happen!',
+  'Great defense from both sides! 🛡️',
+];
+
+export function getRandomGameOverQuote(result: 'win' | 'loss' | 'draw'): string {
+  const quotes = result === 'win'
+    ? GAME_OVER_WIN_QUOTES
+    : result === 'loss'
+    ? GAME_OVER_LOSS_QUOTES
+    : GAME_OVER_DRAW_QUOTES;
+  return quotes[Math.floor(Math.random() * quotes.length)];
+}
