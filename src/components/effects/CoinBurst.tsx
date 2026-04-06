@@ -7,10 +7,11 @@ interface CoinParticleProps {
   delay: number;
   angle: number;
   speed: number;
+  bigWin?: boolean;
   onDone?: () => void;
 }
 
-function CoinParticle({ delay, angle, speed, onDone }: CoinParticleProps) {
+function CoinParticle({ delay, angle, speed, bigWin, onDone }: CoinParticleProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -20,6 +21,7 @@ function CoinParticle({ delay, angle, speed, onDone }: CoinParticleProps) {
   useEffect(() => {
     const vx = Math.cos(angle) * speed;
     const vy = -Math.abs(Math.sin(angle)) * speed; // Always goes up initially
+    const dm = bigWin ? 1.5 : 1; // Duration multiplier for big wins
 
     Animated.sequence([
       Animated.delay(delay),
@@ -27,19 +29,19 @@ function CoinParticle({ delay, angle, speed, onDone }: CoinParticleProps) {
         // Fade in quickly
         Animated.timing(opacity, { toValue: 1, duration: 80, useNativeDriver: true }),
         // Scale up
-        Animated.spring(scale, { toValue: 1, speed: 40, bounciness: 8, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: bigWin ? 1.2 : 1, speed: 40, bounciness: bigWin ? 12 : 8, useNativeDriver: true }),
         // Horizontal drift
-        Animated.timing(translateX, { toValue: vx * 1.2, duration: 700, useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: vx * 1.2, duration: 700 * dm, useNativeDriver: true }),
         // Vertical: go up then come down (gravity curve)
         Animated.sequence([
-          Animated.timing(translateY, { toValue: vy * 0.8, duration: 350, useNativeDriver: true }),
-          Animated.timing(translateY, { toValue: vy * 0.8 + 60, duration: 450, useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: vy * 0.8, duration: 350 * dm, useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: vy * 0.8 + (bigWin ? 90 : 60), duration: 450 * dm, useNativeDriver: true }),
         ]),
         // Spin
-        Animated.timing(rotation, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(rotation, { toValue: 1, duration: 700 * dm, useNativeDriver: true }),
       ]),
       // Fade out
-      Animated.timing(opacity, { toValue: 0, duration: 100, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: bigWin ? 200 : 100, useNativeDriver: true }),
     ]).start(() => onDone?.());
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,12 +76,15 @@ interface CoinBurstProps {
 export function CoinBurst({ visible, amount, onDone }: CoinBurstProps) {
   if (!visible) return null;
 
-  const coinCount = Math.min(Math.max(3, Math.ceil(amount / 20)), 5);
+  const isBigWin = amount >= 100;
+  const coinCount = isBigWin
+    ? Math.min(Math.max(8, Math.ceil(amount / 30)), 12)
+    : Math.min(Math.max(3, Math.ceil(amount / 20)), 5);
   const particles = Array.from({ length: coinCount }, (_, i) => ({
     id: i,
-    delay: i * 60,
-    angle: -Math.PI / 2 + (Math.random() - 0.5) * 1.8, // Spread upward
-    speed: 40 + Math.random() * 50,
+    delay: isBigWin ? i * 40 : i * 60, // Faster cascade for big wins
+    angle: -Math.PI / 2 + (Math.random() - 0.5) * (isBigWin ? 2.4 : 1.8), // Wider spread
+    speed: isBigWin ? 50 + Math.random() * 70 : 40 + Math.random() * 50, // More energetic
   }));
 
   let doneCount = 0;
@@ -98,6 +103,7 @@ export function CoinBurst({ visible, amount, onDone }: CoinBurstProps) {
           delay={p.delay}
           angle={p.angle}
           speed={p.speed}
+          bigWin={isBigWin}
           onDone={handleParticleDone}
         />
       ))}

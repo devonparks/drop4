@@ -104,6 +104,7 @@ export function GameScreen({ navigation }: Props) {
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
+  const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
   const preLevelRef = useRef(useShopStore.getState().level);
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
@@ -125,6 +126,14 @@ export function GameScreen({ navigation }: Props) {
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
   const [isFirstWinOfDay, setIsFirstWinOfDay] = useState(false);
+
+  // Win celebration variety
+  const [celebrationText, setCelebrationText] = useState<string | null>(null);
+
+  // AI personality hints
+  const [aiPersonalityText, setAiPersonalityText] = useState<string | null>(null);
+  const aiPersonalityFade = useRef(new RNAnimated.Value(0)).current;
+  const aiPersonalityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // First-game encouragement
   const [showFirstGameMsg, setShowFirstGameMsg] = useState(false);
@@ -441,6 +450,28 @@ export function GameScreen({ navigation }: Props) {
   const [, setSeriesGame] = useState(1);
   const totalGames = 3;
 
+  // AI personality phrases by difficulty
+  const AI_PERSONALITY: Record<string, string[]> = {
+    easy: ['Hmm, where should I go?', 'I like this column!', 'This looks fun!', 'Here I go!', 'Ooh, what about here?'],
+    medium: ['Interesting move...', 'I see what you\'re doing...', 'Let me think...', 'Not bad!', 'Watch this!'],
+    hard: ['Is that your best move?', 'You can\'t beat me.', 'Too predictable.', 'I\'m always one step ahead.', 'Nice try.'],
+  };
+
+  const showAiPersonality = useCallback(() => {
+    if (Math.random() > 0.4) return; // ~40% chance to show
+    const phrases = AI_PERSONALITY[difficulty] || AI_PERSONALITY.easy;
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    setAiPersonalityText(phrase);
+    aiPersonalityFade.setValue(0);
+    RNAnimated.timing(aiPersonalityFade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    if (aiPersonalityTimerRef.current) clearTimeout(aiPersonalityTimerRef.current);
+    aiPersonalityTimerRef.current = setTimeout(() => {
+      RNAnimated.timing(aiPersonalityFade, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
+        setAiPersonalityText(null);
+      });
+    }, 1500);
+  }, [difficulty]);
+
   // AI move logic — fixed: no dependency on isAiThinking
   // Skip AI entirely for online matches (opponent is a real player)
   useEffect(() => {
@@ -465,6 +496,7 @@ export function GameScreen({ navigation }: Props) {
       haptics.tap(); // Lighter haptic for AI moves
       playSound('drop');
       setAiThinking(false);
+      showAiPersonality();
     }, thinkTime);
 
     return () => {
@@ -614,8 +646,29 @@ export function GameScreen({ navigation }: Props) {
         addLootBox('gold_box');
         setStreakReward({ coins: 5000, lootBox: 'Gold', milestone: 15 });
       }
+      // Compute total coins for CoinBurst intensity
+      let coinTotal = totalReward;
+      if (wagerCourt && wagerCourt.winnerGets > 0) coinTotal += wagerCourt.winnerGets;
+      if (currentStreak === 3) coinTotal += 50;
+      else if (currentStreak === 5) coinTotal += 200;
+      else if (currentStreak === 10) coinTotal += 1000;
+      else if (currentStreak === 15) coinTotal += 5000;
+      setTotalCoinsEarned(coinTotal);
       setShowConfetti(true);
       setShowCoinBurst(true);
+      // Win celebration variety
+      const playerMoveCount = Math.ceil(moveCount / 2);
+      const careerStars = params.careerLevelId ? (moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1) : 0;
+      const wasLosingInSeries = scores.player2 > scores.player1;
+      if (playerMoveCount <= 8) {
+        setCelebrationText('LIGHTNING WIN! \u26A1');
+      } else if (wasLosingInSeries) {
+        setCelebrationText('COMEBACK! \uD83D\uDD25');
+      } else if (careerStars === 3) {
+        setCelebrationText('PERFECT! \u2B50\u2B50\u2B50');
+      } else {
+        setCelebrationText('VICTORY! \uD83C\uDF89');
+      }
       haptics.win();
       haptics.coinEarn();
       playSound('win');
@@ -839,8 +892,8 @@ export function GameScreen({ navigation }: Props) {
       : (currentPlayer === 1 ? (p1Name === 'You' ? 'Your Turn' : `${p1Name}'s Turn`) : `${p2Name}'s Turn`))
     : status === 'won'
     ? (isOnlineMatch
-      ? (winner === myPlayerNum ? 'You Win!' : `${p2Name} Wins!`)
-      : (winner === 1 ? (p1Name === 'You' ? 'You Win!' : `${p1Name} Wins!`) : `${p2Name} Wins!`))
+      ? (winner === myPlayerNum ? (celebrationText || 'You Win!') : `${p2Name} Wins!`)
+      : (winner === 1 ? (p1Name === 'You' ? (celebrationText || 'You Win!') : `${p1Name} Wins!`) : `${p2Name} Wins!`))
     : 'Draw!';
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
@@ -923,10 +976,11 @@ export function GameScreen({ navigation }: Props) {
     }, delay);
   };
 
-  // Cleanup AI emote timer on unmount
+  // Cleanup AI emote timer + personality timer on unmount
   useEffect(() => {
     return () => {
       if (aiEmoteTimerRef.current) clearTimeout(aiEmoteTimerRef.current);
+      if (aiPersonalityTimerRef.current) clearTimeout(aiPersonalityTimerRef.current);
     };
   }, []);
 
@@ -1030,6 +1084,11 @@ export function GameScreen({ navigation }: Props) {
               <Text style={styles.thinkingDots}>
                 {'.'.repeat(thinkingDots)}
               </Text>
+            )}
+            {aiPersonalityText && isVsAi && !isAiThinking && (
+              <RNAnimated.View style={[styles.aiPersonalityBubble, { opacity: aiPersonalityFade }]}>
+                <Text style={styles.aiPersonalityText}>{aiPersonalityText}</Text>
+              </RNAnimated.View>
             )}
           </View>
         </View>
@@ -1367,13 +1426,19 @@ export function GameScreen({ navigation }: Props) {
         {/* Coin burst on win */}
         <CoinBurst
           visible={showCoinBurst}
-          amount={COIN_REWARDS[difficulty]}
+          amount={totalCoinsEarned || COIN_REWARDS[difficulty]}
           onDone={() => setShowCoinBurst(false)}
         />
 
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
+            {/* Win celebration variety banner */}
+            {celebrationText && status === 'won' && winner === 1 && !showFirstWin && (
+              <Animated.View entering={FadeIn.duration(400)} style={styles.celebrationBanner} pointerEvents="none">
+                <Text style={styles.celebrationText}>{celebrationText}</Text>
+              </Animated.View>
+            )}
             {/* First Win golden banner */}
             {showFirstWin && (
               <RNAnimated.View style={[styles.firstWinBanner, { opacity: firstWinOpacity }]} pointerEvents="none">
@@ -2157,6 +2222,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
+  aiPersonalityBubble: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 4,
+    maxWidth: 130,
+    alignSelf: 'flex-end',
+  },
+  aiPersonalityText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: colors.pieceYellow,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
   hintArrowRow: {
     alignSelf: 'center',
     height: 22,
@@ -2296,6 +2380,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  celebrationBanner: {
+    position: 'absolute',
+    top: '8%',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(46,204,113,0.15)',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(46,204,113,0.5)',
+    zIndex: 200,
+    shadowColor: 'rgba(46,204,113,0.8)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 30,
+  },
+  celebrationText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 24,
+    color: '#2ecc71',
+    letterSpacing: 3,
+    textShadowColor: 'rgba(46,204,113,0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
+    textAlign: 'center',
   },
   firstWinBanner: {
     position: 'absolute',
