@@ -73,9 +73,11 @@ export function ProfileScreen() {
   const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
 
   // Use lifetime match history for accurate stats (not session scores which reset on local play)
-  const totalGames = allMatches.length;
-  const lifetimeWins = allMatches.filter(m => m.result === 'win').length;
-  const winRate = totalGames > 0 ? Math.round((lifetimeWins / totalGames) * 100) : 0;
+  const { totalGames, lifetimeWins, winRate } = useMemo(() => {
+    const total = allMatches.length;
+    const wins = allMatches.filter(m => m.result === 'win').length;
+    return { totalGames: total, lifetimeWins: wins, winRate: total > 0 ? Math.round((wins / total) * 100) : 0 };
+  }, [allMatches]);
 
   // Daily goals calculations
   const dailyGoals = useMemo(() => {
