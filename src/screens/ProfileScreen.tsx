@@ -54,6 +54,7 @@ export function ProfileScreen() {
   const equipped = useShopStore(s => s.equipped);
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
+  const setEquippedCustomTitle = useShopStore(s => s.setEquippedCustomTitle);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
@@ -114,7 +115,8 @@ export function ProfileScreen() {
   const handleShareProfile = async () => {
     haptics.tap();
     const playerName = useShopStore.getState().playerName;
-    const title = getPlayerTitle(level, tier, coins);
+    const computedTitle = getPlayerTitle(level, tier, coins);
+    const title = equippedCustomTitle ?? computedTitle;
     const tierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
     const petName = equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None';
     const card = [
@@ -371,18 +373,49 @@ export function ProfileScreen() {
         })()}
 
         <View style={styles.achievementsList}>
-          {achievements.map((ach) => (
-            <View key={ach.id} style={[styles.achievementRow, ach.unlocked && styles.achievementDone]}>
-              <Text style={styles.achievementIcon}>{ach.icon}</Text>
-              <View style={styles.achievementInfo}>
-                <Text style={[styles.achievementName, ach.unlocked && { color: colors.coinGold }]}>
-                  {ach.name}
-                </Text>
-                <Text style={styles.achievementDesc}>{ach.description}</Text>
+          {achievements.map((ach) => {
+            const hasTitle = ach.reward.type === 'title' && typeof ach.reward.value === 'string';
+            const isActiveTitle = hasTitle && equippedCustomTitle === ach.reward.value;
+            return (
+              <View key={ach.id} style={[styles.achievementRow, ach.unlocked && styles.achievementDone]}>
+                <Text style={styles.achievementIcon}>{ach.icon}</Text>
+                <View style={styles.achievementInfo}>
+                  <Text style={[styles.achievementName, ach.unlocked && { color: colors.coinGold }]}>
+                    {ach.name}
+                  </Text>
+                  <Text style={styles.achievementDesc}>{ach.description}</Text>
+                  {hasTitle && !ach.unlocked && (
+                    <Text style={[styles.achievementDesc, { color: colors.textMuted, fontStyle: 'italic' }]}>
+                      Unlocks title: "{ach.reward.value as string}"
+                    </Text>
+                  )}
+                </View>
+                {ach.unlocked && hasTitle ? (
+                  <Pressable
+                    onPress={() => {
+                      if (isActiveTitle) {
+                        setEquippedCustomTitle(null);
+                        haptics.select();
+                      } else {
+                        setEquippedCustomTitle(ach.reward.value as string);
+                        haptics.win();
+                      }
+                    }}
+                    style={[
+                      styles.titleChip,
+                      isActiveTitle && styles.titleChipActive,
+                    ]}
+                  >
+                    <Text style={[styles.titleChipText, isActiveTitle && { color: '#1a1a00' }]}>
+                      {isActiveTitle ? '✓ ACTIVE' : 'USE TITLE'}
+                    </Text>
+                  </Pressable>
+                ) : ach.unlocked ? (
+                  <Text style={styles.checkmark}>✓</Text>
+                ) : null}
               </View>
-              {ach.unlocked && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Ranked Progress */}
@@ -802,6 +835,25 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 18,
     color: colors.green,
+  },
+  titleChip: {
+    backgroundColor: 'rgba(241,196,15,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.4)',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  titleChipActive: {
+    backgroundColor: colors.coinGold,
+    borderColor: colors.coinGold,
+  },
+  titleChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.coinGold,
+    letterSpacing: 0.5,
   },
   quickActions: {
     flexDirection: 'row',
