@@ -282,8 +282,8 @@ export function SettingsScreen({ navigation }: Props) {
                       rankedWins: 0, rankedLosses: 0, rankedGames: 0,
                       seasonHighElo: 500, currentSeason: 0, seasonHistory: [],
                     });
-                    // Game scores
-                    useGameStore.getState().resetScores();
+                    // Game scores + streaks
+                    useGameStore.setState({ scores: { player1: 0, player2: 0 }, winStreak: 0, bestStreak: 0 });
                     // Career progress
                     useCareerStore.setState({ progress: {}, currentChapter: 1 });
                     // Achievements
@@ -306,8 +306,8 @@ export function SettingsScreen({ navigation }: Props) {
                     useChallengeStore.getState().refreshChallenges();
                     // Daily spin
                     useDailySpinStore.setState({ lastSpinDate: '' });
-                    // Tutorial tips
-                    useTutorialStore.setState({ seenTips: [] });
+                    // Tutorial tips + lesson mastery
+                    useTutorialStore.setState({ seenTips: [], completionAwarded: false, viewedLessons: [] });
 
                     haptics.tap();
                   },
