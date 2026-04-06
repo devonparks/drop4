@@ -118,6 +118,23 @@ function BundleCard({ icon, amount, bonus, price, color, onPress }: {
   );
 }
 
+// ─── Unlock Requirements for earn-only items ─────────────────────
+const UNLOCK_REQUIREMENTS: Record<string, string> = {
+  // Board themes
+  darkmatter: 'Reach Dark Matter rank',
+  // Piece themes
+  damascus: 'Complete Career Mode',
+  // Drop effects
+  darkmatter_drop: 'Reach Dark Matter rank',
+  darkmatter_trail: 'Reach Dark Matter rank',
+  // Win animations
+  darkmatter_win: 'Reach Dark Matter rank',
+  // Board accessories
+  darkmatter_frame: 'Reach Dark Matter rank',
+  // Emotes
+  griddy: 'Reach Dark Matter rank',
+};
+
 // ─── Shop Item Card (existing, improved) ───────────────────────
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }: {
   item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number; playerCoins: number;
@@ -128,6 +145,7 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
   const coinsNeeded = item.price - playerCoins;
   // Average ~50 coins per game (medium difficulty)
   const gamesNeeded = Math.ceil(coinsNeeded / 50);
+  const unlockReq = UNLOCK_REQUIREMENTS[item.id];
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -164,7 +182,12 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
         ) : isOwned ? (
           <Text style={s.ownedText}>Tap to Equip</Text>
         ) : isDarkMatter || (item.price === 0 && item.rarity === 'mythic') ? (
-          <Text style={[s.lockedText, { color: rarityColor }]}>Earn Only</Text>
+          <>
+            <Text style={[s.lockedText, { color: rarityColor }]}>Earn Only</Text>
+            {unlockReq && (
+              <Text style={s.unlockReqText} numberOfLines={2}>{unlockReq}</Text>
+            )}
+          </>
         ) : (
           <>
             <View style={s.priceRow}>
@@ -742,6 +765,11 @@ const s = StyleSheet.create({
   lockedText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
     textAlign: 'center', marginTop: 4, textTransform: 'uppercase',
+  },
+  unlockReqText: {
+    fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 8,
+    textAlign: 'center', marginTop: 2, color: 'rgba(200,220,255,0.4)',
+    lineHeight: 11, paddingHorizontal: 4,
   },
 
   // ── Pet cards ──

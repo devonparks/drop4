@@ -72,6 +72,8 @@ export type GameParams = {
   onlineMatchId?: string;
   onlinePlayerNum?: 1 | 2;
   onlineOpponentName?: string;
+  // Game speed (private match)
+  gameSpeed?: 'normal' | 'fast' | 'instant';
 };
 
 export type RootStackParamList = {

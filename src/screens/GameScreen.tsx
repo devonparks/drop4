@@ -122,6 +122,7 @@ export function GameScreen({ navigation }: Props) {
   const [shareCopied, setShareCopied] = useState(false);
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
+  const [isFirstWinOfDay, setIsFirstWinOfDay] = useState(false);
 
   // First-game encouragement
   const [showFirstGameMsg, setShowFirstGameMsg] = useState(false);
@@ -440,9 +441,9 @@ export function GameScreen({ navigation }: Props) {
     if (aiTimerRef.current) return;
 
     setAiThinking(true);
-    const thinkTime = AI_THINK_DELAY[difficulty];
-    // Play thinking voice after a short delay so it feels natural
-
+    const baseThinkTime = AI_THINK_DELAY[difficulty];
+    const speedParam = params.gameSpeed || 'normal';
+    const thinkTime = speedParam === 'instant' ? 50 : speedParam === 'fast' ? Math.round(baseThinkTime * 0.3) : baseThinkTime;
 
     aiTimerRef.current = setTimeout(() => {
       aiTimerRef.current = null;
@@ -483,7 +484,16 @@ export function GameScreen({ navigation }: Props) {
       const dailyMultiplier = getStreakMultiplier();
       const totalReward = Math.round((reward + streakBonus) * dailyMultiplier);
       addCoins(totalReward);
-      addXp(reward);
+      // First Win of the Day — 2x XP if no wins yet today
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const winsToday = useMatchHistoryStore.getState().matches.filter(
+        m => m.result === 'win' && m.timestamp >= todayStart.getTime()
+      );
+      const isFirstToday = winsToday.length === 0;
+      const xpAmount = isFirstToday ? reward * 2 : reward;
+      addXp(xpAmount);
+      if (isFirstToday) setIsFirstWinOfDay(true);
       // Detect level-up
       const newLevel = useShopStore.getState().level;
       if (newLevel > preLevelRef.current) {
@@ -715,6 +725,7 @@ export function GameScreen({ navigation }: Props) {
     setStreakBrokenAt(null);
     setDailyStreakMultiplier(1);
     setDoubleCoinsUsed(false);
+    setIsFirstWinOfDay(false);
     newGame(difficulty, isVsAi);
   };
 
@@ -1446,6 +1457,39 @@ export function GameScreen({ navigation }: Props) {
                 </View>
               </View>
 
+              {/* ---- Replay Highlight: Winning Move ---- */}
+              {status === 'won' && (() => {
+                const replayMoves = useReplayStore.getState().currentMoves;
+                const lastMove = replayMoves.length > 0 ? replayMoves[replayMoves.length - 1] : null;
+                if (!lastMove) return null;
+                const winnerIsPlayer = winner === 1;
+                const moveLabel = winnerIsPlayer ? 'Your winning move' : `${p2Name} won with`;
+                const moveIcon = winnerIsPlayer ? '\uD83C\uDFAF' : '\uD83D\uDCA1';
+                return (
+                  <View style={styles.goReplayHighlight}>
+                    <Text style={styles.goReplayIcon}>{moveIcon}</Text>
+                    <View style={styles.goReplayTextWrap}>
+                      <Text style={[styles.goReplayLabel, !winnerIsPlayer && { color: colors.textSecondary }]}>{moveLabel}</Text>
+                      <Text style={[styles.goReplayValue, !winnerIsPlayer && { color: colors.textSecondary }]}>
+                        Column {lastMove.col + 1}, Move {Math.ceil((lastMove.moveNumber + 1) / 2)}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
+              {/* First Win of the Day banner */}
+              {isFirstWinOfDay && status === 'won' && winner === 1 && (
+                <View style={styles.goFirstWinDay}>
+                  <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
+                  <View style={styles.goFirstWinDayTextWrap}>
+                    <Text style={styles.goFirstWinDayTitle}>FIRST WIN OF THE DAY!</Text>
+                    <Text style={styles.goFirstWinDaySub}>2x XP earned this game</Text>
+                  </View>
+                  <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
+                </View>
+              )}
+
               {/* ---- Rewards section ---- */}
               <View style={styles.goRewardsBlock}>
                 {/* Coin tooltip */}
@@ -1516,10 +1560,10 @@ export function GameScreen({ navigation }: Props) {
                 )}
                 {/* XP earned */}
                 {status === 'won' && winner === 1 && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.3)' }]}>
-                    <Text style={styles.goRewardIcon}>⭐</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.purple }]}>+{COIN_REWARDS[difficulty]}</Text>
-                    <Text style={styles.goRewardDesc}>XP</Text>
+                  <View style={[styles.goRewardChip, { borderColor: isFirstWinOfDay ? 'rgba(241,196,15,0.5)' : 'rgba(155,89,182,0.3)', backgroundColor: isFirstWinOfDay ? 'rgba(241,196,15,0.08)' : undefined }]}>
+                    <Text style={styles.goRewardIcon}>{isFirstWinOfDay ? '\u2B50' : '\u2B50'}</Text>
+                    <Text style={[styles.goRewardAmount, { color: isFirstWinOfDay ? '#f1c40f' : colors.purple }]}>+{isFirstWinOfDay ? COIN_REWARDS[difficulty] * 2 : COIN_REWARDS[difficulty]}</Text>
+                    <Text style={styles.goRewardDesc}>{isFirstWinOfDay ? 'XP (2x!)' : 'XP'}</Text>
                   </View>
                 )}
                 {/* Season XP — shown for win, loss, and draw */}
@@ -2542,6 +2586,77 @@ const styles = StyleSheet.create({
     color: 'rgba(241, 196, 15, 0.6)',
   },
   // Chat bubble
+  // Replay Highlight
+  goReplayHighlight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  goReplayIcon: {
+    fontSize: 18,
+  },
+  goReplayTextWrap: {
+    alignItems: 'flex-start',
+  },
+  goReplayLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: colors.green,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  goReplayValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  // First Win of the Day
+  goFirstWinDay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(241,196,15,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.35)',
+  },
+  goFirstWinDayIcon: {
+    fontSize: 16,
+  },
+  goFirstWinDayTextWrap: {
+    alignItems: 'center',
+  },
+  goFirstWinDayTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#f1c40f',
+    letterSpacing: 1.5,
+  },
+  goFirstWinDaySub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 10,
+    color: 'rgba(241,196,15,0.7)',
+    marginTop: 1,
+  },
   goChatBubble: {
     alignSelf: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',

@@ -126,6 +126,9 @@ export function CustomGameScreen({ navigation }: Props) {
   const [blindMode, setBlindMode] = useState(false);
   const [sniperMode, setSniperMode] = useState(false);
 
+  // ── Game Speed ──
+  const [gameSpeed, setGameSpeed] = useState<'normal' | 'fast' | 'instant'>('normal');
+
   // ── Opponent ──
   const [opponent, setOpponent] = useState('ai_medium');
 
@@ -193,7 +196,7 @@ export function CustomGameScreen({ navigation }: Props) {
       timerSeconds: timer === 'none' ? 0 : parseInt(timer) || 0,
       startingPlayer,
     });
-    navigation.navigate('Game');
+    navigation.navigate('Game', { gameSpeed: gameSpeed !== 'normal' ? gameSpeed : undefined } as any);
   };
 
   const activeModCount = [gravityFlip, randomStart, suddenDeath, blindMode, sniperMode].filter(Boolean).length;
@@ -295,6 +298,18 @@ export function CustomGameScreen({ navigation }: Props) {
                 { label: 'Best of 7', value: 'bo7' },
               ]}
               onChange={setWinCondition}
+            />
+
+            <SettingRow
+              label="Game Speed"
+              icon="⚡"
+              value={gameSpeed}
+              options={[
+                { label: 'Normal', value: 'normal' },
+                { label: 'Fast', value: 'fast' },
+                { label: 'Instant', value: 'instant' },
+              ]}
+              onChange={(val) => setGameSpeed(val as 'normal' | 'fast' | 'instant')}
             />
           </SectionCard>
 
