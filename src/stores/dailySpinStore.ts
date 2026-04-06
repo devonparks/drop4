@@ -30,15 +30,19 @@ function getTodayString(): string {
 }
 
 /** Weighted random pick — returns segment index */
-function pickWeightedSegment(): number {
-  const totalWeight = SPIN_SEGMENTS.reduce((sum, s) => sum + s.weight, 0);
+function pickWeightedSegment(weights?: number[]): number {
+  const w = weights ?? SPIN_SEGMENTS.map(s => s.weight);
+  const totalWeight = w.reduce((sum, wt) => sum + wt, 0);
   let rand = Math.random() * totalWeight;
   for (let i = 0; i < SPIN_SEGMENTS.length; i++) {
-    rand -= SPIN_SEGMENTS[i].weight;
+    rand -= w[i];
     if (rand <= 0) return i;
   }
   return 0; // fallback
 }
+
+// Golden spin has dramatically better odds — rare/epic/legendary boosted
+const GOLDEN_WEIGHTS = [3, 3, 8, 18, 12, 20, 18, 12, 6];
 
 interface DailySpinState {
   lastSpinDate: string;
@@ -46,6 +50,7 @@ interface DailySpinState {
   // Derived
   canSpin: () => boolean;
   pickReward: () => number; // returns segment index
+  pickGoldenReward: () => number; // boosted weights, for gem-purchased spin
   recordSpin: () => void;
 
   // Persistence
@@ -61,6 +66,10 @@ export const useDailySpinStore = create<DailySpinState>((set, get) => ({
 
   pickReward: () => {
     return pickWeightedSegment();
+  },
+
+  pickGoldenReward: () => {
+    return pickWeightedSegment(GOLDEN_WEIGHTS);
   },
 
   recordSpin: () => {

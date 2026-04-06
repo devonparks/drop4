@@ -8,6 +8,8 @@ import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
+
+const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
@@ -254,10 +256,14 @@ export function ShopScreen() {
   const owned = useShopStore(s2 => s2.owned);
   const equipped = useShopStore(s2 => s2.equipped);
   const equippedEmotes = useShopStore(s2 => s2.equippedEmotes);
+  const ownedEmotes = useShopStore(s2 => s2.ownedEmotes);
   const equippedPet = useShopStore(s2 => s2.equippedPet);
   const ownedPets = useShopStore(s2 => s2.ownedPets);
   const purchaseItem = useShopStore(s2 => s2.purchaseItem);
   const equipItem = useShopStore(s2 => s2.equipItem);
+  const setEquippedEmote = useShopStore(s2 => s2.setEquippedEmote);
+  const removeEquippedEmote = useShopStore(s2 => s2.removeEquippedEmote);
+  const purchaseEmote = useShopStore(s2 => s2.purchaseEmote);
   const equipPet = useShopStore(s2 => s2.equipPet);
   const purchasePet = useShopStore(s2 => s2.purchasePet);
   const addCoins = useShopStore(s2 => s2.addCoins);
@@ -289,6 +295,40 @@ export function ShopScreen() {
       const success = purchaseItem(category, item.id, item.price);
       if (success) { haptics.win(); playSound('coin'); equipItem(equipKey, item.id); }
       else { haptics.error(); }
+    }
+  };
+
+  const handleEmotePress = (item: ShopItem) => {
+    if (item.rarity === 'darkmatter') { haptics.error(); return; }
+    const isEquipped = equippedEmotes.includes(item.id);
+    const isOwned = ownedEmotes.includes(item.id) || item.price === 0;
+
+    if (isEquipped) {
+      removeEquippedEmote(item.id);
+      haptics.select();
+      return;
+    }
+
+    const equipEmote = (id: string) => {
+      // Find a slot with a non-catalog emote (base default), or use slot 0
+      const slotIdx = equippedEmotes.findIndex(e => !EMOTE_IDS.has(e) || e === '');
+      setEquippedEmote(slotIdx !== -1 ? slotIdx : 0, id);
+    };
+
+    if (isOwned) {
+      equipEmote(item.id);
+      haptics.select();
+      playSound('whoosh');
+      return;
+    }
+
+    const success = purchaseEmote(item.id, item.price);
+    if (success) {
+      haptics.win();
+      playSound('coin');
+      equipEmote(item.id);
+    } else {
+      haptics.error();
     }
   };
 
@@ -532,15 +572,21 @@ export function ShopScreen() {
                   <ShopItemCard
                     key={item.id}
                     item={item}
-                    isOwned={category === 'emotes' ? equippedEmotes.includes(item.id) : (owned[category]?.includes(item.id) ?? false)}
-                    isEquipped={category === 'emotes' ? equippedEmotes.includes(item.id) : equipped[
-                      category === 'boards' ? 'board'
-                      : category === 'pieces' ? 'pieces'
-                      : category === 'dropEffects' ? 'dropEffect'
-                      : category === 'boardAccessories' ? 'boardAccessory'
-                      : 'winAnimation'
-                    ] === item.id}
-                    onPress={() => category === 'emotes' ? undefined : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
+                    isOwned={category === 'emotes'
+                      ? (ownedEmotes.includes(item.id) || item.price === 0)
+                      : (owned[category]?.includes(item.id) ?? false)}
+                    isEquipped={category === 'emotes'
+                      ? equippedEmotes.includes(item.id)
+                      : equipped[
+                          category === 'boards' ? 'board'
+                          : category === 'pieces' ? 'pieces'
+                          : category === 'dropEffects' ? 'dropEffect'
+                          : category === 'boardAccessories' ? 'boardAccessory'
+                          : 'winAnimation'
+                        ] === item.id}
+                    onPress={() => category === 'emotes'
+                      ? handleEmotePress(item)
+                      : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
                     index={i}
                     playerCoins={coins}
                   />

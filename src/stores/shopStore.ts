@@ -65,6 +65,7 @@ interface ShopState {
 
   // Emote wheel — 6 equipped emote slots
   equippedEmotes: string[];
+  ownedEmotes: string[];
 
   // Equipped idle variant (null = base idle with random variants)
   equippedIdle: string | null;
@@ -89,6 +90,8 @@ interface ShopState {
   purchaseItem: (category: keyof ShopState['owned'], itemId: string, cost: number) => boolean;
   equipItem: (category: keyof ShopState['equipped'], itemId: string) => void;
   setEquippedEmote: (slot: number, emoteId: string) => void;
+  removeEquippedEmote: (emoteId: string) => void;
+  purchaseEmote: (emoteId: string, cost: number) => boolean;
   setEquippedIdle: (idleId: string | null) => void;
   equipPet: (petId: string | null) => void;
   purchasePet: (petId: string, cost: number) => boolean;
@@ -122,6 +125,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
   },
 
   equippedEmotes: ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
+  ownedEmotes: [],
 
   equippedIdle: null,
 
@@ -195,6 +199,27 @@ export const useShopStore = create<ShopState>((set, get) => ({
     });
   },
 
+  removeEquippedEmote: (emoteId) => {
+    set((s) => {
+      const idx = s.equippedEmotes.indexOf(emoteId);
+      if (idx === -1) return {};
+      const newEmotes = [...s.equippedEmotes];
+      newEmotes[idx] = '';
+      return { equippedEmotes: newEmotes };
+    });
+  },
+
+  purchaseEmote: (emoteId, cost) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    if (state.ownedEmotes.includes(emoteId)) return false;
+    set((s) => ({
+      coins: s.coins - cost,
+      ownedEmotes: [...s.ownedEmotes, emoteId],
+    }));
+    return true;
+  },
+
   setEquippedIdle: (idleId) => set({ equippedIdle: idleId }),
 
   equipPet: (petId) => set({ equippedPet: petId }),
@@ -251,6 +276,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
           ...saved.owned,
         },
         equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
+        ownedEmotes: (saved as any).ownedEmotes ?? [],
         equippedIdle: saved.equippedIdle ?? null,
         equippedPet: saved.equippedPet ?? null,
         ownedPets: saved.ownedPets ?? [],
@@ -320,6 +346,7 @@ useShopStore.subscribe((state) => {
     equipped: state.equipped,
     owned: state.owned,
     equippedEmotes: state.equippedEmotes,
+    ownedEmotes: state.ownedEmotes,
     equippedIdle: state.equippedIdle,
     equippedPet: state.equippedPet,
     ownedPets: state.ownedPets,

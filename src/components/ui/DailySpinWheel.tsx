@@ -77,9 +77,12 @@ function getRarityLabel(rarity: SpinSegment['rarity']): string {
 export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   const canSpin = useDailySpinStore(s => s.canSpin);
   const pickReward = useDailySpinStore(s => s.pickReward);
+  const pickGoldenReward = useDailySpinStore(s => s.pickGoldenReward);
   const recordSpin = useDailySpinStore(s => s.recordSpin);
   const addCoins = useShopStore(s => s.addCoins);
   const addGems = useShopStore(s => s.addGems);
+  const spendGems = useShopStore(s => s.spendGems);
+  const gems = useShopStore(s => s.gems);
   const addBox = useLootBoxStore(s => s.addBox);
 
   const [spinning, setSpinning] = useState(false);
@@ -164,6 +167,48 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
       haptics.heavy();
       setResultSegment(segment);
       recordSpin();
+
+      setTimeout(() => {
+        setShowResult(true);
+        resultScaleAnim.setValue(0);
+        resultOpacityAnim.setValue(0);
+        Animated.parallel([
+          Animated.spring(resultScaleAnim, { toValue: 1, useNativeDriver: true, speed: 12, bounciness: 10 }),
+          Animated.timing(resultOpacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        ]).start();
+        try { playSound('level_up'); } catch {}
+      }, 300);
+    });
+  };
+
+  const handleGoldenSpin = () => {
+    if (spinning) return;
+    if (!spendGems(50)) {
+      haptics.error();
+      return;
+    }
+    haptics.tap();
+    setSpinning(true);
+    setShowResult(false);
+    setResultSegment(null);
+    setShowGoldenSpin(false);
+
+    const winIndex = pickGoldenReward();
+    const segment = SPIN_SEGMENTS[winIndex];
+    const fullRotations = 4 + Math.floor(Math.random() * 3);
+    const targetAngle = -(winIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2 + Math.random() * (SEGMENT_ANGLE * 0.4) - SEGMENT_ANGLE * 0.2);
+    const totalDegrees = fullRotations * 360 + targetAngle;
+
+    spinAnim.setValue(0);
+    Animated.timing(spinAnim, {
+      toValue: totalDegrees,
+      duration: 3500,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      haptics.heavy();
+      setResultSegment(segment);
+      // Golden spin does NOT consume the daily spin
 
       setTimeout(() => {
         setShowResult(true);
@@ -383,9 +428,13 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
                 </View>
                 <Text style={st.goldenSub}>Legendary-weighted prizes!</Text>
                 <View style={st.goldenBtns}>
-                  <Pressable style={st.goldenBtn} onPress={() => haptics.tap()}>
+                  <Pressable
+                    style={[st.goldenBtn, gems < 50 && { opacity: 0.5 }]}
+                    onPress={handleGoldenSpin}
+                  >
                     <LinearGradient colors={['#f1c40f', '#d4ac0d', '#b8960a']} style={st.goldenBtnGradient}>
                       <Text style={st.goldenBtnText}>SPIN 50 {'\u{1F48E}'}</Text>
+                      {gems < 50 && <Text style={[st.goldenBtnText, { fontSize: 9, opacity: 0.8 }]}>({gems} gems)</Text>}
                     </LinearGradient>
                   </Pressable>
                   <Pressable style={st.goldenBtn} onPress={() => haptics.tap()}>

@@ -132,11 +132,22 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
   loadFromStorage: async () => {
     const saved = await loadState<{ challenges: Challenge[]; lastRefresh: number; bonusClaimed?: boolean }>('challenges');
     if (saved) {
-      set({
-        challenges: saved.challenges ?? pickRandomChallenges(3),
-        lastRefresh: saved.lastRefresh ?? Date.now(),
-        bonusClaimed: saved.bonusClaimed ?? false,
-      });
+      const lastRefresh = saved.lastRefresh ?? 0;
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const isStale = Date.now() - lastRefresh > msPerDay;
+      if (isStale) {
+        set({
+          challenges: pickRandomChallenges(3),
+          lastRefresh: Date.now(),
+          bonusClaimed: false,
+        });
+      } else {
+        set({
+          challenges: saved.challenges ?? pickRandomChallenges(3),
+          lastRefresh,
+          bonusClaimed: saved.bonusClaimed ?? false,
+        });
+      }
     }
   },
 }));
