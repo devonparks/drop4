@@ -13,6 +13,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useOnlineStore } from '../stores/onlineStore';
+import { useGameStore } from '../stores/gameStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -55,6 +56,7 @@ function SearchingOverlay({ navigation }: { navigation: Props['navigation'] }) {
     if (isInMatch && matchId && myPlayerNum) {
       const isRanked = queueMode === 'ranked';
       clearMatch();
+      useGameStore.getState().resetScores();
       navigation.navigate('Game', {
         onlineMatchId: matchId,
         onlinePlayerNum: myPlayerNum,

@@ -98,6 +98,7 @@ export function LearnScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
+  const resetScores = useGameStore(s => s.resetScores);
   const markLessonViewed = useTutorialStore(s => s.markLessonViewed);
   const hasViewedLesson = useTutorialStore(s => s.hasViewedLesson);
   const [selected, setSelected] = useState<Lesson | null>(null);
@@ -141,6 +142,7 @@ export function LearnScreen({ navigation }: Props) {
                 markLessonViewed(selected.id);
                 const diff = selected.difficulty === 'beginner' ? 'easy'
                   : selected.difficulty === 'intermediate' ? 'medium' : 'hard';
+                resetScores();
                 newGame(diff as any, true);
                 navigation.navigate('Game');
               }}

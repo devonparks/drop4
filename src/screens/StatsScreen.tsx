@@ -99,7 +99,57 @@ export function StatsScreen({ navigation }: Props) {
     const totalGames = matches.length;
     const totalCoinsEarned = matches.reduce((sum, m) => sum + (m.coinsEarned || 0), 0);
     const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
-    return { totalGames, wins, losses, draws, winRate, totalCoinsEarned };
+
+    // Difficulty win breakdown
+    const easyWins = matches.filter(m => m.result === 'win' && m.difficulty === 'easy').length;
+    const mediumWins = matches.filter(m => m.result === 'win' && m.difficulty === 'medium').length;
+    const hardWins = matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length;
+    const totalDiffWins = easyWins + mediumWins + hardWins;
+
+    // Mode breakdown
+    const aiGames = matches.filter(m => m.mode === 'ai').length;
+    const localGames = matches.filter(m => m.mode === 'local').length;
+    const wagerGames = matches.filter(m => m.mode === 'wager').length;
+
+    // Time estimate
+    const avgMoves = matches.length > 0
+      ? matches.reduce((sum, m) => sum + (m.moves || 20), 0) / matches.length
+      : 20;
+    const estimatedMinutes = Math.round(totalGames * avgMoves * 5 / 60);
+    const hoursPlayed = estimatedMinutes >= 60
+      ? `${(estimatedMinutes / 60).toFixed(1)}h`
+      : `${estimatedMinutes}m`;
+
+    // Losing streak
+    let currentLoseStreak = 0;
+    let longestLoseStreak = 0;
+    for (const m of matches) {
+      if (m.result === 'loss') {
+        currentLoseStreak++;
+        longestLoseStreak = Math.max(longestLoseStreak, currentLoseStreak);
+      } else {
+        currentLoseStreak = 0;
+      }
+    }
+
+    // Best performance
+    const winMatches = matches.filter(m => m.result === 'win');
+    const fastestWin = winMatches.length > 0 ? Math.min(...winMatches.map(m => m.moves)) : null;
+    const mostCoins = matches.length > 0 ? Math.max(...matches.map(m => m.coinsEarned || 0)) : null;
+
+    // Recent form & ranked recent
+    const recentForm = matches.slice(0, 10);
+    const rankedMatches = matches.filter(m => m.mode === 'stage').slice(0, 10);
+
+    return {
+      totalGames, wins, losses, draws, winRate, totalCoinsEarned,
+      easyWins, mediumWins, hardWins, totalDiffWins,
+      aiGames, localGames, wagerGames,
+      hoursPlayed,
+      longestLoseStreak,
+      fastestWin, mostCoins,
+      recentForm, rankedMatches,
+    };
   }, [matches]);
 
   const tierInfo = useMemo(() => {
@@ -127,44 +177,14 @@ export function StatsScreen({ navigation }: Props) {
     return pet ? `${pet.name} the ${pet.breed}` : null;
   }, [equippedPet]);
 
-  // Difficulty breakdown from match history
-  const easyWins = matches.filter(m => m.result === 'win' && m.difficulty === 'easy').length;
-  const mediumWins = matches.filter(m => m.result === 'win' && m.difficulty === 'medium').length;
-  const hardWins = matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length;
-  const totalDiffWins = easyWins + mediumWins + hardWins;
-
-  // Mode breakdown
-  const aiGames = matches.filter(m => m.mode === 'ai').length;
-  const localGames = matches.filter(m => m.mode === 'local').length;
-  const wagerGames = matches.filter(m => m.mode === 'wager').length;
-
-  // Hours played estimate: use actual average moves × ~5 seconds per move
-  const avgMoves = matches.length > 0
-    ? matches.reduce((sum, m) => sum + (m.moves || 20), 0) / matches.length
-    : 20;
-  const estimatedMinutes = Math.round(stats.totalGames * avgMoves * 5 / 60);
-  const hoursPlayed = estimatedMinutes >= 60
-    ? `${(estimatedMinutes / 60).toFixed(1)}h`
-    : `${estimatedMinutes}m`;
-
-  // Streaks — compute longest losing streak from match history
-  let currentLoseStreak = 0;
-  let longestLoseStreak = 0;
-  for (const m of matches) {
-    if (m.result === 'loss') {
-      currentLoseStreak++;
-      longestLoseStreak = Math.max(longestLoseStreak, currentLoseStreak);
-    } else {
-      currentLoseStreak = 0;
-    }
-  }
-
-  // Recent form (last 10 games, newest first)
-  const recentForm = matches.slice(0, 10);
-
-  // ELO history — derive from ranked games in match history
-  // We show the ranked ELO progression as text entries
-  const rankedMatches = matches.filter(m => m.mode === 'stage').slice(0, 10);
+  const {
+    easyWins, mediumWins, hardWins, totalDiffWins,
+    aiGames, localGames, wagerGames,
+    hoursPlayed,
+    longestLoseStreak,
+    fastestWin, mostCoins,
+    recentForm, rankedMatches,
+  } = stats;
 
   return (
     <ScreenBackground>
@@ -276,9 +296,7 @@ export function StatsScreen({ navigation }: Props) {
               <View style={styles.bestPerfItem}>
                 <Text style={styles.bestPerfIcon}>{'\u26A1'}</Text>
                 <Text style={styles.bestPerfValue}>
-                  {matches.filter(m => m.result === 'win').length > 0
-                    ? Math.min(...matches.filter(m => m.result === 'win').map(m => m.moves))
-                    : '--'}
+                  {fastestWin ?? '--'}
                 </Text>
                 <Text style={styles.bestPerfLabel}>Fastest Win</Text>
                 <Text style={styles.bestPerfSub}>(fewest moves)</Text>
@@ -294,9 +312,7 @@ export function StatsScreen({ navigation }: Props) {
               <View style={styles.bestPerfItem}>
                 <Text style={styles.bestPerfIcon}>{'\uD83E\uDE99'}</Text>
                 <Text style={[styles.bestPerfValue, { color: colors.coinGold }]}>
-                  {matches.length > 0
-                    ? Math.max(...matches.map(m => m.coinsEarned || 0))
-                    : '--'}
+                  {mostCoins ?? '--'}
                 </Text>
                 <Text style={styles.bestPerfLabel}>Most Coins</Text>
                 <Text style={styles.bestPerfSub}>in one game</Text>

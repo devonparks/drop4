@@ -25,6 +25,7 @@ export function BoardEditorScreen({ navigation }: Props) {
     placePiece, setCurrentPiece, clearBoard, saveBoard, loadBoard, myBoards,
   } = useBoardEditorStore();
   const newGame = useGameStore(s => s.newGame);
+  const resetScores = useGameStore(s => s.resetScores);
 
   const [boardName, setBoardName] = useState('');
   const [showSave, setShowSave] = useState(false);
@@ -45,6 +46,7 @@ export function BoardEditorScreen({ navigation }: Props) {
   };
 
   const handlePlayBoard = () => {
+    resetScores();
     // Start a game with the current editor board as preset
     newGame('medium', true, {
       rows: editorRows,

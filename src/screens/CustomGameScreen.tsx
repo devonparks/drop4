@@ -112,6 +112,7 @@ export function CustomGameScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const newGame = useGameStore(s => s.newGame);
+  const resetScores = useGameStore(s => s.resetScores);
 
   // ── Game Rules ──
   const [boardSize, setBoardSize] = useState('6x7');
@@ -190,6 +191,7 @@ export function CustomGameScreen({ navigation }: Props) {
     if (firstMove === 'player2') startingPlayer = 2;
     else if (firstMove === 'random') startingPlayer = Math.random() < 0.5 ? 1 : 2;
 
+    resetScores();
     newGame(difficulty as any, isAi, {
       rows: rows || 7,
       cols: cols || 6,

@@ -370,6 +370,7 @@ export function GameScreen({ navigation }: Props) {
 
     // In the new match, colors are swapped: old player1 becomes player2 and vice versa
     const newPlayerNum: 1 | 2 = myPlayerNum === 1 ? 2 : 1;
+    resetScores();
     newGame('medium', false);
     navigation.replace('Game', {
       onlineMatchId: rematchNewMatchId,

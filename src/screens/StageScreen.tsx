@@ -88,6 +88,7 @@ export function StageScreen({ navigation }: Props) {
   const spendCoins = useShopStore(s => s.spendCoins);
   const tier = useRankedStore(s => s.tier);
   const newGame = useGameStore(s => s.newGame);
+  const resetScores = useGameStore(s => s.resetScores);
 
   const handleSelectCourt = (court: WagerCourt) => {
     if (court.entryFee > 0) {
@@ -103,6 +104,7 @@ export function StageScreen({ navigation }: Props) {
               const success = spendCoins(court.entryFee);
               if (!success) { haptics.error(); return; }
               playSound('coin');
+              resetScores();
               newGame('hard', true);
               navigation.navigate('Game', { wagerCourt: court });
             },

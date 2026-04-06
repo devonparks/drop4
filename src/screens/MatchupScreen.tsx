@@ -24,6 +24,7 @@ import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
+import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -72,6 +73,7 @@ export function MatchupScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const equippedPet = useShopStore(s => s.equippedPet);
+  const resetScores = useGameStore(s => s.resetScores);
 
   // State
   const [phase, setPhase] = useState<'searching' | 'reveal' | 'ready'>('searching');
@@ -183,6 +185,7 @@ export function MatchupScreen({ navigation }: Props) {
   const handleReady = useCallback(() => {
     haptics.tap();
     playSound('click');
+    resetScores();
     // Navigate to Game with all match params
     navigation.replace('Game', {
       rankedMode: params.mode === 'ranked',
@@ -197,7 +200,7 @@ export function MatchupScreen({ navigation }: Props) {
         winnerGets: Math.floor(params.wagerAmount * 2 * 0.9), // 10% rake
       } : undefined,
     });
-  }, [navigation, params, courtName]);
+  }, [navigation, params, courtName, resetScores]);
 
   const handleBack = useCallback(() => {
     haptics.tap();
