@@ -34,11 +34,31 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 // Bot Persona Data
 // ═══════════════════════════════════
 
-const BOT_PERSONAS: Record<string, { name: string; level: number; title: string }> = {
-  easy: { name: 'Rookie Ron', level: 5, title: 'Beginner' },
-  medium: { name: 'Midfield Mike', level: 16, title: 'Strategist' },
-  hard: { name: 'Master Maxine', level: 30, title: 'Undefeated' },
+const BOT_POOLS: Record<string, { name: string; level: number; title: string }[]> = {
+  easy: [
+    { name: 'Rookie Ron', level: 5, title: 'Beginner' },
+    { name: 'Beginner Ben', level: 3, title: 'Newbie' },
+    { name: 'Chill Charlie', level: 7, title: 'Laid-Back' },
+    { name: 'Lazy Luna', level: 4, title: 'Sleepy' },
+  ],
+  medium: [
+    { name: 'Midfield Mike', level: 16, title: 'Strategist' },
+    { name: 'Steady Steve', level: 14, title: 'Consistent' },
+    { name: 'Tactical Tara', level: 18, title: 'Planner' },
+    { name: 'Careful Chris', level: 15, title: 'Methodical' },
+  ],
+  hard: [
+    { name: 'Master Maxine', level: 30, title: 'Undefeated' },
+    { name: 'Grand Gary', level: 28, title: 'Grandmaster' },
+    { name: 'Elite Emma', level: 32, title: 'Ruthless' },
+    { name: 'Savage Sam', level: 35, title: 'No Mercy' },
+  ],
 };
+
+function pickRandomBot(difficulty: string) {
+  const pool = BOT_POOLS[difficulty] || BOT_POOLS.medium;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Matchup'>;
@@ -56,9 +76,9 @@ export function MatchupScreen({ navigation }: Props) {
   // State
   const [phase, setPhase] = useState<'searching' | 'reveal' | 'ready'>('searching');
 
-  // Determine opponent info
+  // Determine opponent info — pick a random bot from the pool (stable per mount)
   const difficulty = params.difficulty || 'medium';
-  const botPersona = BOT_PERSONAS[difficulty] || BOT_PERSONAS.medium;
+  const [botPersona] = useState(() => pickRandomBot(difficulty));
   const opponentName = params.opponentName || botPersona.name;
   const opponentLevel = params.opponentLevel ?? botPersona.level;
   const opponentTitle = params.opponentTitle || botPersona.title;

@@ -44,6 +44,15 @@ export function PlayScreen({ navigation }: Props) {
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, gamesToday };
   }, [matches]);
   const mastery = useMemo(() => getMasteryStats(), [matches]);
+
+  // Personal bests from match history
+  const personalBests = useMemo(() => {
+    const wins = matches.filter(m => m.result === 'win');
+    const fastestWin = wins.length > 0 ? Math.min(...wins.map(m => m.moves)) : null;
+    const mostCoins = matches.length > 0 ? Math.max(...matches.map(m => m.coinsEarned || 0)) : null;
+    return { fastestWin, longestStreak: bestStreak, mostCoins };
+  }, [matches, bestStreak]);
+
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
@@ -153,6 +162,33 @@ export function PlayScreen({ navigation }: Props) {
             </View>
           </View>
 
+          {/* Personal Best records */}
+          {(personalBests.fastestWin !== null || personalBests.longestStreak > 0 || (personalBests.mostCoins !== null && personalBests.mostCoins > 0)) && (
+            <View style={styles.personalBestRow}>
+              {personalBests.fastestWin !== null && (
+                <View style={styles.pbItem}>
+                  <Text style={styles.pbIcon}>{'\u26A1'}</Text>
+                  <Text style={styles.pbValue}>{personalBests.fastestWin}</Text>
+                  <Text style={styles.pbLabel}>Best Moves</Text>
+                </View>
+              )}
+              {personalBests.longestStreak > 0 && (
+                <View style={styles.pbItem}>
+                  <Text style={styles.pbIcon}>{'\uD83D\uDD25'}</Text>
+                  <Text style={[styles.pbValue, { color: colors.orange }]}>{personalBests.longestStreak}</Text>
+                  <Text style={styles.pbLabel}>Best Streak</Text>
+                </View>
+              )}
+              {personalBests.mostCoins !== null && personalBests.mostCoins > 0 && (
+                <View style={styles.pbItem}>
+                  <Text style={styles.pbIcon}>{'\uD83E\uDE99'}</Text>
+                  <Text style={[styles.pbValue, { color: colors.coinGold || '#ffd700' }]}>{personalBests.mostCoins}</Text>
+                  <Text style={styles.pbLabel}>Best Coins</Text>
+                </View>
+              )}
+            </View>
+          )}
+
           {/* Difficulty buttons */}
           <View style={styles.buttonsWrap}>
             <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.wins > 0 ? ` • ${mastery.easy.wins}W` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
@@ -259,6 +295,39 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 9, color: colors.textSecondary,
     textTransform: 'uppercase', letterSpacing: 0.3,
+  },
+  personalBestRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    maxWidth: 340,
+    justifyContent: 'center',
+  },
+  pbItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,215,0,0.06)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.12)',
+  },
+  pbIcon: {
+    fontSize: 14,
+  },
+  pbValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: colors.green,
+  },
+  pbLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 8,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,

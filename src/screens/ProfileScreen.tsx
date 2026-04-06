@@ -7,7 +7,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
-import { useShopStore } from '../stores/shopStore';
+import { useShopStore, getCoinMilestoneInfo } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useAchievementStore } from '../stores/achievementStore';
@@ -63,6 +63,9 @@ export function ProfileScreen() {
 
   const totalGames = scores.player1 + scores.player2;
   const winRate = totalGames > 0 ? Math.round((scores.player1 / totalGames) * 100) : 0;
+
+  // Coin milestone
+  const milestoneInfo = useMemo(() => getCoinMilestoneInfo(coins), [coins]);
 
   // Map equipped IDs to display names
   const boardNames: Record<string, string> = {
@@ -139,6 +142,34 @@ export function ProfileScreen() {
               Next reward at Level {level + 1}
             </Text>
           </View>
+        </View>
+
+        {/* Coin Milestone */}
+        <Text style={styles.sectionTitle}>COIN GOAL</Text>
+        <View style={styles.milestoneCard}>
+          {milestoneInfo.currentTitle && (
+            <View style={styles.milestoneCurrentRow}>
+              <Text style={styles.milestoneCurrentIcon}>{milestoneInfo.currentIcon}</Text>
+              <Text style={styles.milestoneCurrentTitle}>{milestoneInfo.currentTitle}</Text>
+            </View>
+          )}
+          {milestoneInfo.nextMilestone ? (
+            <>
+              <View style={styles.milestoneProgressOuter}>
+                <LinearGradient
+                  colors={[colors.coinGold, colors.orange]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.milestoneProgressFill, { width: `${Math.max(milestoneInfo.progress * 100, 4)}%` as any }]}
+                />
+              </View>
+              <Text style={styles.milestoneNextText}>
+                Next: {milestoneInfo.nextMilestone.icon} {milestoneInfo.nextMilestone.title} ({milestoneInfo.nextMilestone.coins.toLocaleString()} coins) — {milestoneInfo.coinsToGo.toLocaleString()} to go!
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.milestoneMaxText}>All milestones achieved!</Text>
+          )}
         </View>
 
         {/* Stats grid */}
@@ -701,6 +732,58 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.coinGold,
   },
+  // Coin Milestone
+  milestoneCard: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,215,0,0.06)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  milestoneCurrentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  milestoneCurrentIcon: {
+    fontSize: 18,
+  },
+  milestoneCurrentTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: colors.coinGold,
+    letterSpacing: 0.5,
+  },
+  milestoneProgressOuter: {
+    width: '100%',
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  milestoneProgressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  milestoneNextText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  milestoneMaxText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.coinGold,
+    textAlign: 'center',
+  },
+
   // Recent Activity
   activityList: {
     marginHorizontal: 16,

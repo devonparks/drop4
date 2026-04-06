@@ -208,6 +208,54 @@ export const useShopStore = create<ShopState>((set, get) => ({
   },
 }));
 
+// ── Coin Milestone Helper ──
+export interface CoinMilestone {
+  coins: number;
+  title: string;
+  icon: string;
+}
+
+export const COIN_MILESTONES: CoinMilestone[] = [
+  { coins: 1_000, title: 'Saver', icon: '\uD83D\uDCB0' },
+  { coins: 5_000, title: 'Banker', icon: '\uD83C\uDFE6' },
+  { coins: 10_000, title: 'Rich', icon: '\uD83D\uDCB5' },
+  { coins: 50_000, title: 'Tycoon', icon: '\uD83D\uDC8E' },
+  { coins: 100_000, title: 'Mogul', icon: '\uD83D\uDC51' },
+];
+
+/** Returns the player's current milestone title (highest achieved) and next goal */
+export function getCoinMilestoneInfo(currentCoins: number): {
+  currentTitle: string | null;
+  currentIcon: string | null;
+  nextMilestone: CoinMilestone | null;
+  coinsToGo: number;
+  progress: number; // 0-1 toward next milestone
+} {
+  let currentTitle: string | null = null;
+  let currentIcon: string | null = null;
+  let nextMilestone: CoinMilestone | null = null;
+  let previousThreshold = 0;
+
+  for (const ms of COIN_MILESTONES) {
+    if (currentCoins >= ms.coins) {
+      currentTitle = ms.title;
+      currentIcon = ms.icon;
+      previousThreshold = ms.coins;
+    } else {
+      nextMilestone = ms;
+      break;
+    }
+  }
+
+  const coinsToGo = nextMilestone ? nextMilestone.coins - currentCoins : 0;
+  const range = nextMilestone ? nextMilestone.coins - previousThreshold : 1;
+  const progress = nextMilestone
+    ? Math.min((currentCoins - previousThreshold) / range, 1)
+    : 1;
+
+  return { currentTitle, currentIcon, nextMilestone, coinsToGo, progress };
+}
+
 // Auto-save on every state change
 useShopStore.subscribe((state) => {
   saveState('shop', {
