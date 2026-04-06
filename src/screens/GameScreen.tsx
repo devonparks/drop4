@@ -758,6 +758,28 @@ export function GameScreen({ navigation }: Props) {
       if (wagerCourt || isRankedMode) {
         recordRanked(false);
       }
+      // Check achievements — game count / pets / cosmetics can unlock on any game
+      const lossHistory = useMatchHistoryStore.getState();
+      const lossShop = useShopStore.getState();
+      const lossCareer = useCareerStore.getState();
+      const lossNewAchs = checkAchievements({
+        totalWins: lossHistory.matches.filter(m => m.result === 'win').length,
+        currentStreak: useGameStore.getState().winStreak,
+        bestStreak: useGameStore.getState().bestStreak,
+        totalGames: lossHistory.matches.length,
+        level: lossShop.level,
+        careerStars: lossCareer.getTotalStars(),
+        lastGameMoves: 0, // speed achievements only count on wins
+        hardWins: lossHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
+        ownedCosmetics: lossShop.owned.boards.length + lossShop.owned.pieces.length + lossShop.owned.dropEffects.length,
+        ownedPets: lossShop.ownedPets,
+      });
+      if (lossNewAchs.length > 0) {
+        const allAchs = useAchievementStore.getState().achievements;
+        setAchievementQueue(q => [...q, ...lossNewAchs.map(name => ({
+          name, icon: allAchs.find(a => a.name === name)?.icon ?? '🏆',
+        }))]);
+      }
       haptics.error();
       playSound('lose');
       // Comeback mechanic — grant pity coins on losing streak to keep players engaged
@@ -792,6 +814,28 @@ export function GameScreen({ navigation }: Props) {
         setSeasonTierUp(postTierDraw);
         playSound('level_up');
         haptics.levelUp();
+      }
+      // Check achievements — game count / pets / cosmetics can unlock on any game
+      const drawHistory = useMatchHistoryStore.getState();
+      const drawShop = useShopStore.getState();
+      const drawCareer = useCareerStore.getState();
+      const drawNewAchs = checkAchievements({
+        totalWins: drawHistory.matches.filter(m => m.result === 'win').length,
+        currentStreak: useGameStore.getState().winStreak,
+        bestStreak: useGameStore.getState().bestStreak,
+        totalGames: drawHistory.matches.length,
+        level: drawShop.level,
+        careerStars: drawCareer.getTotalStars(),
+        lastGameMoves: 0,
+        hardWins: drawHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
+        ownedCosmetics: drawShop.owned.boards.length + drawShop.owned.pieces.length + drawShop.owned.dropEffects.length,
+        ownedPets: drawShop.ownedPets,
+      });
+      if (drawNewAchs.length > 0) {
+        const allAchs = useAchievementStore.getState().achievements;
+        setAchievementQueue(q => [...q, ...drawNewAchs.map(name => ({
+          name, icon: allAchs.find(a => a.name === name)?.icon ?? '🏆',
+        }))]);
       }
       haptics.coinEarn();
       playSound('coin');
