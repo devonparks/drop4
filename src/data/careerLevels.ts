@@ -14,6 +14,7 @@ export interface CareerLevel {
   difficulty: Difficulty;
   isBoss: boolean;
   reward?: CareerReward;
+  bonusReward?: CareerReward;
   // Game settings overrides
   settings: {
     rows?: number;
@@ -40,7 +41,7 @@ export type CareerChallengeType =
   | 'tournament';     // Beat multiple opponents in a row
 
 export interface CareerReward {
-  type: 'coins' | 'board' | 'pieces' | 'emote' | 'title';
+  type: 'coins' | 'board' | 'pieces' | 'emote' | 'title' | 'pet';
   id?: string;
   name: string;
   amount?: number;
@@ -192,6 +193,7 @@ const CHAPTER_1: CareerLevel[] = [
     chapter: 1, type: 'boss', difficulty: 'medium', isBoss: true,
     settings: {},
     reward: { type: 'board', id: 'neon_glow', name: 'Neon Glow Board', icon: '✨' },
+    bonusReward: { type: 'pet', id: 'dalmatian', name: 'Dalmatian Pet', icon: '🐕' },
     starThresholds: { three: 7, two: 12 },
   },
 ];
@@ -343,6 +345,7 @@ const CHAPTER_2: CareerLevel[] = [
     chapter: 2, type: 'boss', difficulty: 'hard', isBoss: true,
     settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 15 },
     reward: { type: 'board', id: 'galaxy', name: 'Galaxy Board', icon: '🌌' },
+    bonusReward: { type: 'pet', id: 'wolf', name: 'Wolf Pet', icon: '🐺' },
     starThresholds: { three: 9, two: 15 },
   },
 ];

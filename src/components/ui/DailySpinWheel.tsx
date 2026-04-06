@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useDailySpinStore, SPIN_SEGMENTS, SpinSegment } from '../../stores/dailySpinStore';
 import { useShopStore } from '../../stores/shopStore';
 import { useLootBoxStore } from '../../stores/lootBoxStore';
+import { PETS } from '../../data/pets';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
@@ -33,6 +34,7 @@ const VIBRANT_COLORS: { bg: string; border: string }[] = [
   { bg: '#8e44ad', border: '#a569bd' },  // purple
   { bg: '#1abc9c', border: '#2dd4ad' },  // teal
   { bg: '#d4ac0d', border: '#f1c40f' },  // gold
+  { bg: '#e67e22', border: '#f5a623' },  // warm orange (pet)
 ];
 
 interface DailySpinWheelProps {
@@ -182,6 +184,17 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
     if (resultSegment.rewardType === 'coins') addCoins(resultSegment.amount);
     else if (resultSegment.rewardType === 'gems') addGems(resultSegment.amount);
     else if (resultSegment.rewardType === 'lootbox') addBox('bronze_box');
+    else if (resultSegment.rewardType === 'pet') {
+      const shopState = useShopStore.getState();
+      const commonPets = PETS.filter(p => p.rarity === 'common');
+      const unownedCommon = commonPets.filter(p => !shopState.ownedPets.includes(p.id));
+      if (unownedCommon.length > 0) {
+        const pick = unownedCommon[Math.floor(Math.random() * unownedCommon.length)];
+        shopState.purchasePet(pick.id, 0); // free grant — cost 0
+      } else {
+        addCoins(500); // fallback: all common pets owned
+      }
+    }
     try { playSound('coin'); } catch {}
     setSpinning(false);
     setShowResult(false);

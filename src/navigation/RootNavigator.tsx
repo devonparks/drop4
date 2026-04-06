@@ -36,7 +36,7 @@ export type WagerCourtParams = {
 };
 
 export type CareerRewardParams = {
-  type: 'coins' | 'board' | 'pieces';
+  type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
   amount?: number;
   id?: string;
 };

@@ -42,6 +42,7 @@ import { CoinBurst } from '../components/effects/CoinBurst';
 import { sendEmote, listenForEmotes } from '../services/emotes';
 // QuickChatBar replaced by EmotePickerModal
 import { ChatBubble } from '../components/effects/ChatBubble';
+import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import type { QuickChatMessage } from '../data/quickChat';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
@@ -463,20 +464,19 @@ export function GameScreen({ navigation }: Props) {
         // Star rating: 3 stars if < 15 moves, 2 if < 25, 1 otherwise
         const starRating = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
-        // Award career reward
+        // Award career reward(s)
         const careerReward = params.careerLevelReward;
-        if (careerReward) {
-          if (careerReward.type === 'coins' && careerReward.amount) {
-            addCoins(careerReward.amount);
-          }
-          // Board/piece unlocks handled by shopStore
-          if (careerReward.type === 'board' && careerReward.id) {
-            useShopStore.getState().purchaseItem('boards', careerReward.id, 0);
-          }
-          if (careerReward.type === 'pieces' && careerReward.id) {
-            useShopStore.getState().purchaseItem('pieces', careerReward.id, 0);
-          }
-        }
+        const grantReward = (r: typeof careerReward) => {
+          if (!r) return;
+          if (r.type === 'coins' && r.amount) addCoins(r.amount);
+          if (r.type === 'board' && r.id) useShopStore.getState().purchaseItem('boards', r.id, 0);
+          if (r.type === 'pieces' && r.id) useShopStore.getState().purchaseItem('pieces', r.id, 0);
+          if (r.type === 'pet' && r.id) useShopStore.getState().purchasePet(r.id, 0);
+        };
+        grantReward(careerReward);
+        // Grant bonus reward (e.g. pet from boss levels)
+        const levelData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
+        if (levelData?.bonusReward) grantReward(levelData.bonusReward as any);
       }
       // Wager court winnings + ranked ELO update
       if (wagerCourt) {
@@ -505,6 +505,7 @@ export function GameScreen({ navigation }: Props) {
         lastGameMoves: moveCount,
         hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length,
+        ownedPets: shopState.ownedPets,
       });
       // First Win special celebration
       if (newAchievements.includes('First Win')) {

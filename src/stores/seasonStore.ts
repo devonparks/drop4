@@ -35,7 +35,7 @@ const SEASON_REWARDS: SeasonReward[] = [
   { tier: 3, freeReward: null, premiumReward: { type: 'emote', name: 'Dance Emote', icon: '💃' } },
   { tier: 4, freeReward: { type: 'coins', name: '300 Coins', icon: '🪙' }, premiumReward: { type: 'effect', name: 'Spark Drop', icon: '✨' } },
   { tier: 5, freeReward: { type: 'skin', name: 'Fire & Ice', icon: '🔥' }, premiumReward: { type: 'board', name: 'Neon Board', icon: '🎨' } },
-  { tier: 6, freeReward: { type: 'coins', name: '500 Coins', icon: '🪙' }, premiumReward: { type: 'skin', name: 'Neon Pieces', icon: '💜' } },
+  { tier: 6, freeReward: { type: 'coins', name: '500 Coins', icon: '🪙' }, premiumReward: { type: 'pet', name: 'Shiba Pet', icon: '🐕' } },
   { tier: 7, freeReward: null, premiumReward: { type: 'emote', name: 'Crown Pose', icon: '👑' } },
   { tier: 8, freeReward: { type: 'coins', name: '1000 Coins', icon: '🪙' }, premiumReward: { type: 'board', name: 'Galaxy Board', icon: '🌌' } },
 ];

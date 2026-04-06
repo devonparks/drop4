@@ -21,7 +21,9 @@ type AchievementCondition =
   | { type: 'career_stars'; count: number }
   | { type: 'fast_win'; moves: number }
   | { type: 'hard_wins'; count: number }
-  | { type: 'cosmetics'; count: number };
+  | { type: 'cosmetics'; count: number }
+  | { type: 'pets_owned'; count: number }
+  | { type: 'legendary_pet' };
 
 interface AchievementState {
   achievements: Achievement[];
@@ -39,6 +41,7 @@ export interface GameStats {
   lastGameMoves: number;
   hardWins: number;
   ownedCosmetics: number;
+  ownedPets: string[];
 }
 
 const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
@@ -80,7 +83,15 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     condition: { type: 'cosmetics', count: 5 }, reward: { type: 'coins', value: 150 } },
   { id: 'collector_15', name: 'Hoarder', description: 'Own 15 cosmetic items', icon: '💰',
     condition: { type: 'cosmetics', count: 15 }, reward: { type: 'coins', value: 500 } },
+  { id: 'pet_owner', name: 'Pet Owner', description: 'Own your first pet', icon: '🐕',
+    condition: { type: 'pets_owned', count: 1 }, reward: { type: 'coins', value: 100 } },
+  { id: 'dog_collector', name: 'Dog Collector', description: 'Own 5 different pets', icon: '🐾',
+    condition: { type: 'pets_owned', count: 5 }, reward: { type: 'coins', value: 500 } },
+  { id: 'best_in_show', name: 'Best in Show', description: 'Own a Legendary pet', icon: '🏆',
+    condition: { type: 'legendary_pet' }, reward: { type: 'title', value: 'Best in Show' } },
 ];
+
+const LEGENDARY_PET_IDS = ['hellhound', 'robot', 'scifi'];
 
 function checkCondition(condition: AchievementCondition, stats: GameStats): boolean {
   switch (condition.type) {
@@ -92,6 +103,8 @@ function checkCondition(condition: AchievementCondition, stats: GameStats): bool
     case 'fast_win': return stats.lastGameMoves > 0 && stats.lastGameMoves <= condition.moves;
     case 'hard_wins': return stats.hardWins >= condition.count;
     case 'cosmetics': return stats.ownedCosmetics >= condition.count;
+    case 'pets_owned': return stats.ownedPets.length >= condition.count;
+    case 'legendary_pet': return stats.ownedPets.some(id => LEGENDARY_PET_IDS.includes(id));
     default: return false;
   }
 }

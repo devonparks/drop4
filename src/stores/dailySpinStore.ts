@@ -5,7 +5,7 @@ export interface SpinSegment {
   id: number;
   label: string;
   emoji: string;
-  rewardType: 'coins' | 'gems' | 'lootbox';
+  rewardType: 'coins' | 'gems' | 'lootbox' | 'pet';
   amount: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   color: string;        // segment fill
@@ -14,14 +14,15 @@ export interface SpinSegment {
 }
 
 export const SPIN_SEGMENTS: SpinSegment[] = [
-  { id: 0, label: '50 Coins',        emoji: '\u{1FA99}', rewardType: 'coins',   amount: 50,   rarity: 'common',    color: '#4a4a5a', borderColor: '#6a6a7a', weight: 20 },
-  { id: 1, label: '100 Coins',       emoji: '\u{1FA99}', rewardType: 'coins',   amount: 100,  rarity: 'common',    color: '#555565', borderColor: '#7a7a8a', weight: 20 },
+  { id: 0, label: '50 Coins',        emoji: '\u{1FA99}', rewardType: 'coins',   amount: 50,   rarity: 'common',    color: '#4a4a5a', borderColor: '#6a6a7a', weight: 17 },
+  { id: 1, label: '100 Coins',       emoji: '\u{1FA99}', rewardType: 'coins',   amount: 100,  rarity: 'common',    color: '#555565', borderColor: '#7a7a8a', weight: 18 },
   { id: 2, label: '250 Coins',       emoji: '\u{1FA99}', rewardType: 'coins',   amount: 250,  rarity: 'uncommon',  color: '#27ae3d', borderColor: '#34c94d', weight: 20 },
   { id: 3, label: '5 Gems',          emoji: '\u{1F48E}', rewardType: 'gems',    amount: 5,    rarity: 'rare',      color: '#2980b9', borderColor: '#3498db', weight: 10 },
   { id: 4, label: '500 Coins',       emoji: '\u{1FA99}', rewardType: 'coins',   amount: 500,  rarity: 'rare',      color: '#2471a3', borderColor: '#2e86c1', weight: 10 },
   { id: 5, label: 'Bronze Loot Box', emoji: '\u{1F381}', rewardType: 'lootbox', amount: 1,    rarity: 'epic',      color: '#8e44ad', borderColor: '#9b59b6', weight: 12 },
   { id: 6, label: '25 Gems',         emoji: '\u{1F48E}', rewardType: 'gems',    amount: 25,   rarity: 'legendary', color: '#d4ac0d', borderColor: '#f1c40f', weight: 4 },
   { id: 7, label: '1,000 Coins',     emoji: '\u{1FA99}', rewardType: 'coins',   amount: 1000, rarity: 'legendary', color: '#c4841a', borderColor: '#f4a623', weight: 4 },
+  { id: 8, label: 'Random Pet!',     emoji: '\u{1F436}', rewardType: 'pet',     amount: 0,    rarity: 'rare',      color: '#e67e22', borderColor: '#f39c12', weight: 5 },
 ];
 
 function getTodayString(): string {
