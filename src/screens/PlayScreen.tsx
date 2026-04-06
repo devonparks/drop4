@@ -34,7 +34,12 @@ export function PlayScreen({ navigation }: Props) {
     const totalGames = matches.length;
     const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
     const totalCoinsEarned = matches.reduce((sum, m) => sum + m.coinsEarned, 0);
-    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
+    // Count games played today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    const gamesToday = matches.filter(m => m.timestamp >= todayMs).length;
+    return { wins, losses, draws, totalGames, winRate, totalCoinsEarned, gamesToday };
   }, [matches]);
   // If navigated here from Multiplayer with ranked flags, default to ranked mode
   const incomingRanked = route.params?.rankedMode;
@@ -93,21 +98,37 @@ export function PlayScreen({ navigation }: Props) {
 
           {/* Quick stats */}
           <View style={styles.statsRow}>
-            <View style={styles.statPill}>
+            <LinearGradient
+              colors={['rgba(39,174,61,0.15)', 'rgba(39,174,61,0.05)']}
+              style={styles.statPill}
+            >
               <Text style={styles.statValue}>{stats.wins}</Text>
               <Text style={styles.statLabel}>Wins</Text>
-            </View>
-            <View style={styles.statPill}>
+            </LinearGradient>
+            <LinearGradient
+              colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.05)']}
+              style={styles.statPill}
+            >
               <Text style={[styles.statValue, { color: colors.orange }]}>
-                {bestStreak > 0 ? `🔥${bestStreak}` : '0'}
+                {bestStreak > 0 ? `\uD83D\uDD25${bestStreak}` : '0'}
               </Text>
               <Text style={styles.statLabel}>Best Streak</Text>
-            </View>
-            <View style={styles.statPill}>
+            </LinearGradient>
+            <LinearGradient
+              colors={['rgba(100,180,255,0.15)', 'rgba(100,180,255,0.05)']}
+              style={styles.statPill}
+            >
               <Text style={styles.statValue}>{stats.winRate}%</Text>
               <Text style={styles.statLabel}>Win Rate</Text>
-            </View>
+            </LinearGradient>
           </View>
+
+          {/* Games played today */}
+          {stats.gamesToday > 0 && (
+            <Text style={styles.gamesToday}>
+              Today: {stats.gamesToday} game{stats.gamesToday !== 1 ? 's' : ''} played
+            </Text>
+          )}
 
           {/* Difficulty buttons */}
           <View style={styles.buttonsWrap}>
@@ -181,12 +202,17 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: fonts.body, fontWeight: weight.bold,
-    fontSize: 16, color: '#ffffff',
+    fontSize: 24, color: '#ffffff',
   },
   statLabel: {
     fontFamily: fonts.body, fontWeight: weight.regular,
     fontSize: 9, color: colors.textSecondary,
     textTransform: 'uppercase',
+  },
+  gamesToday: {
+    fontFamily: fonts.body, fontWeight: weight.semibold,
+    fontSize: 11, color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,

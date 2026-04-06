@@ -9,6 +9,7 @@ import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVari
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { IdlePicker } from '../components/ui/IdlePicker';
 import { useShopStore } from '../stores/shopStore';
+import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
@@ -117,6 +118,7 @@ export function HomeScreen() {
   const level = useShopStore(s => s.level);
   // Season & challenge details moved to tab bar — store import kept for future use
   const equippedIdle = useShopStore(s => s.equippedIdle);
+  const winStreak = useGameStore(s => s.winStreak);
   const canSpin = useDailySpinStore(s => s.canSpin);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
@@ -393,6 +395,13 @@ export function HomeScreen() {
             <Text style={styles.friendsBtnText}>Party</Text>
           </Pressable>
         </View>
+
+        {/* Win streak indicator */}
+        {winStreak > 0 && (
+          <Text style={styles.streakText}>
+            {'\uD83D\uDD25'} {winStreak} Win Streak!
+          </Text>
+        )}
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
@@ -775,6 +784,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#e74c3c',
     borderWidth: 1.5,
     borderColor: '#0a0e27',
+  },
+  // Win streak
+  streakText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#ff8c00',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+    textShadowColor: 'rgba(255,140,0,0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   // Menu buttons
   menuButtons: {

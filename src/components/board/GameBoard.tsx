@@ -332,10 +332,15 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
       </LinearGradient>
 
       {/* Board base/tray */}
-      <LinearGradient
-        colors={[...theme.baseGradient]}
-        style={styles.boardBase}
-      />
+      <View style={styles.boardBaseWrap}>
+        <View style={styles.boardBaseHighlight} />
+        <LinearGradient
+          colors={[...theme.baseGradient]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.boardBase}
+        />
+      </View>
     </View>
   );
 }
@@ -491,12 +496,26 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
   },
-  boardBase: {
+  boardBaseWrap: {
     width: BOARD_WIDTH + 16,
-    height: 16,
+    marginTop: -2,
+    position: 'relative',
+  },
+  boardBaseHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 1.5,
+    backgroundColor: 'rgba(160,210,255,0.25)',
+    borderRadius: 1,
+    zIndex: 1,
+  },
+  boardBase: {
+    width: '100%',
+    height: 18,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
-    marginTop: -2,
     shadowColor: 'rgba(80,140,255,0.4)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
