@@ -589,14 +589,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 12,
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   lockIcon: {
-    fontSize: 16,
+    fontSize: 11,
   },
   claimedBadge: {
     position: 'absolute',
