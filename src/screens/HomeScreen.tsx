@@ -467,7 +467,7 @@ export function HomeScreen() {
                 </Animated.View>
               )}
               <AnimatedCharacter
-                size={360}
+                size={320}
                 emote={emote}
                 selectedIdle={equippedIdle as IdleVariantId | null}
                 onEmoteComplete={clearEmote}
@@ -687,22 +687,25 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    marginTop: -2,
-    marginBottom: 0,
+    height: 50,            // fixed height — character can never push into this
+    justifyContent: 'center',
+    marginTop: 2,
+    marginBottom: 4,
+    zIndex: 20,            // stays above the character
   },
   logoMain: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 42,
+    fontSize: 36,
     color: '#ffffff',
     textShadowColor: 'rgba(120,180,255,0.7)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 22,
-    letterSpacing: 5,
+    letterSpacing: 4,
   },
   logo4: {
     color: '#ff8c00',
-    fontSize: 52,
+    fontSize: 44,
     textShadowColor: 'rgba(255,140,0,0.8)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 28,
@@ -853,25 +856,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 10,
+    paddingTop: 0,
   },
   stageGlowOuter: {
-    width: 340,
-    height: 340,
-    borderRadius: 170,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
     position: 'absolute',
-    bottom: 40,
+    bottom: 30,
     alignSelf: 'center',
     borderWidth: 1.5,
     borderColor: 'rgba(100,180,255,0.08)',
     backgroundColor: 'rgba(80,140,255,0.03)',
   },
   stageGlowInner: {
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    width: 230,
+    height: 230,
+    borderRadius: 115,
     position: 'absolute',
-    bottom: 80,
+    bottom: 70,
     alignSelf: 'center',
     borderWidth: 1,
     borderColor: 'rgba(100,180,255,0.12)',
