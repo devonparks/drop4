@@ -423,7 +423,7 @@ export function StatsScreen({ navigation }: Props) {
             <Text style={styles.loadoutLabel}>Board</Text>
             <Text style={styles.loadoutValue}>{boardName}</Text>
           </View>
-          <View style={styles.loadoutRow}>
+          <View style={[styles.loadoutRow, !petName && { borderBottomWidth: 0 }]}>
             <Text style={styles.loadoutIcon}>🔵</Text>
             <Text style={styles.loadoutLabel}>Pieces</Text>
             <Text style={styles.loadoutValue}>{piecesName}</Text>
