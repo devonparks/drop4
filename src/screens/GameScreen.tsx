@@ -1249,8 +1249,7 @@ export function GameScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* Move counter */}
-        <Text style={styles.moveCountText}>Move {moveCount}</Text>
+        {/* Move counter moved to bottom controls (duplicate removed) */}
 
         {/* First game encouragement */}
         {showFirstGameMsg && (
