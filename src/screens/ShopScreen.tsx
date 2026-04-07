@@ -794,12 +794,11 @@ const s = StyleSheet.create({
   coinGoalText: {
     fontFamily: fonts.body,
     fontWeight: weight.medium,
-    fontSize: 8,
+    fontSize: 9,
     color: '#e74c3c',
     textAlign: 'center',
     marginTop: 2,
-    lineHeight: 11,
-    opacity: 0.85,
+    lineHeight: 13,
   },
   equippedBadge: {
     marginTop: 4, alignSelf: 'center', backgroundColor: 'rgba(39,174,61,0.2)',
