@@ -1638,32 +1638,15 @@ export function GameScreen({ navigation }: Props) {
                   </View>
                 </View>
 
-                {/* Win Streak */}
-                <View style={styles.goStatItem}>
-                  <View style={styles.goStatHeader}>
-                    <Text style={[styles.goStatVal, winStreak > 0 && { color: colors.orange }]}>
-                      {winStreak > 0 ? `${winStreak}` : '0'}
-                    </Text>
-                    <Text style={styles.goStatLabel}>WIN STREAK</Text>
-                    <Text style={styles.goStatVal}>-</Text>
-                  </View>
-                  <View style={styles.goBarRow}>
-                    <View style={styles.goBarTrack}>
-                      <View style={[styles.goBarFillLeft, { width: `${Math.min(winStreak * 20, 100)}%`, backgroundColor: colors.orange }]} />
-                    </View>
-                    <View style={styles.goBarTrack}>
-                      <View style={[styles.goBarFillRight, { width: '0%' }]} />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Best Streak */}
-                <View style={styles.goStatItem}>
-                  <View style={styles.goStatHeader}>
-                    <Text style={styles.goStatVal}>{bestStreak}</Text>
-                    <Text style={styles.goStatLabel}>BEST STREAK</Text>
-                    <Text style={styles.goStatVal}>-</Text>
-                  </View>
+                {/* Streak summary — single line: current + best */}
+                <View style={styles.goStreakRow}>
+                  <Text style={styles.goStreakLabel}>STREAK</Text>
+                  <Text style={[styles.goStreakValue, winStreak > 0 && { color: colors.orange }]}>
+                    {winStreak > 0 ? `🔥 ${winStreak}` : '0'}
+                  </Text>
+                  <Text style={styles.goStreakDivider}>·</Text>
+                  <Text style={styles.goStreakLabel}>BEST</Text>
+                  <Text style={styles.goStreakValue}>{bestStreak}</Text>
                 </View>
               </View>
 
@@ -3122,6 +3105,39 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     letterSpacing: 0.3,
+  },
+  goStreakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 4,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  goStreakLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: 'rgba(168,178,212,0.7)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  goStreakValue: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  goStreakDivider: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: 'rgba(168,178,212,0.4)',
+    marginHorizontal: 4,
   },
   goPersonalBest: {
     alignItems: 'center',
