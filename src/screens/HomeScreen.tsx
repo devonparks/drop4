@@ -26,6 +26,7 @@ import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
+import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -531,14 +532,44 @@ export function HomeScreen() {
               onPress={() => navigateTo('Career')}
             />
           </PressScaleView>
-          <PressScaleView onPress={() => navigateTo('Multiplayer')}>
+          {FEATURES.onlineMultiplayer ? (
+            <PressScaleView onPress={() => navigateTo('Multiplayer')}>
+              <GlossyButton
+                label="MULTIPLAYER"
+                subtitle="Ranked · Wager Courts · Online"
+                variant="teal"
+                small
+                iconRight="›"
+                onPress={() => navigateTo('Multiplayer')}
+              />
+            </PressScaleView>
+          ) : (
+            <PressScaleView onPress={() => { haptics.tap(); }}>
+              <View style={{ position: 'relative' }}>
+                <GlossyButton
+                  label="MULTIPLAYER"
+                  subtitle="Coming Soon"
+                  variant="teal"
+                  small
+                  iconRight="›"
+                  onPress={() => {}}
+                  disabled
+                />
+                <View style={styles.comingSoonBadge}>
+                  <Text style={styles.comingSoonText}>SOON</Text>
+                </View>
+              </View>
+            </PressScaleView>
+          )}
+          {/* Local play — pass and play, available in v1 */}
+          <PressScaleView onPress={() => navigateTo('LocalPlay')}>
             <GlossyButton
-              label="MULTIPLAYER"
-              subtitle="Ranked · Wager Courts · Online"
+              label="LOCAL PLAY"
+              subtitle="Pass & play on one device"
               variant="teal"
               small
               iconRight="›"
-              onPress={() => navigateTo('Multiplayer')}
+              onPress={() => navigateTo('LocalPlay')}
             />
           </PressScaleView>
         </View>
@@ -661,20 +692,43 @@ const styles = StyleSheet.create({
   },
   logoMain: {
     fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 40,
+    fontWeight: weight.black,
+    fontSize: 42,
     color: '#ffffff',
-    textShadowColor: 'rgba(100,160,255,0.5)',
+    textShadowColor: 'rgba(120,180,255,0.7)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
-    letterSpacing: 4,
+    textShadowRadius: 22,
+    letterSpacing: 5,
   },
   logo4: {
     color: '#ff8c00',
-    fontSize: 50,
-    textShadowColor: 'rgba(255,140,0,0.6)',
+    fontSize: 52,
+    textShadowColor: 'rgba(255,140,0,0.8)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    textShadowRadius: 28,
+  },
+  comingSoonBadge: {
+    position: 'absolute',
+    top: -4,
+    right: 12,
+    backgroundColor: 'rgba(155,89,182,0.9)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#9b59b6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  comingSoonText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   seasonCountdown: {
     fontFamily: fonts.body,

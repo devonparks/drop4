@@ -51,10 +51,20 @@ export const colors = {
   navyLight: '#243560',
   navyDark: '#0f1a30',
 
-  // Text
+  // Text — brighter secondary/muted for better legibility on dark navy
   textPrimary: '#ffffff',
-  textSecondary: '#8892b0',
-  textMuted: '#5a6580',
+  textSecondary: '#a8b2d4',
+  textMuted: '#6b7595',
+  textDim: '#5a6580', // legacy alias for old textMuted callsites that need very faded
+  textAccent: '#c4d2ff', // links / interactive secondary
+
+  // Surfaces — premium card system
+  surfaceRaised: 'rgba(255,255,255,0.06)',
+  surfaceRaisedBorder: 'rgba(255,255,255,0.12)',
+  surfacePressed: 'rgba(255,255,255,0.10)',
+  surfaceInsetHighlight: 'rgba(255,255,255,0.18)',
+  divider: 'rgba(255,255,255,0.08)',
+  dividerStrong: 'rgba(255,255,255,0.14)',
 
   // Coins / currency
   coinGold: '#ffd700',
