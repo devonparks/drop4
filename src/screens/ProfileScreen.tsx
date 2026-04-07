@@ -204,7 +204,7 @@ export function ProfileScreen() {
             );
           })()}
 
-          <RankBadge size="small" showProgress style={{ marginTop: 4 }} />
+          {/* Duplicate RankBadge removed — rankBadgeRow above already shows tier + ELO */}
 
           {/* Share Profile button */}
           <Pressable
