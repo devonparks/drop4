@@ -273,7 +273,8 @@ const styles = StyleSheet.create({
   avatarWrap: {
     position: 'relative',
     alignItems: 'center',
-    minWidth: 52,
+    minWidth: 56,
+    flexShrink: 0,
   },
   avatarRing: {
     width: 42,
@@ -319,9 +320,10 @@ const styles = StyleSheet.create({
   rankLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 8,
+    fontSize: 9,
     textAlign: 'center',
-    marginTop: 1,
-    letterSpacing: 0.3,
+    marginTop: 2,
+    letterSpacing: 0.2,
+    minWidth: 56,
   },
 });
