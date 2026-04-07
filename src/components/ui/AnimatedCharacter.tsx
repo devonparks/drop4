@@ -141,6 +141,16 @@ const IDLE_SHEET_CONFIG: SheetConfig = {
   frameInterval: 100,   // smooth idle breathing
 };
 
+// Base idle has a different grid layout (3 cols × 4 rows = 768×1024)
+// vs idle variants which are (4 cols × 3 rows = 1024×768)
+const BASE_IDLE_SHEET_CONFIG: SheetConfig = {
+  columns: 3,
+  totalFrames: 12,
+  frameWidth: 256,
+  frameHeight: 256,
+  frameInterval: 100,
+};
+
 // ═══════════════════════════════════════════════════════════
 // LEGACY EMOTE FRAMES — kept as fallback exports for other
 // components (EmoteShowcase, CharacterCreator, etc.)
@@ -364,19 +374,31 @@ export function AnimatedCharacter({
     handleComplete = handleEmoteComplete;
   } else if (animState === 'idle_variant' && activeVariant) {
     const key = `idle_${activeVariant}`;
-    sheetSource = SPRITE_SHEETS[key] || SPRITE_SHEETS.idle;
-    config = IDLE_SHEET_CONFIG;
+    const variantSheet = SPRITE_SHEETS[key];
+    if (variantSheet) {
+      sheetSource = variantSheet;
+      config = IDLE_SHEET_CONFIG; // variants are 4 cols × 3 rows
+    } else {
+      sheetSource = SPRITE_SHEETS.idle;
+      config = BASE_IDLE_SHEET_CONFIG; // fallback to base idle (3 cols × 4 rows)
+    }
     loop = false;
     handleComplete = handleVariantComplete;
   } else if (selectedIdle) {
     const key = `idle_${selectedIdle}`;
-    sheetSource = SPRITE_SHEETS[key] || SPRITE_SHEETS.idle;
-    config = IDLE_SHEET_CONFIG;
+    const resolvedSource = SPRITE_SHEETS[key];
+    if (resolvedSource) {
+      sheetSource = resolvedSource;
+      config = IDLE_SHEET_CONFIG; // variants are 4×3
+    } else {
+      sheetSource = SPRITE_SHEETS.idle;
+      config = BASE_IDLE_SHEET_CONFIG; // base idle is 3×4
+    }
     loop = true;
     handleComplete = undefined;
   } else {
     sheetSource = SPRITE_SHEETS.idle;
-    config = IDLE_SHEET_CONFIG;
+    config = BASE_IDLE_SHEET_CONFIG; // base idle is 3×4 (768×1024)
     loop = true;
     handleComplete = undefined;
   }

@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   mainContent: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold,
@@ -130,10 +130,11 @@ const styles = StyleSheet.create({
   },
   playerCard: {
     width: '100%', maxWidth: 340, borderRadius: 16, overflow: 'hidden',
+    alignSelf: 'center',
   },
   playerGradient: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 14, borderRadius: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 12, paddingHorizontal: 12, borderRadius: 16,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   playerDot: {
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  pieceIcon: { fontSize: 24 },
+  pieceIcon: { fontSize: 22, marginRight: 4 },
   vsWrap: {
     flexDirection: 'row', alignItems: 'center',
     gap: 12, marginVertical: 14,

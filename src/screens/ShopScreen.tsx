@@ -418,7 +418,104 @@ export function ShopScreen() {
         {/* ── Main scrollable content ── */}
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
-          {/* ═══ 1. DAILY DEALS ═══ */}
+          {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══ */}
+          <View style={s.itemShopSection}>
+            <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
+
+            {/* Category tabs */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
+              {tabs.map(tab => (
+                <Pressable
+                  key={tab.key}
+                  onPress={() => { setActiveTab(tab.key); haptics.tap(); }}
+                  style={[s.tab, activeTab === tab.key && s.tabActive]}
+                >
+                  <Text style={s.tabIcon}>{tab.icon}</Text>
+                  <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {/* Collection filters */}
+            {activeTab !== 'boxes' && activeTab !== 'pets' && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
+                {collectionFilters.map(cf => (
+                  <Pressable
+                    key={cf}
+                    onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
+                    style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
+                  >
+                    <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Items */}
+            {activeTab === 'pets' ? (
+              <View style={s.grid}>
+                {PETS.map((pet, i) => (
+                  <PetCard
+                    key={pet.id}
+                    pet={pet}
+                    isOwned={ownedPets.includes(pet.id)}
+                    isEquipped={equippedPet === pet.id}
+                    onPress={() => handlePetPress(pet)}
+                    index={i}
+                  />
+                ))}
+              </View>
+            ) : activeTab === 'boxes' ? (
+              <View style={s.boxList}>
+                {LOOT_BOXES.map(box => {
+                  const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
+                  return (
+                    <View key={box.id} style={s.boxItem}>
+                      <Text style={s.boxItemIcon}>{box.icon}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.boxItemName}>{box.name}</Text>
+                        <Text style={s.boxItemCount}>{'\u00D7'}{count} owned</Text>
+                      </View>
+                      {box.cost > 0 && <Text style={s.boxItemPrice}>{'\u{1FA99}'} {box.cost}</Text>}
+                    </View>
+                  );
+                })}
+              </View>
+            ) : items.length > 0 ? (
+              <View style={s.grid}>
+                {items.map((item, i) => (
+                  <ShopItemCard
+                    key={item.id}
+                    item={item}
+                    isOwned={category === 'emotes'
+                      ? (ownedEmotes.includes(item.id) || item.price === 0)
+                      : (owned[category]?.includes(item.id) ?? false)}
+                    isEquipped={category === 'emotes'
+                      ? equippedEmotes.includes(item.id)
+                      : equipped[
+                          category === 'boards' ? 'board'
+                          : category === 'pieces' ? 'pieces'
+                          : category === 'dropEffects' ? 'dropEffect'
+                          : category === 'boardAccessories' ? 'boardAccessory'
+                          : 'winAnimation'
+                        ] === item.id}
+                    onPress={() => category === 'emotes'
+                      ? handleEmotePress(item)
+                      : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
+                    index={i}
+                    playerCoins={coins}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View style={s.comingSoon}>
+                <Text style={s.comingSoonIcon}>{'\u{1F6A7}'}</Text>
+                <Text style={s.comingSoonText}>No items match this filter</Text>
+              </View>
+            )}
+          </View>
+
+          {/* ═══ 2. DAILY DEALS ═══ */}
           <Animated.View entering={FadeInUp.delay(100).springify()}>
             <SectionHeader
               title="TODAY'S DEALS"
@@ -508,104 +605,7 @@ export function ShopScreen() {
             </View>
           </Animated.View>
 
-          {/* ═══ 4. ITEM SHOP ═══ */}
-          <View style={s.itemShopSection}>
-            <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
-
-            {/* Category tabs */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
-              {tabs.map(tab => (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => { setActiveTab(tab.key); haptics.tap(); }}
-                  style={[s.tab, activeTab === tab.key && s.tabActive]}
-                >
-                  <Text style={s.tabIcon}>{tab.icon}</Text>
-                  <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            {/* Collection filters */}
-            {activeTab !== 'boxes' && activeTab !== 'pets' && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
-                {collectionFilters.map(cf => (
-                  <Pressable
-                    key={cf}
-                    onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
-                    style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
-                  >
-                    <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            )}
-
-            {/* Items */}
-            {activeTab === 'pets' ? (
-              <View style={s.grid}>
-                {PETS.map((pet, i) => (
-                  <PetCard
-                    key={pet.id}
-                    pet={pet}
-                    isOwned={ownedPets.includes(pet.id)}
-                    isEquipped={equippedPet === pet.id}
-                    onPress={() => handlePetPress(pet)}
-                    index={i}
-                  />
-                ))}
-              </View>
-            ) : activeTab === 'boxes' ? (
-              <View style={s.boxList}>
-                {LOOT_BOXES.map(box => {
-                  const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
-                  return (
-                    <View key={box.id} style={s.boxItem}>
-                      <Text style={s.boxItemIcon}>{box.icon}</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={s.boxItemName}>{box.name}</Text>
-                        <Text style={s.boxItemCount}>{'\u00D7'}{count} owned</Text>
-                      </View>
-                      {box.cost > 0 && <Text style={s.boxItemPrice}>{'\u{1FA99}'} {box.cost}</Text>}
-                    </View>
-                  );
-                })}
-              </View>
-            ) : items.length > 0 ? (
-              <View style={s.grid}>
-                {items.map((item, i) => (
-                  <ShopItemCard
-                    key={item.id}
-                    item={item}
-                    isOwned={category === 'emotes'
-                      ? (ownedEmotes.includes(item.id) || item.price === 0)
-                      : (owned[category]?.includes(item.id) ?? false)}
-                    isEquipped={category === 'emotes'
-                      ? equippedEmotes.includes(item.id)
-                      : equipped[
-                          category === 'boards' ? 'board'
-                          : category === 'pieces' ? 'pieces'
-                          : category === 'dropEffects' ? 'dropEffect'
-                          : category === 'boardAccessories' ? 'boardAccessory'
-                          : 'winAnimation'
-                        ] === item.id}
-                    onPress={() => category === 'emotes'
-                      ? handleEmotePress(item)
-                      : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
-                    index={i}
-                    playerCoins={coins}
-                  />
-                ))}
-              </View>
-            ) : rawItems.length === 0 ? (
-              <View style={s.loadingWrap}><Text style={s.loadingText}>Loading...</Text></View>
-            ) : (
-              <View style={s.comingSoon}>
-                <Text style={s.comingSoonIcon}>{'\u{1F6A7}'}</Text>
-                <Text style={s.comingSoonText}>No items match this filter</Text>
-              </View>
-            )}
-          </View>
+          {/* Item shop is now rendered first (above deals) */}
         </ScrollView>
       </View>
     </ScreenBackground>

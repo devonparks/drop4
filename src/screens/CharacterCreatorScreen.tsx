@@ -361,11 +361,17 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           {card.label}
                         </Text>
 
-                        {/* Count badge */}
-                        {hasItems && (
+                        {/* Count badge — or Coming Soon for empty categories */}
+                        {hasItems ? (
                           <View style={[styles.categoryCountBadge, { backgroundColor: card.color[0] + '20', borderColor: card.color[0] + '40' }]}>
                             <Text style={[styles.categoryCountText, { color: card.color[0] }]}>
                               {counts.owned}/{counts.total}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={[styles.categoryCountBadge, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+                            <Text style={[styles.categoryCountText, { color: 'rgba(255,255,255,0.4)', fontSize: 8 }]}>
+                              SOON
                             </Text>
                           </View>
                         )}
@@ -812,7 +818,9 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 // ====================================
 
 const CARD_GAP = 10;
-const CARD_WIDTH = (SCREEN_WIDTH - 32 - CARD_GAP) / 2; // 2 columns
+// Use min(screen, 386) — phone frame inner content area is 386px on web
+const CONTENT_WIDTH = Math.min(SCREEN_WIDTH, 386);
+const CARD_WIDTH = Math.floor((CONTENT_WIDTH - 32 - CARD_GAP) / 2); // 2 columns, integer for safety
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -1108,12 +1116,12 @@ const styles = StyleSheet.create({
   randomButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(155,89,182,0.12)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
+    gap: 8,
+    backgroundColor: 'rgba(155,89,182,0.18)',
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1.5,
     borderColor: 'rgba(155,89,182,0.25)',
   },
   randomIcon: {
@@ -1122,9 +1130,10 @@ const styles = StyleSheet.create({
   randomLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 11,
+    fontSize: 13,
     color: '#bf5fff',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 
   // --- Back to Categories ---

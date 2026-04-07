@@ -75,26 +75,32 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 
   useEffect(() => {
     // Pulse glow
-    RNAnimated.loop(
+    const pulse = RNAnimated.loop(
       RNAnimated.sequence([
         RNAnimated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
         RNAnimated.timing(pulseAnim, { toValue: 0.3, duration: 1200, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    pulse.start();
     // Float
-    RNAnimated.loop(
+    const float = RNAnimated.loop(
       RNAnimated.sequence([
         RNAnimated.timing(floatAnim, { toValue: -8, duration: 1500, useNativeDriver: true }),
         RNAnimated.timing(floatAnim, { toValue: 8, duration: 1500, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    float.start();
+    return () => { pulse.stop(); float.stop(); };
   }, []);
 
+  const revealedRef = useRef(false);
   const handleTap = () => {
+    if (revealedRef.current) return; // Prevent double-reveal
     haptics.tap();
     setTapCount(prev => {
       const next = prev + 1;
-      if (next >= 3) {
+      if (next >= 3 && !revealedRef.current) {
+        revealedRef.current = true;
         haptics.heavy();
         onReveal();
       }

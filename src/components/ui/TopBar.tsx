@@ -270,6 +270,8 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: 'relative',
+    alignItems: 'center',
+    minWidth: 52,
   },
   avatarRing: {
     width: 42,

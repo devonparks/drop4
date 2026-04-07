@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, ImageSourcePropType } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, ImageSourcePropType } from 'react-native';
 
 // ═══════════════════════════════════════════════════════════
 // SPRITE SHEET ANIMATOR
@@ -10,7 +10,7 @@ import { View, Image, StyleSheet, ImageSourcePropType } from 'react-native';
 // How it works:
 // - A View with overflow:'hidden' acts as the viewport (1 frame)
 // - A full-size Image of the entire sheet sits inside
-// - translateX/Y shifts the Image so the correct frame is visible
+// - left/top positioning shifts the Image so the correct frame is visible
 // ═══════════════════════════════════════════════════════════
 
 export interface SpriteSheetAnimatorProps {
@@ -100,19 +100,24 @@ export function SpriteSheetAnimator({
     };
   }, [source, playing, totalFrames, frameInterval, loop]);
 
-  // Calculate sheet dimensions
+  // Calculate sheet dimensions at native resolution
   const rows = Math.ceil(totalFrames / columns);
-  const sheetWidth = columns * frameWidth;
-  const sheetHeight = rows * frameHeight;
+  const nativeSheetWidth = columns * frameWidth;
+  const nativeSheetHeight = rows * frameHeight;
 
-  // Calculate frame position
+  // Scale factor: display size vs native frame size
+  // When size=320 and frameWidth=256, scale=1.25
+  const scale = size / frameWidth;
+  const displaySheetWidth = nativeSheetWidth * scale;
+  const displaySheetHeight = nativeSheetHeight * scale;
+  const displayFrameWidth = frameWidth * scale;
+  const displayFrameHeight = frameHeight * scale;
+
+  // Calculate frame position at display scale
   const col = frameIndex % columns;
   const row = Math.floor(frameIndex / columns);
-  const translateX = -(col * frameWidth);
-  const translateY = -(row * frameHeight);
-
-  // Scale factor from frame size to display size
-  const scale = size / frameWidth;
+  const left = -(col * displayFrameWidth);
+  const top = -(row * displayFrameHeight);
 
   return (
     <View
@@ -128,19 +133,11 @@ export function SpriteSheetAnimator({
       <Image
         source={source}
         style={{
-          width: sheetWidth,
-          height: sheetHeight,
+          width: displaySheetWidth,
+          height: displaySheetHeight,
           position: 'absolute',
-          top: 0,
-          left: 0,
-          transform: [
-            { translateX: translateX },
-            { translateY: translateY },
-            // We don't scale the Image — instead we scale the viewport.
-            // But since RN Image uses logical pixels and our sheets have
-            // exact pixel dimensions, we need to keep the image at full
-            // sheet size and scale the whole container.
-          ],
+          left,
+          top,
         }}
         resizeMode="stretch"
       />
@@ -148,22 +145,18 @@ export function SpriteSheetAnimator({
   );
 }
 
-// Wrapper that applies scaling so the viewport shows at `size` dimensions
-// but the internal rendering uses the native frame dimensions
+// Wrapper that renders at the target `size` by passing it straight through.
+// No CSS transform scaling needed — `SpriteSheetAnimator` sets the Image
+// width/height proportionally so the correct frame region is visible at
+// whatever display size is requested.
 export function ScaledSpriteSheet(props: SpriteSheetAnimatorProps) {
-  const { size = 256, frameWidth, style, ...rest } = props;
-  const scale = size / frameWidth;
+  const { size = 256, style, ...rest } = props;
 
   return (
-    <View style={[{ width: size, height: size, overflow: 'hidden' }, style]}>
-      <View style={{ transform: [{ scale }], transformOrigin: 'top left' }}>
-        <SpriteSheetAnimator
-          {...rest}
-          frameWidth={frameWidth}
-          size={frameWidth} // render at native size, container scales it
-          style={{ width: frameWidth, height: frameWidth }}
-        />
-      </View>
-    </View>
+    <SpriteSheetAnimator
+      {...rest}
+      size={size}
+      style={style}
+    />
   );
 }

@@ -1249,23 +1249,8 @@ export function GameScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* Quick Stats bar — motivational stats below HUD */}
-        {(() => {
-          const stats = useMatchHistoryStore.getState().getStats();
-          const streak = useGameStore.getState().winStreak;
-          return (
-            <View style={styles.quickStatsBar}>
-              {/* Move counter */}
-              <Text style={styles.quickStatText}>Move {moveCount}</Text>
-              {stats.totalGames > 0 && (
-                <Text style={styles.quickStatText}>{stats.winRate}% WR</Text>
-              )}
-              {streak > 0 && (
-                <Text style={styles.quickStatText}>{'\uD83D\uDD25'} {streak}</Text>
-              )}
-            </View>
-          );
-        })()}
+        {/* Move counter */}
+        <Text style={styles.moveCountText}>Move {moveCount}</Text>
 
         {/* First game encouragement */}
         {showFirstGameMsg && (
@@ -1316,12 +1301,7 @@ export function GameScreen({ navigation }: Props) {
           />
         </RNAnimated.View>
 
-        {/* Last move indicator */}
-        {lastMoveCol !== null && (
-          <RNAnimated.View style={[styles.lastMoveIndicator, { opacity: lastMoveFade }]}>
-            <Text style={styles.lastMoveText}>Col {lastMoveCol + 1}</Text>
-          </RNAnimated.View>
-        )}
+        {/* Last move indicator — removed, piece drop is self-evident */}
 
         {/* Bottom controls */}
         <View style={styles.controls}>
@@ -1385,63 +1365,7 @@ export function GameScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* Compact emote pills + MORE button */}
-        <View style={styles.emoteRow}>
-          {/* 4 recently-used emote pills */}
-          {([
-            { id: 'thumbsup' as const, emoji: '👍', label: 'Nice', color: '#2ecc71' },
-            { id: 'clapping' as const, emoji: '👏', label: 'GG', color: '#f1c40f' },
-            { id: 'laughpoint' as const, emoji: '😂', label: 'Lol', color: '#e67e22' },
-            { id: 'angry' as const, emoji: '😤', label: 'Grr', color: '#e74c3c' },
-          ]).map(emote => (
-            <Pressable
-              key={emote.id}
-              onPress={() => {
-                haptics.tap();
-                playSound('click');
-                // Show player's emote locally
-                setMyEmote({ emoteId: emote.id, key: Date.now() });
-                if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-                  sendEmote(onlineMatchId, emote.id, myPlayerNum);
-                } else {
-                  // Local game: trigger AI reaction
-                  triggerAiEmoteReaction(emote.id);
-                }
-              }}
-              style={[styles.quickEmotePill, { borderColor: emote.color + '30' }]}
-            >
-              <Text style={styles.quickEmoteEmoji}>{emote.emoji}</Text>
-              <Text style={[styles.quickEmoteLabel, { color: emote.color + 'bb' }]}>{emote.label}</Text>
-            </Pressable>
-          ))}
-
-          {/* MORE button — opens full picker */}
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              playSound('click');
-              setEmotePickerTab('emotes');
-              setEmotePickerOpen(true);
-            }}
-            style={styles.moreBtn}
-          >
-            <Text style={styles.moreBtnText}>MORE</Text>
-            <Text style={styles.moreBtnArrow}>{'▲'}</Text>
-          </Pressable>
-
-          {/* Chat button — opens picker on chat tab */}
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              playSound('click');
-              setEmotePickerTab('chat');
-              setEmotePickerOpen(true);
-            }}
-            style={styles.chatToggleBtn}
-          >
-            <Text style={styles.chatToggleIcon}>{'💬'}</Text>
-          </Pressable>
-        </View>
+        {/* Emote/Chat pills removed — use the emote wheel button (bottom-right) or MORE for full picker */}
 
         {/* Full-screen emote/chat picker modal */}
         <EmotePickerModal
@@ -1798,177 +1722,50 @@ export function GameScreen({ navigation }: Props) {
                 </View>
               )}
 
-              {/* ---- Rewards section ---- */}
+              {/* ---- Rewards — clean consolidated view ---- */}
               <View style={styles.goRewardsBlock}>
-                {/* Coin tooltip */}
-                {coinTooltipVisible && (
-                  <View style={styles.coinTooltip}>
-                    <Text style={styles.coinTooltipText}>Visit the Shop to spend your coins!</Text>
-                    <View style={styles.coinTooltipArrow} />
+                {/* Big total coins earned */}
+                {status === 'won' && winner === 1 && totalCoinsEarned > 0 && (
+                  <View style={styles.goTotalCoins}>
+                    <Text style={styles.goTotalCoinsIcon}>🪙</Text>
+                    <Text style={styles.goTotalCoinsAmount}>+{totalCoinsEarned}</Text>
                   </View>
-                )}
-                {/* Coins earned */}
-                {status === 'won' && winner === 1 && (
-                  <Pressable
-                    style={styles.goRewardChip}
-                    onPress={() => {
-                      haptics.tap();
-                      setCoinTooltipVisible(true);
-                      setTimeout(() => setCoinTooltipVisible(false), 2500);
-                    }}
-                  >
-                    <Text style={styles.goRewardIcon}>🪙</Text>
-                    <Text style={styles.goRewardAmount}>+{Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)}</Text>
-                    <Text style={styles.goRewardDesc}>
-                      {dailyStreakMultiplier > 1 ? `Coins (x${dailyStreakMultiplier} streak!)` : 'Coins'}
-                    </Text>
-                  </Pressable>
                 )}
                 {status === 'draw' && (
-                  <Pressable
-                    style={styles.goRewardChip}
-                    onPress={() => {
-                      haptics.tap();
-                      setCoinTooltipVisible(true);
-                      setTimeout(() => setCoinTooltipVisible(false), 2500);
-                    }}
-                  >
-                    <Text style={styles.goRewardIcon}>🪙</Text>
-                    <Text style={styles.goRewardAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
-                    <Text style={styles.goRewardDesc}>
-                      {getStreakMultiplier() > 1 ? `Draw (x${getStreakMultiplier()} streak!)` : 'Draw Bonus'}
-                    </Text>
-                  </Pressable>
-                )}
-                {/* Streak bonus */}
-                {status === 'won' && winner === 1 && winStreak > 1 && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(255,140,0,0.3)' }]}>
-                    <Text style={styles.goRewardIcon}>🔥</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.orange }]}>+{Math.min(winStreak * 10, 50)}</Text>
-                    <Text style={styles.goRewardDesc}>Streak</Text>
+                  <View style={styles.goTotalCoins}>
+                    <Text style={styles.goTotalCoinsIcon}>🪙</Text>
+                    <Text style={styles.goTotalCoinsAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
                   </View>
                 )}
-                {/* Streak Milestone Reward */}
-                {status === 'won' && winner === 1 && streakReward && (
-                  <View style={[styles.goRewardChip, {
-                    borderColor: streakReward.milestone >= 10 ? 'rgba(241,196,15,0.5)' : 'rgba(255,140,0,0.4)',
-                    backgroundColor: streakReward.milestone >= 10 ? 'rgba(241,196,15,0.1)' : 'rgba(255,140,0,0.08)',
-                  }]}>
-                    <Text style={styles.goRewardIcon}>🔥</Text>
-                    <Text style={[styles.goRewardAmount, {
-                      color: streakReward.milestone >= 10 ? '#f1c40f' : colors.orange,
-                      fontSize: 10,
-                    }]}>
-                      STREAK{'\n'}BONUS!
-                    </Text>
-                    <Text style={[styles.goRewardDesc, { color: streakReward.milestone >= 10 ? '#f1c40f' : colors.orange }]}>
-                      +{streakReward.coins.toLocaleString()}{streakReward.lootBox ? ` + ${streakReward.lootBox} Box` : ''}
-                    </Text>
+                {/* Notable events — max 3, only the most exciting */}
+                {didLevelUp && (
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(155,89,182,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>🎉</Text>
+                    <Text style={[styles.goEventText, { color: '#b06cc7' }]}>Level Up! Now Lv {level}</Text>
                   </View>
                 )}
-                {/* XP earned */}
-                {status === 'won' && winner === 1 && (
-                  <View style={[styles.goRewardChip, { borderColor: isFirstWinOfDay ? 'rgba(241,196,15,0.5)' : 'rgba(155,89,182,0.3)', backgroundColor: isFirstWinOfDay ? 'rgba(241,196,15,0.08)' : undefined }]}>
-                    <Text style={styles.goRewardIcon}>{isFirstWinOfDay ? '\u2B50' : '\u2B50'}</Text>
-                    <Text style={[styles.goRewardAmount, { color: isFirstWinOfDay ? '#f1c40f' : colors.purple }]}>+{isFirstWinOfDay ? COIN_REWARDS[difficulty] * 2 : COIN_REWARDS[difficulty]}</Text>
-                    <Text style={styles.goRewardDesc}>{isFirstWinOfDay ? 'XP (2x!)' : 'XP'}</Text>
+                {streakReward && (
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(255,140,0,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>🔥</Text>
+                    <Text style={[styles.goEventText, { color: colors.orange }]}>{streakReward.milestone} Win Streak! +{streakReward.coins} bonus</Text>
                   </View>
                 )}
-                {/* Season XP — shown for win, loss, and draw */}
-                {(() => {
-                  const seasonXpEarned = status === 'won' && winner === 1
-                    ? COIN_REWARDS[difficulty]
-                    : status === 'draw' ? 15 : 10;
-                  const seasonState = useSeasonStore.getState();
-                  const xpToNext = seasonState.xpPerTier - seasonState.xp;
-                  const isCloseToTier = xpToNext > 0 && xpToNext <= 150 && seasonState.currentTier < seasonState.maxTier;
-                  return (
-                    <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.3)' }]}>
-                      <Text style={styles.goRewardIcon}>🏆</Text>
-                      <Text style={[styles.goRewardAmount, { color: colors.teal }]}>+{seasonXpEarned}</Text>
-                      <Text style={styles.goRewardDesc}>Season XP</Text>
-                      {isCloseToTier && (
-                        <Text style={[styles.goRewardDesc, { color: colors.teal, fontSize: 8, marginTop: 2 }]}>
-                          {xpToNext} to next tier!
-                        </Text>
-                      )}
-                    </View>
-                  );
-                })()}
-                {/* Career stars — dramatic display */}
-                {status === 'won' && winner === 1 && wasCareerLevel && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.4)', backgroundColor: 'rgba(241,196,15,0.08)' }]}>
-                    <Text style={styles.goRewardIcon}>
-                      {moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}
-                    </Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.gold, fontSize: 11 }]}>
-                      {moveCount < 15 ? 'PERFECT!' : moveCount < 25 ? 'Great!' : 'Cleared'}
-                    </Text>
+                {completedChallengeName && (
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(26,188,156,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>🎯</Text>
+                    <Text style={[styles.goEventText, { color: colors.teal }]}>Challenge: {completedChallengeName}</Text>
                   </View>
                 )}
-                {/* Move Efficiency badge */}
-                {status === 'won' && winner === 1 && (() => {
-                  const playerMoves = Math.ceil(moveCount / 2);
-                  const badge = playerMoves <= 4
-                    ? { icon: '\u26A1', label: 'PERFECT\nGAME!', color: '#f1c40f', bg: 'rgba(241,196,15,0.12)', border: 'rgba(241,196,15,0.5)' }
-                    : playerMoves <= 8
-                    ? { icon: '\uD83D\uDD25', label: 'QUICK WIN', color: colors.orange, bg: 'rgba(255,140,0,0.08)', border: 'rgba(255,140,0,0.4)' }
-                    : playerMoves <= 13
-                    ? { icon: '\uD83D\uDC4D', label: 'GOOD GAME', color: colors.green, bg: 'rgba(39,174,61,0.08)', border: 'rgba(39,174,61,0.3)' }
-                    : { icon: '\uD83C\uDFAF', label: 'HARD\nFOUGHT', color: colors.textSecondary, bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)' };
-                  return (
-                    <View style={[styles.goRewardChip, { borderColor: badge.border, backgroundColor: badge.bg }]}>
-                      <Text style={styles.goRewardIcon}>{badge.icon}</Text>
-                      <Text style={[styles.goRewardAmount, { color: badge.color, fontSize: 10 }]}>{badge.label}</Text>
-                      <Text style={styles.goRewardDesc}>{playerMoves} moves</Text>
-                    </View>
-                  );
-                })()}
-                {/* Undo Count badge — reward pure skill */}
-                {status === 'won' && winner === 1 && undoCount === 0 && difficulty === 'easy' && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(52,152,219,0.5)', backgroundColor: 'rgba(52,152,219,0.12)' }]}>
-                    <Text style={styles.goRewardIcon}>{'\uD83D\uDC8E'}</Text>
-                    <Text style={[styles.goRewardAmount, { color: '#3498db', fontSize: 10 }]}>{'NO UNDO\nPURE SKILL!'}</Text>
+                {wasCareerLevel && status === 'won' && winner === 1 && (
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(241,196,15,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>{moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}</Text>
+                    <Text style={[styles.goEventText, { color: '#f1c40f' }]}>{moveCount < 15 ? 'Perfect clear!' : moveCount < 25 ? 'Great clear!' : 'Level cleared!'}</Text>
                   </View>
                 )}
-                {status === 'won' && winner === 1 && undoCount > 0 && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' }]}>
-                    <Text style={styles.goRewardIcon}>{'\u21A9\uFE0F'}</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.textSecondary, fontSize: 10 }]}>Undo x{undoCount}</Text>
-                  </View>
-                )}
-                {/* LEVEL UP! */}
-                {status === 'won' && winner === 1 && didLevelUp && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.5)', backgroundColor: 'rgba(155,89,182,0.12)' }]}>
-                    <Text style={styles.goRewardIcon}>🎉</Text>
-                    <Text style={[styles.goRewardAmount, { color: '#b06cc7', fontSize: 11 }]}>LEVEL UP!</Text>
-                    <Text style={styles.goRewardDesc}>Lv {level}</Text>
-                  </View>
-                )}
-                {/* SEASON TIER UP! */}
-                {seasonTierUp !== null && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.5)', backgroundColor: 'rgba(26,188,156,0.12)' }]}>
-                    <Text style={styles.goRewardIcon}>🏆</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>SEASON{'\n'}TIER UP!</Text>
-                    <Text style={styles.goRewardDesc}>Tier {seasonTierUp}</Text>
-                  </View>
-                )}
-                {/* CHALLENGE COMPLETE! */}
-                {status === 'won' && winner === 1 && completedChallengeName && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(26,188,156,0.5)', backgroundColor: 'rgba(26,188,156,0.12)' }]}>
-                    <Text style={styles.goRewardIcon}>🎯</Text>
-                    <View>
-                      <Text style={[styles.goRewardAmount, { color: colors.teal, fontSize: 10 }]}>CHALLENGE DONE!</Text>
-                      <Text style={[styles.goRewardDesc, { color: '#ffffff', fontSize: 11, marginTop: 1 }]}>{completedChallengeName}</Text>
-                    </View>
-                  </View>
-                )}
-                {/* Streak broken notification (loss only) */}
                 {status === 'won' && winner === 2 && streakBrokenAt !== null && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(231,76,60,0.4)', backgroundColor: 'rgba(231,76,60,0.08)' }]}>
-                    <Text style={styles.goRewardIcon}>💔</Text>
-                    <Text style={[styles.goRewardAmount, { color: colors.pieceRed, fontSize: 11 }]}>Streak broken{'\n'}at {streakBrokenAt}!</Text>
-                    <Text style={[styles.goRewardDesc, { color: colors.textSecondary }]}>Start a new one!</Text>
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(231,76,60,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>💔</Text>
+                    <Text style={[styles.goEventText, { color: colors.pieceRed }]}>{streakBrokenAt} win streak broken</Text>
                   </View>
                 )}
                 {/* Game count milestone celebration */}
@@ -2355,6 +2152,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 4,
     marginTop: 28,
+  },
+  moveCountText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(200,220,255,0.4)',
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   quickStatsBar: {
     flexDirection: 'row',
@@ -3277,6 +3083,47 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     letterSpacing: -1,
+  },
+  goTotalCoins: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  goTotalCoinsIcon: {
+    fontSize: 24,
+  },
+  goTotalCoinsAmount: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 28,
+    color: colors.coinGold,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
+  goEventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+  },
+  goEventIcon: {
+    fontSize: 16,
+  },
+  goEventText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
   goPersonalBest: {
     alignItems: 'center',

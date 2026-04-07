@@ -216,8 +216,7 @@ export function MatchupScreen({ navigation }: Props) {
   return (
     <ScreenBackground>
       <View style={styles.container}>
-        {/* Coin/gem display */}
-        <TopBar coins={coins} gems={gems} level={playerLevel} />
+        {/* No TopBar — this is a cinematic VS reveal */}
 
         {/* Boss battle red gradient overlay */}
         {isBossMatch && (
@@ -279,16 +278,6 @@ export function MatchupScreen({ navigation }: Props) {
               </Text>
             </View>
             <Text style={styles.playerTitle}>YOU</Text>
-            {equippedPet && (
-              <>
-                <PetDisplay petId={equippedPet} size={60} style={{ marginTop: 2 }} />
-                {getPetById(equippedPet) && (
-                  <Text style={styles.petNameText}>
-                    {'\uD83D\uDC15'} {getPetById(equippedPet)!.name}
-                  </Text>
-                )}
-              </>
-            )}
           </Animated.View>
 
           {/* ── CENTER: VS ── */}
@@ -310,18 +299,20 @@ export function MatchupScreen({ navigation }: Props) {
                   <Text style={styles.vsText}>VS</Text>
                 </Animated.View>
 
-                {/* Match rules below VS */}
-                <Animated.View entering={FadeInUp.delay(600).duration(400)} style={styles.matchInfo}>
-                  <Text style={styles.matchRule}>
-                    Connect {connectCount} {'\u2022'} {boardSize} Board
-                  </Text>
-                  {timerSeconds != null && timerSeconds > 0 && (
-                    <Text style={styles.matchDetail}>{timerSeconds}s per turn</Text>
-                  )}
-                  {wagerAmount != null && wagerAmount > 0 && (
-                    <Text style={styles.matchWager}>{wagerAmount} at stake</Text>
-                  )}
-                </Animated.View>
+                {/* Match details below VS — only show non-standard rules */}
+                {(connectCount !== 4 || (timerSeconds != null && timerSeconds > 0) || (wagerAmount != null && wagerAmount > 0)) && (
+                  <Animated.View entering={FadeInUp.delay(600).duration(400)} style={styles.matchInfo}>
+                    {connectCount !== 4 && (
+                      <Text style={styles.matchRule}>Connect {connectCount}</Text>
+                    )}
+                    {timerSeconds != null && timerSeconds > 0 && (
+                      <Text style={styles.matchDetail}>{timerSeconds}s per turn</Text>
+                    )}
+                    {wagerAmount != null && wagerAmount > 0 && (
+                      <Text style={styles.matchWager}>{wagerAmount} coins at stake</Text>
+                    )}
+                  </Animated.View>
+                )}
               </>
             )}
           </View>
@@ -351,14 +342,7 @@ export function MatchupScreen({ navigation }: Props) {
               <View style={[styles.namePlate, styles.namePlateOpponent]}>
                 <Text style={styles.nameText} numberOfLines={1}>{opponentName}</Text>
               </View>
-              <Text style={styles.opponentTitle}>{opponentTitle}</Text>
-
-              {/* Fake opponent stats */}
-              <View style={styles.oppStatsWrap}>
-                <Text style={styles.oppStatText}>Win Rate: {opponentStats.winRate}%</Text>
-                <Text style={styles.oppStatText}>Favorite Move: {opponentStats.favMove}</Text>
-                <Text style={styles.oppStatText}>{opponentStats.gamesPlayed} games</Text>
-              </View>
+              <Text style={styles.opponentTitle}>{opponentTitle.toUpperCase()}</Text>
             </Animated.View>
           ) : (
             <View style={styles.playerSide}>
@@ -412,7 +396,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingTop: 4,
+    paddingTop: 50,
     paddingBottom: 30,
   },
 
@@ -521,9 +505,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   characterGlow: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },

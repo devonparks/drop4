@@ -250,7 +250,7 @@ export function EmoteShowcase({ visible, onClose }: EmoteShowcaseProps) {
                         {isLocked && (
                           <View style={styles.lockOverlay}>
                             <Text style={styles.lockIcon}>🔒</Text>
-                            <Text style={styles.lockReq} numberOfLines={1}>{unlock.requirement}</Text>
+                            <Text style={styles.lockReq} numberOfLines={2}>{unlock.requirement}</Text>
                           </View>
                         )}
                         {isPlaying && (

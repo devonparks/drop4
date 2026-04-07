@@ -136,9 +136,21 @@ export function RootNavigator() {
         component={SeasonPassScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
-      <Stack.Screen name="CharacterCreator" component={CharacterCreatorScreen} />
-      <Stack.Screen name="BoardEditor" component={BoardEditorScreen} />
-      <Stack.Screen name="ReplayViewer" component={ReplayViewerScreen} />
+      <Stack.Screen
+        name="CharacterCreator"
+        component={CharacterCreatorScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="BoardEditor"
+        component={BoardEditorScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="ReplayViewer"
+        component={ReplayViewerScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
       <Stack.Screen
         name="LootBox"
         component={LootBoxScreen}
@@ -160,7 +172,11 @@ export function RootNavigator() {
         component={StatsScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
-      <Stack.Screen name="PartyLobby" component={PartyLobbyScreen} />
+      <Stack.Screen
+        name="PartyLobby"
+        component={PartyLobbyScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
       <Stack.Screen
         name="Collection"
         component={CollectionScreen}

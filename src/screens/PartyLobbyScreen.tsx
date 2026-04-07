@@ -31,7 +31,9 @@ type Props = {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SLOT_WIDTH = SCREEN_WIDTH * 0.42;
+// Cap at phone frame inner width on web
+const CONTENT_WIDTH = Math.min(SCREEN_WIDTH, 386);
+const SLOT_WIDTH = CONTENT_WIDTH * 0.42;
 
 // Room code generator
 function generateRoomCode(): string {

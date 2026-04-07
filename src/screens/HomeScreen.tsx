@@ -437,47 +437,7 @@ export function HomeScreen() {
           <Text style={styles.logoMain}>
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
-          <Text style={styles.logoTagline}>Stack. Connect. Dominate.</Text>
-          {/* Player title badge */}
-          {(() => {
-            const computedTitle = getPlayerTitle(level, rankedTier, coins);
-            const displayTitle = equippedCustomTitle ?? computedTitle;
-            const titleColor = equippedCustomTitle ? '#f1c40f' : getPlayerTitleColor(computedTitle);
-            return (
-              <View style={[styles.homeTitleBadge, { borderColor: `${titleColor}40` }]}>
-                <Text style={[styles.homeTitleText, { color: titleColor }]}>Lv.{level} {displayTitle}</Text>
-              </View>
-            );
-          })()}
-          <Text style={styles.seasonCountdown}>
-            Season {currentSeason}: {seasonDaysRemaining} day{seasonDaysRemaining !== 1 ? 's' : ''} remaining
-          </Text>
-
-          {/* Season Rewards Preview — show next unlock when close */}
-          {seasonTier < seasonMaxTier && (() => {
-            const nextTier = seasonTier + 1;
-            const nextReward = seasonRewards.find(r => r.tier === nextTier);
-            const rewardLabel = nextReward?.freeReward
-              ? `${nextReward.freeReward.icon} ${nextReward.freeReward.name}`
-              : nextReward?.premiumReward
-                ? `${nextReward.premiumReward.icon} ${nextReward.premiumReward.name} (Premium)`
-                : null;
-            const pct = seasonXpPerTier > 0 ? Math.round((seasonXp / seasonXpPerTier) * 100) : 0;
-            if (!rewardLabel) return null;
-            return (
-              <Pressable onPress={() => navigation.navigate('SeasonPass')} style={styles.seasonRewardPreview}>
-                <Text style={styles.seasonRewardText}>
-                  Next reward: {rewardLabel} (Tier {nextTier})
-                </Text>
-                {pct >= 50 && (
-                  <Text style={styles.seasonRewardProgress}>{pct}% there!</Text>
-                )}
-              </Pressable>
-            );
-          })()}
         </View>
-
-        {/* Season & Challenges moved to tab bar — more room for character */}
 
         {/* ═══ CHARACTER LOBBY ═══ */}
         <View style={styles.lobbyArea}>
@@ -494,15 +454,11 @@ export function HomeScreen() {
 
           {/* Character on stage */}
           <View style={styles.characterStage}>
-            {/* Glow rings behind character (Fortnite-style platform) */}
             <View style={styles.stageGlowOuter} />
             <View style={styles.stageGlowInner} />
-
-            {/* Floating sparkle particles around stage */}
             <StageSparkles />
 
             <Pressable onPress={handleCharacterTap}>
-              {/* "Tap me!" tooltip */}
               {showTapHint && (
                 <Animated.View style={[styles.tapHintBubble, { opacity: tapHintOpacity }]}>
                   <Text style={styles.tapHintText}>Tap me!</Text>
@@ -510,41 +466,29 @@ export function HomeScreen() {
                 </Animated.View>
               )}
               <AnimatedCharacter
-                size={320}
+                size={360}
                 emote={emote}
                 selectedIdle={equippedIdle as IdleVariantId | null}
                 onEmoteComplete={clearEmote}
               />
             </Pressable>
-            {/* Pet display — tappable with bounce + heart */}
             {equippedPet && (
               <Pressable onPress={handlePetTap} style={styles.petPosition}>
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                  <PetDisplay
-                    petId={equippedPet}
-                    size={80}
-                    isIdle={!emote}
-                  />
+                  <PetDisplay petId={equippedPet} size={80} isIdle={!emote} />
                 </Animated.View>
                 {showPetHeart && (
                   <Animated.Text
-                    style={[
-                      styles.petHeart,
-                      { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] },
-                    ]}
+                    style={[styles.petHeart, { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] }]}
                     pointerEvents="none"
-                  >
-                    {'\u2764\uFE0F'}
-                  </Animated.Text>
+                  >{'\u2764\uFE0F'}</Animated.Text>
                 )}
               </Pressable>
             )}
-            {/* Stage platform glow */}
             <LinearGradient
               colors={['rgba(100,180,255,0.3)', 'rgba(80,140,255,0.12)', 'transparent']}
               style={styles.stagePlatform}
             />
-            {/* Stage outer ring */}
             <View style={styles.stageRing} />
           </View>
 
@@ -560,150 +504,27 @@ export function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* News banner removed — character is the focus. News accessible via tabs.
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.newsBanner}
-        >
-          {NEWS_ITEMS.map(item => (
-            <NewsCard
-              key={item.id}
-              item={item}
-              onPress={() => {
-                haptics.tap();
-                if (item.screen) {
-                  navigateTo(item.screen);
-                } else if (item.id === 'spin') {
-                  setSpinWheelOpen(true);
-                }
-              }}
-            />
-          ))}
-        </ScrollView>
-        */}
-
-        {/* Quick action buttons */}
-        <View style={styles.quickActions}>
-          <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.customizeBtn}>
-            <Text style={styles.customizeText}>Customize</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => { haptics.tap(); setSpinWheelOpen(true); }}
-            style={[styles.freeSpinBtn, !spinAvailable && { opacity: 0.5 }]}
-          >
-            <Animated.Text style={[styles.freeSpinText, spinAvailable && { opacity: spinPulse }]}>FREE SPIN</Animated.Text>
-            {spinAvailable && <View style={styles.freeSpinBadge} />}
-          </Pressable>
-          <Pressable onPress={() => { haptics.tap(); navigateTo('PartyLobby'); }} style={styles.friendsBtn}>
-            <Text style={styles.friendsBtnText}>Party</Text>
-          </Pressable>
-        </View>
-
-        {/* Win streak indicator — animated fire */}
-        {winStreak > 0 && (
-          <StreakFireBanner streak={winStreak} />
-        )}
-
-        {/* XP Earned Today */}
-        {xpEarnedToday > 0 && (
-          <Text style={styles.xpTodayText}>
-            Today: +{xpEarnedToday} XP earned
-          </Text>
-        )}
-
-        {/* Smart Suggestion — contextual nudge based on game state */}
-        {smartSuggestion && winStreak === 0 && (
-          <Pressable
-            onPress={() => {
-              if (smartSuggestion.screen) {
-                haptics.tap();
-                if (smartSuggestion.tabParams) {
-                  navigation.navigate(smartSuggestion.screen, smartSuggestion.tabParams);
-                } else {
-                  navigateTo(smartSuggestion.screen);
-                }
-              }
-            }}
-            style={styles.smartSuggestion}
-          >
-            <Text style={styles.smartSuggestionText}>{smartSuggestion.text}</Text>
-          </Pressable>
-        )}
-        {/* When streak is active, show suggestion below streak */}
-        {smartSuggestion && winStreak > 0 && smartSuggestion.text.includes('Claim') && (
-          <Pressable
-            onPress={() => {
-              if (smartSuggestion.screen) {
-                haptics.tap();
-                if (smartSuggestion.tabParams) {
-                  navigation.navigate(smartSuggestion.screen, smartSuggestion.tabParams);
-                } else {
-                  navigateTo(smartSuggestion.screen);
-                }
-              }
-            }}
-            style={styles.smartSuggestion}
-          >
-            <Text style={styles.smartSuggestionText}>{smartSuggestion.text}</Text>
-          </Pressable>
-        )}
-
-        {/* ═══ STARTER PACK ═══ */}
-        {showStarterPack && (
-          <Pressable onPress={handleClaimStarterPack} style={styles.starterPackBanner}>
-            <LinearGradient
-              colors={['rgba(46,204,113,0.2)', 'rgba(39,174,61,0.08)']}
-              style={styles.starterPackGradient}
-            >
-              <Text style={styles.starterPackEmoji}>{'\uD83D\uDC15'}</Text>
-              <View style={styles.starterPackInfo}>
-                <Text style={styles.starterPackTitle}>STARTER PACK</Text>
-                <Text style={styles.starterPackDesc}>Buddy the Labrador + 500 Coins</Text>
-              </View>
-              <View style={styles.starterPackClaim}>
-                <Text style={styles.starterPackClaimText}>FREE</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
-        )}
+        {/* Customize link — subtle, centered under character */}
+        <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.customizeLink}>
+          <Text style={styles.customizeLinkText}>✦ Customize</Text>
+        </Pressable>
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
-          <View style={styles.playButtonRow}>
-            <View style={{ flex: 1 }}>
-              <PressScaleView onPress={() => navigateTo('Play')}>
-                <GlossyButton
-                  label="PLAY"
-                  subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'Quick Match'}
-                  variant="orange"
-                  small
-                  iconRight="›"
-                  onPress={() => navigateTo('Play')}
-                />
-              </PressScaleView>
-            </View>
-            {/* Quick Play — instant rematch at last difficulty */}
-            {aiGameCount > 0 && (
-              <PressScaleView onPress={() => {
-                const lastDiff = useGameStore.getState().difficulty;
-                useGameStore.getState().resetScores();
-                useGameStore.getState().newGame(lastDiff, true);
-                navigation.dispatch(CommonActions.navigate({
-                  name: 'Matchup',
-                  params: { mode: 'casual', difficulty: lastDiff },
-                }));
-              }}>
-                <View style={styles.quickPlayBtn}>
-                  <Text style={styles.quickPlayIcon}>▶</Text>
-                </View>
-              </PressScaleView>
-            )}
-          </View>
+          <PressScaleView onPress={() => navigateTo('Play')}>
+            <GlossyButton
+              label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
+              subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
+              variant="orange"
+              small
+              iconRight="›"
+              onPress={() => navigateTo('Play')}
+            />
+          </PressScaleView>
           <PressScaleView onPress={() => navigateTo('Career')}>
             <GlossyButton
               label="CAREER"
-              subtitle={`${careerCompletedCount}/${totalCareerLevels} levels`}
+              subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : '36 levels · Boss battles'}
               variant="purple"
               small
               iconRight="›"
@@ -713,7 +534,7 @@ export function HomeScreen() {
           <PressScaleView onPress={() => navigateTo('Multiplayer')}>
             <GlossyButton
               label="MULTIPLAYER"
-              subtitle="Ranked, Wagers & Online"
+              subtitle="Ranked · Wager Courts · Online"
               variant="teal"
               small
               iconRight="›"
@@ -835,25 +656,25 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    marginTop: -6,
-    marginBottom: -2,
+    marginTop: -2,
+    marginBottom: 0,
   },
   logoMain: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 44,
+    fontSize: 40,
     color: '#ffffff',
-    textShadowColor: 'rgba(80,120,255,0.6)',
+    textShadowColor: 'rgba(100,160,255,0.5)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-    letterSpacing: 3,
+    textShadowRadius: 18,
+    letterSpacing: 4,
   },
   logo4: {
     color: '#ff8c00',
-    fontSize: 56,
-    textShadowColor: 'rgba(255,140,0,0.7)',
+    fontSize: 50,
+    textShadowColor: 'rgba(255,140,0,0.6)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 25,
+    textShadowRadius: 22,
   },
   seasonCountdown: {
     fontFamily: fonts.body,
@@ -978,12 +799,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 30,
+    paddingTop: 10,
   },
   stageGlowOuter: {
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: 340,
+    height: 340,
+    borderRadius: 170,
     position: 'absolute',
     bottom: 40,
     alignSelf: 'center',
@@ -992,9 +813,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(80,140,255,0.03)',
   },
   stageGlowInner: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
     position: 'absolute',
     bottom: 80,
     alignSelf: 'center',
@@ -1047,78 +868,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textAlign: 'center',
   },
-  // Quick action buttons
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  customizeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(100,180,255,0.12)',
-    borderRadius: 12,
+  // Customize link under character
+  customizeLink: {
+    alignSelf: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(100,180,255,0.3)',
+    paddingVertical: 4,
+    marginBottom: 4,
   },
-  customizeText: {
+  customizeLinkText: {
     fontFamily: fonts.body,
-    fontWeight: weight.bold,
+    fontWeight: weight.semibold,
     fontSize: 12,
-    color: 'rgba(200,230,255,0.9)',
-    letterSpacing: 0.5,
-  },
-  friendsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-  },
-  friendsBtnText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: 'rgba(255,200,130,0.9)',
-    letterSpacing: 0.5,
-  },
-  freeSpinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(241,196,15,0.12)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(241,196,15,0.3)',
-    position: 'relative',
-  },
-  freeSpinText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: 'rgba(241,196,15,0.9)',
-    letterSpacing: 0.5,
-  },
-  freeSpinBadge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#e74c3c',
-    borderWidth: 1.5,
-    borderColor: '#0a0e27',
+    color: 'rgba(200,220,255,0.45)',
+    letterSpacing: 1.5,
   },
   // Smart suggestion
   smartSuggestion: {

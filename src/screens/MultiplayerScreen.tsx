@@ -272,6 +272,19 @@ export function MultiplayerScreen({ navigation }: Props) {
             </View>
           </View>
 
+          {/* Party */}
+          <Text style={styles.sectionLabel}>PARTY</Text>
+
+          <View style={styles.buttonsWrap}>
+            <GlossyButton
+              label="PARTY LOBBY"
+              subtitle="Invite friends with room codes"
+              variant="orange"
+              icon="🎉"
+              onPress={() => navigation.navigate('PartyLobby')}
+            />
+          </View>
+
           {/* Local play */}
           <Text style={styles.sectionLabel}>LOCAL</Text>
 

@@ -149,144 +149,58 @@ export function PlayScreen({ navigation }: Props) {
               onPress={() => { haptics.tap(); setMode('casual'); }}
               style={[styles.modeBtn, mode === 'casual' && styles.modeBtnActive]}
             >
-              <Text style={[styles.modeBtnText, mode === 'casual' && styles.modeBtnTextActive]}>🎮 CASUAL</Text>
+              <Text style={[styles.modeBtnText, mode === 'casual' && styles.modeBtnTextActive]}>CASUAL</Text>
             </Pressable>
             <Pressable
               onPress={() => { haptics.tap(); setMode('ranked'); }}
               style={[styles.modeBtn, mode === 'ranked' && styles.modeBtnActiveRanked]}
             >
-              <Text style={[styles.modeBtnText, mode === 'ranked' && styles.modeBtnTextActive]}>🏆 RANKED</Text>
+              <Text style={[styles.modeBtnText, mode === 'ranked' && styles.modeBtnTextActive]}>RANKED</Text>
             </Pressable>
           </View>
 
-          {/* Equipped summary */}
-          <Text style={styles.equippedSummary}>{equippedSummary}</Text>
-
-          {/* Character with glow */}
-          <View style={styles.characterArea}>
-            <LinearGradient
-              colors={['rgba(100,180,255,0.1)', 'rgba(100,180,255,0.03)', 'transparent']}
-              style={styles.characterGlow}
-            >
-              <CharacterAvatar size="xlarge" variant="player" />
-            </LinearGradient>
-          </View>
-
-          {/* Quick stats */}
-          <View style={styles.statsRow}>
-            <LinearGradient
-              colors={['rgba(39,174,61,0.15)', 'rgba(39,174,61,0.05)']}
-              style={styles.statPill}
-            >
-              <Text style={styles.statValue}>{stats.wins}</Text>
-              <Text style={styles.statLabel}>Wins</Text>
-            </LinearGradient>
-            <LinearGradient
-              colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.05)']}
-              style={styles.statPill}
-            >
-              <Text style={[styles.statValue, { color: colors.orange }]}>
-                {bestStreak > 0 ? `\uD83D\uDD25${bestStreak}` : '0'}
-              </Text>
-              <Text style={styles.statLabel}>Best Streak</Text>
-            </LinearGradient>
-            <LinearGradient
-              colors={['rgba(100,180,255,0.15)', 'rgba(100,180,255,0.05)']}
-              style={styles.statPill}
-            >
-              <Text style={styles.statValue}>{stats.winRate}%</Text>
-              <Text style={styles.statLabel}>Win Rate</Text>
-            </LinearGradient>
-          </View>
-
-          {/* Games played today */}
-          {stats.gamesToday > 0 && (
-            <Text style={styles.gamesToday}>
-              Today: {stats.gamesToday} game{stats.gamesToday !== 1 ? 's' : ''} played
-            </Text>
-          )}
-
-          {/* AI Mastery tracker */}
-          <View style={styles.masteryRow}>
-            <View style={[styles.masteryPill, { borderColor: 'rgba(39,174,61,0.3)' }]}>
-              <Text style={[styles.masteryWins, { color: colors.green }]}>{mastery.easy.wins}</Text>
-              <Text style={styles.masteryLabel}>Easy</Text>
-            </View>
-            <View style={[styles.masteryPill, { borderColor: 'rgba(255,140,0,0.3)' }]}>
-              <Text style={[styles.masteryWins, { color: colors.orange }]}>{mastery.medium.wins}</Text>
-              <Text style={styles.masteryLabel}>Medium</Text>
-            </View>
-            <View style={[styles.masteryPill, { borderColor: 'rgba(231,76,60,0.3)' }]}>
-              <Text style={[styles.masteryWins, { color: colors.pieceRed || '#e74c3c' }]}>{mastery.hard.wins}</Text>
-              <Text style={styles.masteryLabel}>Hard</Text>
-            </View>
-          </View>
-
-          {/* Personal Best records */}
-          {(personalBests.fastestWin !== null || personalBests.longestStreak > 0 || (personalBests.mostCoins !== null && personalBests.mostCoins > 0)) && (
-            <View style={styles.personalBestRow}>
-              {personalBests.fastestWin !== null && (
-                <View style={styles.pbItem}>
-                  <Text style={styles.pbIcon}>{'\u26A1'}</Text>
-                  <Text style={styles.pbValue}>{personalBests.fastestWin}</Text>
-                  <Text style={styles.pbLabel}>Best Moves</Text>
-                </View>
-              )}
-              {personalBests.longestStreak > 0 && (
-                <View style={styles.pbItem}>
-                  <Text style={styles.pbIcon}>{'\uD83D\uDD25'}</Text>
-                  <Text style={[styles.pbValue, { color: colors.orange }]}>{personalBests.longestStreak}</Text>
-                  <Text style={styles.pbLabel}>Best Streak</Text>
-                </View>
-              )}
-              {personalBests.mostCoins !== null && personalBests.mostCoins > 0 && (
-                <View style={styles.pbItem}>
-                  <Text style={styles.pbIcon}>{'\uD83E\uDE99'}</Text>
-                  <Text style={[styles.pbValue, { color: colors.coinGold || '#ffd700' }]}>{personalBests.mostCoins}</Text>
-                  <Text style={styles.pbLabel}>Best Coins</Text>
-                </View>
-              )}
-            </View>
-          )}
+          {/* Compact stats row — just win rate + games */}
+          <Text style={styles.statsLine}>
+            {stats.totalGames > 0
+              ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
+              : 'Choose your difficulty'}
+          </Text>
 
           {/* Smart difficulty suggestion */}
           {difficultySuggestion && (
-            <View style={[styles.suggestionBanner, { borderColor: `${difficultySuggestion.color}33` }]}>
-              <Text style={[styles.suggestionText, { color: difficultySuggestion.color }]}>
-                {difficultySuggestion.emoji} {difficultySuggestion.text}
-              </Text>
-            </View>
+            <Text style={[styles.suggestionInline, { color: difficultySuggestion.color }]}>
+              {difficultySuggestion.emoji} {difficultySuggestion.text}
+            </Text>
           )}
 
-          {/* Difficulty buttons */}
+          {/* Difficulty buttons — the main event */}
           <View style={styles.buttonsWrap}>
-            <GlossyButton label="EASY" subtitle={`Casual & Fun${mastery.easy.games > 0 ? ` • ${mastery.easy.wins}W - ${masteryLosses.easy}L` : ''}`} variant="green" iconRight="⭐" onPress={() => startGame('easy')} />
-            <View>
-              <GlossyButton label="MEDIUM" subtitle={`Think Ahead${mastery.medium.games > 0 ? ` • ${mastery.medium.wins}W - ${masteryLosses.medium}L` : ''}`} variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')} />
-              {level < 3 && (
-                <Text style={styles.levelGateHint}>Recommended at Level 3+</Text>
-              )}
-            </View>
-            <View>
-              <GlossyButton label="HARD" subtitle={`No Mercy${mastery.hard.games > 0 ? ` • ${mastery.hard.wins}W - ${masteryLosses.hard}L` : ''}`} variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')} />
-              {level < 5 && (
-                <Text style={styles.levelGateHint}>Recommended at Level 5+</Text>
-              )}
-            </View>
+            <GlossyButton
+              label="EASY"
+              subtitle={mastery.easy.games > 0 ? `${mastery.easy.wins}W · ${masteryLosses.easy}L` : 'Casual & Fun'}
+              variant="green" iconRight="⭐" onPress={() => startGame('easy')}
+            />
+            <GlossyButton
+              label="MEDIUM"
+              subtitle={mastery.medium.games > 0 ? `${mastery.medium.wins}W · ${masteryLosses.medium}L` : 'Think Ahead'}
+              variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')}
+            />
+            <GlossyButton
+              label="HARD"
+              subtitle={mastery.hard.games > 0 ? `${mastery.hard.wins}W · ${masteryLosses.hard}L` : 'No Mercy'}
+              variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')}
+            />
           </View>
 
-          {/* Tip of the day */}
+          {/* Tip */}
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>{'\uD83D\uDCA1'} {tip}</Text>
           </View>
 
           {/* Secondary buttons */}
           <View style={styles.secondaryWrap}>
-            <GlossyButton label="LEARN" variant="purple" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
+            <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
             <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
-          </View>
-          <View style={styles.secondaryWrap}>
-            <GlossyButton label="BOARD EDITOR" variant="navy" icon="🏗" small onPress={() => navigation.navigate('BoardEditor')} style={{ flex: 1 }} />
           </View>
         </View>
       </View>
@@ -326,103 +240,14 @@ const styles = StyleSheet.create({
     fontSize: 10, color: 'rgba(255,255,255,0.3)',
     letterSpacing: 0.3, textAlign: 'center',
   },
-  title: {
-    fontFamily: fonts.heading, fontWeight: weight.bold,
-    fontSize: 32, color: '#ffffff',
-    textShadowColor: 'rgba(80,120,255,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
-    letterSpacing: 4,
-  },
-  characterArea: { alignItems: 'center' },
-  characterGlow: {
-    width: 200, height: 200, borderRadius: 100,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row', gap: 8,
-  },
-  statPill: {
-    alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 10,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
-    minWidth: 70,
-  },
-  statValue: {
-    fontFamily: fonts.body, fontWeight: weight.bold,
-    fontSize: 24, color: '#ffffff',
-  },
-  statLabel: {
-    fontFamily: fonts.body, fontWeight: weight.regular,
-    fontSize: 9, color: colors.textSecondary,
-    textTransform: 'uppercase',
-  },
-  gamesToday: {
+  statsLine: {
     fontFamily: fonts.body, fontWeight: weight.semibold,
-    fontSize: 11, color: colors.textSecondary,
-    letterSpacing: 0.3,
+    fontSize: 13, color: 'rgba(200,220,255,0.5)',
+    letterSpacing: 0.5, textAlign: 'center',
   },
-  masteryRow: {
-    flexDirection: 'row', gap: 8, width: '100%', maxWidth: 340,
-    justifyContent: 'center',
-  },
-  masteryPill: {
-    flex: 1, alignItems: 'center', paddingVertical: 4,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
-  },
-  masteryWins: {
+  suggestionInline: {
     fontFamily: fonts.body, fontWeight: weight.bold,
-    fontSize: 18, color: '#ffffff',
-  },
-  masteryLabel: {
-    fontFamily: fonts.body, fontWeight: weight.regular,
-    fontSize: 9, color: colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 0.3,
-  },
-  personalBestRow: {
-    flexDirection: 'row',
-    gap: 8,
-    width: '100%',
-    maxWidth: 340,
-    justifyContent: 'center',
-  },
-  pbItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-    backgroundColor: 'rgba(255,215,0,0.06)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.12)',
-  },
-  pbIcon: {
-    fontSize: 14,
-  },
-  pbValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: colors.green,
-  },
-  pbLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 8,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  suggestionBanner: {
-    width: '100%', maxWidth: 340,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 6,
-    alignItems: 'center',
-  },
-  suggestionText: {
-    fontFamily: fonts.body, fontWeight: weight.bold,
-    fontSize: 13, letterSpacing: 0.3,
+    fontSize: 13, letterSpacing: 0.3, textAlign: 'center',
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,

@@ -261,7 +261,7 @@ const rStyles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
   replayLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  replayResult: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 16, width: 36 },
+  replayResult: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, minWidth: 50, textAlign: 'center' },
   replayOpponent: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 13, color: '#ffffff' },
   replayMeta: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 10, color: colors.textSecondary },
   replayRight: { flexDirection: 'row', gap: 12 },
