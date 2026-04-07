@@ -47,7 +47,8 @@ export function ScreenBackground({ children, style, variant = 'default' }: Scree
 
       {/* Star field texture (web only) */}
       {Platform.OS === 'web' && <View style={styles.starField} />}
-      {Platform.OS === 'web' && <View style={styles.starFieldSmall} />}
+      {Platform.OS === 'web' && <View style={styles.starFieldSmall1} />}
+      {Platform.OS === 'web' && <View style={styles.starFieldSmall2} />}
 
       {/* Content */}
       <View style={styles.content}>
@@ -81,16 +82,20 @@ const styles = StyleSheet.create({
       backgroundSize: '50px 50px',
     } as any : {}),
   },
-  starFieldSmall: {
+  starFieldSmall1: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.15,
     ...(Platform.OS === 'web' ? {
-      backgroundImage: [
-        'radial-gradient(circle, rgba(200,220,255,0.7) 0.3px, transparent 0.3px)',
-        'radial-gradient(circle, rgba(255,200,255,0.4) 0.2px, transparent 0.2px)',
-      ].join(', '),
-      backgroundSize: '23px 27px, 37px 41px',
-      backgroundPosition: '11px 13px, 5px 7px',
+      backgroundImage: 'radial-gradient(circle, rgba(200,220,255,0.7) 0.3px, transparent 0.3px)',
+      backgroundSize: '23px 27px',
+    } as any : {}),
+  },
+  starFieldSmall2: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.15,
+    ...(Platform.OS === 'web' ? {
+      backgroundImage: 'radial-gradient(circle, rgba(255,200,255,0.4) 0.2px, transparent 0.2px)',
+      backgroundSize: '37px 41px',
     } as any : {}),
   },
   content: {

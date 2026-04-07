@@ -685,7 +685,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...(Platform.OS === 'web' ? {
-      animation: 'spin 1s linear infinite',
+      animationKeyframes: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+      animationDuration: '1s',
+      animationTimingFunction: 'linear',
+      animationIterationCount: 'infinite',
     } as any : {}),
   },
   spinnerInner: {
