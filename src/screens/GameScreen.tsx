@@ -1258,26 +1258,28 @@ export function GameScreen({ navigation }: Props) {
           </RNAnimated.View>
         )}
 
-        {/* Score dots (best of 5) */}
-        <View style={styles.scoreDots}>
-          <View style={styles.dotsGroup}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <View key={`p1-${i}`} style={[styles.dot,
-                i < scores.player1 && { backgroundColor: colors.pieceRed }
-              ]} />
-            ))}
+        {/* Score dots — only shown in series/best-of mode */}
+        {isSeriesMode && (
+          <View style={styles.scoreDots}>
+            <View style={styles.dotsGroup}>
+              {Array.from({ length: seriesWinsNeeded }).map((_, i) => (
+                <View key={`p1-${i}`} style={[styles.dot,
+                  i < scores.player1 && { backgroundColor: colors.pieceRed }
+                ]} />
+              ))}
+            </View>
+            <View style={styles.dotSpacer}>
+              <View style={styles.dotLine} />
+            </View>
+            <View style={styles.dotsGroup}>
+              {Array.from({ length: seriesWinsNeeded }).map((_, i) => (
+                <View key={`p2-${i}`} style={[styles.dot,
+                  i < scores.player2 && { backgroundColor: colors.pieceYellow }
+                ]} />
+              ))}
+            </View>
           </View>
-          <View style={styles.dotSpacer}>
-            <View style={styles.dotLine} />
-          </View>
-          <View style={styles.dotsGroup}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <View key={`p2-${i}`} style={[styles.dot,
-                i < scores.player2 && { backgroundColor: colors.pieceYellow }
-              ]} />
-            ))}
-          </View>
-        </View>
+        )}
 
         {/* Hint indicator — pulsing arrow above the board */}
         {hintCol !== null && (
@@ -2382,19 +2384,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   moveCounter: {
-    backgroundColor: 'rgba(255,140,0,0.10)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.15)',
   },
   moveText: {
     fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 0.3,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(168,178,212,0.6)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   // Emote row — compact pills + MORE + chat
   emoteRow: {
