@@ -761,7 +761,7 @@ const s = StyleSheet.create({
   },
   itemCard: {
     width: 108, backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1, borderColor: colors.surfaceBorder, paddingBottom: 10,
+    borderWidth: 1, borderColor: colors.surfaceBorder, paddingBottom: 10, minHeight: 157,
   },
   rarityStrip: { height: 3, width: '100%' },
   itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
