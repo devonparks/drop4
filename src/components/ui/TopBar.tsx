@@ -133,14 +133,16 @@ function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextC
       ) : (
         <Text style={styles.pillValue}>{value}</Text>
       )}
-      <Pressable onPress={() => { haptics.tap(); onPlusPress?.(); }}>
-        <LinearGradient
-          colors={['#34c94d', '#27ae3d', '#1e8a30']}
-          style={styles.plusBtn}
-        >
-          <Text style={styles.plusText}>+</Text>
-        </LinearGradient>
-      </Pressable>
+      {onPlusPress && (
+        <Pressable onPress={() => { haptics.tap(); onPlusPress(); }}>
+          <LinearGradient
+            colors={['#34c94d', '#27ae3d', '#1e8a30']}
+            style={styles.plusBtn}
+          >
+            <Text style={styles.plusText}>+</Text>
+          </LinearGradient>
+        </Pressable>
+      )}
     </>
   );
 

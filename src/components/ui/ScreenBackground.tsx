@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     opacity: 0.25,
     ...(Platform.OS === 'web' ? {
       backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.9) 0.5px, transparent 0.5px)',
-      backgroundSize: '50px 50px',
+      backgroundSize: '50px',
     } as any : {}),
   },
   starFieldSmall1: {
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     opacity: 0.15,
     ...(Platform.OS === 'web' ? {
       backgroundImage: 'radial-gradient(circle, rgba(200,220,255,0.7) 0.3px, transparent 0.3px)',
-      backgroundSize: '23px 27px',
+      backgroundSize: '25px',
     } as any : {}),
   },
   starFieldSmall2: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     opacity: 0.15,
     ...(Platform.OS === 'web' ? {
       backgroundImage: 'radial-gradient(circle, rgba(255,200,255,0.4) 0.2px, transparent 0.2px)',
-      backgroundSize: '37px 41px',
+      backgroundSize: '39px',
     } as any : {}),
   },
   content: {
