@@ -22,6 +22,7 @@ import { toggleMute, getMuted } from '../services/audio';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { FEATURES } from '../config/features';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -107,60 +108,64 @@ export function SettingsScreen({ navigation }: Props) {
           />
         </View>
 
-        {/* Season Stats */}
-        <Text style={styles.sectionTitle}>SEASON STATS</Text>
-        <View style={styles.section}>
-          <View style={styles.seasonStatsRow}>
-            <View style={styles.seasonStatItem}>
-              <Text style={styles.seasonStatLabel}>Season</Text>
-              <Text style={styles.seasonStatValue}>{seasonNumber}</Text>
-            </View>
-            <View style={styles.seasonStatItem}>
-              <Text style={styles.seasonStatLabel}>ELO</Text>
-              <Text style={styles.seasonStatValue}>{rankedElo}</Text>
-            </View>
-            <View style={styles.seasonStatItem}>
-              <Text style={styles.seasonStatLabel}>Tier</Text>
-              <RankBadge size="small" showElo={false} />
-            </View>
-          </View>
-          <View style={styles.seasonRecordRow}>
-            <Text style={styles.seasonRecordLabel}>Record</Text>
-            <Text style={styles.seasonRecordValue}>
-              {rankedWins}W - {rankedLosses}L
-            </Text>
-          </View>
-          <View style={styles.seasonRecordRow}>
-            <Text style={styles.seasonRecordLabel}>Season High</Text>
-            <Text style={[styles.seasonRecordValue, { color: colors.coinGold }]}>
-              {seasonHighElo} ELO
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => { haptics.tap(); setShowPastSeasons(!showPastSeasons); }}
-            style={styles.settingRow}
-          >
-            <Text style={styles.settingIcon}>📊</Text>
-            <Text style={styles.settingLabel}>View Past Seasons</Text>
-            <Text style={styles.chevron}>{showPastSeasons ? '⌄' : '›'}</Text>
-          </Pressable>
-          {showPastSeasons && (
-            <View style={styles.pastSeasonsWrap}>
-              {rankedSeasonHistory.length === 0 ? (
-                <Text style={styles.pastSeasonEmpty}>No past seasons yet</Text>
-              ) : (
-                rankedSeasonHistory.map((s) => (
-                  <View key={s.season} style={styles.pastSeasonRow}>
-                    <Text style={styles.pastSeasonNum}>S{s.season}</Text>
-                    <Text style={styles.pastSeasonTier}>{s.tier.charAt(0).toUpperCase() + s.tier.slice(1)}</Text>
-                    <Text style={styles.pastSeasonElo}>{s.elo} ELO</Text>
-                    <Text style={styles.pastSeasonRecord}>{s.wins}W {s.losses}L</Text>
-                  </View>
-                ))
+        {/* Season Stats — only when ranked is enabled */}
+        {FEATURES.rankedMode && (
+          <>
+            <Text style={styles.sectionTitle}>SEASON STATS</Text>
+            <View style={styles.section}>
+              <View style={styles.seasonStatsRow}>
+                <View style={styles.seasonStatItem}>
+                  <Text style={styles.seasonStatLabel}>Season</Text>
+                  <Text style={styles.seasonStatValue}>{seasonNumber}</Text>
+                </View>
+                <View style={styles.seasonStatItem}>
+                  <Text style={styles.seasonStatLabel}>ELO</Text>
+                  <Text style={styles.seasonStatValue}>{rankedElo}</Text>
+                </View>
+                <View style={styles.seasonStatItem}>
+                  <Text style={styles.seasonStatLabel}>Tier</Text>
+                  <RankBadge size="small" showElo={false} />
+                </View>
+              </View>
+              <View style={styles.seasonRecordRow}>
+                <Text style={styles.seasonRecordLabel}>Record</Text>
+                <Text style={styles.seasonRecordValue}>
+                  {rankedWins}W - {rankedLosses}L
+                </Text>
+              </View>
+              <View style={styles.seasonRecordRow}>
+                <Text style={styles.seasonRecordLabel}>Season High</Text>
+                <Text style={[styles.seasonRecordValue, { color: colors.coinGold }]}>
+                  {seasonHighElo} ELO
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => { haptics.tap(); setShowPastSeasons(!showPastSeasons); }}
+                style={styles.settingRow}
+              >
+                <Text style={styles.settingIcon}>📊</Text>
+                <Text style={styles.settingLabel}>View Past Seasons</Text>
+                <Text style={styles.chevron}>{showPastSeasons ? '⌄' : '›'}</Text>
+              </Pressable>
+              {showPastSeasons && (
+                <View style={styles.pastSeasonsWrap}>
+                  {rankedSeasonHistory.length === 0 ? (
+                    <Text style={styles.pastSeasonEmpty}>No past seasons yet</Text>
+                  ) : (
+                    rankedSeasonHistory.map((s) => (
+                      <View key={s.season} style={styles.pastSeasonRow}>
+                        <Text style={styles.pastSeasonNum}>S{s.season}</Text>
+                        <Text style={styles.pastSeasonTier}>{s.tier.charAt(0).toUpperCase() + s.tier.slice(1)}</Text>
+                        <Text style={styles.pastSeasonElo}>{s.elo} ELO</Text>
+                        <Text style={styles.pastSeasonRecord}>{s.wins}W {s.losses}L</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
               )}
             </View>
-          )}
-        </View>
+          </>
+        )}
 
         {/* Notifications */}
         <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
