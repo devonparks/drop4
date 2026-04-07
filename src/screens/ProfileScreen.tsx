@@ -18,6 +18,7 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
+import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -190,8 +191,8 @@ export function ProfileScreen() {
             );
           })()}
 
-          {/* Prominent ranked tier badge */}
-          {(() => {
+          {/* Prominent ranked tier badge — only when ranked is enabled */}
+          {FEATURES.rankedMode && (() => {
             const tierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
             return (
               <View style={[styles.rankBadgeRow, { borderColor: `${tierInfo.color}40` }]}>
@@ -203,8 +204,6 @@ export function ProfileScreen() {
               </View>
             );
           })()}
-
-          {/* Duplicate RankBadge removed — rankBadgeRow above already shows tier + ELO */}
 
           {/* Share Profile button */}
           <Pressable
@@ -422,11 +421,15 @@ export function ProfileScreen() {
           })}
         </View>
 
-        {/* Ranked Progress */}
-        <Text style={styles.sectionTitle}>RANKED PROGRESS</Text>
-        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <RankProgressCard />
-        </View>
+        {/* Ranked Progress — only when ranked is enabled */}
+        {FEATURES.rankedMode && (
+          <>
+            <Text style={styles.sectionTitle}>RANKED PROGRESS</Text>
+            <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+              <RankProgressCard />
+            </View>
+          </>
+        )}
 
         {/* Streaks */}
         <Text style={styles.sectionTitle}>STREAKS</Text>
@@ -435,8 +438,8 @@ export function ProfileScreen() {
           <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
         </View>
 
-        {/* Season History */}
-        {seasonHistory.length > 0 && (
+        {/* Season History — only when ranked is enabled */}
+        {FEATURES.rankedMode && seasonHistory.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>SEASON HISTORY</Text>
             <View style={styles.statsGrid}>
@@ -455,21 +458,24 @@ export function ProfileScreen() {
         {/* Quick Actions */}
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
         <View style={styles.quickActions}>
-          <GlossyButton label="Season Pass" variant="purple" icon="⭐" small onPress={() => navigateTo('SeasonPass')} style={{ flex: 1 }} />
           <GlossyButton label="Challenges" variant="teal" icon="🎯" small onPress={() => navigateTo('Challenges')} style={{ flex: 1 }} />
-        </View>
-        <View style={[styles.quickActions, { marginTop: 0 }]}>
-          <GlossyButton label="Replays" variant="navy" icon="🎬" small onPress={() => navigateTo('ReplayViewer')} style={{ flex: 1 }} />
-          <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
-        </View>
-        <View style={[styles.quickActions, { marginTop: 0 }]}>
           <GlossyButton label="Match History" variant="orange" icon="📊" small onPress={() => navigateTo('MatchHistory')} style={{ flex: 1 }} />
-          <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
         </View>
         <View style={[styles.quickActions, { marginTop: 0 }]}>
           <GlossyButton label="Stats" variant="navy" icon="📈" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
           <GlossyButton label="Collection" variant="gold" icon="🗂️" small onPress={() => navigateTo('Collection')} style={{ flex: 1 }} />
         </View>
+        {FEATURES.lootBoxes && (
+          <View style={[styles.quickActions, { marginTop: 0 }]}>
+            <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
+            <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
+          </View>
+        )}
+        {!FEATURES.lootBoxes && (
+          <View style={[styles.quickActions, { marginTop: 0 }]}>
+            <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
+          </View>
+        )}
 
         {/* Recent Activity */}
         {(() => {
