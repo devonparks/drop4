@@ -15,6 +15,7 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { PETS } from '../data/pets';
+import { FEATURES } from '../config/features';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -112,25 +113,13 @@ export function PlayScreen({ navigation }: Props) {
     return `Board: ${boardName}  |  Pieces: ${piecesName}  |  Pet: ${petName}`;
   }, [equipped.board, equipped.pieces, equippedPet]);
 
-  // If navigated here from Multiplayer with ranked flags, default to ranked mode
-  const incomingRanked = route.params?.rankedMode;
-  const [mode, setMode] = useState<'casual' | 'ranked'>(incomingRanked ? 'ranked' : 'casual');
-
+  // Ranked is gated v1.1+. v1 is casual-only.
   const startGame = (difficulty: Difficulty) => {
-    // Reset scores from any previous session before starting fresh
     resetScores();
-    // Initialize the game state
-    if (mode === 'ranked') {
-      newGame(difficulty, true, { timerSeconds: 15 });
-    } else {
-      newGame(difficulty, true);
-    }
-
-    // Navigate to Matchup screen first (VS reveal), which then navigates to Game
+    newGame(difficulty, true);
     navigation.navigate('Matchup', {
-      mode: mode,
+      mode: 'casual',
       difficulty,
-      timerSeconds: mode === 'ranked' ? 15 : undefined,
     });
   };
 
@@ -143,23 +132,10 @@ export function PlayScreen({ navigation }: Props) {
         />
 
         <View style={styles.mainContent}>
-          {/* Mode toggle */}
-          <View style={styles.modeToggle}>
-            <Pressable
-              onPress={() => { haptics.tap(); setMode('casual'); }}
-              style={[styles.modeBtn, mode === 'casual' && styles.modeBtnActive]}
-            >
-              <Text style={[styles.modeBtnText, mode === 'casual' && styles.modeBtnTextActive]}>CASUAL</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => { haptics.tap(); setMode('ranked'); }}
-              style={[styles.modeBtn, mode === 'ranked' && styles.modeBtnActiveRanked]}
-            >
-              <Text style={[styles.modeBtnText, mode === 'ranked' && styles.modeBtnTextActive]}>RANKED</Text>
-            </Pressable>
-          </View>
+          {/* Screen heading */}
+          <Text style={styles.screenHeading}>QUICK PLAY</Text>
 
-          {/* Compact stats row — just win rate + games */}
+          {/* Compact stats line */}
           <Text style={styles.statsLine}>
             {stats.totalGames > 0
               ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
@@ -197,10 +173,12 @@ export function PlayScreen({ navigation }: Props) {
             <Text style={styles.tipText}>{'\uD83D\uDCA1'} {tip}</Text>
           </View>
 
-          {/* Secondary buttons */}
+          {/* Secondary buttons — only show enabled features */}
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
-            <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
+            {FEATURES.customGame && (
+              <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
+            )}
           </View>
         </View>
       </View>
@@ -212,37 +190,20 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   mainContent: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 20, gap: 6,
+    paddingHorizontal: 20, gap: 10,
   },
-  modeToggle: {
-    flexDirection: 'row', gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12, padding: 3,
-  },
-  modeBtn: {
-    paddingHorizontal: 20, paddingVertical: 8, borderRadius: 10,
-  },
-  modeBtnActive: {
-    backgroundColor: 'rgba(39,174,61,0.2)',
-  },
-  modeBtnActiveRanked: {
-    backgroundColor: 'rgba(155,89,182,0.2)',
-  },
-  modeBtnText: {
-    fontFamily: fonts.body, fontWeight: weight.bold,
-    fontSize: 12, color: colors.textSecondary, letterSpacing: 0.5,
-  },
-  modeBtnTextActive: {
-    color: '#ffffff',
-  },
-  equippedSummary: {
-    fontFamily: fonts.body, fontWeight: weight.regular,
-    fontSize: 10, color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 0.3, textAlign: 'center',
+  screenHeading: {
+    fontFamily: fonts.heading, fontWeight: weight.black,
+    fontSize: 32, color: '#ffffff',
+    letterSpacing: 3,
+    textShadowColor: 'rgba(120,180,255,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
+    marginBottom: -2,
   },
   statsLine: {
     fontFamily: fonts.body, fontWeight: weight.semibold,
-    fontSize: 13, color: 'rgba(200,220,255,0.5)',
+    fontSize: 13, color: 'rgba(200,220,255,0.55)',
     letterSpacing: 0.5, textAlign: 'center',
   },
   suggestionInline: {
