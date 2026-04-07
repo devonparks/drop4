@@ -735,16 +735,16 @@ const s = StyleSheet.create({
   // ── Item Shop ──
   itemShopSection: { marginTop: 8 },
   tabRow: {
-    flexDirection: 'row', paddingHorizontal: 16, gap: 6, marginBottom: 12,
+    flexDirection: 'row', paddingHorizontal: 12, gap: 5, marginBottom: 12,
   },
   tab: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 4, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
+    gap: 3, paddingVertical: 9, paddingHorizontal: 9, borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent',
   },
   tabActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' },
-  tabIcon: { fontSize: 14 },
-  tabLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, color: colors.textSecondary },
+  tabIcon: { fontSize: 13 },
+  tabLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
   tabLabelActive: { color: colors.orange },
 
   collectionRow: { paddingHorizontal: 16, gap: 6, marginBottom: 10 },
