@@ -54,11 +54,12 @@ function ProgressBar({ label, value, max, color, showPct = true }: {
   label: string; value: number; max: number; color: string; showPct?: boolean;
 }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  const valueColor = value > 0 ? color : colors.textMuted;
   return (
     <View style={styles.progressRow}>
       <View style={styles.progressLabelRow}>
         <Text style={styles.progressLabel}>{label}</Text>
-        <Text style={[styles.progressValue, { color }]}>
+        <Text style={[styles.progressValue, { color: valueColor }]}>
           {value}{showPct ? ` (${pct}%)` : ''}
         </Text>
       </View>
