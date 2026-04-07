@@ -13,6 +13,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
 import { useOnlineStore } from '../stores/onlineStore';
+import { FEATURES } from '../config/features';
 import { useGameStore } from '../stores/gameStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { colors } from '../theme/colors';
@@ -203,11 +204,11 @@ export function MultiplayerScreen({ navigation }: Props) {
         <View style={styles.mainContent}>
           <Text style={styles.title}>MULTIPLAYER</Text>
 
-          {/* Full rank progress card */}
-          <RankProgressCard />
+          {/* Full rank progress card — only when ranked is enabled */}
+          {FEATURES.rankedMode && <RankProgressCard />}
 
           {/* Promotion match indicator */}
-          {isPromotionMatch && (
+          {FEATURES.rankedMode && isPromotionMatch && (
             <View style={styles.promotionBanner}>
               <Text style={styles.promotionText}>PROMOTION MATCH!</Text>
               <Text style={styles.promotionSub}>
@@ -216,74 +217,81 @@ export function MultiplayerScreen({ navigation }: Props) {
             </View>
           )}
 
-          {/* Online PvP */}
-          <Text style={styles.sectionLabel}>PLAY ONLINE</Text>
+          {/* Online PvP — gated v1.1 */}
+          {FEATURES.onlineMultiplayer && (
+            <>
+              <Text style={styles.sectionLabel}>PLAY ONLINE</Text>
+              <View style={styles.buttonsWrap}>
+                <View style={styles.btnWithBadge}>
+                  <GlossyButton
+                    label="QUICK MATCH"
+                    subtitle="Find an opponent • No stakes"
+                    variant="green"
+                    icon="🌐"
+                    onPress={() => startSearching('casual')}
+                  />
+                  <View style={styles.betaBadge}>
+                    <Text style={styles.betaBadgeText}>BETA</Text>
+                  </View>
+                  <View style={styles.playerCountBadge}>
+                    <View style={styles.playerCountDot} />
+                    <Text style={styles.playerCountText}>{playerCounts.quickMatch} online</Text>
+                  </View>
+                </View>
 
-          <View style={styles.buttonsWrap}>
-            {/* Quick Match — casual online, no stakes */}
-            <View style={styles.btnWithBadge}>
-              <GlossyButton
-                label="QUICK MATCH"
-                subtitle="Find an opponent • No stakes"
-                variant="green"
-                icon="🌐"
-                onPress={() => startSearching('casual')}
-              />
-              <View style={styles.betaBadge}>
-                <Text style={styles.betaBadgeText}>BETA</Text>
-              </View>
-              <View style={styles.playerCountBadge}>
-                <View style={styles.playerCountDot} />
-                <Text style={styles.playerCountText}>{playerCounts.quickMatch} online</Text>
-              </View>
-            </View>
+                {FEATURES.rankedMode && (
+                  <View style={styles.btnWithBadge}>
+                    <GlossyButton
+                      label="RANKED"
+                      subtitle={`Chess clock • ${tierInfo.icon} ${formatRank(elo)} (${elo} MMR)`}
+                      variant="purple"
+                      icon="🏆"
+                      onPress={() => startSearching('ranked')}
+                    />
+                    <View style={styles.betaBadge}>
+                      <Text style={styles.betaBadgeText}>BETA</Text>
+                    </View>
+                    <View style={styles.playerCountBadge}>
+                      <View style={styles.playerCountDot} />
+                      <Text style={styles.playerCountText}>{playerCounts.ranked} searching</Text>
+                    </View>
+                  </View>
+                )}
 
-            {/* Ranked — ELO rating, chess clock */}
-            <View style={styles.btnWithBadge}>
-              <GlossyButton
-                label="RANKED"
-                subtitle={`Chess clock • ${tierInfo.icon} ${formatRank(elo)} (${elo} MMR)`}
-                variant="purple"
-                icon="🏆"
-                onPress={() => startSearching('ranked')}
-              />
-              <View style={styles.betaBadge}>
-                <Text style={styles.betaBadgeText}>BETA</Text>
+                {FEATURES.goldCourt && (
+                  <View style={styles.btnWithBadge}>
+                    <GlossyButton
+                      label="GOLD COURT"
+                      subtitle="Wager coins • High stakes"
+                      variant="gold"
+                      icon="👑"
+                      onPress={() => navigation.navigate('Stage')}
+                    />
+                    <View style={styles.playerCountBadge}>
+                      <View style={[styles.playerCountDot, { backgroundColor: '#f1c40f' }]} />
+                      <Text style={styles.playerCountText}>{playerCounts.goldCourt} wagering</Text>
+                    </View>
+                  </View>
+                )}
               </View>
-              <View style={styles.playerCountBadge}>
-                <View style={styles.playerCountDot} />
-                <Text style={styles.playerCountText}>{playerCounts.ranked} searching</Text>
+            </>
+          )}
+
+          {/* Party — gated v1.1 */}
+          {FEATURES.partyLobby && (
+            <>
+              <Text style={styles.sectionLabel}>PARTY</Text>
+              <View style={styles.buttonsWrap}>
+                <GlossyButton
+                  label="PARTY LOBBY"
+                  subtitle="Invite friends with room codes"
+                  variant="orange"
+                  icon="🎉"
+                  onPress={() => navigation.navigate('PartyLobby')}
+                />
               </View>
-            </View>
-
-            {/* Gold Court — wager coins online */}
-            <View style={styles.btnWithBadge}>
-              <GlossyButton
-                label="GOLD COURT"
-                subtitle="Wager coins • High stakes"
-                variant="gold"
-                icon="👑"
-                onPress={() => navigation.navigate('Stage')}
-              />
-              <View style={styles.playerCountBadge}>
-                <View style={[styles.playerCountDot, { backgroundColor: '#f1c40f' }]} />
-                <Text style={styles.playerCountText}>{playerCounts.goldCourt} wagering</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Party */}
-          <Text style={styles.sectionLabel}>PARTY</Text>
-
-          <View style={styles.buttonsWrap}>
-            <GlossyButton
-              label="PARTY LOBBY"
-              subtitle="Invite friends with room codes"
-              variant="orange"
-              icon="🎉"
-              onPress={() => navigation.navigate('PartyLobby')}
-            />
-          </View>
+            </>
+          )}
 
           {/* Local play */}
           <Text style={styles.sectionLabel}>LOCAL</Text>
@@ -298,7 +306,8 @@ export function MultiplayerScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('LocalPlay')}
             />
 
-            {/* Tournament — local bracket */}
+            {FEATURES.tournaments && (
+            /* Tournament — local bracket */
             <GlossyButton
               label="TOURNAMENT"
               subtitle="4-8 Player Bracket"
@@ -306,6 +315,7 @@ export function MultiplayerScreen({ navigation }: Props) {
               icon="🏟"
               onPress={() => navigation.navigate('Tournament')}
             />
+            )}
           </View>
         </View>
       </View>

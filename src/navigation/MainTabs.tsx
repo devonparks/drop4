@@ -8,6 +8,7 @@ import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { haptics } from '../services/haptics';
 import { useChallengeStore } from '../stores/challengeStore';
+import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -71,13 +72,15 @@ export function MainTabs() {
           tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} />,
         }}
       />
-      <Tab.Screen
-        name="Leaderboards"
-        component={FriendsTab}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏆" label="Leaderboards" focused={focused} />,
-        }}
-      />
+      {FEATURES.leaderboards && (
+        <Tab.Screen
+          name="Leaderboards"
+          component={FriendsTab}
+          options={{
+            tabBarIcon: ({ focused }) => <TabIcon icon="🏆" label="Leaderboards" focused={focused} />,
+          }}
+        />
+      )}
       <Tab.Screen
         name="Challenges"
         component={RanksTab}
