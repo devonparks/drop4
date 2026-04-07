@@ -230,7 +230,7 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
 
             {/* Info */}
             <View style={st.boxCardInfo}>
-              <Text style={st.boxCardName}>{box.name}</Text>
+              <Text style={st.boxCardName} numberOfLines={1}>{box.name}</Text>
               <View style={st.boxCountRow}>
                 <Text style={st.boxCountLabel}>Owned:</Text>
                 <View style={[st.boxCountBadge, count > 0 && { backgroundColor: 'rgba(39,174,61,0.2)' }]}>
@@ -443,7 +443,7 @@ const st = StyleSheet.create({
   boxCardIcon: { fontSize: 36 },
   boxCardInfo: { flex: 1, gap: 4 },
   boxCardName: {
-    fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 18, color: '#ffffff',
+    fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 17, color: '#ffffff',
   },
   boxCountRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   boxCountLabel: {
