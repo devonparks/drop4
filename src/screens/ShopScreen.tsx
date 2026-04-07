@@ -422,33 +422,51 @@ export function ShopScreen() {
           <View style={s.itemShopSection}>
             <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
 
-            {/* Category tabs */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
-              {tabs.map(tab => (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => { setActiveTab(tab.key); haptics.tap(); }}
-                  style={[s.tab, activeTab === tab.key && s.tabActive]}
-                >
-                  <Text style={s.tabIcon}>{tab.icon}</Text>
-                  <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            {/* Collection filters */}
-            {activeTab !== 'boxes' && activeTab !== 'pets' && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
-                {collectionFilters.map(cf => (
+            {/* Category tabs (with right fade-edge to indicate scrollability) */}
+            <View style={s.tabScrollWrap}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
+                {tabs.map(tab => (
                   <Pressable
-                    key={cf}
-                    onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
-                    style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
+                    key={tab.key}
+                    onPress={() => { setActiveTab(tab.key); haptics.tap(); }}
+                    style={[s.tab, activeTab === tab.key && s.tabActive]}
                   >
-                    <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
+                    <Text style={s.tabIcon}>{tab.icon}</Text>
+                    <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
                   </Pressable>
                 ))}
               </ScrollView>
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={s.scrollFadeRight}
+              />
+            </View>
+
+            {/* Collection filters */}
+            {activeTab !== 'boxes' && activeTab !== 'pets' && (
+              <View style={s.tabScrollWrap}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
+                  {collectionFilters.map(cf => (
+                    <Pressable
+                      key={cf}
+                      onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
+                      style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
+                    >
+                      <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={s.scrollFadeRight}
+                />
+              </View>
             )}
 
             {/* Items */}
@@ -734,6 +752,15 @@ const s = StyleSheet.create({
 
   // ── Item Shop ──
   itemShopSection: { marginTop: 8 },
+  tabScrollWrap: { position: 'relative' },
+  scrollFadeRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 28,
+    pointerEvents: 'none' as any,
+  },
   tabRow: {
     flexDirection: 'row', paddingHorizontal: 12, gap: 5, marginBottom: 12,
   },
