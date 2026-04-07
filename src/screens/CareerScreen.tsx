@@ -158,7 +158,9 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
               ]}>{badge.label}</Text>
             </View>
           </View>
-          <Text style={styles.levelType}>{getChallengeTypeLabel(level.type)} • {level.opponent}</Text>
+          <Text style={styles.levelType}>
+            {level.type === 'standard' ? level.opponent : `${getChallengeTypeLabel(level.type)} • ${level.opponent}`}
+          </Text>
           {level.opponentPersonality && (
             <Text style={styles.levelFlavor} numberOfLines={1}>{level.opponentPersonality}</Text>
           )}
