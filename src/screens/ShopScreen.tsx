@@ -16,7 +16,7 @@ const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
-import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS } from '../data/cosmeticsShopCatalog';
+import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
@@ -589,7 +589,10 @@ export function ShopScreen() {
                    activeTab === 'effects' ? DROP_EFFECTS :
                    activeTab === 'wins' ? WIN_ANIMATIONS :
                    activeTab === 'accessories' ? BOARD_ACCESSORIES :
-                   activeTab === 'emotes' ? EMOTES :
+                   // Emotes tab now blends legacy 2D emotes with new 3D Mixamo
+                   // clips. IDs are namespace-disjoint (`dab` vs `emote_dab`)
+                   // so they coexist without collision.
+                   activeTab === 'emotes' ? [...EMOTES, ...EMOTE_SHOP_ITEMS] :
                    activeTab === 'outfits' ? OUTFIT_SHOP_ITEMS : [];
 
   // Apply species super-filter FIRST when on outfits tab, then collection filter

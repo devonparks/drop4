@@ -37,7 +37,7 @@ Pick the FIRST unchecked item.
 
 - [x] **Task 3: Rewrite ShopScreen 'pets' tab to use `PET_SHOP_ITEMS` + `usePetStore`.** Currently it uses `useShopStore.ownedPets/equippedPet` with a 2D PetCard. Add 3D preview using `<Pet3D>` inside each card at 80×80. Keep 2D fallback when `!FEATURES.character3D`. Wire purchase to `usePetStore.purchasePet`. Cross-check with existing `petStore` in `src/stores/petStore.ts`.
 
-- [ ] **Task 4: Wire `shopStore.ownedEmotes` + `useShopStore.purchaseEmote` to the new `EMOTE_SHOP_ITEMS` array.** Existing emotes tab already reads from shopStore. Extend its data source to include HUMAN_EMOTES entries in addition to whatever 2D emotes were there. Make sure the emote wheel / picker can equip either old or new IDs (new IDs start with `emote_`).
+- [x] **Task 4: Wire `shopStore.ownedEmotes` + `useShopStore.purchaseEmote` to the new `EMOTE_SHOP_ITEMS` array.** Existing emotes tab already reads from shopStore. Extend its data source to include HUMAN_EMOTES entries in addition to whatever 2D emotes were there. Make sure the emote wheel / picker can equip either old or new IDs (new IDs start with `emote_`).
 
 ### Character creator polish
 
@@ -51,13 +51,13 @@ Pick the FIRST unchecked item.
 
 - [x] **Task 8: Swap PartyLobbyScreen to use Character3DPortrait.** Replace both `AnimatedCharacter` usages (lines ~261 and ~311 per inventory). Gate on `FEATURES.character3D`. Keep 2D fallback intact.
 
-- [ ] **Task 9: Swap PlayScreen CharacterAvatar difficulty selectors to Character3DPortrait.** Since these are opponent bots without custom data, use the default customization (no override) OR build a cheap per-difficulty preset map (e.g. Easy = civilians_01, Medium = police_01, Hard = samurai_01, Legend = sci_fi_soldiers_01). Add that map to `src/data/npcCustomizations.ts` as a new file if needed.
+- [x] **Task 9: Swap PlayScreen CharacterAvatar difficulty selectors to Character3DPortrait.** (N/A — CharacterAvatar is imported but not actually rendered anywhere in PlayScreen; the inventory was wrong. Import should probably be removed as a separate cleanup.) Since these are opponent bots without custom data, use the default customization (no override) OR build a cheap per-difficulty preset map (e.g. Easy = civilians_01, Medium = police_01, Hard = samurai_01, Legend = sci_fi_soldiers_01). Add that map to `src/data/npcCustomizations.ts` as a new file if needed.
 
-- [ ] **Task 10: Collection/Roster grids — snapshot approach.** These render many characters simultaneously, so live `<Canvas>` per card kills performance. Build `src/components/3d/CharacterSnapshot.tsx` that renders a Character3D offscreen ONCE, captures it to PNG via `expo-gl`/`react-native-view-shot`, caches the PNG at `AsyncStorage`, and returns an `<Image>`. Replace AnimatedCharacter in CollectionScreen + RosterScreen with this. Cache key = hash of customization + outfitId. If `react-native-view-shot` isn't installed, mark `BLOCKED: requires 'npm install react-native-view-shot'` and move on.
+- [ ] **Task 10: Collection/Roster grids — snapshot approach.** BLOCKED: requires `npm install react-native-view-shot` (and likely a native rebuild). Snapshot caching also needs AsyncStorage key strategy — design first, then implement in a dedicated session. These render many characters simultaneously, so live `<Canvas>` per card kills performance. Build `src/components/3d/CharacterSnapshot.tsx` that renders a Character3D offscreen ONCE, captures it to PNG via `expo-gl`/`react-native-view-shot`, caches the PNG at `AsyncStorage`, and returns an `<Image>`. Replace AnimatedCharacter in CollectionScreen + RosterScreen with this. Cache key = hash of customization + outfitId. If `react-native-view-shot` isn't installed, mark `BLOCKED: requires 'npm install react-native-view-shot'` and move on.
 
 ### Testing & polish
 
-- [ ] **Task 11: Add smoke test for Character3D.** Create `src/components/3d/__tests__/Character3D.test.tsx`. Use jest + @testing-library/react-native to render `<Character3D width={100} height={100} bodyGlb={0} />` and assert it doesn't throw. If jest isn't set up in package.json, install jest + jest-expo + @testing-library/react-native first via `npm install --save-dev`.
+- [ ] **Task 11: Add smoke test for Character3D.** BLOCKED: jest + jest-expo + @testing-library/react-native not installed, and a full RN test config (jest.config.js, mocks for expo-gl / expo-asset / three) is needed. Worth a dedicated setup session rather than a side effect. Create `src/components/3d/__tests__/Character3D.test.tsx`. Use jest + @testing-library/react-native to render `<Character3D width={100} height={100} bodyGlb={0} />` and assert it doesn't throw. If jest isn't set up in package.json, install jest + jest-expo + @testing-library/react-native first via `npm install --save-dev`.
 
 - [x] **Task 12: Write emote picker component.** `src/components/ui/EmotePickerModal3D.tsx` — modal showing a 2×3 grid of the player's 6 equipped emotes (from `useShopStore.equippedEmotes`). Tapping one dismisses the modal and calls an `onPlay(animationId)` callback. Used by HomeScreen later to trigger emotes on the 3D character.
 
