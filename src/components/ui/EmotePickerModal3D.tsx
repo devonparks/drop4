@@ -15,6 +15,7 @@ import { PressScale } from '../animations';
 import { useShopStore } from '../../stores/shopStore';
 import { HUMAN_EMOTES, findAnimation } from '../../data/animationRegistry';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -50,6 +51,8 @@ export function EmotePickerModal3D({ visible, onClose, onPlay }: Props) {
       return;
     }
     haptics.select();
+    // Category-themed cue: celebratory swoosh for dances, whoosh for taunts/others
+    playSound(slot.meta.category === 'dance' ? 'swoosh' : 'whoosh');
     onPlay(slot.meta.id);
     onClose();
   };

@@ -18,7 +18,7 @@
  *   />
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, ViewStyle, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, ViewStyle, ActivityIndicator, Text, Animated } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useGLB } from '../../utils/glbLoader';
@@ -338,11 +338,23 @@ export function Character3D({
   const [loaded, setLoaded] = useState(false);
   const shouldRotate = autoRotate ?? (mode === 'creator');
 
+  // Smooth fade-in when the model finishes loading — prevents "pop".
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!loaded) return;
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+  }, [loaded, fadeAnim]);
+
   return (
     <View
       style={[{ width, height }, style]}
       onTouchEnd={onTap ? () => onTap() : undefined}
     >
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
       <Canvas
         frameloop="always"
         gl={{ antialias: true, alpha: true } as any}
@@ -420,6 +432,7 @@ export function Character3D({
         {/* Floor (receives shadow) */}
         {showFloor && <Floor />}
       </Canvas>
+      </Animated.View>
 
       {/* Loading overlay */}
       {!loaded && (

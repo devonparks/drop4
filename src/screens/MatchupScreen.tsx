@@ -23,6 +23,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { FEATURES } from '../config/features';
+import { getNpcCustomization } from '../data/npcCustomizations';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
@@ -332,7 +333,12 @@ export function MatchupScreen({ navigation }: Props) {
                   colors={['rgba(80,140,255,0.15)', 'rgba(80,140,255,0.03)', 'transparent']}
                   style={styles.characterGlow}
                 >
-                  <CharacterAvatar size="xlarge" variant={botVariant as any} />
+                  {FEATURES.character3D
+                    ? <Character3DPortrait
+                        width={180} height={220} showFloor={false}
+                        customization={getNpcCustomization(params.difficulty)}
+                      />
+                    : <CharacterAvatar size="xlarge" variant={botVariant as any} />}
                 </LinearGradient>
               </View>
 
