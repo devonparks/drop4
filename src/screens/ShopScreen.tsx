@@ -20,6 +20,11 @@ import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS } from '../data/cosmeticsShopCata
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
+import { PETS as PETS_3D } from '../data/petRegistry';
+import { DOG_IDLES } from '../data/animationRegistry';
+import { Pet3D } from '../components/3d/Pet3D';
+import { FEATURES } from '../config/features';
+import { useCareerStore } from '../stores/careerStore';
 import { BOARD_THEME_VISUALS } from '../data/boardThemeColors';
 import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
 // cache-bust marker
@@ -355,6 +360,9 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   const rarityColor = PET_RARITY_COLORS[pet.rarity];
   const isEarnOnly = pet.price === 0;
 
+  // Map the 2D pet ID to a 3D registry entry when available (same ID scheme)
+  const pet3D = (PETS_3D as any)[pet.id];
+
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
       <Pressable
@@ -363,7 +371,16 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
       >
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.petPreview}>
-          <Image source={pet.idleImage} style={s.petPreviewImage} resizeMode="contain" />
+          {FEATURES.character3D && pet3D?.glb ? (
+            <Pet3D
+              width={90} height={90}
+              petGlb={pet3D.glb}
+              animationGlb={DOG_IDLES[1]?.glb}
+              animationLoop
+            />
+          ) : (
+            <Image source={pet.idleImage} style={s.petPreviewImage} resizeMode="contain" />
+          )}
         </View>
         <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
         <Text style={s.petBreed} numberOfLines={1}>{pet.breed}</Text>
@@ -411,6 +428,7 @@ export function ShopScreen() {
   const equippedOutfitId = useCharacterStore(s => s.customization.outfitId);
   const unlockOutfit = useCharacterStore(s => s.unlockOutfit);
   const setEquippedOutfit = useCharacterStore(s => s.setOutfit);
+  const unlockedSpecies = useCareerStore(s => s.unlockedSpecies);
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
   const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
@@ -664,17 +682,29 @@ export function ShopScreen() {
                     { id: 'goblin', label: 'Goblin', icon: '\u{1F47A}' },
                     { id: 'skeleton', label: 'Skeleton', icon: '\u{1F480}' },
                     { id: 'zombie', label: 'Zombie', icon: '\u{1F9DF}' },
-                  ] as const).map((sp) => (
-                    <Pressable
-                      key={sp.id}
-                      onPress={() => { setOutfitSpecies(sp.id as any); setCollectionFilter('All'); haptics.tap(); }}
-                      style={[s.collectionPill, outfitSpecies === sp.id && s.collectionPillActive]}
-                    >
-                      <Text style={[s.collectionPillText, outfitSpecies === sp.id && s.collectionPillTextActive]}>
-                        {sp.icon} {sp.label}
-                      </Text>
-                    </Pressable>
-                  ))}
+                  ] as const).map((sp) => {
+                    const isLocked = sp.id !== 'All' && !unlockedSpecies.includes(sp.id);
+                    return (
+                      <Pressable
+                        key={sp.id}
+                        onPress={() => {
+                          if (isLocked) { haptics.error(); return; }
+                          setOutfitSpecies(sp.id as any);
+                          setCollectionFilter('All');
+                          haptics.tap();
+                        }}
+                        style={[
+                          s.collectionPill,
+                          outfitSpecies === sp.id && s.collectionPillActive,
+                          isLocked && { opacity: 0.45 },
+                        ]}
+                      >
+                        <Text style={[s.collectionPillText, outfitSpecies === sp.id && s.collectionPillTextActive]}>
+                          {isLocked ? '\u{1F512} ' : sp.icon + ' '}{sp.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </ScrollView>
                 <LinearGradient
                   pointerEvents="none"

@@ -24,6 +24,7 @@ import {
   type OutfitId,
 } from '../stores/characterStore';
 import { useShopStore } from '../stores/shopStore';
+import { useCareerStore } from '../stores/careerStore';
 import { OUTFITS, OUTFIT_IDS, PACKS, type Species } from '../data/outfitRegistry';
 import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { PETS, PET_IDS, type PetId } from '../data/petRegistry';
@@ -258,6 +259,7 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
   const unlockOutfit = useCharacterStore((s) => s.unlockOutfit);
   const coins = useShopStore((s) => s.coins);
   const spendCoins = useShopStore((s) => s.spendCoins);
+  const unlockedSpecies = useCareerStore((s) => s.unlockedSpecies);
 
   // Filter outfits by species + pack
   const filteredOutfits = OUTFIT_IDS.filter((id) => {
@@ -300,17 +302,29 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
       <Text style={styles.sectionTitle}>OUTFITS</Text>
       <Text style={styles.sectionSub}>{filteredOutfits.length} of {OUTFIT_IDS.length} outfits</Text>
 
-      {/* Species chips */}
+      {/* Species chips — locked species show a padlock and refuse selection */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }} contentContainerStyle={{ gap: 6, paddingRight: 20 }}>
-        {SPECIES_CHIPS.map((sp) => (
-          <PressScale key={sp.id} onPress={() => { haptics.tap(); setSpecies(sp.id); setPackFilter('all'); }}>
-            <View style={[petsStyles.packChip, species === sp.id && petsStyles.packChipActive]}>
-              <Text style={[petsStyles.packChipText, species === sp.id && petsStyles.packChipTextActive]}>
-                {sp.icon} {sp.label}
-              </Text>
-            </View>
-          </PressScale>
-        ))}
+        {SPECIES_CHIPS.map((sp) => {
+          const isLocked = sp.id !== 'all' && !unlockedSpecies.includes(sp.id);
+          return (
+            <PressScale key={sp.id} onPress={() => {
+              if (isLocked) { haptics.error(); return; }
+              haptics.tap();
+              setSpecies(sp.id);
+              setPackFilter('all');
+            }}>
+              <View style={[
+                petsStyles.packChip,
+                species === sp.id && petsStyles.packChipActive,
+                isLocked && { opacity: 0.45 },
+              ]}>
+                <Text style={[petsStyles.packChipText, species === sp.id && petsStyles.packChipTextActive]}>
+                  {isLocked ? '\u{1F512} ' : sp.icon + ' '}{sp.label}
+                </Text>
+              </View>
+            </PressScale>
+          );
+        })}
       </ScrollView>
 
       {/* Pack chips */}

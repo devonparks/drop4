@@ -35,7 +35,7 @@ Pick the FIRST unchecked item.
 
 - [x] **Task 2: Group ShopScreen outfits tab by pack using `OUTFIT_COLLECTIONS`.** Show a horizontal pack-picker chip row (Modern Civilians, Police, Apocalypse, Fantasy, Pirates, Samurai, Sci-Fi, Viking, Elven, Goblin, Skeleton, Zombie). Selecting a pack filters the grid. Include a "Species" super-filter (Human, Elf, Goblin, Skeleton, Zombie) above the pack chips. This turns the single tab into a browsable 152-piece shop.
 
-- [ ] **Task 3: Rewrite ShopScreen 'pets' tab to use `PET_SHOP_ITEMS` + `usePetStore`.** Currently it uses `useShopStore.ownedPets/equippedPet` with a 2D PetCard. Add 3D preview using `<Pet3D>` inside each card at 80×80. Keep 2D fallback when `!FEATURES.character3D`. Wire purchase to `usePetStore.purchasePet`. Cross-check with existing `petStore` in `src/stores/petStore.ts`.
+- [x] **Task 3: Rewrite ShopScreen 'pets' tab to use `PET_SHOP_ITEMS` + `usePetStore`.** Currently it uses `useShopStore.ownedPets/equippedPet` with a 2D PetCard. Add 3D preview using `<Pet3D>` inside each card at 80×80. Keep 2D fallback when `!FEATURES.character3D`. Wire purchase to `usePetStore.purchasePet`. Cross-check with existing `petStore` in `src/stores/petStore.ts`.
 
 - [ ] **Task 4: Wire `shopStore.ownedEmotes` + `useShopStore.purchaseEmote` to the new `EMOTE_SHOP_ITEMS` array.** Existing emotes tab already reads from shopStore. Extend its data source to include HUMAN_EMOTES entries in addition to whatever 2D emotes were there. Make sure the emote wheel / picker can equip either old or new IDs (new IDs start with `emote_`).
 
@@ -71,7 +71,7 @@ Pick the FIRST unchecked item.
 
 ### If all tasks above are complete, pick from:
 
-- [ ] **Task 16: Career mode species unlocks.** In `src/data/careerLevels.ts`, add species-unlock triggers at certain boss levels (Elven at Venice Beach chapter, Goblin at Harlem, Skeleton at Cyber chapter, Zombie at Apocalypse chapter). Wire `careerStore` to expose `unlockedSpecies: string[]`. Reflect in creator Species picker.
+- [x] **Task 16: Career mode species unlocks.** In `src/data/careerLevels.ts`, add species-unlock triggers at certain boss levels (Elven at Venice Beach chapter, Goblin at Harlem, Skeleton at Cyber chapter, Zombie at Apocalypse chapter). Wire `careerStore` to expose `unlockedSpecies: string[]`. Reflect in creator Species picker.
 
 - [x] **Task 17: Write docs/3D_SYSTEM_OVERVIEW.md.** Architectural doc covering: registries, rendering components, feature flag, pipeline, how to add a new outfit/pet/emote. For future contributors.
 

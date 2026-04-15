@@ -13,6 +13,8 @@ interface CareerProgress {
 interface CareerState {
   progress: CareerProgress;
   currentChapter: number;
+  // Species unlocked by defeating chapter bosses. 'human' is always unlocked.
+  unlockedSpecies: string[];
 
   // Actions
   completeLevel: (levelId: number, stars: number, moves: number) => void;
@@ -20,12 +22,24 @@ interface CareerState {
   isLevelUnlocked: (levelId: number) => boolean;
   getTotalStars: () => number;
   getCompletedCount: () => number;
+  isSpeciesUnlocked: (species: string) => boolean;
   loadFromStorage: () => Promise<void>;
 }
+
+// Which species unlocks at which boss level.
+// Chapter 1 boss (lvl 12) → Elves (neighborhood rivals).
+// Chapter 2 boss (lvl 24) → Goblin (underbelly crew).
+// Chapter 3 boss (lvl 36) → Skeleton + Zombie (endgame).
+const BOSS_UNLOCKS: Record<number, string[]> = {
+  12: ['elves'],
+  24: ['goblin'],
+  36: ['skeleton', 'zombie'],
+};
 
 export const useCareerStore = create<CareerState>((set, get) => ({
   progress: {},
   currentChapter: 1,
+  unlockedSpecies: ['human'],
 
   completeLevel: (levelId, stars, moves) => {
     const current = get().progress[levelId];
@@ -61,6 +75,14 @@ export const useCareerStore = create<CareerState>((set, get) => ({
           useRosterStore.getState().unlockForCareerLevel(levelId);
         }
       } catch (e) { /* careerLevels not loaded yet — skip */ }
+
+      // Species unlocks tied to chapter bosses
+      const newSpecies = BOSS_UNLOCKS[levelId];
+      if (newSpecies) {
+        set((state) => ({
+          unlockedSpecies: Array.from(new Set([...state.unlockedSpecies, ...newSpecies])),
+        }));
+      }
     }
   },
 
@@ -80,15 +102,36 @@ export const useCareerStore = create<CareerState>((set, get) => ({
     return Object.values(get().progress).filter(p => p.completed).length;
   },
 
+  isSpeciesUnlocked: (species) => get().unlockedSpecies.includes(species),
+
   loadFromStorage: async () => {
-    const saved = await loadState<{ progress: CareerProgress; currentChapter: number }>('career');
+    const saved = await loadState<{
+      progress: CareerProgress;
+      currentChapter: number;
+      unlockedSpecies?: string[];
+    }>('career');
     if (saved) {
-      set({ progress: saved.progress || {}, currentChapter: saved.currentChapter || 1 });
+      const savedUnlocks = saved.unlockedSpecies ?? [];
+      // Re-apply boss-based unlocks for completed bosses so older saves get
+      // the new species lazily.
+      const completedSpecies: string[] = [];
+      for (const [lvl, species] of Object.entries(BOSS_UNLOCKS)) {
+        if (saved.progress?.[Number(lvl)]?.completed) completedSpecies.push(...species);
+      }
+      set({
+        progress: saved.progress || {},
+        currentChapter: saved.currentChapter || 1,
+        unlockedSpecies: Array.from(new Set(['human', ...savedUnlocks, ...completedSpecies])),
+      });
     }
   },
 }));
 
 // Auto-save
 useCareerStore.subscribe((state) => {
-  saveState('career', { progress: state.progress, currentChapter: state.currentChapter });
+  saveState('career', {
+    progress: state.progress,
+    currentChapter: state.currentChapter,
+    unlockedSpecies: state.unlockedSpecies,
+  });
 });
