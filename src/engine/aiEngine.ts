@@ -260,3 +260,8 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
   const [bestCol] = minimax(board, config.depth, -Infinity, Infinity, true, connectN);
   return bestCol ?? orderedCols[0] ?? validCols[0];
 }
+
+// Dev/test hook — expose AI to window for the playtest bot
+if (typeof window !== 'undefined' && __DEV__) {
+  (window as any).__getAIMove = getAIMove;
+}

@@ -21,6 +21,8 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
+import { FEATURES } from '../config/features';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
@@ -261,7 +263,9 @@ export function MatchupScreen({ navigation }: Props) {
                 colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)', 'transparent']}
                 style={styles.characterGlow}
               >
-                <CharacterAvatar size="xlarge" variant="player" />
+                {FEATURES.character3D
+                  ? <Character3DPortrait width={180} height={220} showFloor={false} />
+                  : <CharacterAvatar size="xlarge" variant="player" />}
               </LinearGradient>
             </View>
 

@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { db, getCurrentUser } from './firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { logger } from '../utils/logger';
 
 // ============ NOTIFICATION HANDLER (module-level) ============
 
@@ -27,7 +28,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   try {
     // Push notifications only work on physical devices
     if (!Device.isDevice) {
-      console.warn('Push notifications require a physical device');
+      logger.warn('Push notifications require a physical device');
       return null;
     }
 
@@ -41,7 +42,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
     }
 
     if (finalStatus !== 'granted') {
-      console.warn('Push notification permission not granted');
+      logger.warn('Push notification permission not granted');
       return null;
     }
 
@@ -65,13 +66,13 @@ export async function registerForPushNotifications(): Promise<string | null> {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { pushToken: token }).catch(() => {
         // If the doc doesn't exist yet, that's fine — it will be created later
-        console.warn('Could not update push token on user profile (doc may not exist yet)');
+        logger.warn('Could not update push token on user profile (doc may not exist yet)');
       });
     }
 
     return token;
   } catch (error) {
-    console.warn('registerForPushNotifications failed:', error);
+    logger.warn('registerForPushNotifications failed:', error);
     return null;
   }
 }
@@ -103,7 +104,7 @@ export async function scheduleDailyReminder(): Promise<string | null> {
 
     return id;
   } catch (error) {
-    console.warn('scheduleDailyReminder failed:', error);
+    logger.warn('scheduleDailyReminder failed:', error);
     return null;
   }
 }
@@ -132,7 +133,7 @@ export async function scheduleInactivityReminder(): Promise<string | null> {
 
     return id;
   } catch (error) {
-    console.warn('scheduleInactivityReminder failed:', error);
+    logger.warn('scheduleInactivityReminder failed:', error);
     return null;
   }
 }
@@ -154,7 +155,7 @@ export async function sendMatchInviteNotification(friendName: string): Promise<v
       trigger: null, // Show immediately
     });
   } catch (error) {
-    console.warn('sendMatchInviteNotification failed:', error);
+    logger.warn('sendMatchInviteNotification failed:', error);
   }
 }
 
@@ -175,7 +176,7 @@ export function handleNotificationResponse(
     }
     return null;
   } catch (error) {
-    console.warn('handleNotificationResponse failed:', error);
+    logger.warn('handleNotificationResponse failed:', error);
     return null;
   }
 }
@@ -209,7 +210,7 @@ export async function cancelAllScheduled(): Promise<void> {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
   } catch (error) {
-    console.warn('cancelAllScheduled failed:', error);
+    logger.warn('cancelAllScheduled failed:', error);
   }
 }
 
@@ -225,6 +226,6 @@ async function cancelNotificationsByTag(tag: string): Promise<void> {
       }
     }
   } catch (error) {
-    console.warn('cancelNotificationsByTag failed:', error);
+    logger.warn('cancelNotificationsByTag failed:', error);
   }
 }

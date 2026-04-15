@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { PortraitFrame, PortraitTier } from '../components/ui/PortraitFrame';
+// cache-bust: portrait rating cleanup
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore, getCoinMilestoneInfo, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -18,6 +20,7 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
+import { Shimmer, SlideReveal } from '../components/animations';
 import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -154,24 +157,25 @@ export function ProfileScreen() {
         {/* Profile header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarSection}>
-            {/* Outer glow ring */}
-            <View style={styles.avatarGlow}>
-              <LinearGradient
-                colors={[colors.goldDark, colors.coinGold, colors.goldLight, colors.coinGold, colors.goldDark]}
-                style={styles.avatarRingOuter}
-              >
-                <View style={styles.avatarRingGap}>
-                  <LinearGradient
-                    colors={['#d4ac0d', '#f1c40f', '#d4ac0d']}
-                    style={styles.avatarRingInner}
-                  >
-                    <View style={styles.avatarInner}>
-                      <CharacterAvatar size="large" variant="player" />
-                    </View>
-                  </LinearGradient>
-                </View>
-              </LinearGradient>
-            </View>
+            {/*
+              Portrait treatment: tight-cropped character inside a tier
+              frame with rating badge + tier label. The tier scales with
+              player level so you visibly upgrade your card as you grind.
+            */}
+            <PortraitFrame
+              image={require('../assets/images/characters/player_idle.png')}
+              rating={Math.min(99, 70 + Math.max(0, level - 1) * 2)}
+              tier={
+                level >= 30 ? 'darkmatter' :
+                level >= 20 ? 'diamond' :
+                level >= 15 ? 'amethyst' :
+                level >= 10 ? 'ruby' :
+                level >= 7  ? 'gold' :
+                level >= 4  ? 'silver' :
+                'bronze'
+              }
+              size={170}
+            />
             {equippedPet && (
               <PetDisplay petId={equippedPet} size={50} style={{ position: 'absolute', right: -10, bottom: -5 }} />
             )}
@@ -217,14 +221,27 @@ export function ProfileScreen() {
           <View style={styles.levelSection}>
             <Text style={styles.levelLabel}>Level {level}</Text>
             <View style={styles.xpBarChunky}>
-              <LinearGradient
-                colors={[colors.orange, '#ff6600', colors.coinGold]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.xpFillChunky, { width: `${Math.max(Math.min((xp / (level * 100)) * 100, 100), 8)}%` }]}
-              >
-                <Text style={styles.xpInsideText}>{xp} / {level * 100} XP</Text>
-              </LinearGradient>
+              {xp > 0 ? (
+                <Shimmer>
+                  <LinearGradient
+                    colors={[colors.orange, '#ff6600', colors.coinGold]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.xpFillChunky, { width: `${Math.max(Math.min((xp / (level * 100)) * 100, 100), 8)}%` }]}
+                  >
+                    <Text style={styles.xpInsideText}>{xp} / {level * 100} XP</Text>
+                  </LinearGradient>
+                </Shimmer>
+              ) : (
+                <LinearGradient
+                  colors={[colors.orange, '#ff6600', colors.coinGold]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.xpFillChunky, { width: `${Math.max(Math.min((xp / (level * 100)) * 100, 100), 8)}%` }]}
+                >
+                  <Text style={styles.xpInsideText}>{xp} / {level * 100} XP</Text>
+                </LinearGradient>
+              )}
             </View>
             <Text style={styles.nextRewardHint}>
               Next reward at Level {level + 1}
@@ -293,16 +310,36 @@ export function ProfileScreen() {
           )}
         </View>
 
-        {/* Stats grid */}
-        <Text style={styles.sectionTitle}>STATISTICS</Text>
-        <View style={styles.statsGrid}>
-          <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
-          <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
-          <StatCard label="Win Rate" value={`${winRate}%`} color={colors.orange} />
-          <StatCard label="Games" value={totalGames} />
-          <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
-          <StatCard label="Gems" value={gems} color={colors.gemGreen} />
+        {/* v1: Stats, Achievements, Quick Actions, Match History all removed from Profile.
+            Stats/Achievements moved to Collection tab. Settings accessible from home gear icon.
+            This keeps Profile as a clean single-screen player card with no scrolling. */}
+
+        {/* Compact links */}
+        <View style={styles.profileLinks}>
+          <Pressable onPress={() => navigateTo('Stats')} style={styles.profileLink}>
+            <Text style={styles.profileLinkIcon}>📊</Text>
+            <Text style={styles.profileLinkText}>Stats</Text>
+            <Text style={styles.profileLinkArrow}>›</Text>
+          </Pressable>
+          <Pressable onPress={() => navigateTo('Settings')} style={styles.profileLink}>
+            <Text style={styles.profileLinkIcon}>⚙️</Text>
+            <Text style={styles.profileLinkText}>Settings</Text>
+            <Text style={styles.profileLinkArrow}>›</Text>
+          </Pressable>
         </View>
+
+        {/* v1 simplified: Stats/Achievements/Quick Actions/Match History removed.
+            See git history for the full Profile implementation if needed for v1.1. */}
+        <SlideReveal from="bottom" delay={100}>
+          <View style={styles.statsGrid}>
+            <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
+            <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
+            <StatCard label="Win Rate" value={`${winRate}%`} color={colors.orange} />
+            <StatCard label="Games" value={totalGames} />
+            <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
+            <StatCard label="Gems" value={gems} color={colors.gemGreen} />
+          </View>
+        </SlideReveal>
 
         {/* Favorite Opponent */}
         {favOpponent && (
@@ -317,109 +354,51 @@ export function ProfileScreen() {
 
         {/* Equipped cosmetics */}
         <Text style={styles.sectionTitle}>EQUIPPED</Text>
-        <View style={styles.equippedGrid}>
-          <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
-          <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
-          <EquippedItem label="Drop Effect" name="None" rarity="common" />
-          <EquippedItem label="Win Animation" name="Basic" rarity="common" />
-          <EquippedItem
-            label="Pet"
-            name={equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None'}
-            rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
-          />
-        </View>
+        <SlideReveal from="bottom" delay={200}>
+          <View style={styles.equippedGrid}>
+            <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
+            <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
+            <EquippedItem label="Drop Effect" name="None" rarity="common" />
+            <EquippedItem label="Win Animation" name="Basic" rarity="common" />
+            <EquippedItem
+              label="Pet"
+              name={equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None'}
+              rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
+            />
+          </View>
+        </SlideReveal>
 
-        {/* Achievements */}
-        <Text style={styles.sectionTitle}>ACHIEVEMENTS ({achievements.filter(a => a.unlocked).length}/{achievements.length})</Text>
-
-        {/* Achievement Score */}
-        <View style={styles.achievementScoreCard}>
-          <Text style={styles.achievementScoreLabel}>Achievement Score</Text>
-          <Text style={styles.achievementScoreValue}>
-            {getAchievementScore(achievements)} / {getMaxAchievementPoints()} pts
-          </Text>
-        </View>
-
-        {/* Achievement Progress Card */}
+        {/* Achievements — compact summary, full list is in Challenges tab */}
+        <Text style={styles.sectionTitle}>ACHIEVEMENTS</Text>
         {(() => {
           const unlocked = achievements.filter(a => a.unlocked).length;
           const total = achievements.length;
           const pct = total > 0 ? Math.round((unlocked / total) * 100) : 0;
-          const nextAch = achievements.find(a => !a.unlocked);
-          const progressWidth = `${Math.max(pct, 4)}%`;
+          const score = getAchievementScore(achievements);
+          const maxScore = getMaxAchievementPoints();
           return (
             <View style={styles.achievementProgressCard}>
-              {/* Progress bar */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={styles.achProgressPct}>{unlocked}/{total} unlocked</Text>
+                <Text style={[styles.achProgressPct, { color: colors.coinGold }]}>{score} / {maxScore} pts</Text>
+              </View>
               <View style={styles.achProgressBarOuter}>
                 <LinearGradient
                   colors={[colors.orange, colors.coinGold]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={[styles.achProgressBarFill, { width: progressWidth as any }]}
+                  style={[styles.achProgressBarFill, { width: `${Math.max(pct, 4)}%` as any }]}
                 />
               </View>
-              <Text style={styles.achProgressPct}>
-                {pct}% Complete {pct < 100 ? '— Keep playing to unlock more!' : '— All unlocked!'}
-              </Text>
-              {nextAch && (
-                <View style={styles.achNextRow}>
-                  <Text style={styles.achNextLabel}>Next:</Text>
-                  <Text style={styles.achNextIcon}>{nextAch.icon}</Text>
-                  <Text style={styles.achNextName}>{nextAch.description}</Text>
-                  <Text style={styles.achNextReward}>
-                    ({nextAch.name})
-                  </Text>
-                </View>
-              )}
+              <Pressable
+                onPress={() => navigateTo('Challenges')}
+                style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
+              >
+                <Text style={{ fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: colors.orange, letterSpacing: 1 }}>VIEW ALL →</Text>
+              </Pressable>
             </View>
           );
         })()}
-
-        <View style={styles.achievementsList}>
-          {achievements.map((ach) => {
-            const hasTitle = ach.reward.type === 'title' && typeof ach.reward.value === 'string';
-            const isActiveTitle = hasTitle && equippedCustomTitle === ach.reward.value;
-            return (
-              <View key={ach.id} style={[styles.achievementRow, ach.unlocked && styles.achievementDone]}>
-                <Text style={styles.achievementIcon}>{ach.icon}</Text>
-                <View style={styles.achievementInfo}>
-                  <Text style={[styles.achievementName, ach.unlocked && { color: colors.coinGold }]}>
-                    {ach.name}
-                  </Text>
-                  <Text style={styles.achievementDesc}>{ach.description}</Text>
-                  {hasTitle && !ach.unlocked && (
-                    <Text style={[styles.achievementDesc, { color: colors.textMuted, fontStyle: 'italic' }]}>
-                      Unlocks title: "{ach.reward.value as string}"
-                    </Text>
-                  )}
-                </View>
-                {ach.unlocked && hasTitle ? (
-                  <Pressable
-                    onPress={() => {
-                      if (isActiveTitle) {
-                        setEquippedCustomTitle(null);
-                        haptics.select();
-                      } else {
-                        setEquippedCustomTitle(ach.reward.value as string);
-                        haptics.win();
-                      }
-                    }}
-                    style={[
-                      styles.titleChip,
-                      isActiveTitle && styles.titleChipActive,
-                    ]}
-                  >
-                    <Text style={[styles.titleChipText, isActiveTitle && { color: '#1a1a00' }]}>
-                      {isActiveTitle ? '✓ ACTIVE' : 'USE TITLE'}
-                    </Text>
-                  </Pressable>
-                ) : ach.unlocked ? (
-                  <Text style={styles.checkmark}>✓</Text>
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
 
         {/* Ranked Progress — only when ranked is enabled */}
         {FEATURES.rankedMode && (
@@ -455,72 +434,11 @@ export function ProfileScreen() {
           </>
         )}
 
-        {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
+        {/* Quick links — compact row */}
         <View style={styles.quickActions}>
-          <GlossyButton label="Challenges" variant="teal" icon="🎯" small onPress={() => navigateTo('Challenges')} style={{ flex: 1 }} />
-          <GlossyButton label="Match History" variant="orange" icon="📊" small onPress={() => navigateTo('MatchHistory')} style={{ flex: 1 }} />
+          <GlossyButton label="📊 Stats" variant="navy" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
+          <GlossyButton label="⚙️ Settings" variant="navy" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
         </View>
-        <View style={[styles.quickActions, { marginTop: 0 }]}>
-          <GlossyButton label="Stats" variant="navy" icon="📈" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
-          <GlossyButton label="Collection" variant="gold" icon="🗂️" small onPress={() => navigateTo('Collection')} style={{ flex: 1 }} />
-        </View>
-        {FEATURES.lootBoxes && (
-          <View style={[styles.quickActions, { marginTop: 0 }]}>
-            <GlossyButton label="Loot Boxes" variant="gold" icon="🎁" small onPress={() => navigateTo('LootBox')} style={{ flex: 1 }} />
-            <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
-          </View>
-        )}
-        {!FEATURES.lootBoxes && (
-          <View style={[styles.quickActions, { marginTop: 0 }]}>
-            <GlossyButton label="Settings" variant="navy" icon="⚙️" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
-          </View>
-        )}
-
-        {/* Recent Activity */}
-        {(() => {
-          const activities: { icon: string; text: string; color: string }[] = [];
-          // Build from match history
-          if (allMatches.length > 0) {
-            const last = allMatches[0];
-            if (last.result === 'win') {
-              activities.push({ icon: '🏆', text: `Won vs ${last.opponent} (+${last.coinsEarned} coins)`, color: colors.green });
-            } else if (last.result === 'loss') {
-              activities.push({ icon: '💔', text: `Lost vs ${last.opponent}`, color: colors.pieceRed });
-            } else {
-              activities.push({ icon: '🤝', text: `Draw vs ${last.opponent}`, color: colors.textSecondary });
-            }
-          }
-          // Level milestone
-          if (level > 1) {
-            activities.push({ icon: '📈', text: `Reached Level ${level}!`, color: colors.orange });
-          }
-          // Achievement progress
-          const unlockedAch = achievements.filter(a => a.unlocked);
-          if (unlockedAch.length > 0) {
-            const lastAch = unlockedAch[unlockedAch.length - 1];
-            activities.push({ icon: lastAch.icon, text: `Unlocked "${lastAch.name}"`, color: colors.coinGold });
-          }
-          // Coin balance hint
-          if (coins >= 1000) {
-            activities.push({ icon: '💰', text: `Sitting on ${coins.toLocaleString()} coins`, color: colors.coinGold });
-          }
-          const display = activities.slice(0, 3);
-          if (display.length === 0) return null;
-          return (
-            <>
-              <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
-              <View style={styles.activityList}>
-                {display.map((a, i) => (
-                  <View key={i} style={styles.activityRow}>
-                    <Text style={styles.activityIcon}>{a.icon}</Text>
-                    <Text style={[styles.activityText, { color: a.color }]} numberOfLines={1}>{a.text}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          );
-        })()}
 
         {/* Match History */}
         {recentMatches.length > 0 && (
@@ -732,6 +650,36 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
   },
+  profileLinks: {
+    marginTop: 16,
+    gap: 6,
+  },
+  profileLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  profileLinkIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  profileLinkText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+    flex: 1,
+  },
+  profileLinkArrow: {
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.3)',
+    fontWeight: '600',
+  },
   sectionTitle: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
@@ -751,26 +699,31 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '30%',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statValue: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 22,
-    marginBottom: 2,
+    fontSize: 26,
+    marginBottom: 3,
   },
   statLabel: {
     fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 10,
-    color: colors.textSecondary,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   equippedGrid: {
     flexDirection: 'row',
@@ -781,25 +734,31 @@ const styles = StyleSheet.create({
   },
   equippedItem: {
     width: '47%',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   equippedLabel: {
     fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 10,
-    color: colors.textSecondary,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 1,
+    marginBottom: 5,
   },
   equippedName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 15,
   },
   achievementsList: {
     paddingHorizontal: 16,

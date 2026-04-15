@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import type { Friend, FriendRequest } from '../stores/friendsStore';
 import type { UserProfile } from './firebase';
+import { logger } from '../utils/logger';
 
 // ============ COLLECTIONS ============
 
@@ -48,7 +49,7 @@ export async function sendFriendRequest(toUid: string): Promise<string | null> {
     if (friendsDoc.exists()) {
       const data = friendsDoc.data();
       if (data.friends?.includes(toUid)) {
-        console.warn('sendFriendRequest: already friends');
+        logger.warn('sendFriendRequest: already friends');
         return null;
       }
     }
@@ -62,7 +63,7 @@ export async function sendFriendRequest(toUid: string): Promise<string | null> {
     );
     const existingSnap = await getDocs(existingQ);
     if (!existingSnap.empty) {
-      console.warn('sendFriendRequest: request already pending');
+      logger.warn('sendFriendRequest: request already pending');
       return null;
     }
 
@@ -70,7 +71,7 @@ export async function sendFriendRequest(toUid: string): Promise<string | null> {
     const myProfile = await getDoc(doc(db, USERS, uid));
     const theirProfile = await getDoc(doc(db, USERS, toUid));
     if (!theirProfile.exists()) {
-      console.warn('sendFriendRequest: target user not found');
+      logger.warn('sendFriendRequest: target user not found');
       return null;
     }
 
@@ -88,7 +89,7 @@ export async function sendFriendRequest(toUid: string): Promise<string | null> {
 
     return requestDoc.id;
   } catch (error) {
-    console.warn('sendFriendRequest failed:', error);
+    logger.warn('sendFriendRequest failed:', error);
     return null;
   }
 }
@@ -119,7 +120,7 @@ export function listenForFriendRequests(
       callback(requests);
     });
   } catch (error) {
-    console.warn('listenForFriendRequests failed:', error);
+    logger.warn('listenForFriendRequests failed:', error);
     return null;
   }
 }
@@ -150,7 +151,7 @@ export function listenForOutgoingRequests(
       callback(requests);
     });
   } catch (error) {
-    console.warn('listenForOutgoingRequests failed:', error);
+    logger.warn('listenForOutgoingRequests failed:', error);
     return null;
   }
 }
@@ -179,7 +180,7 @@ export async function acceptFriendRequest(requestId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.warn('acceptFriendRequest failed:', error);
+    logger.warn('acceptFriendRequest failed:', error);
     return false;
   }
 }
@@ -193,7 +194,7 @@ export async function declineFriendRequest(requestId: string): Promise<boolean> 
     await updateDoc(reqRef, { status: 'declined' });
     return true;
   } catch (error) {
-    console.warn('declineFriendRequest failed:', error);
+    logger.warn('declineFriendRequest failed:', error);
     return false;
   }
 }
@@ -207,7 +208,7 @@ export async function cancelFriendRequest(requestId: string): Promise<boolean> {
     await deleteDoc(reqRef);
     return true;
   } catch (error) {
-    console.warn('cancelFriendRequest failed:', error);
+    logger.warn('cancelFriendRequest failed:', error);
     return false;
   }
 }
@@ -232,7 +233,7 @@ async function addToFriendsList(userUid: string, friendUid: string): Promise<voi
       await setDoc(friendsRef, { friends: [friendUid] });
     }
   } catch (error) {
-    console.warn('addToFriendsList failed:', error);
+    logger.warn('addToFriendsList failed:', error);
   }
 }
 
@@ -264,7 +265,7 @@ export async function removeFriend(friendUid: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.warn('removeFriend failed:', error);
+    logger.warn('removeFriend failed:', error);
     return false;
   }
 }
@@ -326,7 +327,7 @@ export function listenForFriends(
       callback(friendProfiles);
     });
   } catch (error) {
-    console.warn('listenForFriends failed:', error);
+    logger.warn('listenForFriends failed:', error);
     return null;
   }
 }
@@ -396,7 +397,7 @@ export async function searchPlayers(
 
     return results;
   } catch (error) {
-    console.warn('searchPlayers failed:', error);
+    logger.warn('searchPlayers failed:', error);
     return [];
   }
 }
@@ -438,7 +439,7 @@ export async function inviteToMatch(
 
     return inviteDoc.id;
   } catch (error) {
-    console.warn('inviteToMatch failed:', error);
+    logger.warn('inviteToMatch failed:', error);
     return null;
   }
 }
@@ -470,7 +471,7 @@ export function listenForMatchInvites(
       callback(invites);
     });
   } catch (error) {
-    console.warn('listenForMatchInvites failed:', error);
+    logger.warn('listenForMatchInvites failed:', error);
     return null;
   }
 }

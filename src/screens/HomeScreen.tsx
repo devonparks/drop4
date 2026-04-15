@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVariantId } from '../components/ui/AnimatedCharacter';
+import { Character3D } from '../components/3d/Character3D';
+import { useCharacterStore } from '../stores/characterStore';
+import { OUTFITS } from '../data/outfitRegistry';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
+import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
+import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { IdlePicker } from '../components/ui/IdlePicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -27,6 +32,7 @@ import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import { FEATURES } from '../config/features';
+import { PressScale, Shimmer, BreathingView, SlideReveal } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -84,23 +90,30 @@ function StageSparkles() {
 }
 
 // Pressable wrapper with scale-down feedback for menu buttons
-function PressScaleView({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    haptics.tap();
-    Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
-  };
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }).start();
-  };
-
+// PressScaleView — now uses the shared PressScale component from animations library
+function Character3DWrapper() {
+  const cust = useCharacterStore((s) => s.customization);
+  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS.modern_civilians_01;
   return (
-    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        {children}
-      </Animated.View>
-    </Pressable>
+    <Character3D
+      width={320}
+      height={400}
+      bodyGlb={outfit.glb}
+      skinColor={cust.skinColor}
+      hairColor={cust.hairColor}
+      outfitColors={cust.outfitColors}
+      bodyType={cust.bodyType}
+      bodySize={cust.bodySize}
+      muscle={cust.muscle}
+    />
+  );
+}
+
+function PressScaleView({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+  return (
+    <PressScale onPress={onPress}>
+      {children}
+    </PressScale>
   );
 }
 
@@ -298,6 +311,12 @@ export function HomeScreen() {
     }
   }, [justLeveledUp]);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [emoteSelectorOpen, setEmoteSelectorOpen] = useState(false);
+  const [animPickerOpen, setAnimPickerOpen] = useState(false);
+  const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
+  // Subscribed so taps on the character resolve the current preference.
+  const selectedHomeEmote = useShopStore((s) => s.selectedHomeEmote);
+  const homeEmoteRandomMode = useShopStore((s) => s.homeEmoteRandomMode);
   const [idlePickerOpen, setIdlePickerOpen] = useState(false);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -375,15 +394,22 @@ export function HomeScreen() {
     return () => { clearInterval(interval); clearTimeout(safetyTimeout); };
   }, [emote]);
 
-  // All non-idle emotes for random idle tap
+  // All non-idle emotes for random mode tap
   const allEmoteIds: EmoteId[] = EMOTE_CATEGORIES.flatMap(c => c.emotes);
   const handleCharacterTap = () => {
     haptics.tap();
     // Hide tooltip immediately on tap
     setShowTapHint(false);
     tapHintOpacity.setValue(0);
-    const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
-    triggerEmote(randomEmote);
+
+    // Resolution: random mode → random pick; else play the equipped emote;
+    // else fall back to random so taps are never a no-op.
+    if (homeEmoteRandomMode || !selectedHomeEmote) {
+      const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
+      triggerEmote(randomEmote);
+    } else {
+      triggerEmote(selectedHomeEmote as EmoteId);
+    }
   };
 
   // ═══ Smart Suggestion — contextual hint based on game state ═══
@@ -433,25 +459,56 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* ═══ DROP4 LOGO ═══ */}
+        {/* ═══ DROP4 LOGO — single text + decorative flare ═══ */}
+        {/* Wrapped in a horizontal row so the decorative side flares sit
+            beside the text instead of trying to overlap it. */}
         <View style={styles.logoArea}>
+          {/* Soft orange halo behind everything */}
+          <View style={styles.logoGlowHalo} pointerEvents="none" />
+
+          {/* Side flare lines — thin gradients that fade out from the text */}
+          <View style={styles.logoFlareRow} pointerEvents="none">
+            <LinearGradient
+              colors={['transparent', 'rgba(255,140,0,0.55)', 'rgba(255,140,0,0.85)']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.logoFlareLeft}
+            />
+            <View style={styles.logoFlareSpacer} />
+            <LinearGradient
+              colors={['rgba(255,140,0,0.85)', 'rgba(255,140,0,0.55)', 'transparent']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.logoFlareRight}
+            />
+          </View>
+
+          {/* The logo itself */}
           <Text style={styles.logoMain}>
             DROP<Text style={styles.logo4}>4</Text>
           </Text>
+
+          {/* Small triangle tick above the "4" for a scoreboard vibe */}
+          <View style={styles.logoTick} pointerEvents="none" />
         </View>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
         <View style={styles.lobbyArea}>
-          {/* Emotes button (left) */}
-          <Pressable onPress={() => { haptics.tap(); setShowcaseOpen(true); }} style={styles.sideBtn}>
+          {/* Emotes button (left) — opens unified picker on Emotes tab */}
+          <View
+            style={styles.sideBtn}
+            {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
+          >
+            <Pressable onPress={() => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }} style={StyleSheet.absoluteFill} />
             <LinearGradient
               colors={['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.15)', 'rgba(255,40,0,0.1)']}
               style={styles.sideBtnCircle}
+              pointerEvents="none"
             >
               <Text style={styles.sideBtnEmoji}>🕺</Text>
             </LinearGradient>
-            <Text style={styles.sideBtnLabel}>Emotes</Text>
-          </Pressable>
+            <Text style={styles.sideBtnLabel} pointerEvents="none">Emotes</Text>
+          </View>
 
           {/* Character on stage */}
           <View style={styles.characterStage}>
@@ -459,6 +516,7 @@ export function HomeScreen() {
             <View style={styles.stageGlowInner} />
             <StageSparkles />
 
+            <BreathingView intensity={0.015} speed={4000}>
             <Pressable onPress={handleCharacterTap}>
               {showTapHint && (
                 <Animated.View style={[styles.tapHintBubble, { opacity: tapHintOpacity }]}>
@@ -466,13 +524,18 @@ export function HomeScreen() {
                   <View style={styles.tapHintArrow} />
                 </Animated.View>
               )}
-              <AnimatedCharacter
-                size={320}
-                emote={emote}
-                selectedIdle={equippedIdle as IdleVariantId | null}
-                onEmoteComplete={clearEmote}
-              />
+              {FEATURES.character3D ? (
+                <Character3DWrapper />
+              ) : (
+                <AnimatedCharacter
+                  size={320}
+                  emote={emote}
+                  selectedIdle={equippedIdle as IdleVariantId | null}
+                  onEmoteComplete={clearEmote}
+                />
+              )}
             </Pressable>
+            </BreathingView>
             {equippedPet && (
               <Pressable onPress={handlePetTap} style={styles.petPosition}>
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
@@ -491,48 +554,89 @@ export function HomeScreen() {
               style={styles.stagePlatform}
             />
             <View style={styles.stageRing} />
+
+            {/* CUSTOMIZE button (only when 3D is enabled) */}
+            {FEATURES.character3D && (
+              <Pressable
+                onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
+                style={{
+                  position: 'absolute',
+                  bottom: -10,
+                  alignSelf: 'center',
+                  backgroundColor: 'rgba(255,140,0,0.18)',
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255,140,0,0.5)',
+                  borderRadius: 20,
+                  paddingHorizontal: 18,
+                  paddingVertical: 7,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  zIndex: 20,
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>✨</Text>
+                <Text style={{
+                  fontFamily: fonts.body,
+                  fontWeight: weight.bold,
+                  fontSize: 12,
+                  color: colors.orange,
+                  letterSpacing: 1.5,
+                }}>CUSTOMIZE</Text>
+              </Pressable>
+            )}
           </View>
 
-          {/* Idles button (right) */}
-          <Pressable onPress={() => { haptics.tap(); setIdlePickerOpen(true); }} style={styles.sideBtn}>
+          {/* Idles button (right) — opens unified picker on Idles tab */}
+          <View
+            style={styles.sideBtn}
+            {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
+          >
+            <Pressable onPress={() => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }} style={StyleSheet.absoluteFill} />
             <LinearGradient
               colors={['rgba(80,140,255,0.25)', 'rgba(60,100,255,0.15)', 'rgba(40,80,255,0.1)']}
               style={styles.sideBtnCircle}
+              pointerEvents="none"
             >
               <Text style={styles.sideBtnEmoji}>💫</Text>
             </LinearGradient>
-            <Text style={styles.sideBtnLabel}>Idles</Text>
-          </Pressable>
+            <Text style={styles.sideBtnLabel} pointerEvents="none">Idles</Text>
+          </View>
         </View>
 
-        {/* Customize link — subtle, centered under character */}
-        <Pressable onPress={() => { haptics.tap(); navigateTo('CharacterCreator'); }} style={styles.customizeLink}>
-          <Text style={styles.customizeLinkText}>✦ Customize</Text>
-        </Pressable>
+        {/* v1: Roster/Customize links removed — characters now live in
+            the Collection tab (bottom nav). Keeping the spacer for layout. */}
+        <View style={{ height: 8 }} />
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
-          <PressScaleView onPress={() => navigateTo('Play')}>
-            <GlossyButton
-              label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
-              subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
-              variant="orange"
-              small
-              iconRight="›"
-              onPress={() => navigateTo('Play')}
-            />
-          </PressScaleView>
-          <PressScaleView onPress={() => navigateTo('Career')}>
-            <GlossyButton
-              label="CAREER"
-              subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : '36 levels · Boss battles'}
-              variant="purple"
-              small
-              iconRight="›"
-              onPress={() => navigateTo('Career')}
-            />
-          </PressScaleView>
-          {FEATURES.onlineMultiplayer ? (
+          <SlideReveal from="bottom" delay={0}>
+            <PressScaleView onPress={() => navigateTo('Play')}>
+              <GlossyButton
+                label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
+                subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
+                variant="orange"
+                small
+                icon="🎮"
+                iconRight="›"
+                onPress={() => navigateTo('Play')}
+              />
+            </PressScaleView>
+          </SlideReveal>
+          <SlideReveal from="bottom" delay={80}>
+            <PressScaleView onPress={() => navigateTo('CareerMap')}>
+              <GlossyButton
+                label="CAREER"
+                subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : 'Take the City · 3 launch cities'}
+                variant="purple"
+                small
+                icon="🏆"
+                iconRight="›"
+                onPress={() => navigateTo('CareerMap')}
+              />
+            </PressScaleView>
+          </SlideReveal>
+          {FEATURES.onlineMultiplayer && (
             <PressScaleView onPress={() => navigateTo('Multiplayer')}>
               <GlossyButton
                 label="MULTIPLAYER"
@@ -543,47 +647,42 @@ export function HomeScreen() {
                 onPress={() => navigateTo('Multiplayer')}
               />
             </PressScaleView>
-          ) : (
+          )}
+          {false && (
+            // Deprecated "Coming Soon" placeholder — kept in source as a
+            // reference for when multiplayer ships. Do not re-enable until
+            // FEATURES.onlineMultiplayer is true AND the screen is tested.
             <PressScaleView onPress={() => { haptics.tap(); }}>
-              <View style={{ position: 'relative' }}>
-                <GlossyButton
-                  label="MULTIPLAYER"
-                  subtitle="Coming Soon"
-                  variant="teal"
-                  small
-                  iconRight="›"
-                  onPress={() => {}}
-                  disabled
-                />
-                <View style={styles.comingSoonBadge}>
-                  <Text style={styles.comingSoonText}>SOON</Text>
-                </View>
-              </View>
+              <View style={{ position: 'relative' }}><GlossyButton label="MULTIPLAYER" subtitle="Coming Soon" variant="teal" small iconRight="›" onPress={() => {}} disabled /></View>
             </PressScaleView>
           )}
           {/* Local play — pass and play, available in v1 */}
-          <PressScaleView onPress={() => navigateTo('LocalPlay')}>
-            <GlossyButton
-              label="LOCAL PLAY"
-              subtitle="Pass & play on one device"
-              variant="teal"
-              small
-              iconRight="›"
-              onPress={() => navigateTo('LocalPlay')}
-            />
-          </PressScaleView>
+          <SlideReveal from="bottom" delay={160}>
+            <PressScaleView onPress={() => navigateTo('LocalPlay')}>
+              <GlossyButton
+                label="LOCAL PLAY"
+                subtitle="Pass & play on one device"
+                variant="teal"
+                small
+                icon="👥"
+                iconRight="›"
+                onPress={() => navigateTo('LocalPlay')}
+              />
+            </PressScaleView>
+          </SlideReveal>
         </View>
 
-        {/* Emote Showcase Modal */}
+        {/* Unified Animation Picker — Emotes + Idles in one modal */}
+        <AnimationPicker
+          visible={animPickerOpen}
+          onClose={() => setAnimPickerOpen(false)}
+          initialTab={animPickerTab}
+        />
+
+        {/* Legacy modals kept for deep link / programmatic access */}
         <EmoteShowcase
           visible={showcaseOpen}
           onClose={() => setShowcaseOpen(false)}
-        />
-
-        {/* Idle Picker Modal */}
-        <IdlePicker
-          visible={idlePickerOpen}
-          onClose={() => setIdlePickerOpen(false)}
         />
 
         {/* Daily Spin Wheel */}
@@ -687,28 +786,81 @@ const styles = StyleSheet.create({
   // Logo
   logoArea: {
     alignItems: 'center',
-    height: 50,            // fixed height — character can never push into this
+    height: 60,
     justifyContent: 'center',
     marginTop: 2,
     marginBottom: 4,
-    zIndex: 20,            // stays above the character
+    zIndex: 20,
+    position: 'relative',
   },
+  logoGlowHalo: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 300,
+    height: 56,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,140,0,0.2)',
+    marginLeft: -150,
+    marginTop: -28,
+    transform: [{ scaleY: 0.75 }],
+  },
+  // Decorative horizontal flares flanking the text
+  logoFlareRow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '50%',
+    height: 3,
+    marginTop: -1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoFlareLeft: {
+    flex: 1,
+    height: 2,
+    borderRadius: 1,
+  },
+  logoFlareSpacer: {
+    width: 200,   // reserved empty space where the text sits
+  },
+  logoFlareRight: {
+    flex: 1,
+    height: 2,
+    borderRadius: 1,
+  },
+  // Main logo text — bright white DROP with an orange 4
   logoMain: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 36,
+    fontSize: 42,
     color: '#ffffff',
-    textShadowColor: 'rgba(120,180,255,0.7)',
+    textShadowColor: 'rgba(120,180,255,0.9)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    textShadowRadius: 16,
     letterSpacing: 4,
   },
   logo4: {
-    color: '#ff8c00',
-    fontSize: 44,
-    textShadowColor: 'rgba(255,140,0,0.8)',
+    color: '#ff9a1a',
+    fontSize: 52,
+    textShadowColor: 'rgba(255,140,0,0.95)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 28,
+    textShadowRadius: 22,
+  },
+  // Small orange triangle accent above the "4"
+  logoTick: {
+    position: 'absolute',
+    top: 2,
+    right: '29%',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#ff9a1a',
+    opacity: 0.85,
   },
   comingSoonBadge: {
     position: 'absolute',
@@ -926,11 +1078,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   // Customize link under character
-  customizeLink: {
-    alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+  characterLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     marginBottom: 4,
+  },
+  customizeLink: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   customizeLinkText: {
     fontFamily: fonts.body,
@@ -938,6 +1095,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(200,220,255,0.45)',
     letterSpacing: 1.5,
+  },
+  customizeLinkDivider: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: 'rgba(200,220,255,0.25)',
   },
   // Smart suggestion
   smartSuggestion: {

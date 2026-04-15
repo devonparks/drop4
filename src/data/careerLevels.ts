@@ -527,3 +527,246 @@ export const CHAPTERS = [
 export function getChapterForLevel(levelId: number): typeof CHAPTERS[0] | undefined {
   return CHAPTERS.find(ch => ch.levels.some(l => l.id === levelId));
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// CAREER MODE 2.0 — "TAKE THE CITY"
+//
+// NBA Street Vol. 2 × Basketball Stars. The world is a map of US cities;
+// each city is a court to conquer with a snake path of 12 opponent nodes.
+// Existing CareerLevel data + NPCs + rules carry over — this is a view
+// layer redesign. The nodes reference existing level ids.
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface CareerCity {
+  id: string;                // stable id, e.g. 'brooklyn'
+  name: string;              // "Brooklyn"
+  nickname: string;          // "The Rec"
+  state: string;             // "NY"
+  tagline: string;           // short pitch shown on the map
+  unlockedAfterCityId?: string;  // progressive unlock chain
+  comingSoon?: boolean;      // show on map but not playable yet
+  themeColor: string;        // accent color for markers/path/badges
+  accentColor: string;       // secondary highlight
+  skyGradient: [string, string, string];   // 3-stop gradient for city screen sky
+  mapPosition: { xPct: number; yPct: number }; // 0..100 coords on the stylized US map
+  levelIds: number[];        // references into ALL_CAREER_LEVELS
+}
+
+// Compute an opponent "rating" (70-99) from difficulty + boss flag.
+// This gives each node a "player card" number for the Basketball Stars vibe.
+// Distribution:
+//   Easy   → 70 + (id % 8)         (70-77)
+//   Medium → 78 + (id % 8)         (78-85)
+//   Hard   → 86 + (id % 8)         (86-93)
+//   Boss   → +5 on top, capped 99
+function computeRating(level: CareerLevel): number {
+  const base =
+    level.difficulty === 'easy' ? 70 :
+    level.difficulty === 'medium' ? 78 : 86;
+  const spread = (level.id * 3) % 8;    // mild variation so nodes aren't all identical
+  const boss = level.isBoss ? 5 : 0;
+  return Math.min(99, base + spread + boss);
+}
+
+// Exported for the node path view so it doesn't have to recompute on every render.
+export const CAREER_RATINGS: Record<number, number> = ALL_CAREER_LEVELS.reduce(
+  (acc, lvl) => {
+    acc[lvl.id] = computeRating(lvl);
+    return acc;
+  },
+  {} as Record<number, number>,
+);
+
+// ─── The Cities ────────────────────────────────────────────────────────
+// 3 playable at launch (mapping cleanly onto existing chapters) + 6 teased.
+// The teased cities show on the map with silhouettes + "Coming Soon" — huge
+// hook for retention and teases the post-launch content pipeline.
+export const CAREER_CITIES: CareerCity[] = [
+  // ─── LIVE AT LAUNCH ───
+  {
+    id: 'brooklyn',
+    name: 'Brooklyn',
+    nickname: 'The Rec',
+    state: 'NY',
+    tagline: 'Where every baller starts. Cracked blacktop, real respect.',
+    themeColor: '#f4a623',       // warm orange — street lamp glow
+    accentColor: '#ff6b35',
+    skyGradient: ['#1a2766', '#3a2a5c', '#f4a623'], // dusk
+    mapPosition: { xPct: 90, yPct: 47 },   // lower-right (NE coast, below Harlem, more separation)
+    levelIds: CHAPTER_1.map((l) => l.id),
+  },
+  {
+    id: 'venice_beach',
+    name: 'Venice Beach',
+    nickname: 'The Boardwalk',
+    state: 'CA',
+    tagline: 'Sun, sand, and speed. Sharpen up or get burned.',
+    unlockedAfterCityId: 'brooklyn',
+    themeColor: '#ff8c42',       // sunset orange
+    accentColor: '#ffd166',
+    skyGradient: ['#ff6b9d', '#ff8c42', '#ffd166'], // sunset
+    mapPosition: { xPct: 10, yPct: 58 },
+    levelIds: CHAPTER_2.map((l) => l.id),
+  },
+  {
+    id: 'harlem',
+    name: 'Harlem',
+    nickname: 'The Cathedral',
+    state: 'NY',
+    tagline: 'Where legends are made. Survive the night.',
+    unlockedAfterCityId: 'venice_beach',
+    themeColor: '#9b59b6',       // purple — night regal
+    accentColor: '#f1c40f',
+    skyGradient: ['#0a0e27', '#2d1b69', '#9b59b6'], // deep night
+    mapPosition: { xPct: 85, yPct: 18 },   // upper-right above Brooklyn
+    levelIds: CHAPTER_3.map((l) => l.id),
+  },
+
+  // ─── TEASED / COMING SOON ───
+  {
+    id: 'chicago',
+    name: 'Chicago',
+    nickname: 'The Cage',
+    state: 'IL',
+    tagline: 'Puzzle courts. Out-think or get out.',
+    comingSoon: true,
+    themeColor: '#3498db',
+    accentColor: '#5dade2',
+    skyGradient: ['#0a1e3c', '#1a4a7a', '#3498db'],
+    mapPosition: { xPct: 60, yPct: 32 },
+    levelIds: [],
+  },
+  {
+    id: 'detroit',
+    name: 'Detroit',
+    nickname: 'The Motor',
+    state: 'MI',
+    tagline: 'Mixed modes, rough crowd. Prove it.',
+    comingSoon: true,
+    themeColor: '#95a5a6',
+    accentColor: '#bdc3c7',
+    skyGradient: ['#1a1a1a', '#4a4a4a', '#95a5a6'],
+    mapPosition: { xPct: 70, yPct: 22 },
+    levelIds: [],
+  },
+  {
+    id: 'oakland',
+    name: 'Oakland',
+    nickname: 'The Town',
+    state: 'CA',
+    tagline: 'Connect 6 country. No weak links.',
+    comingSoon: true,
+    themeColor: '#2ecc71',
+    accentColor: '#58d68d',
+    skyGradient: ['#0a2a1e', '#1a5a3e', '#2ecc71'],
+    mapPosition: { xPct: 4, yPct: 34 },
+    levelIds: [],
+  },
+  {
+    id: 'compton',
+    name: 'Compton',
+    nickname: 'The Yard',
+    state: 'CA',
+    tagline: 'Speed demons only. Blink and lose.',
+    comingSoon: true,
+    themeColor: '#e74c3c',
+    accentColor: '#ff6b6b',
+    skyGradient: ['#2d0a0a', '#8b1e1e', '#e74c3c'],
+    mapPosition: { xPct: 22, yPct: 78 },
+    levelIds: [],
+  },
+  {
+    id: 'miami',
+    name: 'Miami',
+    nickname: 'South Beach',
+    state: 'FL',
+    tagline: 'Tournaments under neon lights.',
+    comingSoon: true,
+    themeColor: '#ff006e',
+    accentColor: '#00f5ff',
+    skyGradient: ['#1a0a3e', '#6a0dad', '#ff006e'],
+    mapPosition: { xPct: 80, yPct: 85 },
+    levelIds: [],
+  },
+  {
+    id: 'the_void',
+    name: '???',
+    nickname: 'The Void',
+    state: '??',
+    tagline: 'Rumors only. Nobody comes back the same.',
+    comingSoon: true,
+    themeColor: '#e94560',
+    accentColor: '#7b2cbf',
+    skyGradient: ['#000000', '#1a0033', '#e94560'],
+    mapPosition: { xPct: 45, yPct: 60 },
+    levelIds: [],
+  },
+];
+
+// Fast lookups
+export const CITY_BY_ID: Record<string, CareerCity> = CAREER_CITIES.reduce(
+  (acc, c) => { acc[c.id] = c; return acc; },
+  {} as Record<string, CareerCity>,
+);
+
+// For each level id, what city does it belong to? Used by the city screen
+// and by any analytics that want to tag level plays with a region.
+export const CITY_ID_BY_LEVEL_ID: Record<number, string> = CAREER_CITIES.reduce(
+  (acc, city) => {
+    for (const id of city.levelIds) acc[id] = city.id;
+    return acc;
+  },
+  {} as Record<number, string>,
+);
+
+// ─── Helpers ──────────────────────────────────────────────────────────
+
+/** All levels that belong to a given city, in career order. */
+export function getLevelsForCity(cityId: string): CareerLevel[] {
+  const city = CITY_BY_ID[cityId];
+  if (!city) return [];
+  return city.levelIds
+    .map((id) => ALL_CAREER_LEVELS.find((l) => l.id === id))
+    .filter((l): l is CareerLevel => !!l);
+}
+
+/** Is a city unlocked given the set of completed level ids? */
+export function isCityUnlocked(cityId: string, completedLevelIds: Set<number>): boolean {
+  const city = CITY_BY_ID[cityId];
+  if (!city) return false;
+  if (city.comingSoon) return false;
+  if (!city.unlockedAfterCityId) return true;   // starter city
+  // A city unlocks when its prerequisite city is fully cleared.
+  const prereq = CITY_BY_ID[city.unlockedAfterCityId];
+  if (!prereq) return true;
+  return prereq.levelIds.every((id) => completedLevelIds.has(id));
+}
+
+/** Completion count + star count for a given city. */
+export function getCityCompletion(
+  city: CareerCity,
+  progress: { [levelId: number]: { stars: number; completed: boolean } } = {},
+): { completed: number; total: number; stars: number; maxStars: number; fraction: number } {
+  const total = city.levelIds.length;
+  let completed = 0;
+  let stars = 0;
+  for (const id of city.levelIds) {
+    const p = progress[id];
+    if (p?.completed) completed++;
+    stars += p?.stars ?? 0;
+  }
+  const maxStars = total * 3;
+  return {
+    completed,
+    total,
+    stars,
+    maxStars,
+    fraction: total > 0 ? completed / total : 0,
+  };
+}
+
+/** Aggregate reputation: 0-5 stars based on total career stars. */
+export function getReputationStars(totalStars: number): number {
+  // 108 max stars across all 3 launch cities. 20 stars per rep star, capped at 5.
+  return Math.min(5, Math.floor(totalStars / 20));
+}

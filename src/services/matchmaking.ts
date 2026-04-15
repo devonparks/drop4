@@ -17,6 +17,7 @@ import {
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
+import { logger } from '../utils/logger';
 
 // ============ TYPES ============
 
@@ -104,7 +105,7 @@ export async function joinQueue(
   try {
     const uid = await ensureAuth();
     if (!uid) {
-      console.warn('joinQueue: not authenticated');
+      logger.warn('joinQueue: not authenticated');
       return null;
     }
 
@@ -165,7 +166,7 @@ export async function joinQueue(
 
     return null; // No match yet, caller should use listenForMatch
   } catch (error) {
-    console.warn('joinQueue failed:', error);
+    logger.warn('joinQueue failed:', error);
     return null;
   }
 }
@@ -185,7 +186,7 @@ export async function leaveQueue(): Promise<void> {
     }
     currentQueueDocId = null;
   } catch (error) {
-    console.warn('leaveQueue failed:', error);
+    logger.warn('leaveQueue failed:', error);
   }
 }
 
@@ -200,7 +201,7 @@ export function listenForMatch(
   try {
     const uid = currentQueueDocId || getCurrentUser()?.uid;
     if (!uid) {
-      console.warn('listenForMatch: no queue entry to listen to');
+      logger.warn('listenForMatch: no queue entry to listen to');
       return null;
     }
 
@@ -217,7 +218,7 @@ export function listenForMatch(
 
     return unsubscribe;
   } catch (error) {
-    console.warn('listenForMatch failed:', error);
+    logger.warn('listenForMatch failed:', error);
     return null;
   }
 }
@@ -250,7 +251,7 @@ export async function createMatch(
     const docRef = await addDoc(collection(db, MATCHES_COLLECTION), matchData);
     return docRef.id;
   } catch (error) {
-    console.warn('createMatch failed:', error);
+    logger.warn('createMatch failed:', error);
     return null;
   }
 }
@@ -269,13 +270,13 @@ export function listenToMatch(
     matchDocRef,
     (snapshot) => {
       if (!snapshot.exists()) {
-        console.warn('listenToMatch: match document not found');
+        logger.warn('listenToMatch: match document not found');
         return;
       }
       callback({ id: snapshot.id, ...(snapshot.data() as MatchDocument) });
     },
     (error) => {
-      console.warn('listenToMatch error:', error);
+      logger.warn('listenToMatch error:', error);
     }
   );
 
@@ -296,7 +297,7 @@ export async function makeMove(
     const matchSnap = await getDoc(matchDocRef);
 
     if (!matchSnap.exists()) {
-      console.warn('makeMove: match not found');
+      logger.warn('makeMove: match not found');
       return false;
     }
 
@@ -304,13 +305,13 @@ export async function makeMove(
 
     // Validate it is this player's turn
     if (match.currentPlayer !== playerNum) {
-      console.warn('makeMove: not your turn');
+      logger.warn('makeMove: not your turn');
       return false;
     }
 
     // Validate match is still playing
     if (match.status !== 'playing') {
-      console.warn('makeMove: match is not in playing state');
+      logger.warn('makeMove: match is not in playing state');
       return false;
     }
 
@@ -319,7 +320,7 @@ export async function makeMove(
     const row = getLowestEmptyRow(board, column);
 
     if (row === -1) {
-      console.warn('makeMove: column is full');
+      logger.warn('makeMove: column is full');
       return false;
     }
 
@@ -355,7 +356,7 @@ export async function makeMove(
     await updateDoc(matchDocRef, updates);
     return true;
   } catch (error) {
-    console.warn('makeMove failed:', error);
+    logger.warn('makeMove failed:', error);
     return false;
   }
 }
@@ -372,13 +373,13 @@ export async function resignMatch(
     const matchSnap = await getDoc(matchDocRef);
 
     if (!matchSnap.exists()) {
-      console.warn('resignMatch: match not found');
+      logger.warn('resignMatch: match not found');
       return false;
     }
 
     const match = matchSnap.data() as MatchDocument;
     if (match.status !== 'playing') {
-      console.warn('resignMatch: match is not in playing state');
+      logger.warn('resignMatch: match is not in playing state');
       return false;
     }
 
@@ -392,7 +393,7 @@ export async function resignMatch(
 
     return true;
   } catch (error) {
-    console.warn('resignMatch failed:', error);
+    logger.warn('resignMatch failed:', error);
     return false;
   }
 }
@@ -439,7 +440,7 @@ async function findCompatibleOpponent(
 
     return null;
   } catch (error) {
-    console.warn('findCompatibleOpponent failed:', error);
+    logger.warn('findCompatibleOpponent failed:', error);
     return null;
   }
 }
@@ -459,7 +460,7 @@ export async function requestRematch(
     const matchSnap = await getDoc(matchDocRef);
 
     if (!matchSnap.exists()) {
-      console.warn('requestRematch: match not found');
+      logger.warn('requestRematch: match not found');
       return false;
     }
 
@@ -487,7 +488,7 @@ export async function requestRematch(
     await updateDoc(matchDocRef, { rematch });
     return true;
   } catch (error) {
-    console.warn('requestRematch failed:', error);
+    logger.warn('requestRematch failed:', error);
     return false;
   }
 }
@@ -525,14 +526,14 @@ export async function acceptRematch(
     const matchSnap = await getDoc(matchDocRef);
 
     if (!matchSnap.exists()) {
-      console.warn('acceptRematch: match not found');
+      logger.warn('acceptRematch: match not found');
       return null;
     }
 
     const match = matchSnap.data() as MatchDocument;
 
     if (!match.rematch) {
-      console.warn('acceptRematch: no rematch request found');
+      logger.warn('acceptRematch: no rematch request found');
       return null;
     }
 
@@ -565,7 +566,7 @@ export async function acceptRematch(
 
     return null;
   } catch (error) {
-    console.warn('acceptRematch failed:', error);
+    logger.warn('acceptRematch failed:', error);
     return null;
   }
 }

@@ -16,6 +16,8 @@ import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 import { QUICK_CHAT_MESSAGES, type QuickChatMessage } from '../../data/quickChat';
+import { useRosterStore } from '../../stores/rosterStore';
+import { getCharacter } from '../../data/characterRoster';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -103,6 +105,46 @@ function EmoteCard({ emote, onPress }: { emote: EmoteItem; onPress: (id: EmoteId
 }
 
 // ═══════════════════════════════════════════
+// Signature Card — exclusive emote tied to a specific character
+// Same shape as EmoteCard but with a gold border and ✦ badge.
+// ═══════════════════════════════════════════
+
+interface SignatureItem {
+  id: string;       // signature emote id (also the sprite sheet basename)
+  emoji: string;
+  label: string;
+}
+
+function SignatureCard({ item, onPress }: { item: SignatureItem; onPress: (id: string) => void }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePress = useCallback(() => {
+    haptics.tap();
+    playSound('click');
+    Animated.sequence([
+      Animated.spring(scaleAnim, { toValue: 0.9, useNativeDriver: true, speed: 60, bounciness: 10 }),
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
+    ]).start();
+    onPress(item.id);
+  }, [item.id, onPress, scaleAnim]);
+
+  return (
+    <Pressable onPress={handlePress} style={{ width: (SCREEN_WIDTH - 64) / 3 }}>
+      <Animated.View style={[
+        styles.emoteCard,
+        styles.signatureCard,
+        { transform: [{ scale: scaleAnim }] },
+      ]}>
+        <Text style={styles.signatureBadge}>✦</Text>
+        <Text style={styles.emoteCardEmoji}>{item.emoji}</Text>
+        <Text style={[styles.emoteCardLabel, { color: colors.coinGold }]}>{item.label}</Text>
+        <Text style={styles.emoteCardDesc}>Signature</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+// ═══════════════════════════════════════════
 // Chat Pill — tappable message button
 // ═══════════════════════════════════════════
 
@@ -152,6 +194,10 @@ interface EmotePickerModalProps {
 export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, initialTab = 'emotes' }: EmotePickerModalProps) {
   const [activeTab, setActiveTab] = useState<'emotes' | 'chat'>(initialTab);
 
+  // v1: signature emotes disabled — all characters share the universal pool.
+  // The rosterStore + getCharacter imports are kept for v1.1 reactivation.
+  const signatureItems: SignatureItem[] = [];
+
   // Reset tab when modal opens
   React.useEffect(() => {
     if (visible) setActiveTab(initialTab);
@@ -159,6 +205,11 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
 
   const handleEmote = useCallback((id: EmoteId) => {
     onEmotePress(id);
+    onClose();
+  }, [onEmotePress, onClose]);
+
+  const handleSignatureEmote = useCallback((id: string) => {
+    onEmotePress(id as EmoteId);
     onClose();
   }, [onEmotePress, onClose]);
 
@@ -206,11 +257,31 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
             showsVerticalScrollIndicator={false}
           >
             {activeTab === 'emotes' ? (
-              <View style={styles.emoteGrid}>
-                {ALL_EMOTES.map(emote => (
-                  <EmoteCard key={emote.id} emote={emote} onPress={handleEmote} />
-                ))}
-              </View>
+              <>
+                {/* Signature emotes — only shown for characters that have any */}
+                {signatureItems.length > 0 && (
+                  <View style={styles.signatureSection}>
+                    <Text style={styles.signatureSectionLabel}>
+                      ✦ SIGNATURE EMOTES
+                    </Text>
+                    <View style={styles.emoteGrid}>
+                      {signatureItems.map((item) => (
+                        <SignatureCard
+                          key={item.id}
+                          item={item}
+                          onPress={handleSignatureEmote}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                )}
+                {/* Universal emotes — available to every character */}
+                <View style={styles.emoteGrid}>
+                  {ALL_EMOTES.map(emote => (
+                    <EmoteCard key={emote.id} emote={emote} onPress={handleEmote} />
+                  ))}
+                </View>
+              </>
             ) : (
               <View style={styles.chatSection}>
                 {CHAT_CATEGORIES.map(cat => (
@@ -306,6 +377,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 40,
     paddingTop: 8,
+  },
+  // Signature emote section
+  signatureSection: {
+    marginBottom: 18,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,215,0,0.18)',
+  },
+  signatureSectionLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.coinGold,
+    letterSpacing: 1.6,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  signatureCard: {
+    borderColor: 'rgba(255,215,0,0.55)',
+    borderWidth: 2,
+    backgroundColor: 'rgba(255,215,0,0.08)',
+  },
+  signatureBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 6,
+    color: colors.coinGold,
+    fontSize: 12,
+    fontWeight: '900',
   },
   // Emote grid — 3 columns
   emoteGrid: {

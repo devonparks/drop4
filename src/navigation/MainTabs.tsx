@@ -5,6 +5,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
+import { CollectionScreen } from '../screens/CollectionScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { haptics } from '../services/haptics';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -86,6 +87,13 @@ export function MainTabs() {
         component={RanksTab}
         options={{
           tabBarIcon: ({ focused }) => <ChallengesTabIcon focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Collection"
+        component={CollectionScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon icon="🎒" label="Collection" focused={focused} />,
         }}
       />
       <Tab.Screen

@@ -4,8 +4,8 @@
     {
       "name": "drop4-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8085"],
-      "port": 8085
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8086"],
+      "port": 8086
     }
   ]
 }

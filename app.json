@@ -44,7 +44,8 @@
             "backgroundColor": "#0a0e27"
           }
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "extra": {
       "eas": {

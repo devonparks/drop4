@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedCharacter, IdleVariantId, IDLE_VARIANT_IDS } from './AnimatedCharacter';
 import { useShopStore } from '../../stores/shopStore';
@@ -34,6 +35,7 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
   const equippedIdle = useShopStore(s => s.equippedIdle);
   const setEquippedIdle = useShopStore(s => s.setEquippedIdle);
   const [previewIdle, setPreviewIdle] = useState<IdleVariantId | null>(null);
+  const insets = useSafeAreaInsets();
 
   if (!visible) return null;
 
@@ -75,16 +77,16 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
         />
 
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <Text style={styles.headerTitle}>IDLE ANIMATIONS</Text>
           <Text style={styles.headerSub}>Choose your lobby vibe</Text>
         </View>
 
-        {/* Character preview */}
+        {/* Character preview — compact so the full list fits on mobile */}
         <View style={styles.characterArea}>
           <View style={styles.characterGlow} />
           <AnimatedCharacter
-            size={280}
+            size={170}
             selectedIdle={currentDisplay}
           />
           <LinearGradient
@@ -172,7 +174,7 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
         </ScrollView>
 
         {/* Close button */}
-        <View style={styles.closeArea}>
+        <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
           <Pressable onPress={handleClose} style={styles.closeBtn}>
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
@@ -193,35 +195,36 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 56,
+    // paddingTop is applied inline via useSafeAreaInsets()
     paddingBottom: 4,
   },
   headerTitle: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 24,
+    fontSize: 22,
     color: '#ffffff',
     letterSpacing: 3,
   },
   headerSub: {
     fontFamily: fonts.body,
     fontWeight: weight.medium,
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(200,220,255,0.5)',
     letterSpacing: 1,
     marginTop: 2,
   },
   characterArea: {
-    height: 240,
+    height: 180,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    marginTop: 4,
   },
   characterGlow: {
     position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     borderWidth: 1,
     borderColor: 'rgba(100,180,255,0.1)',
     backgroundColor: 'rgba(80,140,255,0.03)',
@@ -269,12 +272,12 @@ const styles = StyleSheet.create({
   idleCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 12,
   },
   idleCardIcon: {
-    fontSize: 26,
+    fontSize: 22,
   },
   idleCardText: {
     flex: 1,
@@ -282,7 +285,7 @@ const styles = StyleSheet.create({
   idleCardName: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 14,
+    fontSize: 13,
     color: '#ffffff',
   },
   idleCardDesc: {
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
   },
   closeArea: {
     paddingHorizontal: 40,
-    paddingBottom: 36,
+    // paddingBottom applied inline via useSafeAreaInsets()
     paddingTop: 8,
   },
   closeBtn: {

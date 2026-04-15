@@ -2,16 +2,19 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share } from 'react-native';
 import Animated, {
   FadeIn,
-  SlideInDown,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { PressScale, SlideReveal, Shimmer } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
+import { AnimatedStarRating } from '../components/effects/AnimatedStarRating';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { CharacterAvatar } from '../components/ui/CharacterAvatar';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
+import { FEATURES } from '../config/features';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { EmotePickerModal } from '../components/ui/EmotePickerModal';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
@@ -1020,6 +1023,26 @@ export function GameScreen({ navigation }: Props) {
       );
       return;
     }
+
+    // Default mid-match confirm for Quick Play / Career / Local Play.
+    // Without this, tapping the X button or Quit button silently abandons
+    // the match with zero feedback, which players (and App Store reviewers)
+    // universally hate. If the game is already over, skip the confirm.
+    if (status === 'playing' && moveCount > 0) {
+      Alert.alert(
+        'Quit Match?',
+        'Your progress in this match will be lost.',
+        [
+          { text: 'Keep Playing', style: 'cancel' },
+          {
+            text: 'Quit',
+            style: 'destructive',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+      return;
+    }
     navigation.goBack();
   };
 
@@ -1281,12 +1304,24 @@ export function GameScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* Hint indicator — pulsing arrow above the board */}
+        {/* Hint indicator — pulsing arrow + "BEST MOVE" banner above the board */}
         {hintCol !== null && (
           <Animated.View entering={FadeIn.duration(200)} style={[styles.hintArrowRow, { width: BOARD_WIDTH }]}>
+            <RNAnimated.View
+              style={[
+                styles.hintBestMoveBanner,
+                { left: _getHintArrowOffset(hintCol) - 22, opacity: hintPulseAnim },
+              ]}
+            >
+              <Text style={styles.hintBestMoveText}>BEST MOVE</Text>
+            </RNAnimated.View>
             <RNAnimated.Text style={[
               styles.hintArrow,
-              { left: _getHintArrowOffset(hintCol), opacity: hintPulseAnim },
+              {
+                left: _getHintArrowOffset(hintCol),
+                opacity: hintPulseAnim,
+                transform: [{ scale: hintPulseAnim.interpolate({ inputRange: [0.2, 1], outputRange: [0.85, 1.2] }) }],
+              },
             ]}>
               ▼
             </RNAnimated.Text>
@@ -1325,10 +1360,12 @@ export function GameScreen({ navigation }: Props) {
                       const spent = useShopStore.getState().spendCoins(10);
                       if (!spent) return;
                     }
-                    haptics.tap();
+                    haptics.achievement?.() ?? haptics.tap();
+                    playSound('achievement');
                     const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
                     setHintCol(bestCol);
-                    setTimeout(() => setHintCol(null), 2000);
+                    // Longer visual dwell so players can see the cue.
+                    setTimeout(() => setHintCol(null), 4500);
                   }
                 }}
                 style={[styles.controlBtn, !canAffordHint && { opacity: 0.4 }]}
@@ -1538,7 +1575,8 @@ export function GameScreen({ navigation }: Props) {
                 <Text style={styles.firstWinText}>FIRST WIN!</Text>
               </RNAnimated.View>
             )}
-            <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.goCard}>
+            <SlideReveal from="bottom" delay={100}>
+            <Animated.View style={styles.goCard}>
              <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
 
               {/* Top: Mode label */}
@@ -1556,7 +1594,13 @@ export function GameScreen({ navigation }: Props) {
                     <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
                   )}
                   <View style={styles.goAvatarWrap}>
-                    <CharacterAvatar size="large" variant="player" />
+                    {FEATURES.character3D
+                      ? <Character3DPortrait
+                          width={140} height={180} showFloor={false}
+                          animationId={status === 'won' && winner === 1 ? 'emote_dab' : 'idle_base'}
+                          animationLoop={status !== 'won' || winner !== 1}
+                        />
+                      : <CharacterAvatar size="large" variant="player" />}
                     {/* Level badge */}
                     <View style={styles.goLevelBadge}>
                       <Text style={styles.goLevelText}>{level}</Text>
@@ -1710,16 +1754,20 @@ export function GameScreen({ navigation }: Props) {
               <View style={styles.goRewardsBlock}>
                 {/* Big total coins earned */}
                 {status === 'won' && winner === 1 && totalCoinsEarned > 0 && (
-                  <View style={styles.goTotalCoins}>
-                    <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                    <Text style={styles.goTotalCoinsAmount}>+{totalCoinsEarned}</Text>
-                  </View>
+                  <Shimmer color="rgba(255,215,0,0.25)" duration={2800}>
+                    <View style={styles.goTotalCoins}>
+                      <Text style={styles.goTotalCoinsIcon}>🪙</Text>
+                      <Text style={styles.goTotalCoinsAmount}>+{totalCoinsEarned}</Text>
+                    </View>
+                  </Shimmer>
                 )}
                 {status === 'draw' && (
-                  <View style={styles.goTotalCoins}>
-                    <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                    <Text style={styles.goTotalCoinsAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
-                  </View>
+                  <Shimmer color="rgba(255,215,0,0.18)" duration={3200}>
+                    <View style={styles.goTotalCoins}>
+                      <Text style={styles.goTotalCoinsIcon}>🪙</Text>
+                      <Text style={styles.goTotalCoinsAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
+                    </View>
+                  </Shimmer>
                 )}
                 {/* Notable events — max 3, only the most exciting */}
                 {didLevelUp && (
@@ -1740,12 +1788,18 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={[styles.goEventText, { color: colors.teal }]}>Challenge: {completedChallengeName}</Text>
                   </View>
                 )}
-                {wasCareerLevel && status === 'won' && winner === 1 && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(241,196,15,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>{moveCount < 15 ? '⭐⭐⭐' : moveCount < 25 ? '⭐⭐' : '⭐'}</Text>
-                    <Text style={[styles.goEventText, { color: '#f1c40f' }]}>{moveCount < 15 ? 'Perfect clear!' : moveCount < 25 ? 'Great clear!' : 'Level cleared!'}</Text>
-                  </View>
-                )}
+                {wasCareerLevel && status === 'won' && winner === 1 && (() => {
+                  const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+                  const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
+                  return (
+                    <View style={[styles.goEventRow, styles.goStarBlock, { borderColor: 'rgba(241,196,15,0.5)' }]}>
+                      <AnimatedStarRating earned={earnedStars} size={32} delay={300} />
+                      <Text style={[styles.goEventText, styles.goStarVerdict, { color: '#ffd93d' }]}>
+                        {verdict}
+                      </Text>
+                    </View>
+                  );
+                })()}
                 {status === 'won' && winner === 2 && streakBrokenAt !== null && (
                   <View style={[styles.goEventRow, { borderColor: 'rgba(231,76,60,0.3)' }]}>
                     <Text style={styles.goEventIcon}>💔</Text>
@@ -1782,10 +1836,12 @@ export function GameScreen({ navigation }: Props) {
 
               {/* Wager display */}
               {wagerCourt && wagerCourt.winnerGets > 0 && status === 'won' && winner === 1 && (
-                <View style={styles.goWagerRow}>
-                  <Text style={styles.goWagerIcon}>🪙🪙🪙</Text>
-                  <Text style={styles.goWagerText}>+{wagerCourt.winnerGets} Wager Won!</Text>
-                </View>
+                <Shimmer color="rgba(255,215,0,0.3)" duration={2500}>
+                  <View style={styles.goWagerRow}>
+                    <Text style={styles.goWagerIcon}>🪙🪙🪙</Text>
+                    <Text style={styles.goWagerText}>+{wagerCourt.winnerGets} Wager Won!</Text>
+                  </View>
+                </Shimmer>
               )}
 
               {/* ELO change for ranked/wager matches */}
@@ -1800,28 +1856,30 @@ export function GameScreen({ navigation }: Props) {
 
               {/* Double Coins — UI-only ad concept */}
               {status === 'won' && winner === 1 && !doubleCoinsUsed && (
-                <Pressable
-                  style={styles.doubleCoinsBtn}
-                  onPress={() => {
-                    const reward = COIN_REWARDS[difficulty];
-                    const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
-                    const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
-                    addCoins(total);
-                    setDoubleCoinsUsed(true);
-                    haptics.win();
-                    playSound('coin');
-                    setShowCoinBurst(true);
-                  }}
-                >
-                  <View style={styles.doubleCoinsAdBadge}>
-                    <Text style={styles.doubleCoinsAdText}>AD</Text>
-                  </View>
-                  <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
-                  <View style={styles.doubleCoinsBtnTextWrap}>
-                    <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
-                    <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
-                  </View>
-                </Pressable>
+                <PressScale scaleTo={0.96}>
+                  <Pressable
+                    style={styles.doubleCoinsBtn}
+                    onPress={() => {
+                      const reward = COIN_REWARDS[difficulty];
+                      const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
+                      const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
+                      addCoins(total);
+                      setDoubleCoinsUsed(true);
+                      haptics.win();
+                      playSound('coin');
+                      setShowCoinBurst(true);
+                    }}
+                  >
+                    <View style={styles.doubleCoinsAdBadge}>
+                      <Text style={styles.doubleCoinsAdText}>AD</Text>
+                    </View>
+                    <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
+                    <View style={styles.doubleCoinsBtnTextWrap}>
+                      <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
+                      <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
+                    </View>
+                  </Pressable>
+                </PressScale>
               )}
               {doubleCoinsUsed && status === 'won' && winner === 1 && (
                 <View style={[styles.doubleCoinsBtn, { opacity: 0.5, borderColor: 'rgba(46,204,113,0.4)' }]}>
@@ -1949,40 +2007,41 @@ export function GameScreen({ navigation }: Props) {
                           const isActive = d === difficulty;
                           const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : (colors.pieceRed || '#e74c3c');
                           return (
-                            <Pressable
-                              key={d}
-                              onPress={() => {
-                                if (!isActive) {
-                                  haptics.tap();
-                                  // Reset state and start new game with the selected difficulty
-                                  setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
-                                  setShowConfetti(false);
-                                  setWasCareerLevel(false);
-                                  setFreeHintsRemaining(3);
-                                  setDidLevelUp(false);
-                                  setSeasonTierUp(null);
-                                  setStreakReward(null);
-                                  setCompletedChallengeName(null);
-                                  setStreakBrokenAt(null);
-                                  setDailyStreakMultiplier(1);
-                                  setDoubleCoinsUsed(false);
-                                  setIsFirstWinOfDay(false);
-                                  newGame(d, isVsAi);
-                                }
-                              }}
-                              style={[
-                                styles.goDiffBtn,
-                                isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
-                              ]}
-                            >
-                              <Text style={[
-                                styles.goDiffBtnText,
-                                { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
-                                isActive && { fontWeight: '800' as any },
-                              ]}>
-                                {d.toUpperCase()}
-                              </Text>
-                            </Pressable>
+                            <PressScale key={d} scaleTo={0.92}>
+                              <Pressable
+                                onPress={() => {
+                                  if (!isActive) {
+                                    haptics.tap();
+                                    // Reset state and start new game with the selected difficulty
+                                    setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
+                                    setShowConfetti(false);
+                                    setWasCareerLevel(false);
+                                    setFreeHintsRemaining(3);
+                                    setDidLevelUp(false);
+                                    setSeasonTierUp(null);
+                                    setStreakReward(null);
+                                    setCompletedChallengeName(null);
+                                    setStreakBrokenAt(null);
+                                    setDailyStreakMultiplier(1);
+                                    setDoubleCoinsUsed(false);
+                                    setIsFirstWinOfDay(false);
+                                    newGame(d, isVsAi);
+                                  }
+                                }}
+                                style={[
+                                  styles.goDiffBtn,
+                                  isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
+                                ]}
+                              >
+                                <Text style={[
+                                  styles.goDiffBtnText,
+                                  { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
+                                  isActive && { fontWeight: '800' as any },
+                                ]}>
+                                  {d.toUpperCase()}
+                                </Text>
+                              </Pressable>
+                            </PressScale>
                           );
                         })}
                       </View>
@@ -2004,31 +2063,38 @@ export function GameScreen({ navigation }: Props) {
                   </>
                 )}
                 {/* Share Score */}
-                <Pressable style={styles.shareButton} onPress={handleShareScore}>
-                  <Text style={styles.shareButtonText}>
-                    {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
-                  </Text>
-                </Pressable>
+                <PressScale scaleTo={0.95}>
+                  <Pressable style={styles.shareButton} onPress={handleShareScore}>
+                    <Text style={styles.shareButtonText}>
+                      {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
+                    </Text>
+                  </Pressable>
+                </PressScale>
 
                 {/* Quick Actions */}
                 <View style={styles.quickActionsRow}>
-                  <Pressable
-                    style={styles.quickActionLink}
-                    onPress={() => navigation.navigate('Stats' as any)}
-                  >
-                    <Text style={styles.quickActionText}>View Stats</Text>
-                  </Pressable>
+                  <PressScale scaleTo={0.93}>
+                    <Pressable
+                      style={styles.quickActionLink}
+                      onPress={() => navigation.navigate('Stats' as any)}
+                    >
+                      <Text style={styles.quickActionText}>View Stats</Text>
+                    </Pressable>
+                  </PressScale>
                   <Text style={styles.quickActionDot}>·</Text>
-                  <Pressable
-                    style={styles.quickActionLink}
-                    onPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
-                  >
-                    <Text style={styles.quickActionText}>Shop</Text>
-                  </Pressable>
+                  <PressScale scaleTo={0.93}>
+                    <Pressable
+                      style={styles.quickActionLink}
+                      onPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+                    >
+                      <Text style={styles.quickActionText}>Shop</Text>
+                    </Pressable>
+                  </PressScale>
                 </View>
               </View>
              </ScrollView>
             </Animated.View>
+            </SlideReveal>
           </Animated.View>
         </Modal>
 
@@ -2338,18 +2404,41 @@ const styles = StyleSheet.create({
   },
   hintArrowRow: {
     alignSelf: 'center',
-    height: 22,
+    height: 44,
     marginBottom: 2,
     position: 'relative',
   },
   hintArrow: {
     position: 'absolute',
-    top: 0,
-    fontSize: 20,
+    top: 22,
+    fontSize: 26,
     color: colors.coinGold,
-    textShadowColor: 'rgba(255,215,0,0.6)',
+    textShadowColor: 'rgba(255,215,0,0.9)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 12,
+  },
+  hintBestMoveBanner: {
+    position: 'absolute',
+    top: 0,
+    width: 64,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: colors.coinGold,
+    borderRadius: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    shadowColor: colors.coinGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+  },
+  hintBestMoveText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 8,
+    color: '#1a1200',
+    letterSpacing: 0.8,
   },
   lastMoveIndicator: {
     alignSelf: 'center',
@@ -3105,6 +3194,25 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     letterSpacing: 0.3,
+  },
+  // Prominent career-win star block (replaces the plain text star row)
+  goStarBlock: {
+    flexDirection: 'column',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 4,
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    gap: 4,
+    alignItems: 'center',
+  },
+  goStarVerdict: {
+    fontWeight: weight.black,
+    fontSize: 14,
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(255,215,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   goStreakRow: {
     flexDirection: 'row',

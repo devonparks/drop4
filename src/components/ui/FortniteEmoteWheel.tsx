@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
@@ -7,6 +7,8 @@ import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 import { EMOTE_EMOJI, EMOTE_NAME } from './EmoteShowcase';
+import { useRosterStore } from '../../stores/rosterStore';
+import { getCharacter } from '../../data/characterRoster';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const WHEEL_RADIUS = 110;
@@ -22,17 +24,53 @@ interface FortniteEmoteWheelProps {
   onClose: () => void;
 }
 
+// A slot can be either a universal equipped emote or a character-locked signature.
+// Signatures come from the roster store's equipped character; they displace
+// universal slots at the front of the wheel so players ALWAYS see their
+// character's signatures first without having to equip them manually.
+interface WheelSlot {
+  id: string;              // emote id (universal) or signature id (string)
+  emoji: string;
+  name: string;
+  isSignature: boolean;
+  isEmpty: boolean;
+}
+
+const EMPTY_SLOT: WheelSlot = { id: '', emoji: '?', name: 'Empty', isSignature: false, isEmpty: true };
+
 export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose }: FortniteEmoteWheelProps) {
   const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
+
+  // v1: all characters share the same emote pool. Signature emotes are
+  // disabled until character art ships in v1.1. The roster store + getCharacter
+  // imports are kept for future use but not called in the render path.
+  const slots: WheelSlot[] = useMemo(() => {
+    const universals: WheelSlot[] = equippedEmotes.map((id) =>
+      id
+        ? {
+            id,
+            emoji: EMOTE_EMOJI[id] || '?',
+            name: EMOTE_NAME[id] || 'Empty',
+            isSignature: false,
+            isEmpty: false,
+          }
+        : EMPTY_SLOT,
+    );
+
+    while (universals.length < 6) universals.push(EMPTY_SLOT);
+    return universals.slice(0, 6);
+  }, [equippedEmotes]);
 
   if (!visible) return null;
 
   const handleSlotPress = (index: number) => {
-    const emoteId = equippedEmotes[index];
-    if (!emoteId) return;
+    const slot = slots[index];
+    if (!slot || slot.isEmpty) return;
     haptics.tap();
     playSound('click');
-    onSelect(emoteId);
+    // Signature ids are strings outside the EmoteId union. Cast at the boundary —
+    // AnimatedCharacter's emote prop already accepts strings for signature paths.
+    onSelect(slot.id as EmoteId);
     onClose();
   };
 
@@ -51,11 +89,18 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
             const angleRad = (angleDeg * Math.PI) / 180;
             const x = Math.cos(angleRad) * WHEEL_RADIUS;
             const y = -Math.sin(angleRad) * WHEEL_RADIUS; // negative because screen Y is inverted
-            const emoteId = equippedEmotes[index] as EmoteId | undefined;
-            const emoji = emoteId ? (EMOTE_EMOJI[emoteId] || '?') : '?';
-            const name = emoteId ? (EMOTE_NAME[emoteId] || 'Empty') : 'Empty';
-            const isEmpty = !emoteId;
+            const slot = slots[index];
+            const { emoji, name, isEmpty, isSignature } = slot;
             const isHovered = hoveredSlot === index;
+
+            // Signature slots get a gold ring + gradient so players can tell
+            // "this emote is mine, character-locked" at a glance.
+            const hoverGradient: [string, string] = isSignature
+              ? ['rgba(255,215,0,0.45)', 'rgba(255,170,0,0.18)']
+              : ['rgba(255,140,0,0.35)', 'rgba(255,100,0,0.15)'];
+            const idleGradient: [string, string] = isSignature
+              ? ['rgba(255,215,0,0.22)', 'rgba(255,170,0,0.06)']
+              : ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)'];
 
             return (
               <Pressable
@@ -71,15 +116,16 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
                   },
                   isHovered && !isEmpty && styles.slotHovered,
                   isEmpty && styles.slotEmpty,
+                  isSignature && styles.slotSignature,
                 ]}
               >
                 <LinearGradient
                   colors={
                     isHovered && !isEmpty
-                      ? ['rgba(255,140,0,0.35)', 'rgba(255,100,0,0.15)']
+                      ? hoverGradient
                       : isEmpty
                         ? ['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']
-                        : ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)']
+                        : idleGradient
                   }
                   style={styles.slotGradient}
                 >
@@ -87,12 +133,17 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
                     {emoji}
                   </Text>
                   <Text
-                    style={[styles.slotName, isEmpty && styles.slotNameEmpty]}
+                    style={[
+                      styles.slotName,
+                      isEmpty && styles.slotNameEmpty,
+                      isSignature && styles.slotNameSignature,
+                    ]}
                     numberOfLines={1}
                   >
                     {name}
                   </Text>
                 </LinearGradient>
+                {isSignature && <Text style={styles.signatureBadge}>✦</Text>}
               </Pressable>
             );
           })}
@@ -185,6 +236,36 @@ const styles = StyleSheet.create({
   slotEmpty: {
     borderColor: 'rgba(255,255,255,0.06)',
     opacity: 0.4,
+  },
+  slotSignature: {
+    borderColor: 'rgba(255,215,0,0.85)',
+    borderWidth: 2.5,
+    shadowColor: '#ffd700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 7,
+  },
+  slotNameSignature: {
+    color: '#ffd700',
+  },
+  signatureBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,215,0,0.95)',
+    color: '#1a1200',
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
+    lineHeight: 18,
+    shadowColor: '#ffd700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   slotGradient: {
     width: '100%',

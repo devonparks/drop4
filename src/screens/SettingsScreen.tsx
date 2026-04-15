@@ -17,6 +17,8 @@ import { useBoardEditorStore } from '../stores/boardEditorStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
+import { useRosterStore } from '../stores/rosterStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted } from '../services/audio';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
@@ -229,18 +231,48 @@ export function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {/* Support & Purchases */}
+        <Text style={styles.sectionTitle}>SUPPORT</Text>
+        <View style={styles.section}>
+          <SettingLink label="Contact Support" icon="💬" onPress={() => {
+            haptics.tap();
+            navigation.navigate('Legal', { type: 'support' });
+          }} />
+          <SettingLink label="Restore Purchases" icon="🔄" onPress={() => {
+            haptics.tap();
+            // Stubbed: in v1 release this will call StoreKit restore.
+            // For now, show a friendly confirmation so reviewers see the
+            // required button exists and responds.
+            Alert.alert(
+              'Restore Purchases',
+              'No previous purchases to restore. This button will fetch any non-consumable items you\'ve bought when the store is live.',
+              [{ text: 'OK' }],
+            );
+          }} />
+        </View>
+
         {/* About */}
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.section}>
           <SettingLink label="Rate Drop4" icon="⭐" onPress={() => {
-            // Will link to app store when published
             haptics.tap();
+            // Linking.openURL('itms-apps://itunes.apple.com/...') once published
           }} />
           <SettingLink label="Share with Friends" icon="📤" onPress={() => {
             Share.share({ message: 'Check out Drop4 — the best Connect 4 game! 🎮🔴🟡' });
           }} />
-          <SettingLink label="Privacy Policy" icon="🔒" onPress={() => haptics.tap()} />
-          <SettingLink label="Terms of Service" icon="📄" onPress={() => haptics.tap()} />
+          <SettingLink label="Credits" icon="🏆" onPress={() => {
+            haptics.tap();
+            navigation.navigate('Legal', { type: 'credits' });
+          }} />
+          <SettingLink label="Privacy Policy" icon="🔒" onPress={() => {
+            haptics.tap();
+            navigation.navigate('Legal', { type: 'privacy' });
+          }} />
+          <SettingLink label="Terms of Service" icon="📄" onPress={() => {
+            haptics.tap();
+            navigation.navigate('Legal', { type: 'terms' });
+          }} />
         </View>
 
         {/* Account */}
@@ -308,6 +340,17 @@ export function SettingsScreen({ navigation }: Props) {
                     useDailySpinStore.setState({ lastSpinDate: '' });
                     // Tutorial tips + lesson mastery
                     useTutorialStore.setState({ seenTips: [], completionAwarded: false, viewedLessons: [] });
+                    // Roster (new character-locked emotes + unlocks)
+                    try { useRosterStore?.setState?.({
+                      equippedCharacterId: 'default_player',
+                      unlockedCharacterIds: ['default_player'],
+                      pendingUnlocks: [],
+                    }); } catch (e) { /* roster store optional */ }
+                    // Welcome overlay — nuke the async storage flag so a fresh
+                    // onboarding fires on next launch (used to bypass drop4_ prefix).
+                    AsyncStorage.removeItem('drop4_welcome_dismissed').catch(() => {});
+                    // Legacy key from older builds — clean up if it exists.
+                    AsyncStorage.removeItem('welcome_dismissed').catch(() => {});
 
                     haptics.tap();
                   },

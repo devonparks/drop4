@@ -256,3 +256,10 @@ useGameStore.subscribe((state) => {
 
 // Export board constants for use elsewhere
 export { ROWS, COLS, getLowestEmptyRow, createEmptyBoard };
+
+// ── Dev/test hook ────────────────────────────────────────────────────
+// Exposes the store to window so the playtest bot can access board state
+// and call dropPiece() directly. Only runs in dev (web preview).
+if (typeof window !== 'undefined' && __DEV__) {
+  (window as any).__gameStore = useGameStore;
+}

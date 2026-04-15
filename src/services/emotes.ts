@@ -9,6 +9,7 @@ import {
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
+import { logger } from '../utils/logger';
 
 // ============ TYPES ============
 
@@ -43,7 +44,7 @@ export async function sendEmote(
       timestamp: serverTimestamp(),
     });
   } catch (error) {
-    console.warn('sendEmote failed:', error);
+    logger.warn('sendEmote failed:', error);
   }
 }
 
@@ -91,7 +92,7 @@ export function listenForEmotes(
       }
     }
   }, (error) => {
-    console.warn('listenForEmotes error:', error);
+    logger.warn('listenForEmotes error:', error);
   });
 
   return unsubscribe;

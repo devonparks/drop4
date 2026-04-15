@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Image, StyleSheet, ImageSourcePropType } from 'react-native';
 import { ScaledSpriteSheet } from './SpriteSheetAnimator';
+import { useRosterStore } from '../../stores/rosterStore';
+import { DEFAULT_CHARACTER_ID, RosterCharacterId } from '../../data/characterRoster';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -112,6 +114,46 @@ const SPRITE_SHEETS: Record<string, ImageSourcePropType> = {
   idle_weightshift: require('../../assets/images/characters/spritesheets/sheet_idle_weightshift.png'),
   idle_phonescroll: require('../../assets/images/characters/spritesheets/sheet_idle_phonescroll.png'),
 };
+
+// ═══════════════════════════════════════════════════════════
+// PER-CHARACTER SPRITE SHEET OVERRIDES
+//
+// Each entry is a partial map of sheet keys -> require()'d images for ONE
+// roster character. React Native's bundler requires `require()` to take a
+// static literal, so we cannot interpolate the character id into the path —
+// every character must be registered explicitly here as their assets land in
+// `src/assets/images/characters/rosters/{characterId}/`.
+//
+// Lookup falls back to the default `SPRITE_SHEETS` for any missing key, so
+// you can ship a character with just an idle sheet and the rest will use the
+// default player animations until you render the full set in Unity.
+//
+// Signature emote ids (from characterRoster.ts) also live in this map under
+// the same shape — just add them as new keys alongside the universal ones.
+// ═══════════════════════════════════════════════════════════
+
+type CharacterSheetMap = Record<string, ImageSourcePropType>;
+
+const ROSTER_SPRITE_SHEETS: Partial<Record<RosterCharacterId, CharacterSheetMap>> = {
+  // Example for when you ship a roster character:
+  //
+  // speedy_sam: {
+  //   idle: require('../../assets/images/characters/rosters/speedy_sam/sheet_idle.png'),
+  //   wave: require('../../assets/images/characters/rosters/speedy_sam/sheet_wave.png'),
+  //   speed_dash: require('../../assets/images/characters/rosters/speedy_sam/sheet_speed_dash.png'),
+  // },
+};
+
+/**
+ * Returns the sprite sheet image source for `key` (e.g. 'idle', 'wave',
+ * 'speed_dash') for the given character. Falls back to the default player
+ * sheets when the character has no override for that key.
+ */
+function getSheet(characterId: RosterCharacterId, key: string): ImageSourcePropType | undefined {
+  const overrides = ROSTER_SPRITE_SHEETS[characterId];
+  if (overrides && overrides[key]) return overrides[key];
+  return SPRITE_SHEETS[key];
+}
 
 // ═══════════════════════════════════════════════════════════
 // SPRITE SHEET CONFIG — grid dimensions per animation type
@@ -291,11 +333,17 @@ type AnimState = 'idle' | 'idle_variant' | 'emote';
 
 interface AnimatedCharacterProps {
   size?: number;
-  emote?: EmoteId | null;
+  emote?: EmoteId | string | null;     // accepts signature emote ids too
   pose?: PoseId;
   selectedIdle?: IdleVariantId | null;
   onEmoteComplete?: () => void;
   style?: any;
+  /**
+   * Roster character to render. Defaults to whichever character the player has
+   * equipped. Pass an explicit id to render a specific opponent (e.g. on the
+   * career level card or character select screen).
+   */
+  characterId?: RosterCharacterId;
 }
 
 export function AnimatedCharacter({
@@ -305,7 +353,13 @@ export function AnimatedCharacter({
   selectedIdle = null,
   onEmoteComplete,
   style,
+  characterId,
 }: AnimatedCharacterProps) {
+  // Subscribe to the equipped character so the active player avatar updates
+  // automatically when the player swaps skins. Explicit `characterId` always
+  // wins so callers rendering a specific opponent are not affected.
+  const equippedId = useRosterStore((s) => s.equippedCharacterId);
+  const activeCharacterId: RosterCharacterId = characterId ?? equippedId ?? DEFAULT_CHARACTER_ID;
   const [animState, setAnimState] = useState<AnimState>('idle');
   const [activeEmote, setActiveEmote] = useState<EmoteId | null>(null);
   const [activeVariant, setActiveVariant] = useState<IdleVariantId | null>(null);
@@ -330,14 +384,16 @@ export function AnimatedCharacter({
   }, [selectedIdle]);
 
   // ─── Handle emote trigger from props ───
+  // Accepts both universal emote ids (typed EmoteId) and signature emote ids
+  // (string), as long as the active character or default has a sheet for them.
   useEffect(() => {
-    if (emote && emote !== 'idle' && SPRITE_SHEETS[emote]) {
+    if (emote && emote !== 'idle' && getSheet(activeCharacterId, emote)) {
       if (variantTimerRef.current) clearTimeout(variantTimerRef.current);
-      setActiveEmote(emote);
+      setActiveEmote(emote as EmoteId);
       setActiveVariant(null);
       setAnimState('emote');
     }
-  }, [emote]);
+  }, [emote, activeCharacterId]);
 
   // ─── Start the variant timer on mount ───
   useEffect(() => {
@@ -367,37 +423,39 @@ export function AnimatedCharacter({
   let loop: boolean;
   let handleComplete: (() => void) | undefined;
 
-  if (animState === 'emote' && activeEmote && SPRITE_SHEETS[activeEmote]) {
-    sheetSource = SPRITE_SHEETS[activeEmote];
+  // All sheet lookups now go through getSheet so per-character overrides work.
+  // Missing keys silently fall back to the default player's sheet for that key.
+  if (animState === 'emote' && activeEmote && getSheet(activeCharacterId, activeEmote)) {
+    sheetSource = getSheet(activeCharacterId, activeEmote)!;
     config = EMOTE_SHEET_CONFIG;
     loop = false;
     handleComplete = handleEmoteComplete;
   } else if (animState === 'idle_variant' && activeVariant) {
     const key = `idle_${activeVariant}`;
-    const variantSheet = SPRITE_SHEETS[key];
+    const variantSheet = getSheet(activeCharacterId, key);
     if (variantSheet) {
       sheetSource = variantSheet;
       config = IDLE_SHEET_CONFIG; // variants are 4 cols × 3 rows
     } else {
-      sheetSource = SPRITE_SHEETS.idle;
+      sheetSource = getSheet(activeCharacterId, 'idle')!;
       config = BASE_IDLE_SHEET_CONFIG; // fallback to base idle (3 cols × 4 rows)
     }
     loop = false;
     handleComplete = handleVariantComplete;
   } else if (selectedIdle) {
     const key = `idle_${selectedIdle}`;
-    const resolvedSource = SPRITE_SHEETS[key];
+    const resolvedSource = getSheet(activeCharacterId, key);
     if (resolvedSource) {
       sheetSource = resolvedSource;
       config = IDLE_SHEET_CONFIG; // variants are 4×3
     } else {
-      sheetSource = SPRITE_SHEETS.idle;
+      sheetSource = getSheet(activeCharacterId, 'idle')!;
       config = BASE_IDLE_SHEET_CONFIG; // base idle is 3×4
     }
     loop = true;
     handleComplete = undefined;
   } else {
-    sheetSource = SPRITE_SHEETS.idle;
+    sheetSource = getSheet(activeCharacterId, 'idle')!;
     config = BASE_IDLE_SHEET_CONFIG; // base idle is 3×4 (768×1024)
     loop = true;
     handleComplete = undefined;

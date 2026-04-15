@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -6,10 +6,12 @@ import { useChallengeStore, Challenge } from '../stores/challengeStore';
 import { useShopStore } from '../stores/shopStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useAchievementStore, Achievement, AchievementDifficulty, getAchievementScore, getMaxAchievementPoints } from '../stores/achievementStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { PressScale, StaggeredEntry, PulseGlow } from '../components/animations';
 
 // ── Challenge type → icon color mapping ──────────────────────────────
 const ICON_COLORS: Record<string, [string, string]> = {
@@ -107,6 +109,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
         {/* Right: reward coin bubble or claim/done badge */}
         <View style={styles.cardRight}>
           {canClaim ? (
+            <PulseGlow color="#27ae3d" size={36} active={canClaim}>
             <Pressable onPress={onClaim} style={styles.claimBtnSmall}>
               <LinearGradient
                 colors={['#34c94d', '#27ae3d', '#1e8a30']}
@@ -115,6 +118,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
                 <Text style={styles.claimBtnText}>CLAIM</Text>
               </LinearGradient>
             </Pressable>
+            </PulseGlow>
           ) : challenge.completed ? (
             <View style={styles.doneBadge}>
               <Text style={styles.doneBadgeCheck}>✓</Text>
@@ -128,6 +132,125 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
         </View>
       </View>
     </Animated.View>
+  );
+}
+
+// ── Collapsible Achievement Group ───────────────────────────────────
+const DIFFICULTY_META: Record<AchievementDifficulty, { label: string; colors: [string, string]; icon: string }> = {
+  common:  { label: 'COMMON',  colors: ['#3498db', '#2176ae'], icon: '🔵' },
+  rare:    { label: 'RARE',    colors: ['#9b59b6', '#7d4192'], icon: '🟣' },
+  hard:    { label: 'LEGENDARY', colors: ['#f4a623', '#e08d00'], icon: '🟡' },
+};
+
+function AchievementGroup({ difficulty, achievements }: { difficulty: AchievementDifficulty; achievements: Achievement[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta = DIFFICULTY_META[difficulty];
+  const unlocked = achievements.filter(a => a.unlocked).length;
+  const total = achievements.length;
+  const allDone = unlocked === total;
+
+  return (
+    <View style={styles.achGroup}>
+      <Pressable
+        onPress={() => { haptics.tap(); setExpanded(!expanded); }}
+        style={styles.achGroupHeader}
+      >
+        <PressScale>
+        <LinearGradient
+          colors={[`${meta.colors[0]}20`, `${meta.colors[1]}08`]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.achGroupHeaderGradient}
+        >
+          <Text style={styles.achGroupIcon}>{meta.icon}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.achGroupLabel, { color: meta.colors[0] }]}>{meta.label}</Text>
+            <Text style={styles.achGroupCount}>{unlocked}/{total} unlocked</Text>
+          </View>
+          {allDone && <Text style={styles.achGroupDoneCheck}>✓</Text>}
+          <Text style={[styles.achGroupChevron, { color: meta.colors[0] }]}>
+            {expanded ? '▲' : '▼'}
+          </Text>
+        </LinearGradient>
+        </PressScale>
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.achGroupList}>
+          {achievements.map((ach) => (
+            <View key={ach.id} style={[styles.achRow, ach.unlocked && styles.achRowDone]}>
+              <Text style={styles.achRowIcon}>{ach.icon}</Text>
+              <View style={styles.achRowInfo}>
+                <Text style={[styles.achRowName, ach.unlocked && { color: colors.coinGold }]}>
+                  {ach.name}
+                </Text>
+                <Text style={styles.achRowDesc}>{ach.description}</Text>
+                {ach.reward.type === 'coins' && !ach.unlocked && (
+                  <Text style={styles.achRowReward}>🪙 {ach.reward.value}</Text>
+                )}
+                {ach.reward.type === 'title' && (
+                  <Text style={[styles.achRowReward, { color: meta.colors[0] }]}>
+                    🏷️ "{ach.reward.value}"
+                  </Text>
+                )}
+              </View>
+              {ach.unlocked ? (
+                <View style={[styles.achCheckBadge, { borderColor: `${meta.colors[0]}50`, backgroundColor: `${meta.colors[0]}15` }]}>
+                  <Text style={[styles.achCheckMark, { color: meta.colors[0] }]}>✓</Text>
+                </View>
+              ) : (
+                <View style={styles.achLockedBadge}>
+                  <Text style={styles.achLockedIcon}>🔒</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Achievements Section (collapsible by difficulty) ────────────────
+function AchievementsSection() {
+  const achievements = useAchievementStore(s => s.achievements);
+  const score = getAchievementScore(achievements);
+  const maxScore = getMaxAchievementPoints();
+  const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+  const unlocked = achievements.filter(a => a.unlocked).length;
+
+  const common = achievements.filter(a => a.difficulty === 'common');
+  const rare = achievements.filter(a => a.difficulty === 'rare');
+  const hard = achievements.filter(a => a.difficulty === 'hard');
+
+  return (
+    <View style={styles.achSection}>
+      <LinearGradient
+        colors={['rgba(244,166,35,0.15)', 'rgba(244,166,35,0.04)', 'transparent']}
+        style={styles.achHeaderGradient}
+      >
+        <Text style={styles.achTitle}>ACHIEVEMENTS</Text>
+        <Text style={styles.achSubtitle}>{unlocked}/{achievements.length} unlocked · {score} pts</Text>
+      </LinearGradient>
+
+      {/* Score progress bar */}
+      <View style={styles.achScoreBar}>
+        <View style={styles.achScoreBarBg}>
+          <LinearGradient
+            colors={[colors.orange, colors.coinGold]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.achScoreBarFill, { width: `${Math.max(pct, 3)}%` }]}
+          />
+        </View>
+        <Text style={styles.achScorePct}>{pct}%</Text>
+      </View>
+
+      {/* Collapsible groups */}
+      <AchievementGroup difficulty="common" achievements={common} />
+      <AchievementGroup difficulty="rare" achievements={rare} />
+      <AchievementGroup difficulty="hard" achievements={hard} />
+    </View>
   );
 }
 
@@ -263,6 +386,7 @@ export function ChallengesScreen() {
 
           {/* Claim reward bag button */}
           {allComplete && !bonusClaimed && (
+            <PulseGlow color="#27ae3d" size={50} active>
             <Pressable onPress={() => { haptics.tap(); handleClaimBonus(); }} style={styles.claimBagBtn}>
               <LinearGradient
                 colors={['#34c94d', '#27ae3d', '#1e8a30']}
@@ -275,6 +399,7 @@ export function ChallengesScreen() {
                 <Text style={styles.claimBagCoins}>🪙 200</Text>
               </LinearGradient>
             </Pressable>
+            </PulseGlow>
           )}
           {bonusClaimed && (
             <View style={styles.bagClaimedRow}>
@@ -285,12 +410,13 @@ export function ChallengesScreen() {
 
         {/* ══ CHALLENGE CARDS ══ */}
         <View style={styles.cardList}>
-          {challenges.map(challenge => (
+          {challenges.map((challenge, i) => (
+            <StaggeredEntry key={challenge.id} index={i}>
             <ChallengeCard
-              key={challenge.id}
               challenge={challenge}
               onClaim={() => handleClaim(challenge.id)}
             />
+            </StaggeredEntry>
           ))}
         </View>
 
@@ -456,6 +582,9 @@ export function ChallengesScreen() {
             </View>
           </LinearGradient>
         </Animated.View>
+
+        {/* ══ ACHIEVEMENTS ══ */}
+        <AchievementsSection />
       </ScrollView>
     </ScreenBackground>
   );
@@ -914,5 +1043,180 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.coinGold,
     marginTop: 1,
+  },
+
+  // ── Achievements Section ──────────────────────────────────────────
+  achSection: {
+    marginTop: 24,
+    gap: 10,
+  },
+  achHeaderGradient: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 12,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  achTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 24,
+    color: '#ffffff',
+    letterSpacing: 2.5,
+    textShadowColor: 'rgba(244,166,35,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  achSubtitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 3,
+  },
+  achScoreBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 2,
+    marginBottom: 4,
+  },
+  achScoreBarBg: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  achScoreBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  achScorePct: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.coinGold,
+    width: 36,
+    textAlign: 'right',
+  },
+
+  // ── Achievement Group (collapsible) ───────────────────────────────
+  achGroup: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  achGroupHeader: {
+    overflow: 'hidden',
+    borderRadius: 16,
+  },
+  achGroupHeaderGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 10,
+  },
+  achGroupIcon: {
+    fontSize: 18,
+  },
+  achGroupLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    letterSpacing: 1.5,
+  },
+  achGroupCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  achGroupDoneCheck: {
+    fontSize: 18,
+    color: colors.green,
+    fontWeight: '900' as any,
+  },
+  achGroupChevron: {
+    fontSize: 12,
+    fontWeight: '700' as any,
+  },
+
+  // ── Achievement Rows ──────────────────────────────────────────────
+  achGroupList: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    gap: 4,
+  },
+  achRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  achRowDone: {
+    backgroundColor: 'rgba(255,215,0,0.04)',
+    borderColor: 'rgba(255,215,0,0.1)',
+  },
+  achRowIcon: {
+    fontSize: 20,
+    width: 28,
+    textAlign: 'center',
+  },
+  achRowInfo: {
+    flex: 1,
+  },
+  achRowName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  achRowDesc: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  achRowReward: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: colors.coinGold,
+    marginTop: 2,
+  },
+  achCheckBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  achCheckMark: {
+    fontSize: 16,
+    fontWeight: '900' as any,
+  },
+  achLockedBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  achLockedIcon: {
+    fontSize: 12,
   },
 });

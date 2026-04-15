@@ -12,7 +12,7 @@ export function WelcomeOverlay() {
   const [dismissed, setDismissed] = useState(true); // Start dismissed, check storage
 
   useEffect(() => {
-    AsyncStorage.getItem('welcome_dismissed').then(val => {
+    AsyncStorage.getItem('drop4_welcome_dismissed').then(val => {
       if (val === 'true') {
         setDismissed(true);
       } else {
@@ -26,7 +26,7 @@ export function WelcomeOverlay() {
   const handleDismiss = () => {
     setVisible(false);
     setDismissed(true);
-    AsyncStorage.setItem('welcome_dismissed', 'true');
+    AsyncStorage.setItem('drop4_welcome_dismissed', 'true');
   };
 
   if (dismissed || !visible) return null;

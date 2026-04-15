@@ -28,6 +28,9 @@ export const FEATURES = {
   boardEditor: false,         // Puzzle board creator
   replayViewer: false,        // Saved replays
 
+  // ── 3D Characters (in progress) ──────────────────────────────
+  character3D: true,          // react-three-fiber 3D character system
+
   // ── Always on (core game) ────────────────────────────────────
   career: true,
   localPlay: true,

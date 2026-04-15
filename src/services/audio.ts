@@ -1,4 +1,5 @@
 import { Audio } from 'expo-av';
+import { logger } from '../utils/logger';
 
 // Sound references — expanded with AMG Studios sound pack
 const sounds: Record<string, Audio.Sound | null> = {
@@ -33,7 +34,7 @@ export async function initAudio() {
     });
     isInitialized = true;
   } catch (e) {
-    console.warn('Audio init failed:', e);
+    logger.warn('Audio init failed:', e);
   }
 }
 

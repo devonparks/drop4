@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { logger } from '../utils/logger';
 
 // Firebase config — will be populated with real values
 const firebaseConfig = {
@@ -25,7 +26,7 @@ export async function signInAsGuest() {
     const result = await signInAnonymously(auth);
     return result.user;
   } catch (error) {
-    console.warn('Guest sign-in failed:', error);
+    logger.warn('Guest sign-in failed:', error);
     return null;
   }
 }
@@ -119,7 +120,7 @@ export async function getOrCreateProfile(uid: string): Promise<UserProfile> {
     await setDoc(docRef, profile);
     return profile as UserProfile;
   } catch (error) {
-    console.warn('Profile fetch failed:', error);
+    logger.warn('Profile fetch failed:', error);
     return { ...DEFAULT_PROFILE, createdAt: null, lastSeen: null };
   }
 }
@@ -129,7 +130,7 @@ export async function updateProfile(uid: string, updates: Partial<UserProfile>) 
     const docRef = doc(db, 'drop4Users', uid);
     await updateDoc(docRef, { ...updates, lastSeen: serverTimestamp() });
   } catch (error) {
-    console.warn('Profile update failed:', error);
+    logger.warn('Profile update failed:', error);
   }
 }
 
@@ -160,7 +161,7 @@ export async function recordGameResult(uid: string, result: 'win' | 'loss' | 'dr
       lastSeen: serverTimestamp(),
     });
   } catch (error) {
-    console.warn('Record game result failed:', error);
+    logger.warn('Record game result failed:', error);
   }
 }
 

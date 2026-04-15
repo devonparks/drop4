@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
+import { useRosterStore } from './rosterStore';
 
 interface CareerProgress {
   [levelId: number]: {
@@ -28,6 +29,8 @@ export const useCareerStore = create<CareerState>((set, get) => ({
 
   completeLevel: (levelId, stars, moves) => {
     const current = get().progress[levelId];
+    const wasAlreadyCompleted = !!current?.completed;
+
     // Only update if new stars are higher or level not yet completed
     if (!current || stars > current.stars || moves < current.bestMoves) {
       set(state => ({
@@ -40,6 +43,24 @@ export const useCareerStore = create<CareerState>((set, get) => ({
           },
         },
       }));
+    }
+
+    // v1: only BOSS level completions unlock a playable character. Regular
+    // career levels give coins/rewards but NOT character unlocks. This keeps
+    // the roster tight (~9 playable characters) without needing 36 full
+    // character renders. Career NPCs are visible on the node path but are
+    // not collectible.
+    //
+    // The level data tells us if it's a boss via `isBoss` flag in careerLevels.
+    // We import the level data lazily to check.
+    if (!wasAlreadyCompleted) {
+      try {
+        const { ALL_CAREER_LEVELS } = require('../data/careerLevels');
+        const level = ALL_CAREER_LEVELS.find((l: any) => l.id === levelId);
+        if (level?.isBoss) {
+          useRosterStore.getState().unlockForCareerLevel(levelId);
+        }
+      } catch (e) { /* careerLevels not loaded yet — skip */ }
     }
   },
 

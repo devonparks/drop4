@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
@@ -11,6 +11,7 @@ import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
+import { useRosterStore } from './src/stores/rosterStore';
 import { useAchievementStore } from './src/stores/achievementStore';
 import { useMatchHistoryStore } from './src/stores/matchHistoryStore';
 import { useReplayStore } from './src/stores/replayStore';
@@ -25,7 +26,10 @@ import { useSeriesStore } from './src/stores/seriesStore';
 import { useFriendsStore } from './src/stores/friendsStore';
 import { useDailySpinStore } from './src/stores/dailySpinStore';
 import { useTutorialStore } from './src/stores/tutorialStore';
+import { useCharacterStore } from './src/stores/characterStore';
+import { usePetStore } from './src/stores/petStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
+import { CharacterUnlockToast } from './src/components/effects/CharacterUnlockToast';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 // WelcomeOverlay is rendered in HomeScreen (first-launch only, AsyncStorage-gated)
 import { SplashAnimation } from './src/components/ui/SplashAnimation';
@@ -35,6 +39,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
+  const navRef = useRef<NavigationContainerRef<any>>(null);
 
   useEffect(() => {
     async function prepare() {
@@ -47,6 +52,7 @@ export default function App() {
         });
         // Load persisted state
         await useShopStore.getState().loadFromStorage();
+        await useRosterStore.getState().loadFromStorage();
         await useCareerStore.getState().loadFromStorage();
         await useAchievementStore.getState().loadFromStorage();
         await useMatchHistoryStore.getState().loadFromStorage();
@@ -62,6 +68,8 @@ export default function App() {
         await useFriendsStore.getState().loadFromStorage();
         await useDailySpinStore.getState().loadFromStorage();
         await useTutorialStore.getState().loadFromStorage();
+        await useCharacterStore.getState().loadFromStorage();
+        await usePetStore.getState().hydrate();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();
@@ -96,6 +104,13 @@ export default function App() {
     <GestureHandlerRootView style={styles.container} onLayout={onLayoutRootView}>
       <StatusBar style="light" />
       <NavigationContainer
+        ref={navRef}
+        onReady={() => {
+          // Dev/test hook: expose navigation for the playtest bot
+          if (__DEV__ && typeof window !== 'undefined') {
+            (window as any).__nav = navRef.current;
+          }
+        }}
         theme={{
           dark: true,
           colors: {
@@ -116,6 +131,7 @@ export default function App() {
       >
         <RootNavigator />
         <DailyRewardPopup />
+        <CharacterUnlockToast />
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>

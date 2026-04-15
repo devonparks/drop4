@@ -1,576 +1,213 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useShopStore } from '../stores/shopStore';
-import { useAchievementStore } from '../stores/achievementStore';
-import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS } from '../data/shopCatalog';
-import { PETS, PET_RARITY_COLORS } from '../data/pets';
+import { useRosterStore } from '../stores/rosterStore';
+import {
+  ROSTER,
+  RosterCharacter,
+} from '../data/characterRoster';
+import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
+import { haptics } from '../services/haptics';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
-import { haptics } from '../services/haptics';
 
-// ═══════════════════════════════════════════════════════════
-// COLLECTION SCREEN — trophy case / completion tracker
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════
+// CollectionScreen — "🎒 Collection" tab
+//
+// Sub-tabs: Characters / Loot / Awards
+// Characters shows playable roster (starters + boss unlocks).
+// Loot and Awards are placeholders for v1 — link to full screens later.
+// ═══════════════════════════════════════════════════════════════════════
 
-interface CategoryData {
-  key: string;
-  label: string;
-  icon: string;
-  items: { id: string; name: string; rarity: string; owned: boolean }[];
-}
+type SubTab = 'characters' | 'loot' | 'awards';
 
 export function CollectionScreen() {
-  const navigation = useNavigation<any>();
-  const owned = useShopStore(s => s.owned);
-  const ownedEmotes = useShopStore(s => s.ownedEmotes);
-  const ownedPets = useShopStore(s => s.ownedPets);
-  const achievements = useAchievementStore(s => s.achievements);
-
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
-  const categories: CategoryData[] = useMemo(() => [
-    {
-      key: 'boards',
-      label: 'Boards',
-      icon: '🎨',
-      items: BOARD_THEMES.map(b => ({
-        id: b.id,
-        name: b.name,
-        rarity: b.rarity,
-        owned: owned.boards.includes(b.id),
-      })),
-    },
-    {
-      key: 'pieces',
-      label: 'Pieces',
-      icon: '🔴',
-      items: PIECE_THEMES.map(p => ({
-        id: p.id,
-        name: p.name,
-        rarity: p.rarity,
-        owned: owned.pieces.includes(p.id),
-      })),
-    },
-    {
-      key: 'dropEffects',
-      label: 'Drop Effects',
-      icon: '✨',
-      items: DROP_EFFECTS.map(d => ({
-        id: d.id,
-        name: d.name,
-        rarity: d.rarity,
-        owned: owned.dropEffects.includes(d.id),
-      })),
-    },
-    {
-      key: 'winAnimations',
-      label: 'Win Animations',
-      icon: '🎆',
-      items: WIN_ANIMATIONS.map(w => ({
-        id: w.id,
-        name: w.name,
-        rarity: w.rarity,
-        owned: owned.winAnimations.includes(w.id),
-      })),
-    },
-    {
-      key: 'emotes',
-      label: 'Emotes',
-      icon: '😎',
-      items: EMOTES.map(e => ({
-        id: e.id,
-        name: e.name,
-        rarity: e.rarity,
-        owned: ownedEmotes.includes(e.id) || e.price === 0,
-      })),
-    },
-    {
-      key: 'pets',
-      label: 'Pets',
-      icon: '🐕',
-      items: PETS.map(p => ({
-        id: p.id,
-        name: p.name,
-        rarity: p.rarity,
-        owned: ownedPets.includes(p.id),
-      })),
-    },
-    {
-      key: 'achievements',
-      label: 'Achievements',
-      icon: '🏆',
-      items: achievements.map(a => ({
-        id: a.id,
-        name: a.name,
-        rarity: 'legendary', // all achievements are gold-themed
-        owned: a.unlocked,
-      })),
-    },
-  ], [owned, ownedEmotes, ownedPets, achievements]);
-
-  // Totals — derived from memoized categories
-  const { totalOwned, totalAvailable, overallPct } = useMemo(() => {
-    const owned = categories.reduce((sum, cat) => sum + cat.items.filter(i => i.owned).length, 0);
-    const available = categories.reduce((sum, cat) => sum + cat.items.length, 0);
-    return { totalOwned: owned, totalAvailable: available, overallPct: available > 0 ? Math.round((owned / available) * 100) : 0 };
-  }, [categories]);
-
-  // Collection value — sum prices of all owned items across every catalog
-  const collectionValue = useMemo(() => {
-    let total = 0;
-    // Boards
-    for (const b of BOARD_THEMES) {
-      if (owned.boards.includes(b.id)) total += b.price;
-    }
-    // Pieces
-    for (const p of PIECE_THEMES) {
-      if (owned.pieces.includes(p.id)) total += p.price;
-    }
-    // Drop effects
-    for (const d of DROP_EFFECTS) {
-      if (owned.dropEffects.includes(d.id)) total += d.price;
-    }
-    // Win animations
-    for (const w of WIN_ANIMATIONS) {
-      if (owned.winAnimations.includes(w.id)) total += w.price;
-    }
-    // Board accessories
-    for (const a of BOARD_ACCESSORIES) {
-      if (owned.boardAccessories.includes(a.id)) total += a.price;
-    }
-    // Pets
-    for (const p of PETS) {
-      if (ownedPets.includes(p.id)) total += p.price;
-    }
-    return total;
-  }, [owned, ownedPets]);
-
-  // Rarity distribution — count owned vs total per rarity tier across all categories
-  const rarityDistribution = useMemo(() => {
-    const allItems = categories.flatMap(cat => cat.items);
-    const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'darkmatter'];
-    return rarities
-      .map(rarity => {
-        const total = allItems.filter(i => i.rarity === rarity).length;
-        const ownedCount = allItems.filter(i => i.rarity === rarity && i.owned).length;
-        return { rarity, owned: ownedCount, total };
-      })
-      .filter(r => r.total > 0); // only show tiers that have items
-  }, [categories]);
-
-  const toggleSection = (key: string) => {
-    haptics.tap();
-    setExpandedSection(prev => (prev === key ? null : key));
-  };
+  const [activeTab, setActiveTab] = useState<SubTab>('characters');
+  const insets = useSafeAreaInsets();
 
   return (
     <ScreenBackground>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Back button */}
-        <Pressable style={styles.backButton} onPress={() => { haptics.tap(); navigation.goBack(); }}>
-          <Text style={styles.backButtonText}>{'<'}</Text>
-        </Pressable>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <Text style={styles.headerTitle}>COLLECTION</Text>
+      </View>
 
-        {/* Header */}
-        <Text style={styles.screenTitle}>MY COLLECTION</Text>
-        <Text style={styles.totalCount}>{totalOwned} / {totalAvailable} items</Text>
+      {/* Sub-tab bar */}
+      <View style={styles.tabRow}>
+        {([
+          { id: 'characters' as SubTab, icon: '👥', label: 'Characters' },
+          { id: 'loot' as SubTab, icon: '📦', label: 'Loot' },
+          { id: 'awards' as SubTab, icon: '🏅', label: 'Awards' },
+        ]).map((tab) => (
+          <Pressable
+            key={tab.id}
+            onPress={() => { haptics.tap(); setActiveTab(tab.id); }}
+            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+          >
+            <Text style={styles.tabIcon}>{tab.icon}</Text>
+            <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
+              {tab.label}
+            </Text>
+            {activeTab === tab.id && <View style={styles.tabIndicator} />}
+          </Pressable>
+        ))}
+      </View>
 
-        {/* Overall progress bar */}
-        <View style={styles.progressOuter}>
-          <LinearGradient
-            colors={[colors.orange, colors.coinGold]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.progressFill, { width: `${Math.max(overallPct, 3)}%` }]}
-          />
-        </View>
-        <Text style={styles.progressPct}>{overallPct}% Complete</Text>
-
-        {/* Collection Value */}
-        <View style={styles.collectionValueCard}>
-          <Text style={styles.collectionValueLabel}>Collection Value</Text>
-          <Text style={styles.collectionValueAmount}>{'\uD83E\uDE99'} {collectionValue.toLocaleString()}</Text>
-        </View>
-
-        {/* Rarity Distribution */}
-        <View style={styles.rarityCard}>
-          <Text style={styles.raritySectionTitle}>RARITY BREAKDOWN</Text>
-          {rarityDistribution.map(r => {
-            const rarityColor = RARITY_COLORS[r.rarity] || '#8892b0';
-            const label = RARITY_LABELS[r.rarity] || r.rarity;
-            const pct = r.total > 0 ? Math.round((r.owned / r.total) * 100) : 0;
-            return (
-              <View key={r.rarity} style={styles.rarityRow}>
-                <View style={[styles.rarityDot, { backgroundColor: rarityColor }]} />
-                <Text style={[styles.rarityLabel, { color: rarityColor }]}>{label}</Text>
-                <View style={styles.rarityBarOuter}>
-                  <View
-                    style={[
-                      styles.rarityBarFill,
-                      { width: `${Math.max(pct, 4)}%`, backgroundColor: rarityColor },
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.rarityCount, { color: rarityColor }]}>{r.owned}/{r.total}</Text>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Category sections */}
-        {categories.map(cat => {
-          const catOwned = cat.items.filter(i => i.owned).length;
-          const catTotal = cat.items.length;
-          const catPct = catTotal > 0 ? Math.round((catOwned / catTotal) * 100) : 0;
-          const isExpanded = expandedSection === cat.key;
-
-          return (
-            <View key={cat.key} style={styles.categoryCard}>
-              {/* Category header — tap to expand */}
-              <Pressable style={styles.categoryHeader} onPress={() => toggleSection(cat.key)}>
-                <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryLabel}>{cat.label}</Text>
-                  <Text style={styles.categoryCount}>{catOwned}/{catTotal} owned</Text>
-                </View>
-                {/* Mini progress bar */}
-                <View style={styles.miniBarOuter}>
-                  <View
-                    style={[
-                      styles.miniBarFill,
-                      {
-                        width: `${Math.max(catPct, 4)}%`,
-                        backgroundColor: catPct >= 100 ? colors.coinGold : colors.orange,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.chevron}>{isExpanded ? '▲' : '▼'}</Text>
-              </Pressable>
-
-              {/* Expanded items — horizontal scroll */}
-              {isExpanded && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.itemsRow}
-                >
-                  {cat.items.map(item => {
-                    const rarityColor = cat.key === 'pets'
-                      ? (PET_RARITY_COLORS[item.rarity] || '#8892b0')
-                      : (RARITY_COLORS[item.rarity] || '#8892b0');
-
-                    return (
-                      <View
-                        key={item.id}
-                        style={[
-                          styles.itemTile,
-                          {
-                            borderColor: item.owned ? rarityColor : 'rgba(255,255,255,0.06)',
-                            opacity: item.owned ? 1 : 0.5,
-                          },
-                        ]}
-                      >
-                        {item.owned ? (
-                          <>
-                            <View style={[styles.itemDot, { backgroundColor: rarityColor }]} />
-                            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                            <Text style={[styles.itemRarity, { color: rarityColor }]}>
-                              {item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1)}
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <Text style={styles.lockedIcon}>?</Text>
-                            <Text style={styles.lockedLabel}>Locked</Text>
-                          </>
-                        )}
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              )}
-            </View>
-          );
-        })}
-
-        {/* Motivational footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            {overallPct >= 100
-              ? 'You collected everything! True completionist.'
-              : overallPct >= 75
-              ? 'Almost there! Keep grinding.'
-              : overallPct >= 50
-              ? 'Halfway to full collection!'
-              : 'Play games and visit the shop to grow your collection!'}
-          </Text>
-        </View>
+      {/* Content */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentInner}
+        showsVerticalScrollIndicator={false}
+      >
+        {activeTab === 'characters' && <CharactersTab />}
+        {activeTab === 'loot' && <PlaceholderTab icon="📦" title="LOOT BOXES" desc="Win games to earn loot boxes. Open them for coins, board skins, and rare cosmetics." tip="Win 3 games → earn a Bronze Box" />}
+        {activeTab === 'awards' && <PlaceholderTab icon="🏅" title="ACHIEVEMENTS" desc="Track your achievements in the Challenges tab. Complete milestones to earn trophies and unlock titles." tip="22 achievements across 3 tiers" />}
       </ScrollView>
     </ScreenBackground>
   );
 }
 
+// ─── Characters tab ──────────────────────────────────────────────────
+function CharactersTab() {
+  const equippedId = useRosterStore((s) => s.equippedCharacterId);
+  const unlockedIds = useRosterStore((s) => s.unlockedCharacterIds);
+  const equipCharacter = useRosterStore((s) => s.equipCharacter);
+
+  const starters = ROSTER.filter((c) => c.unlockedAtCareerLevel == null);
+  const bosses = ROSTER.filter((c) => c.isBoss);
+  const equipped = ROSTER.find((c) => c.id === equippedId);
+
+  const handleEquip = (id: string) => {
+    if (id === equippedId) return;
+    haptics.tap();
+    equipCharacter(id);
+  };
+
+  return (
+    <View>
+      {/* Equipped character hero */}
+      <View style={styles.heroCard}>
+        <LinearGradient
+          colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)']}
+          style={styles.heroGradient}
+        >
+          <AnimatedCharacter size={160} />
+          <Text style={styles.heroName}>{equipped?.name.toUpperCase() || 'ROOKIE'}</Text>
+          <Text style={styles.heroTitle}>{equipped?.title || 'The Newcomer'}</Text>
+        </LinearGradient>
+      </View>
+
+      {/* Starters */}
+      <Text style={styles.sectionTitle}>YOUR CHARACTERS</Text>
+      <View style={styles.charGrid}>
+        {starters.map((c, i) => (
+          <StaggeredEntry key={c.id} index={i}>
+            <CharCard char={c} equipped={c.id === equippedId} unlocked={unlockedIds.includes(c.id)} onEquip={() => handleEquip(c.id)} />
+          </StaggeredEntry>
+        ))}
+      </View>
+
+      {/* Bosses */}
+      <Text style={styles.sectionTitle}>BOSS UNLOCKS</Text>
+      <Text style={styles.sectionSub}>Beat chapter bosses to unlock</Text>
+      <View style={styles.charGrid}>
+        {bosses.map((c, i) => (
+          <StaggeredEntry key={c.id} index={i}>
+            <CharCard char={c} equipped={c.id === equippedId} unlocked={unlockedIds.includes(c.id)} onEquip={() => handleEquip(c.id)} />
+          </StaggeredEntry>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─── Character card ──────────────────────────────────────────────────
+function CharCard({ char, equipped, unlocked, onEquip }: {
+  char: RosterCharacter; equipped: boolean; unlocked: boolean; onEquip: () => void;
+}) {
+  return (
+    <PressScale onPress={unlocked ? onEquip : undefined} disabled={!unlocked}>
+      <View style={[styles.charCard, { borderColor: equipped ? colors.greenLight : 'rgba(255,255,255,0.1)' }, !unlocked && { opacity: 0.45 }]}>
+        <LinearGradient
+          colors={unlocked ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)'] : ['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.15)']}
+          style={styles.charCardInner}
+        >
+          {unlocked ? (
+            <AnimatedCharacter characterId={char.id} size={65} />
+          ) : (
+            <Text style={{ fontSize: 26, opacity: 0.6 }}>🔒</Text>
+          )}
+          <Text style={[styles.charName, !unlocked && { color: 'rgba(255,255,255,0.35)' }]} numberOfLines={1}>
+            {unlocked ? char.name : '???'}
+          </Text>
+          {equipped && (
+            <View style={styles.equippedPill}>
+              <Text style={styles.equippedPillText}>EQUIPPED</Text>
+            </View>
+          )}
+          {char.isBoss && unlocked && <Text style={styles.bossLabel}>👑 BOSS</Text>}
+        </LinearGradient>
+      </View>
+    </PressScale>
+  );
+}
+
+// ─── Placeholder tab ─────────────────────────────────────────────────
+function PlaceholderTab({ icon, title, desc, tip }: { icon: string; title: string; desc: string; tip: string }) {
+  return (
+    <View style={styles.placeholder}>
+      <Text style={{ fontSize: 48, marginBottom: 12 }}>{icon}</Text>
+      <Text style={styles.placeholderTitle}>{title}</Text>
+      <Text style={styles.placeholderDesc}>{desc}</Text>
+      <View style={styles.placeholderTip}>
+        <Text style={styles.placeholderTipText}>{tip}</Text>
+      </View>
+    </View>
+  );
+}
+
+// ─── Styles ──────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  content: {
-    paddingTop: 16,
-    paddingBottom: 100,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 4,
-    left: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  backButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600' as const,
-  },
-  screenTitle: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 28,
-    color: '#ffffff',
-    textAlign: 'center',
-    letterSpacing: 2,
-    marginTop: 8,
-  },
-  totalCount: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  progressOuter: {
-    marginHorizontal: 24,
-    height: 14,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 7,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 7,
-  },
-  progressPct: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: colors.coinGold,
-    textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  categoryCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    overflow: 'hidden',
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 10,
-  },
-  categoryIcon: {
-    fontSize: 22,
-  },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 15,
-    color: '#ffffff',
-  },
-  categoryCount: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  miniBarOuter: {
-    width: 60,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  miniBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  chevron: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginLeft: 4,
-  },
-  itemsRow: {
-    paddingHorizontal: 12,
-    paddingBottom: 14,
-    gap: 8,
-  },
-  itemTile: {
-    width: 90,
-    height: 90,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 6,
-  },
-  itemDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginBottom: 6,
-  },
-  itemName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: '#ffffff',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-  itemRarity: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  lockedIcon: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 28,
-    color: 'rgba(255,255,255,0.15)',
-    marginBottom: 4,
-  },
-  lockedLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.2)',
-  },
-  // Collection Value
-  collectionValueCard: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: 'rgba(241,196,15,0.06)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(241,196,15,0.15)',
-  },
-  collectionValueLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  collectionValueAmount: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: colors.coinGold,
-  },
+  header: { alignItems: 'center', paddingBottom: 6 },
+  headerTitle: { fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 22, color: '#ffffff', letterSpacing: 2 },
 
-  // Rarity Distribution
-  rarityCard: {
-    marginHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  raritySectionTitle: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    marginBottom: 10,
-  },
-  rarityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  rarityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  rarityLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 12,
-    width: 80,
-  },
-  rarityBarOuter: {
-    flex: 1,
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  rarityBarFill: {
-    height: '100%',
-    borderRadius: 4,
-    opacity: 0.8,
-  },
-  rarityCount: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    width: 40,
-    textAlign: 'right',
-  },
+  tabRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 4, marginBottom: 8 },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 10, position: 'relative' },
+  tabActive: {},
+  tabIcon: { fontSize: 18 },
+  tabLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.5 },
+  tabLabelActive: { color: colors.orange },
+  tabIndicator: { position: 'absolute', bottom: 0, width: 24, height: 3, borderRadius: 2, backgroundColor: colors.orange },
 
-  footer: {
-    marginHorizontal: 24,
-    marginTop: 16,
-    paddingVertical: 16,
-    alignItems: 'center',
+  content: { flex: 1 },
+  contentInner: { paddingHorizontal: 16, paddingBottom: 40 },
+
+  heroCard: { borderRadius: 20, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,140,0,0.25)' },
+  heroGradient: { alignItems: 'center', paddingVertical: 14 },
+  heroName: { fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 18, color: '#ffffff', marginTop: 4, letterSpacing: 1 },
+  heroTitle: { fontFamily: fonts.body, fontSize: 11, color: colors.orange, marginTop: 2 },
+
+  sectionTitle: { fontFamily: fonts.body, fontWeight: weight.black, fontSize: 12, color: '#ffffff', letterSpacing: 1.5, marginTop: 8, marginBottom: 4 },
+  sectionSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginBottom: 8 },
+
+  charGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
+  charCard: {
+    flexBasis: '30%', flexGrow: 1, minWidth: 95, maxWidth: 130,
+    borderRadius: 16, borderWidth: 1.5, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3,
   },
-  footerText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 13,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
+  charCardInner: { alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6, minHeight: 110, justifyContent: 'center' },
+  charName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: '#ffffff', textAlign: 'center', marginTop: 4 },
+  equippedPill: { marginTop: 4, backgroundColor: colors.green, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  equippedPillText: { fontFamily: fonts.body, fontWeight: weight.black, fontSize: 8, color: '#ffffff', letterSpacing: 0.8 },
+  bossLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9, color: colors.coinGold, marginTop: 3 },
+
+  placeholder: { alignItems: 'center', paddingVertical: 40 },
+  placeholderTitle: { fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 16, color: '#ffffff', letterSpacing: 2 },
+  placeholderDesc: { fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8, paddingHorizontal: 30, lineHeight: 18 },
+  placeholderTip: { marginTop: 16, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'rgba(255,140,0,0.1)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.25)' },
+  placeholderTipText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.orange },
 });

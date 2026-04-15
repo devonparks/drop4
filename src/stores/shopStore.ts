@@ -70,6 +70,15 @@ interface ShopState {
   // Equipped idle variant (null = base idle with random variants)
   equippedIdle: string | null;
 
+  // Home lobby emote preferences
+  // • selectedHomeEmote: the emote played when the player taps their character
+  //   on the Home screen. null means "no specific emote picked" which falls back
+  //   to random mode behavior.
+  // • homeEmoteRandomMode: when true, tapping the character plays a random
+  //   emote regardless of selectedHomeEmote. This is the classic behavior.
+  selectedHomeEmote: string | null;
+  homeEmoteRandomMode: boolean;
+
   // Pets
   equippedPet: string | null;
   ownedPets: string[];
@@ -97,6 +106,8 @@ interface ShopState {
   removeEquippedEmote: (emoteId: string) => void;
   purchaseEmote: (emoteId: string, cost: number) => boolean;
   setEquippedIdle: (idleId: string | null) => void;
+  setSelectedHomeEmote: (emoteId: string | null) => void;
+  setHomeEmoteRandomMode: (enabled: boolean) => void;
   equipPet: (petId: string | null) => void;
   purchasePet: (petId: string, cost: number) => boolean;
   claimStarterPack: () => void;
@@ -138,6 +149,10 @@ export const useShopStore = create<ShopState>((set, get) => ({
   ownedEmotes: [],
 
   equippedIdle: null,
+
+  // Home emote preferences (new player defaults: random mode on, no selection)
+  selectedHomeEmote: null,
+  homeEmoteRandomMode: true,
 
   equippedPet: null,
   ownedPets: [],
@@ -234,6 +249,11 @@ export const useShopStore = create<ShopState>((set, get) => ({
   },
 
   setEquippedIdle: (idleId) => set({ equippedIdle: idleId }),
+  // Picking a specific home emote automatically disables random mode so the
+  // player's intent is respected on the next tap. Turning random mode back on
+  // later doesn't clear the selection — the choice is remembered.
+  setSelectedHomeEmote: (emoteId) => set({ selectedHomeEmote: emoteId, homeEmoteRandomMode: false }),
+  setHomeEmoteRandomMode: (enabled) => set({ homeEmoteRandomMode: enabled }),
 
   equipPet: (petId) => set({ equippedPet: petId }),
 
@@ -314,6 +334,8 @@ export const useShopStore = create<ShopState>((set, get) => ({
         equippedEmotes: saved.equippedEmotes ?? ['thumbsup', 'wave', 'dab', 'clapping', 'flexbiceps', 'laughpoint'],
         ownedEmotes: (saved as any).ownedEmotes ?? [],
         equippedIdle: saved.equippedIdle ?? null,
+        selectedHomeEmote: (saved as any).selectedHomeEmote ?? null,
+        homeEmoteRandomMode: (saved as any).homeEmoteRandomMode ?? true,
         unlockedTitles: (saved as any).unlockedTitles ?? [],
         equippedCustomTitle: (saved as any).equippedCustomTitle ?? null,
         equippedPet: saved.equippedPet ?? null,
@@ -387,6 +409,8 @@ useShopStore.subscribe((state) => {
     equippedEmotes: state.equippedEmotes,
     ownedEmotes: state.ownedEmotes,
     equippedIdle: state.equippedIdle,
+    selectedHomeEmote: state.selectedHomeEmote,
+    homeEmoteRandomMode: state.homeEmoteRandomMode,
     unlockedTitles: state.unlockedTitles,
     equippedCustomTitle: state.equippedCustomTitle,
     equippedPet: state.equippedPet,

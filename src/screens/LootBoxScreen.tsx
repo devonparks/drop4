@@ -7,6 +7,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useLootBoxStore, LOOT_BOXES, LootBoxItem, LootBox } from '../stores/lootBoxStore';
+import { LootChest, LootChestTier } from '../components/ui/LootChest';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -223,9 +224,9 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
           </View>
 
           <View style={st.boxCardRow}>
-            {/* Box icon area */}
+            {/* Rendered chest art (per-tier composition, no image assets) */}
             <View style={[st.boxIconArea, { borderColor: tier.border }]}>
-              <Text style={st.boxCardIcon}>{tier.icon}</Text>
+              <LootChest tier={box.tier as LootChestTier} size={60} />
             </View>
 
             {/* Info */}

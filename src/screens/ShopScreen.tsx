@@ -4,22 +4,101 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { PressScale, Shimmer, StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
+import { CosmeticPreviewModal } from '../components/ui/CosmeticPreviewModal';
+import { AnimatedRarityBg } from '../components/effects/AnimatedRarityBg';
 
 const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
 import { BOARD_THEME_VISUALS } from '../data/boardThemeColors';
+import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
+// cache-bust marker
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type ShopTab = 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
+
+// ─── Effect/Win/Frame preview configs ──────────────────────────
+interface EffectPreviewConfig {
+  bg: [string, string];
+  icon: string;
+  accentColor: string;
+  particles?: string[];
+}
+
+const EFFECT_PREVIEWS: Record<string, EffectPreviewConfig> = {
+  // Drop effects
+  none:             { bg: ['#1a1a2e', '#0e0e1a'], icon: '—', accentColor: '#555' },
+  sparks:           { bg: ['#2a1800', '#1a0e00'], icon: '✨', accentColor: '#f4a623', particles: ['⚡', '✦'] },
+  smoke:            { bg: ['#1a1a22', '#0e0e14'], icon: '💨', accentColor: '#8892b0', particles: ['☁️'] },
+  splash:           { bg: ['#001a2e', '#000e1a'], icon: '💧', accentColor: '#3498db', particles: ['💦'] },
+  lightning:        { bg: ['#1a1a00', '#0e0e00'], icon: '⚡', accentColor: '#f1c40f', particles: ['⚡', '✦', '⚡'] },
+  confetti:         { bg: ['#1a0022', '#0e0014'], icon: '🎊', accentColor: '#e84393', particles: ['🎉', '🎊'] },
+  shockwave:        { bg: ['#001a1a', '#000e0e'], icon: '💥', accentColor: '#1abc9c', particles: ['◎', '◉'] },
+  fireball:         { bg: ['#2a0800', '#1a0400'], icon: '🔥', accentColor: '#e74c3c', particles: ['🔥', '💥'] },
+  portal:           { bg: ['#0a001a', '#06000e'], icon: '🌀', accentColor: '#9b59b6', particles: ['✦', '🌀'] },
+  plasma:           { bg: ['#001a2a', '#000e1a'], icon: '⚡', accentColor: '#00d4ff', particles: ['⚡', '✦', '⚡'] },
+  darkmatter_drop:  { bg: ['#1a0020', '#0e0014'], icon: '🕳️', accentColor: '#e94560', particles: ['✦', '✦'] },
+  darkmatter_trail: { bg: ['#1a0020', '#0e0014'], icon: '💫', accentColor: '#e94560', particles: ['✦', '✦', '✦'] },
+  // Win animations
+  basic:            { bg: ['#1a1a2e', '#0e0e1a'], icon: '✓', accentColor: '#27ae3d' },
+  fireworks:        { bg: ['#0a0a1e', '#06061a'], icon: '🎆', accentColor: '#f39c12', particles: ['✦', '🎇', '✦'] },
+  lightning_strike: { bg: ['#1a1a00', '#0e0e00'], icon: '⚡', accentColor: '#f1c40f', particles: ['⚡', '⚡'] },
+  gold_rain:        { bg: ['#1a1400', '#0e0a00'], icon: '🪙', accentColor: '#ffd700', particles: ['🪙', '✦', '🪙'] },
+  nuke:             { bg: ['#1a0000', '#0e0000'], icon: '☢️', accentColor: '#e74c3c', particles: ['💥', '🔥'] },
+  meteor:           { bg: ['#1a0800', '#0e0400'], icon: '☄️', accentColor: '#ff6b35', particles: ['☄️', '✦'] },
+  black_hole:       { bg: ['#0a001a', '#06000e'], icon: '🕳️', accentColor: '#9b59b6', particles: ['✦', '🌀', '✦'] },
+  darkmatter_win:   { bg: ['#1a0020', '#0e0014'], icon: '👁️', accentColor: '#e94560', particles: ['✦', '✦', '✦'] },
+  // Board accessories / frames
+  flames:           { bg: ['#2a0800', '#1a0400'], icon: '🔥', accentColor: '#e74c3c', particles: ['🔥'] },
+  vines:            { bg: ['#001a0a', '#000e06'], icon: '🌿', accentColor: '#2ecc71', particles: ['✦', '🌿'] },
+  chains:           { bg: ['#1a1400', '#0e0a00'], icon: '⛓️', accentColor: '#ffd700', particles: ['✦'] },
+  circuit:          { bg: ['#001a2a', '#000e1a'], icon: '🔌', accentColor: '#00d4ff', particles: ['◎', '◉'] },
+  darkmatter_frame: { bg: ['#1a0020', '#0e0014'], icon: '🕳️', accentColor: '#e94560', particles: ['✦', '✦'] },
+};
+
+function EffectPreviewCard({ config, width, height }: { config: EffectPreviewConfig; width: number; height: number }) {
+  return (
+    <View style={{ width, height, overflow: 'hidden', borderRadius: 4 }}>
+      <LinearGradient colors={config.bg} style={StyleSheet.absoluteFill} />
+      {/* Accent glow */}
+      <View style={{
+        position: 'absolute', left: width * 0.2, top: height * 0.15,
+        width: width * 0.6, height: height * 0.7,
+        borderRadius: width * 0.3,
+        backgroundColor: config.accentColor,
+        opacity: 0.15,
+      }} />
+      {/* Center icon */}
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 24 }}>{config.icon}</Text>
+      </View>
+      {/* Floating particles */}
+      {config.particles && config.particles.map((p, i) => (
+        <Text key={i} style={{
+          position: 'absolute',
+          fontSize: 8,
+          opacity: 0.5,
+          left: (width * 0.15) + (i * width * 0.25),
+          top: height * (0.15 + (i % 2) * 0.5),
+        }}>{p}</Text>
+      ))}
+      {/* Bottom accent line */}
+      <View style={{
+        position: 'absolute', bottom: 0, left: width * 0.1, right: width * 0.1,
+        height: 2, borderRadius: 1, backgroundColor: config.accentColor, opacity: 0.5,
+      }} />
+    </View>
+  );
+}
 
 // ─── Countdown hook ────────────────────────────────────────────
 function useCountdown() {
@@ -58,21 +137,23 @@ function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge,
   buttonColor: [string, string]; badge?: string; onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={s.dealCard}>
-      <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={s.dealCardInner}>
-        {badge && (
-          <View style={s.dealBadge}>
-            <Text style={s.dealBadgeText}>{badge}</Text>
-          </View>
-        )}
-        <Text style={s.dealIcon}>{icon}</Text>
-        <Text style={s.dealTitle} numberOfLines={1}>{title}</Text>
-        <Text style={s.dealSub} numberOfLines={1}>{subtitle}</Text>
-        <LinearGradient colors={buttonColor} style={s.dealBtn}>
-          <Text style={s.dealBtnText}>{buttonLabel}</Text>
+    <PressScale onPress={onPress}>
+      <View style={s.dealCard}>
+        <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={s.dealCardInner}>
+          {badge && (
+            <View style={s.dealBadge}>
+              <Text style={s.dealBadgeText}>{badge}</Text>
+            </View>
+          )}
+          <Text style={s.dealIcon}>{icon}</Text>
+          <Text style={s.dealTitle} numberOfLines={1}>{title}</Text>
+          <Text style={s.dealSub} numberOfLines={1}>{subtitle}</Text>
+          <LinearGradient colors={buttonColor} style={s.dealBtn}>
+            <Text style={s.dealBtnText}>{buttonLabel}</Text>
+          </LinearGradient>
         </LinearGradient>
-      </LinearGradient>
-    </Pressable>
+      </View>
+    </PressScale>
   );
 }
 
@@ -82,41 +163,49 @@ function LootBagCard({ tier, icon, name, price, color, borderCol, onPress }: {
   color: [string, string]; borderCol: string; onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[s.bagCard, { borderColor: borderCol }]}>
-      <LinearGradient colors={color} style={s.bagCardInner}>
-        <View style={s.bagIconWrap}>
-          <Text style={s.bagIcon}>{icon}</Text>
-        </View>
-        <Text style={s.bagName}>{name}</Text>
-        <Text style={s.bagPrice}>{price}</Text>
-        <LinearGradient colors={['#27ae3d', '#1e8a30']} style={s.bagOpenBtn}>
-          <Text style={s.bagOpenText}>OPEN</Text>
+    <PressScale onPress={onPress}>
+      <View style={[s.bagCard, { borderColor: borderCol }]}>
+        <LinearGradient colors={color} style={s.bagCardInner}>
+          <View style={s.bagIconWrap}>
+            <Text style={s.bagIcon}>{icon}</Text>
+          </View>
+          <Text style={s.bagName}>{name}</Text>
+          <Text style={s.bagPrice}>{price}</Text>
+          <LinearGradient colors={['#27ae3d', '#1e8a30']} style={s.bagOpenBtn}>
+            <Text style={s.bagOpenText}>OPEN</Text>
+          </LinearGradient>
         </LinearGradient>
-      </LinearGradient>
-    </Pressable>
+      </View>
+    </PressScale>
   );
 }
 
 // ─── Bundle Card ───────────────────────────────────────────────
-function BundleCard({ icon, amount, bonus, price, color, onPress }: {
+function BundleCard({ icon, amount, bonus, price, color, highlight, onPress }: {
   icon: string; amount: string; bonus?: string; price: string;
-  color: [string, string]; onPress: () => void;
+  color: [string, string]; highlight?: boolean; onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={s.bundleCard}>
-      <LinearGradient colors={color} style={s.bundleInner}>
-        {bonus && (
-          <View style={s.bundleBadge}>
-            <Text style={s.bundleBadgeText}>{bonus}</Text>
-          </View>
-        )}
-        <Text style={s.bundleIcon}>{icon}</Text>
-        <Text style={s.bundleAmount}>{amount}</Text>
-      </LinearGradient>
-      <View style={s.bundlePriceRow}>
-        <Text style={s.bundlePrice}>{price}</Text>
+    <PressScale onPress={onPress}>
+      <View style={[s.bundleCard, highlight && s.bundleCardHighlight]}>
+        <LinearGradient colors={color} style={s.bundleInner}>
+          {bonus && (
+            <View style={[s.bundleBadge, bonus === 'BEST' && { backgroundColor: '#f39c12' }]}>
+              <Text style={s.bundleBadgeText}>{bonus}</Text>
+            </View>
+          )}
+          <Text style={s.bundleIcon}>{icon}</Text>
+          <Text style={s.bundleAmount}>{amount}</Text>
+          {highlight && <Text style={s.bundlePopular}>MOST POPULAR</Text>}
+        </LinearGradient>
+        <LinearGradient
+          colors={highlight ? ['rgba(255,140,0,0.25)', 'rgba(255,100,0,0.15)'] : ['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
+          style={s.bundlePriceRow}
+        >
+          <Text style={[s.bundlePrice, highlight && { color: '#ffffff' }]}>{price}</Text>
+        </LinearGradient>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -137,12 +226,52 @@ const UNLOCK_REQUIREMENTS: Record<string, string> = {
   griddy: 'Reach Dark Matter rank',
 };
 
+// ─── Premium piece disc for piece-skin previews ──────────────
+// Used when a shop item is a piece skin (has p1/p2 colors). Gives the
+// same glossy plastic treatment as the pieces inside PremiumBoardThumbnail
+// but a bit larger so piece-skin cards still read clearly.
+function PremiumPiece({ color }: { color: string }) {
+  return (
+    <View
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: color,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.45)',
+        shadowColor: color,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.9,
+        shadowRadius: 8,
+        elevation: 6,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Inner gloss highlight */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 4,
+          left: 7,
+          width: 12,
+          height: 10,
+          borderRadius: 10,
+          backgroundColor: 'rgba(255,255,255,0.55)',
+          transform: [{ rotate: '-20deg' }],
+        }}
+      />
+    </View>
+  );
+}
+
 // ─── Shop Item Card (existing, improved) ───────────────────────
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }: {
   item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number; playerCoins: number;
 }) {
   const rarityColor = RARITY_COLORS[item.rarity];
   const isDarkMatter = item.rarity === 'darkmatter';
+  const isPremium = item.rarity === 'epic' || item.rarity === 'legendary' || item.rarity === 'mythic' || isDarkMatter;
   const canAfford = playerCoins >= item.price;
   const coinsNeeded = item.price - playerCoins;
   // Average ~50 coins per game (medium difficulty)
@@ -156,26 +285,31 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
         style={[s.itemCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
       >
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
-        <View style={[s.itemPreview, { backgroundColor: item.preview.boardColor || colors.surface }]}>
+        <View style={s.itemPreview}>
           {item.preview.p1Color && item.preview.p2Color ? (
-            <View style={s.piecePreviewRow}>
-              <View style={[s.miniPiece, { backgroundColor: item.preview.p1Color }]} />
-              <View style={[s.miniPiece, { backgroundColor: item.preview.p2Color }]} />
-            </View>
-          ) : (() => {
-            const tv = BOARD_THEME_VISUALS[item.id];
-            const frameColor = tv?.frameGradient?.[0] || item.preview.boardColor || colors.surface;
-            const holeColor = tv?.holeColor || 'rgba(0,0,0,0.4)';
-            const holeBorder = tv?.holeBorder || 'rgba(0,0,0,0.2)';
-            const frameBorder = tv?.frameBorder || 'rgba(255,255,255,0.1)';
-            return (
-              <View style={[s.boardPreviewFrame, { backgroundColor: frameColor, borderColor: frameBorder }]}>
-                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                  <View key={i} style={[s.boardPreviewHole, { backgroundColor: holeColor, borderColor: holeBorder }]} />
-                ))}
+            <View style={s.piecePreviewBackdrop}>
+              {isPremium ? (
+                <AnimatedRarityBg rarity={item.rarity as any} width={108} height={64} style={StyleSheet.absoluteFill} />
+              ) : (
+                <LinearGradient colors={['#1a1a2e', '#0e0e1a', '#060610']} style={StyleSheet.absoluteFill} />
+              )}
+              <View style={s.piecePreviewRow}>
+                <PremiumPiece color={item.preview.p1Color} />
+                <PremiumPiece color={item.preview.p2Color} />
               </View>
-            );
-          })()}
+            </View>
+          ) : EFFECT_PREVIEWS[item.id] ? (
+            isPremium ? (
+              <View style={{ width: 108, height: 64, overflow: 'hidden', borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}>
+                <AnimatedRarityBg rarity={item.rarity as any} width={108} height={64} style={StyleSheet.absoluteFill} />
+                <Text style={{ fontSize: 24, zIndex: 1 }}>{EFFECT_PREVIEWS[item.id].icon}</Text>
+              </View>
+            ) : (
+              <EffectPreviewCard config={EFFECT_PREVIEWS[item.id]} width={108} height={64} />
+            )
+          ) : (
+            <PremiumBoardThumbnail themeId={item.id} width={108} height={64} />
+          )}
         </View>
         <Text style={s.itemName} numberOfLines={1}>{item.name}</Text>
         <Text style={[s.rarityLabel, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
@@ -272,6 +406,10 @@ export function ShopScreen() {
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
 
+  // Cosmetic preview modal state
+  const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
+  const [previewCategory, setPreviewCategory] = useState<'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories' | 'emotes'>('boards');
+
   // Derive collected state from persisted store (resets at midnight, not on navigation)
   const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   const dailyCollected = lastShopCoinCollect === today;
@@ -286,21 +424,41 @@ export function ShopScreen() {
   const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
   const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
 
+  // Open cosmetic preview modal instead of buying directly
   const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item: ShopItem) => {
-    const equipKey = category === 'boards' ? 'board'
-      : category === 'pieces' ? 'pieces'
-      : category === 'dropEffects' ? 'dropEffect'
-      : category === 'boardAccessories' ? 'boardAccessory'
+    haptics.tap();
+    setPreviewItem(item);
+    setPreviewCategory(category);
+  };
+
+  const handlePreviewBuy = () => {
+    if (!previewItem) return;
+    const equipKey = previewCategory === 'boards' ? 'board'
+      : previewCategory === 'pieces' ? 'pieces'
+      : previewCategory === 'dropEffects' ? 'dropEffect'
+      : previewCategory === 'boardAccessories' ? 'boardAccessory'
       : 'winAnimation';
-    if (equipped[equipKey] === item.id) return;
-    if (owned[category].includes(item.id)) {
-      equipItem(equipKey, item.id);
-      haptics.select();
-    } else if (item.rarity !== 'darkmatter' && !(item.price === 0 && item.rarity === 'mythic')) {
-      const success = purchaseItem(category, item.id, item.price);
-      if (success) { haptics.win(); playSound('coin'); equipItem(equipKey, item.id); }
-      else { haptics.error(); }
+    const success = purchaseItem(previewCategory as any, previewItem.id, previewItem.price);
+    if (success) {
+      haptics.win();
+      playSound('coin');
+      equipItem(equipKey, previewItem.id);
+      setPreviewItem(null);
+    } else {
+      haptics.error();
     }
+  };
+
+  const handlePreviewEquip = () => {
+    if (!previewItem) return;
+    const equipKey = previewCategory === 'boards' ? 'board'
+      : previewCategory === 'pieces' ? 'pieces'
+      : previewCategory === 'dropEffects' ? 'dropEffect'
+      : previewCategory === 'boardAccessories' ? 'boardAccessory'
+      : 'winAnimation';
+    equipItem(equipKey, previewItem.id);
+    haptics.select();
+    setPreviewItem(null);
   };
 
   const handleEmotePress = (item: ShopItem) => {
@@ -404,14 +562,18 @@ export function ShopScreen() {
             </View>
           </View>
           <View style={s.currencyRow}>
-            <View style={s.coinDisplay}>
-              <Text style={s.coinEmoji}>{'\u{1FA99}'}</Text>
-              <Text style={s.coinValue}>{coins.toLocaleString()}</Text>
-            </View>
-            <View style={s.gemDisplay}>
-              <Text style={s.gemEmoji}>{'\u{1F48E}'}</Text>
-              <Text style={s.gemValue}>{(gems || 0).toLocaleString()}</Text>
-            </View>
+            <Shimmer color="rgba(255,215,0,0.15)" duration={3000}>
+              <View style={s.coinDisplay}>
+                <Text style={s.coinEmoji}>{'\u{1FA99}'}</Text>
+                <Text style={s.coinValue}>{coins.toLocaleString()}</Text>
+              </View>
+            </Shimmer>
+            <Shimmer color="rgba(46,204,113,0.12)" duration={3500}>
+              <View style={s.gemDisplay}>
+                <Text style={s.gemEmoji}>{'\u{1F48E}'}</Text>
+                <Text style={s.gemValue}>{(gems || 0).toLocaleString()}</Text>
+              </View>
+            </Shimmer>
           </View>
         </View>
 
@@ -608,24 +770,42 @@ export function ShopScreen() {
           <Animated.View entering={FadeInUp.delay(300).springify()}>
             <SectionHeader title="GET MORE COINS" gradientColors={['#d4ac0d', '#f1c40f']} />
             <View style={s.bundlesGrid}>
-              <BundleCard icon={'\u{1FA99}'} amount="500" price="Free Daily" color={['rgba(39,174,61,0.2)', 'rgba(39,174,61,0.05)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="2,500" bonus="x2" price="$0.99" color={['rgba(255,209,102,0.15)', 'rgba(255,209,102,0.03)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="10,000" bonus="x2" price="$4.99" color={['rgba(255,209,102,0.2)', 'rgba(255,209,102,0.05)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="50,000" bonus="BEST" price="$9.99" color={['rgba(255,140,0,0.25)', 'rgba(255,140,0,0.05)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1FA99}'} amount="500" price="Free Daily" color={['rgba(39,174,61,0.25)', 'rgba(39,174,61,0.08)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1FA99}'} amount="2,500" bonus="x2" price="$0.99" color={['rgba(255,209,102,0.2)', 'rgba(255,209,102,0.06)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1FA99}'} amount="10,000" bonus="x2" price="$4.99" color={['rgba(255,209,102,0.25)', 'rgba(255,209,102,0.08)']} highlight onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1FA99}'} amount="50,000" bonus="BEST" price="$9.99" color={['rgba(255,140,0,0.3)', 'rgba(255,140,0,0.1)']} onPress={() => haptics.tap()} />
             </View>
 
             <SectionHeader title="GET MORE GEMS" gradientColors={['#1abc9c', '#2dd4ad']} />
             <View style={s.bundlesGrid}>
-              <BundleCard icon={'\u{1F48E}'} amount="10" price="$0.99" color={['rgba(46,204,113,0.15)', 'rgba(46,204,113,0.03)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="50" bonus="x2" price="$4.99" color={['rgba(46,204,113,0.2)', 'rgba(46,204,113,0.05)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="150" bonus="x2" price="$9.99" color={['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.05)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="500" bonus="BEST" price="$19.99" color={['rgba(26,188,156,0.3)', 'rgba(26,188,156,0.05)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1F48E}'} amount="10" price="$0.99" color={['rgba(46,204,113,0.2)', 'rgba(46,204,113,0.06)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1F48E}'} amount="50" bonus="x2" price="$4.99" color={['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.08)']} onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1F48E}'} amount="150" bonus="x2" price="$9.99" color={['rgba(26,188,156,0.3)', 'rgba(26,188,156,0.08)']} highlight onPress={() => haptics.tap()} />
+              <BundleCard icon={'\u{1F48E}'} amount="500" bonus="BEST" price="$19.99" color={['rgba(26,188,156,0.35)', 'rgba(26,188,156,0.12)']} onPress={() => haptics.tap()} />
             </View>
           </Animated.View>
 
           {/* Item shop is now rendered first (above deals) */}
         </ScrollView>
       </View>
+      {/* Cosmetic preview modal */}
+      <CosmeticPreviewModal
+        visible={previewItem !== null}
+        item={previewItem}
+        category={previewCategory}
+        isOwned={previewItem ? (owned[previewCategory as keyof typeof owned]?.includes(previewItem.id) ?? false) : false}
+        isEquipped={previewItem ? equipped[
+          previewCategory === 'boards' ? 'board'
+          : previewCategory === 'pieces' ? 'pieces'
+          : previewCategory === 'dropEffects' ? 'dropEffect'
+          : previewCategory === 'boardAccessories' ? 'boardAccessory'
+          : 'winAnimation'
+        ] === previewItem.id : false}
+        canAfford={previewItem ? coins >= previewItem.price : false}
+        onBuy={handlePreviewBuy}
+        onEquip={handlePreviewEquip}
+        onClose={() => setPreviewItem(null)}
+      />
     </ScreenBackground>
   );
 }
@@ -688,67 +868,124 @@ const s = StyleSheet.create({
   dealsRow: { paddingHorizontal: 16, gap: 10 },
   dealCard: {
     width: (SCREEN_WIDTH - 52) / 3, minWidth: 105, maxWidth: 130,
-    borderRadius: 14, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.12)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   dealCardInner: {
-    alignItems: 'center', paddingVertical: 12, paddingHorizontal: 6,
-    borderRadius: 14, gap: 4,
+    alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8,
+    borderRadius: 16, gap: 4,
   },
   dealBadge: {
     position: 'absolute', top: 6, right: 6,
-    backgroundColor: '#e74c3c', borderRadius: 6,
-    paddingHorizontal: 6, paddingVertical: 2,
+    backgroundColor: '#e74c3c', borderRadius: 8,
+    paddingHorizontal: 7, paddingVertical: 3,
+    shadowColor: '#e74c3c',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dealBadgeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: '#fff', letterSpacing: 0.5 },
-  dealIcon: { fontSize: 28, marginBottom: 2 },
-  dealTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: '#ffffff', textAlign: 'center' },
-  dealSub: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 9, color: colors.textSecondary, textAlign: 'center' },
-  dealBtn: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 5, marginTop: 4 },
-  dealBtnText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: '#ffffff', letterSpacing: 0.5 },
+  dealIcon: { fontSize: 32, marginBottom: 4 },
+  dealTitle: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 12, color: '#ffffff', textAlign: 'center' },
+  dealSub: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 10, color: colors.textSecondary, textAlign: 'center', marginTop: 1 },
+  dealBtn: {
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 7, marginTop: 6,
+    shadowColor: 'rgba(0,0,0,0.3)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dealBtnText: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 11, color: '#ffffff', letterSpacing: 1 },
 
   // ── Loot Bags ──
   bagsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10 },
   bagCard: {
-    flex: 1, borderRadius: 14, overflow: 'hidden',
+    flex: 1, borderRadius: 16, overflow: 'hidden',
     borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   bagCardInner: {
-    alignItems: 'center', paddingVertical: 14, paddingHorizontal: 6, gap: 4, borderRadius: 14,
+    alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8, gap: 6, borderRadius: 16,
   },
   bagIconWrap: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center',
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: 'rgba(255,200,50,0.4)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  bagIcon: { fontSize: 28 },
-  bagName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: '#ffffff', marginTop: 2 },
-  bagPrice: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 10, color: colors.textSecondary },
-  bagOpenBtn: { borderRadius: 10, paddingHorizontal: 18, paddingVertical: 6, marginTop: 6 },
-  bagOpenText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: '#ffffff', letterSpacing: 1 },
+  bagIcon: { fontSize: 30 },
+  bagName: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 14, color: '#ffffff', marginTop: 2, letterSpacing: 0.5 },
+  bagPrice: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
+  bagOpenBtn: {
+    borderRadius: 12, paddingHorizontal: 22, paddingVertical: 8, marginTop: 8,
+    shadowColor: '#27ae3d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  bagOpenText: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 12, color: '#ffffff', letterSpacing: 1.5 },
 
   // ── Bundles ──
-  bundlesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10 },
+  bundlesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10, justifyContent: 'center' },
   bundleCard: {
-    width: (SCREEN_WIDTH - 62) / 4, minWidth: 75,
-    borderRadius: 14, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.08)',
+    width: '47%',
+    borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  bundleCardHighlight: {
+    borderColor: 'rgba(255,140,0,0.4)',
+    shadowColor: 'rgba(255,140,0,0.3)',
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 8,
   },
   bundleInner: {
-    alignItems: 'center', paddingVertical: 12, paddingHorizontal: 4, borderRadius: 14,
+    alignItems: 'center', paddingVertical: 18, paddingHorizontal: 8, borderRadius: 16,
     position: 'relative',
   },
   bundleBadge: {
     position: 'absolute', top: -1, right: -1,
-    backgroundColor: '#e74c3c', borderBottomLeftRadius: 8, borderTopRightRadius: 12,
-    paddingHorizontal: 5, paddingVertical: 2,
+    backgroundColor: '#e74c3c', borderBottomLeftRadius: 10, borderTopRightRadius: 14,
+    paddingHorizontal: 8, paddingVertical: 4,
+    shadowColor: '#e74c3c',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  bundleBadgeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 7, color: '#fff', letterSpacing: 0.5 },
-  bundleIcon: { fontSize: 24 },
-  bundleAmount: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 14, color: '#ffffff', marginTop: 2 },
+  bundleBadgeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9, color: '#fff', letterSpacing: 0.5 },
+  bundleIcon: { fontSize: 34 },
+  bundleAmount: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22, color: '#ffffff', marginTop: 4 },
+  bundlePopular: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: colors.orange, letterSpacing: 1.5, marginTop: 4 },
   bundlePriceRow: {
-    backgroundColor: 'rgba(0,0,0,0.3)', paddingVertical: 5, alignItems: 'center',
+    paddingVertical: 10, alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
   },
-  bundlePrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: colors.textSecondary },
+  bundlePrice: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 14, color: 'rgba(255,255,255,0.85)' },
 
   // ── Item Shop ──
   itemShopSection: { marginTop: 8 },
@@ -791,8 +1028,9 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: colors.surfaceBorder, paddingBottom: 10, minHeight: 157,
   },
   rarityStrip: { height: 3, width: '100%' },
-  itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
-  piecePreviewRow: { flexDirection: 'row', gap: 10 },
+  itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  piecePreviewBackdrop: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
+  piecePreviewRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
   miniPiece: {
     width: 30, height: 30, borderRadius: 15,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 3,

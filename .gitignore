@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# 3D asset pipeline — binaries stay local (regeneratable from Unity + FBX2glTF)
+fbx_export/
+src/assets/models/**/*.glb
+src/assets/models/**/*.fbx

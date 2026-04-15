@@ -13,6 +13,11 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { LearnScreen } from '../screens/LearnScreen';
 import { SeasonPassScreen } from '../screens/SeasonPassScreen';
 import { CharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
+import { Character3DCreatorScreen } from '../screens/Character3DCreatorScreen';
+import { RosterScreen } from '../screens/RosterScreen';
+import { CareerMapScreen } from '../screens/CareerMapScreen';
+import { CareerCityScreen } from '../screens/CareerCityScreen';
+import { LegalScreen } from '../screens/LegalScreen';
 import { BoardEditorScreen } from '../screens/BoardEditorScreen';
 import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
@@ -93,6 +98,11 @@ export type RootStackParamList = {
   Learn: undefined;
   SeasonPass: undefined;
   CharacterCreator: undefined;
+  Character3DCreator: undefined;
+  Roster: undefined;
+  CareerMap: undefined;
+  CareerCity: { cityId: string };
+  Legal: { type: 'privacy' | 'terms' | 'credits' | 'support' };
   BoardEditor: undefined;
   ReplayViewer: undefined;
   LootBox: undefined;
@@ -140,6 +150,31 @@ export function RootNavigator() {
         name="CharacterCreator"
         component={CharacterCreatorScreen}
         options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Character3DCreator"
+        component={Character3DCreatorScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Roster"
+        component={RosterScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="CareerMap"
+        component={CareerMapScreen}
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="CareerCity"
+        component={CareerCityScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Legal"
+        component={LegalScreen}
+        options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen
         name="BoardEditor"
