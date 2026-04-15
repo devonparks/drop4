@@ -17,6 +17,7 @@ import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useGLB } from '../../utils/glbLoader';
 import { colors as themeColors } from '../../theme/colors';
+import { DOG_IDLES } from '../../data/animationRegistry';
 
 interface Pet3DProps {
   width: number;
@@ -133,6 +134,16 @@ export function Pet3D({
     }).start();
   }, [loaded, fadeAnim]);
 
+  // If no explicit animation was requested, pick a stable default idle per
+  // pet based on the numeric require-id hash. Some dogs sit, some stand,
+  // some sleep — feels more alive than a uniform "stand" for everyone.
+  const effectiveAnimGlb = useMemo(() => {
+    if (animationGlb != null) return animationGlb;
+    if (DOG_IDLES.length === 0) return undefined;
+    const seed = typeof petGlb === 'number' ? petGlb : 0;
+    return DOG_IDLES[Math.abs(seed) % DOG_IDLES.length]?.glb;
+  }, [animationGlb, petGlb]);
+
   return (
     <View style={[{ width, height }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
@@ -151,7 +162,7 @@ export function Pet3D({
         <TurntableRig enabled={autoRotate}>
           <PetModel
             petGlb={petGlb}
-            animationGlb={animationGlb}
+            animationGlb={effectiveAnimGlb}
             animationLoop={animationLoop}
             onLoad={() => setLoaded(true)}
           />

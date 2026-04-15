@@ -261,32 +261,46 @@ function CharacterModel({
     }
   }, [prepared, bodyType, bodySize, muscle]);
 
-  // Drive the AnimationMixer. When animGltf is supplied, retarget its clip
-  // onto the character's skeleton (Synty Sidekick bone names match across
-  // the whole pack so clips from AnimationIdles/Emotes/Taunts retarget 1:1).
+  // Drive the AnimationMixer. When animGltf changes, crossfade from the
+  // previous action to the new one over 280ms instead of hard-cutting.
+  // Synty Sidekick bone names match across all packs so idle/emote clips
+  // retarget 1:1 onto the character's skeleton.
   useEffect(() => {
-    // Tear down previous mixer
-    if (mixerRef.current) {
-      mixerRef.current.stopAllAction();
-      mixerRef.current.uncacheRoot(prepared?.clone as any);
-      mixerRef.current = null;
-      actionRef.current = null;
+    if (!prepared) return;
+    if (!animGltf) {
+      // No animation requested — tear down any previous one.
+      if (mixerRef.current) {
+        mixerRef.current.stopAllAction();
+        mixerRef.current = null;
+        actionRef.current = null;
+      }
+      return;
     }
-    if (!prepared || !animGltf) return;
     const clip = animGltf.animations?.[0];
     if (!clip) return;
 
     try {
-      const mixer = new THREE.AnimationMixer(prepared.clone);
-      const action = mixer.clipAction(clip);
-      action.setLoop(
+      // Reuse the same mixer if we already have one (keeps state consistent
+      // for crossfade). Otherwise create a fresh one bound to the model.
+      const mixer = mixerRef.current ?? new THREE.AnimationMixer(prepared.clone);
+      const newAction = mixer.clipAction(clip);
+      newAction.setLoop(
         animationLoop === false ? THREE.LoopOnce : THREE.LoopRepeat,
         animationLoop === false ? 1 : Infinity,
       );
-      action.clampWhenFinished = animationLoop === false;
-      action.play();
+      newAction.clampWhenFinished = animationLoop === false;
+      newAction.reset();
+
+      const prev = actionRef.current;
+      if (prev && prev !== newAction) {
+        // Crossfade: ramp new action up while previous fades out.
+        newAction.play();
+        prev.crossFadeTo(newAction, 0.28, false);
+      } else {
+        newAction.play();
+      }
       mixerRef.current = mixer;
-      actionRef.current = action;
+      actionRef.current = newAction;
     } catch (e) {
       if (__DEV__) console.warn('[Character3D] animation retarget failed:', e);
     }
