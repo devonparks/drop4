@@ -65,15 +65,15 @@ Pick the FIRST unchecked item.
 
 ### Shop catalog expansion
 
-- [ ] **Task 14: Generate per-pack "Collection" entries in the shop daily deals.** Extend `src/screens/ShopScreen.tsx` daily deals to rotate in one random OUTFIT_SHOP_ITEMS item at 20% discount. Seed random by day-of-year so same deal shows all day.
+- [x] **Task 14: Generate per-pack "Collection" entries in the shop daily deals.** Extend `src/screens/ShopScreen.tsx` daily deals to rotate in one random OUTFIT_SHOP_ITEMS item at 20% discount. Seed random by day-of-year so same deal shows all day.
 
-- [ ] **Task 15: Add outfit preview modal.** Long-press on an outfit in the shop should show a preview modal with the 3D character wearing that outfit (live Character3D at 200×280). Add buy/equip buttons in modal. Reuse existing CosmeticPreviewModal pattern if present.
+- [x] **Task 15: Add outfit preview modal.** Long-press on an outfit in the shop should show a preview modal with the 3D character wearing that outfit (live Character3D at 200×280). Add buy/equip buttons in modal. Reuse existing CosmeticPreviewModal pattern if present.
 
 ### If all tasks above are complete, pick from:
 
 - [ ] **Task 16: Career mode species unlocks.** In `src/data/careerLevels.ts`, add species-unlock triggers at certain boss levels (Elven at Venice Beach chapter, Goblin at Harlem, Skeleton at Cyber chapter, Zombie at Apocalypse chapter). Wire `careerStore` to expose `unlockedSpecies: string[]`. Reflect in creator Species picker.
 
-- [ ] **Task 17: Write docs/3D_SYSTEM_OVERVIEW.md.** Architectural doc covering: registries, rendering components, feature flag, pipeline, how to add a new outfit/pet/emote. For future contributors.
+- [x] **Task 17: Write docs/3D_SYSTEM_OVERVIEW.md.** Architectural doc covering: registries, rendering components, feature flag, pipeline, how to add a new outfit/pet/emote. For future contributors.
 
 ## DONE LOG
 

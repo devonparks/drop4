@@ -19,6 +19,7 @@ import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
 import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS } from '../data/cosmeticsShopCatalog';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
+import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { BOARD_THEME_VISUALS } from '../data/boardThemeColors';
 import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
 // cache-bust marker
@@ -416,6 +417,7 @@ export function ShopScreen() {
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
   const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
+  const [outfitPreview, setOutfitPreview] = useState<ShopItem | null>(null);
 
   // Cosmetic preview modal state
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
@@ -472,33 +474,24 @@ export function ShopScreen() {
     setPreviewItem(null);
   };
 
+  // Outfit tap → open preview modal. Modal handles buy/equip via callbacks.
   const handleOutfitPress = (item: ShopItem) => {
-    const alreadyOwned = ownedOutfits.includes(item.id);
-    if (alreadyOwned) {
-      // Equip it
-      setEquippedOutfit(item.id as any);
-      haptics.select();
-      playSound('click');
-      return;
-    }
-    // Purchase path
-    if (item.price === 0) {
-      unlockOutfit(item.id);
-      setEquippedOutfit(item.id as any);
-      haptics.win();
-      playSound('purchase');
-      return;
-    }
-    if (coins < item.price) {
-      haptics.error();
-      return;
-    }
-    if (spendCoins(item.price)) {
-      unlockOutfit(item.id);
-      setEquippedOutfit(item.id as any);
-      haptics.win();
-      playSound('purchase');
-    }
+    haptics.tap();
+    setOutfitPreview(item);
+  };
+
+  const handleOutfitBuy = () => {
+    if (!outfitPreview) return;
+    if (outfitPreview.price > 0 && !spendCoins(outfitPreview.price)) return;
+    unlockOutfit(outfitPreview.id);
+    setEquippedOutfit(outfitPreview.id as any);
+    setOutfitPreview(null);
+  };
+
+  const handleOutfitEquip = () => {
+    if (!outfitPreview) return;
+    setEquippedOutfit(outfitPreview.id as any);
+    setOutfitPreview(null);
   };
 
   const handleEmotePress = (item: ShopItem) => {
@@ -821,6 +814,32 @@ export function ShopScreen() {
                 badge="-50%"
                 onPress={() => haptics.tap()}
               />
+              {/* Daily outfit deal — 20% off, rotates by day-of-year so the same
+                  deal shows all day but flips at midnight */}
+              {(() => {
+                const dayOfYear = Math.floor(
+                  (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+                );
+                const paidOutfits = OUTFIT_SHOP_ITEMS.filter((i) => i.price > 0);
+                if (paidOutfits.length === 0) return null;
+                const pick = paidOutfits[dayOfYear % paidOutfits.length];
+                const discountedPrice = Math.round(pick.price * 0.8);
+                const isOwned = ownedOutfits.includes(pick.id);
+                return (
+                  <DailyDealCard
+                    icon={'\u{1F455}'}
+                    title={`Outfit of the Day`}
+                    subtitle={`${pick.name} · ${discountedPrice}🪙`}
+                    buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
+                    buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
+                    badge="-20%"
+                    onPress={() => {
+                      haptics.tap();
+                      if (!isOwned) setOutfitPreview({ ...pick, price: discountedPrice });
+                    }}
+                  />
+                );
+              })()}
             </ScrollView>
           </Animated.View>
 
@@ -897,6 +916,19 @@ export function ShopScreen() {
         onBuy={handlePreviewBuy}
         onEquip={handlePreviewEquip}
         onClose={() => setPreviewItem(null)}
+      />
+
+      {/* Outfit preview modal — dedicated 3D preview for the Outfits tab */}
+      <OutfitPreviewModal
+        visible={outfitPreview !== null}
+        outfitId={outfitPreview?.id ?? null}
+        price={outfitPreview?.price ?? 0}
+        isOwned={outfitPreview ? ownedOutfits.includes(outfitPreview.id) : false}
+        isEquipped={outfitPreview?.id === equippedOutfitId}
+        canAfford={outfitPreview ? coins >= outfitPreview.price : false}
+        onClose={() => setOutfitPreview(null)}
+        onBuy={handleOutfitBuy}
+        onEquip={handleOutfitEquip}
       />
     </ScreenBackground>
   );
