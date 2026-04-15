@@ -10,6 +10,8 @@ import {
   RosterCharacter,
 } from '../data/characterRoster';
 import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
+import { FEATURES } from '../config/features';
 import { haptics } from '../services/haptics';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
@@ -94,7 +96,9 @@ function CharactersTab() {
           colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)']}
           style={styles.heroGradient}
         >
-          <AnimatedCharacter size={160} />
+          {FEATURES.character3D
+            ? <Character3DPortrait width={160} height={200} showFloor={false} />
+            : <AnimatedCharacter size={160} />}
           <Text style={styles.heroName}>{equipped?.name.toUpperCase() || 'ROOKIE'}</Text>
           <Text style={styles.heroTitle}>{equipped?.title || 'The Newcomer'}</Text>
         </LinearGradient>
