@@ -5,6 +5,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
+import { CharacterSnapshot } from '../components/3d/CharacterSnapshot';
+import { getRosterCustomization } from '../data/npcCustomizations';
+import { useCharacterStore } from '../stores/characterStore';
+import { FEATURES } from '../config/features';
 import { useRosterStore } from '../stores/rosterStore';
 import {
   ROSTER,
@@ -76,6 +80,36 @@ function getCardTier(rating: number, isBoss: boolean, isDarkLord: boolean): Card
   if (rating >= 82) return 'gold';
   if (rating >= 78) return 'silver';
   return 'bronze';
+}
+
+/**
+ * Inner preview component. When 3D is on, uses CharacterSnapshot for cached
+ * PNG rendering — 40+ cards in a grid can't afford live <Canvas> each.
+ * For the equipped character we use the player's own customization. For
+ * other roster characters we pull a predefined 3D look from npcCustomizations.
+ */
+function RosterCardPreview({ characterId, size, isEquipped }: {
+  characterId: string; size: number; isEquipped: boolean;
+}) {
+  const playerCust = useCharacterStore((s) => s.customization);
+  if (!FEATURES.character3D) {
+    return (
+      <AnimatedCharacter
+        characterId={characterId}
+        size={size}
+        selectedIdle={isEquipped ? null : 'foottap'}
+      />
+    );
+  }
+  const custom = getRosterCustomization(characterId);
+  // Default (player) character uses the live customization so it reflects edits
+  return (
+    <CharacterSnapshot
+      width={size}
+      height={size}
+      customization={custom ?? playerCust}
+    />
+  );
 }
 
 function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps) {
@@ -155,11 +189,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
         {/* Character preview */}
         <View style={styles.previewBox}>
           {isUnlocked ? (
-            <AnimatedCharacter
-              characterId={character.id}
-              size={CARD_PREVIEW_SIZE}
-              selectedIdle={isEquipped ? null : 'foottap'}
-            />
+            <RosterCardPreview characterId={character.id} size={CARD_PREVIEW_SIZE} isEquipped={isEquipped} />
           ) : (
             <View style={styles.lockedSilhouette}>
               <Text style={styles.lockEmoji}>🔒</Text>

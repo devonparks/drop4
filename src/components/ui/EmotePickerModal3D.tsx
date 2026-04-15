@@ -35,6 +35,7 @@ const CATEGORY_ICON: Record<string, string> = {
 
 export function EmotePickerModal3D({ visible, onClose, onPlay }: Props) {
   const equipped = useShopStore((s) => s.equippedEmotes);
+  const ownedEmotes = useShopStore((s) => s.ownedEmotes);
 
   // Resolve each equipped slot to a HUMAN_EMOTES entry (or null if 2D/legacy)
   const slots = equipped.slice(0, 6).map((id) => ({
@@ -44,6 +45,17 @@ export function EmotePickerModal3D({ visible, onClose, onPlay }: Props) {
 
   // Pad to 6 slots
   while (slots.length < 6) slots.push({ id: '', meta: null });
+
+  // If player has zero owned 3D emotes AND no equipped ones, fall back to
+  // auto-populating the grid with the free ones (Dab, Bow, Clap) so the
+  // modal isn't a wall of empty slots on first run.
+  const has3DEmoteEquipped = slots.some((s) => s.meta !== null);
+  if (!has3DEmoteEquipped) {
+    const freeEmotes = HUMAN_EMOTES.filter((e) => (e.price ?? 0) === 0 || ownedEmotes.includes(e.id));
+    for (let i = 0; i < Math.min(freeEmotes.length, 6); i++) {
+      slots[i] = { id: freeEmotes[i].id, meta: freeEmotes[i] };
+    }
+  }
 
   const handleTap = (slot: { id: string; meta: typeof HUMAN_EMOTES[number] | null }) => {
     if (!slot.meta) {

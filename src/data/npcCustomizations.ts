@@ -121,3 +121,46 @@ export const NPC_CUSTOMIZATIONS = {
   boss_ch2:     BOSS_CHAPTER_2,
   boss_ch3:     BOSS_CHAPTER_3,
 };
+
+// ── Playable roster characters (bones, pixel, luna, tank) ────────
+// These are characters the player CAN unlock and equip as alternate avatars.
+// Each needs a distinctive 3D look matching their theme.
+
+const ROSTER_BONES: CharacterCustomization = make('skeleton_fantasy_skeletons_01', {
+  bodyType: 10, bodySize: 45, muscle: 55,
+  skinColor: '#e8e4d0', hairColor: '#1a1a1a',
+});
+
+const ROSTER_PIXEL: CharacterCustomization = make('human_sci_fi_civilians_03', {
+  bodyType: 55, bodySize: 45, muscle: 50,
+  skinColor: '#d4a890', hairColor: '#2a80e0',
+  outfitColors: { '10TORS': '#3a50c9', '18LEGL': '#1a1a30' },
+});
+
+const ROSTER_LUNA: CharacterCustomization = make('elves_elven_warriors_02', {
+  bodyType: 88, bodySize: 40, muscle: 55,
+  skinColor: '#f0d4b8', hairColor: '#c0a060',
+  outfitColors: { '10TORS': '#3a5e6e', '11AUPL': '#5e8a9e' },
+});
+
+const ROSTER_TANK: CharacterCustomization = make('human_viking_warriors_03', {
+  bodyType: 5, bodySize: 80, muscle: 95,
+  skinColor: '#a47e58', hairColor: '#2e1e14',
+  outfitColors: { '10TORS': '#6e4a1a', '17HIPS': '#3a1a0a' },
+});
+
+const ROSTER_MAP: Record<string, CharacterCustomization> = {
+  bones: ROSTER_BONES,
+  pixel: ROSTER_PIXEL,
+  luna:  ROSTER_LUNA,
+  tank:  ROSTER_TANK,
+};
+
+/**
+ * Resolve a roster character ID ('bones', 'pixel', 'luna', 'tank') to its
+ * 3D customization. Returns null for the default/player character (caller
+ * should fall back to the player's own customization).
+ */
+export function getRosterCustomization(characterId: string): CharacterCustomization | null {
+  return ROSTER_MAP[characterId] ?? null;
+}
