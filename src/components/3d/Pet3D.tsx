@@ -12,7 +12,7 @@
  *          animationGlb={DOG_IDLES[0]?.glb} />
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ViewStyle, ActivityIndicator, Animated } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useGLB } from '../../utils/glbLoader';
@@ -123,9 +123,19 @@ export function Pet3D({
   cameraDistance = 1.6, cameraHeight = 0.5, autoRotate = false, style,
 }: Pet3DProps) {
   const [loaded, setLoaded] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!loaded) return;
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [loaded, fadeAnim]);
 
   return (
     <View style={[{ width, height }, style]}>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
       <Canvas
         frameloop="always"
         gl={{ antialias: true, alpha: true } as any}
@@ -147,6 +157,7 @@ export function Pet3D({
           />
         </TurntableRig>
       </Canvas>
+      </Animated.View>
       {!loaded && (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator color={themeColors.orange} />

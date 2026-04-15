@@ -20,7 +20,22 @@ import React from 'react';
 import { Character3D } from './Character3D';
 import { useCharacterStore, type CharacterCustomization } from '../../stores/characterStore';
 import { OUTFITS } from '../../data/outfitRegistry';
-import { DEFAULT_HUMAN_IDLE, findAnimation } from '../../data/animationRegistry';
+import { DEFAULT_HUMAN_IDLE, HUMAN_IDLES, findAnimation } from '../../data/animationRegistry';
+
+/**
+ * Pick a stable idle for a given character. Rather than everyone doing the
+ * same "base" idle, we hash the outfit + body type to a looping idle so each
+ * NPC has a distinctive default pose (arms folded, hands on hips, etc).
+ * The player still gets the base idle for legibility on their own character.
+ */
+function pickDefaultIdle(outfitId: string, bodyType: number) {
+  const loopingIdles = HUMAN_IDLES.filter((i) => i.loop);
+  if (loopingIdles.length === 0) return DEFAULT_HUMAN_IDLE;
+  // Simple sum hash — stable per customization, spreads across all idles
+  let h = bodyType | 0;
+  for (let i = 0; i < outfitId.length; i++) h = (h + outfitId.charCodeAt(i)) & 0xffff;
+  return loopingIdles[h % loopingIdles.length];
+}
 
 export interface Character3DPortraitProps {
   width: number;
@@ -51,8 +66,12 @@ export function Character3DPortrait({
   const glb = outfit?.glb ?? OUTFITS['human_modern_civilians_01']?.glb ?? OUTFITS[Object.keys(OUTFITS)[0]]?.glb;
   if (glb == null) return null;
 
-  // Pick animation: explicit id → registry lookup → default idle → none
-  const animMeta = animationId ? findAnimation(animationId) : DEFAULT_HUMAN_IDLE;
+  // Pick animation: explicit id → registry lookup → hashed default idle →
+  // registry fallback. NPCs get varied idles (arms-folded, hands-on-hips,
+  // grumpy, base) based on their customization hash so the world feels alive.
+  const animMeta = animationId
+    ? findAnimation(animationId)
+    : pickDefaultIdle(c.outfitId, c.bodyType);
   const animGlb = animMeta?.glb;
   const loop = animationLoop ?? animMeta?.loop ?? true;
 

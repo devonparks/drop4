@@ -540,7 +540,22 @@ export function HomeScreen() {
             <StageSparkles />
 
             <BreathingView intensity={0.015} speed={4000}>
-            <Pressable onPress={handleCharacterTap}>
+            <Pressable
+              onPress={handleCharacterTap}
+              onLongPress={() => {
+                if (!FEATURES.character3D) return;
+                // Long-press: play a random OWNED emote instantly (no modal).
+                const ownedEmoteIds = useShopStore.getState().ownedEmotes;
+                const pool = HUMAN_EMOTES.filter(
+                  (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
+                );
+                if (pool.length === 0) return;
+                const pick = pool[Math.floor(Math.random() * pool.length)];
+                haptics.win();
+                setActive3DEmote(pick.id);
+              }}
+              delayLongPress={450}
+            >
               {showTapHint && (
                 <Animated.View style={[styles.tapHintBubble, { opacity: tapHintOpacity }]}>
                   <Text style={styles.tapHintText}>Tap me!</Text>
