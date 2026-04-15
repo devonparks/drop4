@@ -6,7 +6,7 @@
  *
  * All changes save to characterStore and persist across sessions.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +24,8 @@ import {
   type OutfitId,
 } from '../stores/characterStore';
 import { useShopStore } from '../stores/shopStore';
-import { OUTFITS, OUTFIT_IDS } from '../data/outfitRegistry';
+import { OUTFITS, OUTFIT_IDS, PACKS, type Species } from '../data/outfitRegistry';
+import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { PETS, PET_IDS, type PetId } from '../data/petRegistry';
 import { usePetStore } from '../stores/petStore';
 import { HUMAN_EMOTES } from '../data/animationRegistry';
@@ -61,6 +62,14 @@ export function Character3DCreatorScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('outfit');
   const [colorPickerFor, setColorPickerFor] = useState<'skin' | 'hair' | null>(null);
+  const [previewEmoteId, setPreviewEmoteId] = useState<string | null>(null);
+
+  // Auto-clear preview emote after 3s so the character returns to idle
+  useEffect(() => {
+    if (!previewEmoteId) return;
+    const t = setTimeout(() => setPreviewEmoteId(null), 3000);
+    return () => clearTimeout(t);
+  }, [previewEmoteId]);
 
   const cust = useCharacterStore((s) => s.customization);
   const unlockedHair = useCharacterStore((s) => s.unlockedHairColors);
@@ -79,7 +88,8 @@ export function Character3DCreatorScreen({ navigation }: Props) {
   const coins = useShopStore((s) => s.coins);
   const spendCoins = useShopStore((s) => s.spendCoins);
 
-  const currentOutfit = OUTFITS[cust.outfitId] ?? OUTFITS.modern_civilians_01;
+  const currentOutfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'] ?? OUTFITS[OUTFIT_IDS[0]];
+  const previewEmote = previewEmoteId ? HUMAN_EMOTES.find((e) => e.id === previewEmoteId) : null;
 
   // ── Purchase handlers ────────────────────────────────────────
   const handlePurchaseHair = (id: string, hex: string, price: number) => {
@@ -143,6 +153,8 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           mode="creator"
           cameraDistance={3.5}
           cameraHeight={1.0}
+          animationGlb={previewEmoteId ? previewEmote?.glb : undefined}
+          animationLoop={!previewEmoteId}
         />
       </View>
 
@@ -190,7 +202,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           />
         )}
         {activeTab === 'pets' && <PetsTab />}
-        {activeTab === 'emotes' && <EmotesTab />}
+        {activeTab === 'emotes' && <EmotesTab onPlay={setPreviewEmoteId} />}
       </ScrollView>
 
       {/* HSL Color Picker Modal */}
@@ -226,32 +238,123 @@ const OUTFIT_HINTS: Record<string, [string, string, string]> = {
   modern_civilians_12: ['#3a4a5e', '#3a4a5e', '#2a2a30'], // long sleeve navy
 };
 
+const SPECIES_CHIPS: { id: 'all' | Species; label: string; icon: string }[] = [
+  { id: 'all',      label: 'All',      icon: '\u{1F465}' },
+  { id: 'human',    label: 'Human',    icon: '\u{1F464}' },
+  { id: 'elves',    label: 'Elf',      icon: '\u{1F9DD}' },
+  { id: 'goblin',   label: 'Goblin',   icon: '\u{1F47A}' },
+  { id: 'skeleton', label: 'Skeleton', icon: '\u{1F480}' },
+  { id: 'zombie',   label: 'Zombie',   icon: '\u{1F9DF}' },
+];
+
+// Quick shop item lookup by id (for price + rarity)
+const SHOP_BY_ID: Record<string, typeof OUTFIT_SHOP_ITEMS[number]> = {};
+for (const it of OUTFIT_SHOP_ITEMS) SHOP_BY_ID[it.id] = it;
+
 function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id: OutfitId) => void }) {
+  const [species, setSpecies] = useState<'all' | Species>('all');
+  const [packFilter, setPackFilter] = useState<string | 'all'>('all');
+  const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
+  const unlockOutfit = useCharacterStore((s) => s.unlockOutfit);
+  const coins = useShopStore((s) => s.coins);
+  const spendCoins = useShopStore((s) => s.spendCoins);
+
+  // Filter outfits by species + pack
+  const filteredOutfits = OUTFIT_IDS.filter((id) => {
+    const o = OUTFITS[id];
+    if (species !== 'all' && o.species !== species) return false;
+    if (packFilter !== 'all' && o.pack !== packFilter) return false;
+    return true;
+  });
+
+  // Packs available for the selected species
+  const availablePacks = PACKS.filter((p) => species === 'all' || p.species === species);
+
+  const handleTap = (id: string) => {
+    const owned = ownedOutfits.includes(id);
+    if (owned) {
+      onSelect(id as OutfitId);
+      haptics.tap();
+      return;
+    }
+    const shopItem = SHOP_BY_ID[id];
+    const price = shopItem?.price ?? 500;
+    if (price === 0) {
+      unlockOutfit(id);
+      onSelect(id as OutfitId);
+      haptics.win();
+      playSound('purchase');
+      return;
+    }
+    if (coins < price) { haptics.error(); return; }
+    if (spendCoins(price)) {
+      unlockOutfit(id);
+      onSelect(id as OutfitId);
+      haptics.win();
+      playSound('purchase');
+    }
+  };
+
   return (
     <View>
-      <Text style={styles.sectionTitle}>OUTFIT</Text>
-      <Text style={styles.sectionSub}>12 Modern Civilians outfits</Text>
+      <Text style={styles.sectionTitle}>OUTFITS</Text>
+      <Text style={styles.sectionSub}>{filteredOutfits.length} of {OUTFIT_IDS.length} outfits</Text>
+
+      {/* Species chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }} contentContainerStyle={{ gap: 6, paddingRight: 20 }}>
+        {SPECIES_CHIPS.map((sp) => (
+          <PressScale key={sp.id} onPress={() => { haptics.tap(); setSpecies(sp.id); setPackFilter('all'); }}>
+            <View style={[petsStyles.packChip, species === sp.id && petsStyles.packChipActive]}>
+              <Text style={[petsStyles.packChipText, species === sp.id && petsStyles.packChipTextActive]}>
+                {sp.icon} {sp.label}
+              </Text>
+            </View>
+          </PressScale>
+        ))}
+      </ScrollView>
+
+      {/* Pack chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }} contentContainerStyle={{ gap: 6, paddingRight: 20 }}>
+        <PressScale onPress={() => { haptics.tap(); setPackFilter('all'); }}>
+          <View style={[petsStyles.packChip, packFilter === 'all' && petsStyles.packChipActive]}>
+            <Text style={[petsStyles.packChipText, packFilter === 'all' && petsStyles.packChipTextActive]}>All Packs</Text>
+          </View>
+        </PressScale>
+        {availablePacks.map((p) => (
+          <PressScale key={`${p.species}_${p.pack}`} onPress={() => { haptics.tap(); setPackFilter(p.pack); }}>
+            <View style={[petsStyles.packChip, packFilter === p.pack && petsStyles.packChipActive]}>
+              <Text style={[petsStyles.packChipText, packFilter === p.pack && petsStyles.packChipTextActive]}>{p.label}</Text>
+            </View>
+          </PressScale>
+        ))}
+      </ScrollView>
+
+      {/* Grid */}
       <View style={styles.grid}>
-        {OUTFIT_IDS.map((id) => {
+        {filteredOutfits.map((id) => {
           const outfit = OUTFITS[id];
           const isEquipped = id === currentId;
-          const hint = OUTFIT_HINTS[id] || ['#3a4a5e', '#4a5a75', '#2a2a30'];
+          const owned = ownedOutfits.includes(id);
+          const shopItem = SHOP_BY_ID[id];
+          const price = shopItem?.price ?? 500;
           return (
-            <PressScale key={id} onPress={() => { haptics.tap(); onSelect(id); }}>
+            <PressScale key={id} onPress={() => handleTap(id)}>
               <View style={[styles.outfitCard, isEquipped && styles.outfitCardActive]}>
                 <LinearGradient
                   colors={isEquipped ? ['rgba(255,140,0,0.25)', 'rgba(255,140,0,0.08)'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']}
                   style={styles.outfitCardInner}
                 >
-                  {/* Color preview swatch row (top, bottom, shoes) */}
-                  <View style={styles.outfitHintRow}>
-                    <View style={[styles.outfitHintSwatch, { backgroundColor: hint[0] }]} />
-                    <View style={[styles.outfitHintSwatch, { backgroundColor: hint[1] }]} />
-                    <View style={[styles.outfitHintSwatch, { backgroundColor: hint[2] }]} />
-                  </View>
-                  <Text style={styles.outfitNum}>{id.slice(-2)}</Text>
-                  <Text style={styles.outfitName} numberOfLines={1}>{outfit.name}</Text>
-                  {isEquipped && <Text style={styles.equippedPill}>EQUIPPED</Text>}
+                  <Text style={styles.outfitNum}>{String(outfit.index).padStart(2, '0')}</Text>
+                  <Text style={styles.outfitName} numberOfLines={1}>{outfit.packLabel}</Text>
+                  {isEquipped ? (
+                    <Text style={styles.equippedPill}>EQUIPPED</Text>
+                  ) : owned ? (
+                    <Text style={petsStyles.ownedPill}>OWNED</Text>
+                  ) : price === 0 ? (
+                    <Text style={petsStyles.freePill}>FREE</Text>
+                  ) : (
+                    <Text style={petsStyles.pricePill}>{price}🪙</Text>
+                  )}
                 </LinearGradient>
               </View>
             </PressScale>
@@ -842,15 +945,16 @@ function emojiForPet(id: PetId): string {
 
 // ══ Emotes Tab ══════════════════════════════════════════════════
 
-function EmotesTab() {
+function EmotesTab({ onPlay }: { onPlay: (id: string) => void }) {
   const ownedEmotes = useShopStore((s) => s.ownedEmotes);
   const coins = useShopStore((s) => s.coins);
   const purchaseEmote = useShopStore((s) => s.purchaseEmote);
 
   const handleTap = (id: string, price: number) => {
-    if (ownedEmotes.includes(id)) {
+    if (ownedEmotes.includes(id) || price === 0) {
+      // Preview the emote on the 3D character
       haptics.tap();
-      // TODO: slot selection UI (reuse existing emote wheel pattern)
+      onPlay(id);
       return;
     }
     if (coins < price) {
@@ -858,6 +962,8 @@ function EmotesTab() {
       return;
     }
     purchaseEmote(id, price);
+    // Auto-play after purchase so the player sees what they bought
+    onPlay(id);
     haptics.win();
     playSound('purchase');
   };
@@ -943,5 +1049,33 @@ const petsStyles = StyleSheet.create({
   },
   emoteCategory: {
     fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary,
+  },
+  packChip: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  packChipActive: {
+    backgroundColor: 'rgba(255,140,0,0.25)',
+    borderColor: colors.orange,
+  },
+  packChipText: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
+    color: colors.textSecondary, letterSpacing: 0.3,
+  },
+  packChipTextActive: {
+    color: '#fff',
+  },
+  ownedPill: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9,
+    color: colors.textSecondary, letterSpacing: 0.8,
+  },
+  freePill: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
+    color: '#4ade80', letterSpacing: 0.5,
+  },
+  pricePill: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
+    color: colors.orange, letterSpacing: 0.5,
   },
 });

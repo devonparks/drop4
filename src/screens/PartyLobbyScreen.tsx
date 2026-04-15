@@ -14,6 +14,8 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { AnimatedCharacter, useEmoteTrigger, EmoteId } from '../components/ui/AnimatedCharacter';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
+import { FEATURES } from '../config/features';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { RankBadge } from '../components/ui/RankBadge';
@@ -258,11 +260,15 @@ export function PartyLobbyScreen({ navigation }: Props) {
             >
               {/* Character */}
               <View style={styles.characterWrap}>
-                <AnimatedCharacter
-                  size={180}
-                  emote={myEmote}
-                  onEmoteComplete={clearMyEmote}
-                />
+                {FEATURES.character3D ? (
+                  <Character3DPortrait width={180} height={220} showFloor={false} />
+                ) : (
+                  <AnimatedCharacter
+                    size={180}
+                    emote={myEmote}
+                    onEmoteComplete={clearMyEmote}
+                  />
+                )}
                 <PetDisplay
                   petId={equippedPet}
                   size={50}
@@ -308,6 +314,7 @@ export function PartyLobbyScreen({ navigation }: Props) {
               >
                 {/* Character */}
                 <View style={styles.characterWrap}>
+                  {/* Bots keep 2D for now — no per-bot customization data yet */}
                   <AnimatedCharacter
                     size={180}
                     emote={bot.emote || undefined}

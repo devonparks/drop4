@@ -9,6 +9,8 @@ import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVari
 import { Character3D } from '../components/3d/Character3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
+import { HUMAN_EMOTES } from '../data/animationRegistry';
+import { EmotePickerModal3D } from '../components/ui/EmotePickerModal3D';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
@@ -91,9 +93,12 @@ function StageSparkles() {
 
 // Pressable wrapper with scale-down feedback for menu buttons
 // PressScaleView — now uses the shared PressScale component from animations library
-function Character3DWrapper() {
+function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null }) {
   const cust = useCharacterStore((s) => s.customization);
-  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS.modern_civilians_01;
+  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
+  const emoteMeta = activeEmoteId
+    ? HUMAN_EMOTES.find((e) => e.id === activeEmoteId) ?? null
+    : null;
   return (
     <Character3D
       width={320}
@@ -105,6 +110,8 @@ function Character3DWrapper() {
       bodyType={cust.bodyType}
       bodySize={cust.bodySize}
       muscle={cust.muscle}
+      animationGlb={emoteMeta?.glb}
+      animationLoop={!emoteMeta}
     />
   );
 }
@@ -321,6 +328,16 @@ export function HomeScreen() {
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
+  // 3D emote playback on the home character. When set, feeds animationGlb to
+  // Character3DWrapper. Auto-clears after 3s so the character returns to idle.
+  const [active3DEmote, setActive3DEmote] = useState<string | null>(null);
+  const [emotePicker3DOpen, setEmotePicker3DOpen] = useState(false);
+  useEffect(() => {
+    if (!active3DEmote) return;
+    const t = setTimeout(() => setActive3DEmote(null), 3000);
+    return () => clearTimeout(t);
+  }, [active3DEmote]);
+
   // FREE SPIN text pulse when spin is available
   const spinPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -402,8 +419,14 @@ export function HomeScreen() {
     setShowTapHint(false);
     tapHintOpacity.setValue(0);
 
-    // Resolution: random mode → random pick; else play the equipped emote;
-    // else fall back to random so taps are never a no-op.
+    // 3D path: tapping the character opens the 3D emote picker modal.
+    // Long-press / double-tap could later play a random owned emote.
+    if (FEATURES.character3D) {
+      setEmotePicker3DOpen(true);
+      return;
+    }
+
+    // 2D path: play the equipped/random sprite emote on the AnimatedCharacter.
     if (homeEmoteRandomMode || !selectedHomeEmote) {
       const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
       triggerEmote(randomEmote);
@@ -525,7 +548,7 @@ export function HomeScreen() {
                 </Animated.View>
               )}
               {FEATURES.character3D ? (
-                <Character3DWrapper />
+                <Character3DWrapper activeEmoteId={active3DEmote} />
               ) : (
                 <AnimatedCharacter
                   size={320}
@@ -689,6 +712,13 @@ export function HomeScreen() {
         <DailySpinWheel
           visible={spinWheelOpen}
           onClose={() => setSpinWheelOpen(false)}
+        />
+
+        {/* 3D Emote Picker — opens on character tap when FEATURES.character3D is on */}
+        <EmotePickerModal3D
+          visible={emotePicker3DOpen}
+          onClose={() => setEmotePicker3DOpen(false)}
+          onPlay={(id) => setActive3DEmote(id)}
         />
 
         {/* First-launch welcome modal — auto-shows once for new users */}

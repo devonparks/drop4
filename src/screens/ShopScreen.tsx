@@ -16,6 +16,9 @@ const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
+import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS } from '../data/cosmeticsShopCatalog';
+import { OUTFITS } from '../data/outfitRegistry';
+import { useCharacterStore } from '../stores/characterStore';
 import { BOARD_THEME_VISUALS } from '../data/boardThemeColors';
 import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
 // cache-bust marker
@@ -24,7 +27,7 @@ import { fonts, weight } from '../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type ShopTab = 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
+type ShopTab = 'outfits' | 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
 
 // ─── Effect/Win/Frame preview configs ──────────────────────────
 interface EffectPreviewConfig {
@@ -400,11 +403,19 @@ export function ShopScreen() {
   const purchaseEmote = useShopStore(s2 => s2.purchaseEmote);
   const equipPet = useShopStore(s2 => s2.equipPet);
   const purchasePet = useShopStore(s2 => s2.purchasePet);
+  const spendCoins = useShopStore(s2 => s2.spendCoins);
+
+  // Outfits live in characterStore (separate from shopStore's board/piece owned set)
+  const ownedOutfits = useCharacterStore(s => s.ownedOutfits);
+  const equippedOutfitId = useCharacterStore(s => s.customization.outfitId);
+  const unlockOutfit = useCharacterStore(s => s.unlockOutfit);
+  const setEquippedOutfit = useCharacterStore(s => s.setOutfit);
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
   const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('boards');
-  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('All');
+  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
+  const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
 
   // Cosmetic preview modal state
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
@@ -459,6 +470,35 @@ export function ShopScreen() {
     equipItem(equipKey, previewItem.id);
     haptics.select();
     setPreviewItem(null);
+  };
+
+  const handleOutfitPress = (item: ShopItem) => {
+    const alreadyOwned = ownedOutfits.includes(item.id);
+    if (alreadyOwned) {
+      // Equip it
+      setEquippedOutfit(item.id as any);
+      haptics.select();
+      playSound('click');
+      return;
+    }
+    // Purchase path
+    if (item.price === 0) {
+      unlockOutfit(item.id);
+      setEquippedOutfit(item.id as any);
+      haptics.win();
+      playSound('purchase');
+      return;
+    }
+    if (coins < item.price) {
+      haptics.error();
+      return;
+    }
+    if (spendCoins(item.price)) {
+      unlockOutfit(item.id);
+      setEquippedOutfit(item.id as any);
+      haptics.win();
+      playSound('purchase');
+    }
   };
 
   const handleEmotePress = (item: ShopItem) => {
@@ -522,6 +562,7 @@ export function ShopScreen() {
   };
 
   const tabs: { key: ShopTab; label: string; icon: string }[] = [
+    { key: 'outfits', label: 'Outfits', icon: '\u{1F455}' },
     { key: 'boards', label: 'Boards', icon: '\u{1F3AF}' },
     { key: 'pieces', label: 'Pieces', icon: '\u{1F534}' },
     { key: 'effects', label: 'Effects', icon: '\u2728' },
@@ -537,10 +578,22 @@ export function ShopScreen() {
                    activeTab === 'effects' ? DROP_EFFECTS :
                    activeTab === 'wins' ? WIN_ANIMATIONS :
                    activeTab === 'accessories' ? BOARD_ACCESSORIES :
-                   activeTab === 'emotes' ? EMOTES : [];
+                   activeTab === 'emotes' ? EMOTES :
+                   activeTab === 'outfits' ? OUTFIT_SHOP_ITEMS : [];
 
-  const items = collectionFilter === 'All' ? rawItems : rawItems.filter(item => item.collection === collectionFilter);
-  const collectionFilters: CollectionFilter[] = ['All', 'OG Collection', 'Season 0', 'Neon Pack', 'Mythic Collection'];
+  // Apply species super-filter FIRST when on outfits tab, then collection filter
+  const speciesFiltered = activeTab === 'outfits' && outfitSpecies !== 'All'
+    ? rawItems.filter((item) => {
+        const meta = OUTFITS[item.id];
+        return meta?.species === outfitSpecies;
+      })
+    : rawItems;
+  const items = collectionFilter === 'All' ? speciesFiltered : speciesFiltered.filter(item => item.collection === collectionFilter);
+  // Collection filters are dynamic per tab. For outfits, expose every unique
+  // collection ("Human · Modern Civilians", "Elven · Elven Warriors", ...).
+  const collectionFilters: (string)[] = activeTab === 'outfits'
+    ? (['All', ...Array.from(new Set(OUTFIT_SHOP_ITEMS.map((i) => i.collection).filter(Boolean))) as string[]])
+    : ['All', 'OG Collection', 'Season 0', 'Neon Pack', 'Mythic Collection'];
 
   const category = activeTab === 'boards' ? 'boards' :
                    activeTab === 'effects' ? 'dropEffects' :
@@ -590,7 +643,7 @@ export function ShopScreen() {
                 {tabs.map(tab => (
                   <Pressable
                     key={tab.key}
-                    onPress={() => { setActiveTab(tab.key); haptics.tap(); }}
+                    onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); }}
                     style={[s.tab, activeTab === tab.key && s.tabActive]}
                   >
                     <Text style={s.tabIcon}>{tab.icon}</Text>
@@ -606,6 +659,39 @@ export function ShopScreen() {
                 style={s.scrollFadeRight}
               />
             </View>
+
+            {/* Outfits-only: Species super-filter */}
+            {activeTab === 'outfits' && (
+              <View style={s.tabScrollWrap}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
+                  {([
+                    { id: 'All', label: 'All', icon: '\u{1F465}' },
+                    { id: 'human', label: 'Human', icon: '\u{1F464}' },
+                    { id: 'elves', label: 'Elf', icon: '\u{1F9DD}' },
+                    { id: 'goblin', label: 'Goblin', icon: '\u{1F47A}' },
+                    { id: 'skeleton', label: 'Skeleton', icon: '\u{1F480}' },
+                    { id: 'zombie', label: 'Zombie', icon: '\u{1F9DF}' },
+                  ] as const).map((sp) => (
+                    <Pressable
+                      key={sp.id}
+                      onPress={() => { setOutfitSpecies(sp.id as any); setCollectionFilter('All'); haptics.tap(); }}
+                      style={[s.collectionPill, outfitSpecies === sp.id && s.collectionPillActive]}
+                    >
+                      <Text style={[s.collectionPillText, outfitSpecies === sp.id && s.collectionPillTextActive]}>
+                        {sp.icon} {sp.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={s.scrollFadeRight}
+                />
+              </View>
+            )}
 
             {/* Collection filters */}
             {activeTab !== 'boxes' && activeTab !== 'pets' && (
@@ -667,10 +753,14 @@ export function ShopScreen() {
                   <ShopItemCard
                     key={item.id}
                     item={item}
-                    isOwned={category === 'emotes'
+                    isOwned={activeTab === 'outfits'
+                      ? ownedOutfits.includes(item.id)
+                      : category === 'emotes'
                       ? (ownedEmotes.includes(item.id) || item.price === 0)
                       : (owned[category]?.includes(item.id) ?? false)}
-                    isEquipped={category === 'emotes'
+                    isEquipped={activeTab === 'outfits'
+                      ? equippedOutfitId === item.id
+                      : category === 'emotes'
                       ? equippedEmotes.includes(item.id)
                       : equipped[
                           category === 'boards' ? 'board'
@@ -679,7 +769,9 @@ export function ShopScreen() {
                           : category === 'boardAccessories' ? 'boardAccessory'
                           : 'winAnimation'
                         ] === item.id}
-                    onPress={() => category === 'emotes'
+                    onPress={() => activeTab === 'outfits'
+                      ? handleOutfitPress(item)
+                      : category === 'emotes'
                       ? handleEmotePress(item)
                       : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
                     index={i}
