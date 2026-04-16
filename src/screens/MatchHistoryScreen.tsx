@@ -33,7 +33,12 @@ function FilterChip({ label, active, color, onPress }: {
   label: string; active: boolean; color: string; onPress: () => void;
 }) {
   return (
-    <Pressable onPress={() => { haptics.select(); onPress(); }}>
+    <Pressable
+      onPress={() => { haptics.select(); onPress(); }}
+      accessibilityRole="button"
+      accessibilityLabel={`Filter by ${label}`}
+      accessibilityState={{ selected: active }}
+    >
       <View style={[styles.chip, active && { backgroundColor: color + '30', borderColor: color + '60' }]}>
         <Text style={[styles.chipText, active && { color }]}>{label}</Text>
       </View>
@@ -45,7 +50,12 @@ function SortChip({ label, active, onPress }: {
   label: string; active: boolean; onPress: () => void;
 }) {
   return (
-    <Pressable onPress={() => { haptics.select(); onPress(); }}>
+    <Pressable
+      onPress={() => { haptics.select(); onPress(); }}
+      accessibilityRole="button"
+      accessibilityLabel={`Sort by ${label}`}
+      accessibilityState={{ selected: active }}
+    >
       <View style={[styles.chip, active && { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' }]}>
         <Text style={[styles.chipText, active && { color: colors.orange }]}>{label}</Text>
       </View>
@@ -270,7 +280,12 @@ export function MatchHistoryScreen() {
         }
         ListFooterComponent={
           hasMore ? (
-            <Pressable onPress={loadMore} style={styles.loadMore}>
+            <Pressable
+              onPress={loadMore}
+              style={styles.loadMore}
+              accessibilityRole="button"
+              accessibilityLabel="Load more matches"
+            >
               <LinearGradient
                 colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.05)']}
                 style={styles.loadMoreGradient}
