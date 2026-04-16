@@ -15,7 +15,7 @@ import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
-import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
+import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
@@ -33,7 +33,7 @@ import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import { FEATURES } from '../config/features';
-import { PressScale, Shimmer, BreathingView, SlideReveal } from '../components/animations';
+import { PressScale, BreathingView, SlideReveal } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
