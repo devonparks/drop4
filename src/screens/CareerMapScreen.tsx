@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,10 +35,7 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'CareerMap'>;
 };
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NODE_SIZE = 64;
-const TRAIL_WIDTH = 4;
-const PATH_INDENT = 60; // horizontal space for zigzag
 
 // ─────────────────────────────────────────────────────────────────────────
 // CareerMapScreen — Vertical Path (Candy Crush style)
