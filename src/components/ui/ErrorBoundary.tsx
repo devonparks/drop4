@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[Drop4 Error]', error, errorInfo);
+    if (__DEV__) console.error('[Drop4 Error]', error, errorInfo);
   }
 
   render() {
@@ -48,6 +48,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <Pressable
               onPress={() => this.setState({ showDetails: !this.state.showDetails })}
               style={styles.detailsToggle}
+              accessibilityRole="button"
+              accessibilityLabel={this.state.showDetails ? 'Hide error details' : 'Show error details'}
+              accessibilityState={{ expanded: this.state.showDetails }}
             >
               <Text style={styles.detailsToggleText}>
                 {this.state.showDetails ? 'Hide Details ▲' : 'Show Details ▼'}
@@ -64,12 +67,18 @@ export class ErrorBoundary extends Component<Props, State> {
                 styles.retryBtn,
                 pressed && styles.retryBtnPressed,
               ]}
+              accessibilityRole="button"
+              accessibilityLabel="Try again"
+              accessibilityHint="Reloads the screen"
             >
               <Text style={styles.retryText}>Try Again</Text>
             </Pressable>
             <Pressable
               onPress={() => this.setState({ hasError: false, error: null, showDetails: false })}
               style={styles.secondaryBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Go home"
+              accessibilityHint="Dismisses this error and returns to the app"
             >
               <Text style={styles.secondaryText}>Go Home</Text>
             </Pressable>
