@@ -135,8 +135,21 @@ function CharactersTab() {
 function CharCard({ char, equipped, unlocked, onEquip }: {
   char: RosterCharacter; equipped: boolean; unlocked: boolean; onEquip: () => void;
 }) {
+  const a11yLabel = unlocked
+    ? `${char.name}${char.isBoss ? ' (boss)' : ''}${equipped ? ', equipped' : ''}`
+    : 'Locked character';
+  const a11yHint = !unlocked
+    ? 'Beat the chapter boss to unlock'
+    : equipped
+    ? 'Already equipped'
+    : 'Equip this character';
   return (
-    <PressScale onPress={unlocked ? onEquip : undefined} disabled={!unlocked}>
+    <PressScale
+      onPress={unlocked ? onEquip : undefined}
+      disabled={!unlocked}
+      accessibilityLabel={a11yLabel}
+      accessibilityHint={a11yHint}
+    >
       <View style={[styles.charCard, { borderColor: equipped ? colors.greenLight : 'rgba(255,255,255,0.1)' }, !unlocked && { opacity: 0.45 }]}>
         <LinearGradient
           colors={unlocked ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)'] : ['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.15)']}
