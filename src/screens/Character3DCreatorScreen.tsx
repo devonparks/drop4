@@ -166,9 +166,15 @@ export function Character3DCreatorScreen({ navigation }: Props) {
       </View>
 
       {/* Tab bar */}
-      <View style={styles.tabRow}>
+      <View style={styles.tabRow} accessibilityRole="tablist">
         {TABS.map((t) => (
-          <PressScale key={t.id} onPress={() => { haptics.tap(); setActiveTab(t.id); }}>
+          <PressScale
+            key={t.id}
+            onPress={() => { haptics.tap(); setActiveTab(t.id); }}
+            accessibilityRole="tab"
+            accessibilityLabel={`${t.label} tab`}
+            accessibilityHint={`Customize your character's ${t.label.toLowerCase()}`}
+          >
             <View style={[styles.tab, activeTab === t.id && styles.tabActive]}>
               <Text style={styles.tabIcon}>{t.icon}</Text>
               <Text style={[styles.tabLabel, activeTab === t.id && styles.tabLabelActive]}>{t.label}</Text>
