@@ -73,7 +73,12 @@ export function CareerCityScreen({ navigation, route }: Props) {
       <ScreenBackground>
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>City not found.</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.errorBtn}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.errorBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Back to map"
+          >
             <Text style={styles.errorBtnText}>← Back to Map</Text>
           </Pressable>
         </View>
@@ -114,7 +119,13 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
       {/* ─── Header ─── */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Back to career map"
+        >
           <LinearGradient
             colors={[colors.orange, colors.orangeDark]}
             style={styles.backBtnBg}
@@ -185,6 +196,9 @@ export function CareerCityScreen({ navigation, route }: Props) {
           onPress={() => navigation.goBack()}
           style={styles.hudBtn}
           hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel="Map"
+          accessibilityHint="Return to the career map"
         >
           <LinearGradient colors={[colors.orange, colors.orangeDark]} style={styles.hudBtnBg}>
             <Text style={styles.hudBtnIcon}>‹</Text>
@@ -198,6 +212,9 @@ export function CareerCityScreen({ navigation, route }: Props) {
           onPress={() => { haptics.tap(); navigation.navigate('Roster'); }}
           style={styles.hudBtn}
           hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel="Roster"
+          accessibilityHint="Open the character roster"
         >
           <LinearGradient
             colors={[city.themeColor, city.accentColor]}
@@ -214,6 +231,9 @@ export function CareerCityScreen({ navigation, route }: Props) {
           onPress={() => { haptics.tap(); navigation.navigate('CharacterCreator'); }}
           style={styles.hudBtn}
           hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel="Customize"
+          accessibilityHint="Open the character creator"
         >
           <LinearGradient colors={['#9b59b6', '#6a3c8a']} style={styles.hudBtnBg}>
             <Text style={[styles.hudBtnIcon, { fontSize: 18 }]}>✎</Text>
@@ -227,6 +247,9 @@ export function CareerCityScreen({ navigation, route }: Props) {
           onPress={() => { haptics.tap(); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
           style={styles.hudBtn}
           hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel="Shop"
+          accessibilityHint="Open the shop"
         >
           <LinearGradient colors={[colors.coinGold, '#c89030']} style={styles.hudBtnBg}>
             <Text style={[styles.hudBtnIcon, { fontSize: 18 }]}>🛒</Text>
@@ -546,6 +569,14 @@ function OpponentNode({
     <Pressable
       onPress={onPress}
       disabled={isLocked}
+      accessibilityRole="button"
+      accessibilityLabel={
+        isLocked
+          ? `Locked opponent, rating ${rating}`
+          : `${level.opponent}${level.isBoss ? ', boss' : ''}, rating ${rating}${isComplete ? `, completed with ${stars} stars` : isNext ? ', next match' : ''}`
+      }
+      accessibilityState={{ disabled: isLocked, selected: isNext }}
+      accessibilityHint={isLocked ? undefined : 'Open match details'}
       style={{
         position: 'absolute',
         left: `${leftPct}%`,
@@ -704,7 +735,12 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+      <Pressable
+        style={styles.modalBackdrop}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss"
+      >
         <Animated.View
           style={[styles.modalCard, { transform: [{ translateY }] }]}
           onStartShouldSetResponder={() => true}
@@ -742,7 +778,12 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             )}
 
             <PressScale>
-            <Pressable style={styles.modalPlayBtn} onPress={() => onPlay(level)}>
+            <Pressable
+              style={styles.modalPlayBtn}
+              onPress={() => onPlay(level)}
+              accessibilityRole="button"
+              accessibilityLabel={`Play match against ${level.opponent}`}
+            >
               <LinearGradient
                 colors={[colors.orange, colors.orangeDark]}
                 style={styles.modalPlayBtnBg}
@@ -752,7 +793,12 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             </Pressable>
             </PressScale>
 
-            <Pressable style={styles.modalCloseBtn} onPress={onClose}>
+            <Pressable
+              style={styles.modalCloseBtn}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+            >
               <Text style={styles.modalCloseBtnText}>CANCEL</Text>
             </Pressable>
           </LinearGradient>
