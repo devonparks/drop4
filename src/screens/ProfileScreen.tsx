@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { PortraitFrame } from '../components/ui/PortraitFrame';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore, getCoinMilestoneInfo, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -159,7 +160,17 @@ export function ProfileScreen() {
               player level so you visibly upgrade your card as you grind.
             */}
             <PortraitFrame
-              image={require('../assets/images/characters/player_idle.png')}
+              // Live 3D portrait — reads the player's current outfit / hair /
+              // skin colors from characterStore, so the card always matches
+              // whatever they've got equipped. No floor, auto-rotate off for
+              // the card look (constant angle feels more "trophy portrait").
+              renderContent={(innerSize) => (
+                <Character3DPortrait
+                  width={innerSize}
+                  height={innerSize}
+                  showFloor={false}
+                />
+              )}
               rating={Math.min(99, 70 + Math.max(0, level - 1) * 2)}
               tier={
                 level >= 30 ? 'darkmatter' :

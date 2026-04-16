@@ -3,6 +3,8 @@ import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native
 import { LinearGradient } from 'expo-linear-gradient';
 import { fonts, weight } from '../../theme/typography';
 
+type RenderContent = (innerSize: number) => React.ReactNode;
+
 // ═══════════════════════════════════════════════════════════════════════
 // PortraitFrame
 //
@@ -40,7 +42,15 @@ const FRAMES: Record<PortraitTier, TierFrame> = {
 };
 
 interface PortraitFrameProps {
-  image: ImageSourcePropType;
+  /** 2D portrait source. Required unless `renderContent` is provided. */
+  image?: ImageSourcePropType;
+  /**
+   * Optional render prop for custom content inside the inner circle
+   * (e.g. a 3D character portrait). Receives the innerSize so the
+   * content can be sized to fill the crop exactly. Takes precedence
+   * over `image` when provided.
+   */
+  renderContent?: RenderContent;
   rating: number;
   tier: PortraitTier;
   size?: number;
@@ -54,6 +64,7 @@ interface PortraitFrameProps {
 
 export function PortraitFrame({
   image,
+  renderContent,
   rating,
   tier,
   size = 160,
@@ -140,18 +151,22 @@ export function PortraitFrame({
               overflow: 'hidden',
             }}
           >
-            <Image
-              source={image}
-              style={{
-                width: innerSize,
-                height: innerSize,
-                transform: [
-                  { scale: imageScale },
-                  { translateY: innerSize * imageTranslateY },
-                ],
-              }}
-              resizeMode="contain"
-            />
+            {renderContent ? (
+              renderContent(innerSize)
+            ) : image ? (
+              <Image
+                source={image}
+                style={{
+                  width: innerSize,
+                  height: innerSize,
+                  transform: [
+                    { scale: imageScale },
+                    { translateY: innerSize * imageTranslateY },
+                  ],
+                }}
+                resizeMode="contain"
+              />
+            ) : null}
           </View>
 
           {/* Top light gradient — soft highlight for depth */}
