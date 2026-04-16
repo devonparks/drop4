@@ -7,7 +7,6 @@ import { getCharacter } from '../../data/characterRoster';
 import { AnimatedCharacter } from '../ui/AnimatedCharacter';
 import { playSound } from '../../services/audio';
 import { haptics } from '../../services/haptics';
-import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
 /**
