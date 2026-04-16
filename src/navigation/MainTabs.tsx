@@ -8,7 +8,6 @@ import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { CollectionScreen } from '../screens/CollectionScreen';
 import { haptics } from '../services/haptics';
 import { useChallengeStore } from '../stores/challengeStore';
-import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
