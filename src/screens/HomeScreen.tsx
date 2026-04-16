@@ -9,7 +9,7 @@ import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVari
 import { Character3D } from '../components/3d/Character3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
-import { HUMAN_EMOTES } from '../data/animationRegistry';
+import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
 import { EmotePickerModal3D } from '../components/ui/EmotePickerModal3D';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
@@ -96,9 +96,14 @@ function StageSparkles() {
 function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null }) {
   const cust = useCharacterStore((s) => s.customization);
   const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
+  // When an emote is active, play it once. Otherwise, loop the default idle
+  // so the character is never stuck in T-pose.
   const emoteMeta = activeEmoteId
     ? HUMAN_EMOTES.find((e) => e.id === activeEmoteId) ?? null
     : null;
+  const defaultIdle = DEFAULT_HUMAN_IDLE;
+  const animGlb = emoteMeta?.glb ?? defaultIdle?.glb;
+  const isEmote = !!emoteMeta;
   return (
     <Character3D
       width={320}
@@ -110,8 +115,8 @@ function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null })
       bodyType={cust.bodyType}
       bodySize={cust.bodySize}
       muscle={cust.muscle}
-      animationGlb={emoteMeta?.glb}
-      animationLoop={!emoteMeta}
+      animationGlb={animGlb}
+      animationLoop={!isEmote}
     />
   );
 }

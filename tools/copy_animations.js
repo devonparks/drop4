@@ -18,62 +18,63 @@ const UNITY_ROOT = path.resolve(
 );
 const OUT_ROOT = path.resolve(__dirname, '..', 'fbx_export', 'animations');
 
-// Pair: [source absolute path, destination basename (no ext)]
-// Note: we pick Masculine versions by default — Feminine variants also exist if needed.
-const MASC = `${UNITY_ROOT}/Synty/AnimationIdles/Animations/Polygon/Masculine`;
-const FEMN = `${UNITY_ROOT}/Synty/AnimationIdles/Animations/Polygon/Feminine`;
-const EMOTES_M = `${UNITY_ROOT}/Synty/AnimationEmotesAndTaunts/Animations/Polygon/Masculine`;
-const EMOTES_F = `${UNITY_ROOT}/Synty/AnimationEmotesAndTaunts/Animations/Polygon/Feminine`;
-const LOCO_M = `${UNITY_ROOT}/Synty/AnimationBaseLocomotion/Animations/Polygon/Masculine`;
+// CRITICAL: Use Sidekick (A_MOD_*) clips, NOT Polygon (A_POLY_*) clips!
+// The Character Creator exports use the Sidekick skeleton bone names.
+// Polygon clips have different bone names (UpperLeg_R vs the Sidekick names)
+// and will result in T-pose with "No target node found" warnings.
+const MASC = `${UNITY_ROOT}/Synty/AnimationIdles/Animations/Sidekick/Masculine`;
+const FEMN = `${UNITY_ROOT}/Synty/AnimationIdles/Animations/Sidekick/Feminine`;
+const EMOTES_M = `${UNITY_ROOT}/Synty/AnimationEmotesAndTaunts/Animations/Sidekick/Masculine`;
+const EMOTES_F = `${UNITY_ROOT}/Synty/AnimationEmotesAndTaunts/Animations/Sidekick/Feminine`;
 const DOG = `${UNITY_ROOT}/PolygonDog/Animations`;
 
 // Curated idles (loops only — enter/exit excluded)
 const HUMAN_IDLES = [
   // Base standing loop (the default)
-  [`${MASC}/Base/Stances/A_POLY_IDL_Base_Masc.fbx`, 'idle_base'],
+  [`${MASC}/Base/Stances/A_MOD_IDL_Base_Masc.fbx`, 'idle_base'],
   // Looping stances — these cycle on home screen
-  [`${MASC}/ArmsFolded/Stances/A_POLY_IDL_ArmsFolded_Casual_Loop_Masc.fbx`, 'idle_arms_folded'],
-  [`${MASC}/HandsOnHips/Stances/A_POLY_IDL_HandsOnHips_Base_Loop_Masc.fbx`, 'idle_hands_on_hips'],
-  [`${MASC}/HandsOnHips/Stances/A_POLY_IDL_HandsOnHips_Grumpy_Loop_Masc.fbx`, 'idle_hands_on_hips_grumpy'],
+  [`${MASC}/ArmsFolded/Stances/A_MOD_IDL_ArmsFolded_Casual_Loop_Masc.fbx`, 'idle_arms_folded'],
+  [`${MASC}/HandsOnHips/Stances/A_MOD_IDL_HandsOnHips_Base_Loop_Masc.fbx`, 'idle_hands_on_hips'],
+  [`${MASC}/HandsOnHips/Stances/A_MOD_IDL_HandsOnHips_Grumpy_Loop_Masc.fbx`, 'idle_hands_on_hips_grumpy'],
   // Short idle actions (one-shots that blend back to base)
-  [`${MASC}/Bored/Actions/A_POLY_IDL_Bored_FootTap_Masc.fbx`, 'idle_bored_foot_tap'],
-  [`${MASC}/Bored/Actions/A_POLY_IDL_Bored_SwingArms_Masc.fbx`, 'idle_bored_swing_arms'],
-  [`${MASC}/Bored/Actions/A_POLY_IDL_Bored_SlumpBack_Masc.fbx`, 'idle_bored_slump'],
-  [`${MASC}/CheckWatch/Actions/A_POLY_IDL_CheckWatch_Masc.fbx`, 'idle_check_watch'],
+  [`${MASC}/Bored/Actions/A_MOD_IDL_Bored_FootTap_Masc.fbx`, 'idle_bored_foot_tap'],
+  [`${MASC}/Bored/Actions/A_MOD_IDL_Bored_SwingArms_Masc.fbx`, 'idle_bored_swing_arms'],
+  [`${MASC}/Bored/Actions/A_MOD_IDL_Bored_SlumpBack_Masc.fbx`, 'idle_bored_slump'],
+  [`${MASC}/CheckWatch/Actions/A_MOD_IDL_CheckWatch_Masc.fbx`, 'idle_check_watch'],
   // Feminine base (for feminine preset)
-  [`${FEMN}/Base/Stances/A_POLY_IDL_Base_Femn.fbx`, 'idle_base_femn'],
-  [`${FEMN}/HandsOnHips/Stances/A_POLY_IDL_HandsOnHips_Base_Loop_Femn.fbx`, 'idle_hands_on_hips_femn'],
-  [`${FEMN}/ArmsFolded/Stances/A_POLY_IDL_ArmsFolded_Casual_Loop_Femn.fbx`, 'idle_arms_folded_femn'],
+  [`${FEMN}/Base/Stances/A_MOD_IDL_Base_Femn.fbx`, 'idle_base_femn'],
+  [`${FEMN}/HandsOnHips/Stances/A_MOD_IDL_HandsOnHips_Base_Loop_Femn.fbx`, 'idle_hands_on_hips_femn'],
+  [`${FEMN}/ArmsFolded/Stances/A_MOD_IDL_ArmsFolded_Casual_Loop_Femn.fbx`, 'idle_arms_folded_femn'],
 ];
 
 // Curated emotes (taunts, dances, celebrations, greets). These are one-shot.
 const HUMAN_EMOTES = [
   // Dances
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_Dab_Masc.fbx`, 'emote_dab'],
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_AirGuitar_Masc.fbx`, 'emote_air_guitar'],
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_BeatChest_Masc.fbx`, 'emote_beat_chest'],
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_Clapping_Polite_Masc.fbx`, 'emote_clap'],
-  [`${EMOTES_M}/Dance/A_POLY_EMOT_Dance_ChestPump_Masc.fbx`, 'emote_dance_chest_pump'],
-  [`${EMOTES_M}/Dance/A_POLY_EMOT_Dance_RunningStep_Masc.fbx`, 'emote_dance_running_step'],
-  [`${EMOTES_M}/Dance/A_POLY_EMOT_Dance_Spin_Slick_Masc.fbx`, 'emote_dance_spin_slick'],
-  [`${EMOTES_M}/Dance/A_POLY_EMOT_Dance_Twist_Masc.fbx`, 'emote_dance_twist'],
-  [`${EMOTES_M}/Dance/A_POLY_EMOT_Dance_GreasedLightnin_Masc.fbx`, 'emote_dance_greased'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_Dab_Masc.fbx`, 'emote_dab'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_AirGuitar_Masc.fbx`, 'emote_air_guitar'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_BeatChest_Masc.fbx`, 'emote_beat_chest'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_Clapping_Polite_Masc.fbx`, 'emote_clap'],
+  [`${EMOTES_M}/Dance/A_MOD_EMOT_Dance_ChestPump_Masc.fbx`, 'emote_dance_chest_pump'],
+  [`${EMOTES_M}/Dance/A_MOD_EMOT_Dance_RunningStep_Masc.fbx`, 'emote_dance_running_step'],
+  [`${EMOTES_M}/Dance/A_MOD_EMOT_Dance_Spin_Slick_Masc.fbx`, 'emote_dance_spin_slick'],
+  [`${EMOTES_M}/Dance/A_MOD_EMOT_Dance_Twist_Masc.fbx`, 'emote_dance_twist'],
+  [`${EMOTES_M}/Dance/A_MOD_EMOT_Dance_GreasedLightnin_Masc.fbx`, 'emote_dance_greased'],
   // Greets / gestures
-  [`${EMOTES_M}/Greet/A_POLY_EMOT_Greet_Bow_Masc.fbx`, 'emote_bow'],
-  [`${EMOTES_M}/Greet/A_POLY_EMOT_Greet_Beckon_Finger_Masc.fbx`, 'emote_beckon'],
+  [`${EMOTES_M}/Greet/A_MOD_EMOT_Greet_Bow_Masc.fbx`, 'emote_bow'],
+  [`${EMOTES_M}/Greet/A_MOD_EMOT_Greet_Beckon_Finger_Masc.fbx`, 'emote_beckon'],
   // Aggression / taunts
-  [`${EMOTES_M}/Aggressive/A_POLY_EMOT_Aggressive_MenacingFists_Masc.fbx`, 'emote_menacing_fists'],
-  [`${EMOTES_M}/Aggressive/A_POLY_EMOT_Aggressive_ThumbsDown_Roman_Masc.fbx`, 'emote_thumbs_down'],
-  [`${EMOTES_M}/Angry/A_POLY_EMOT_Angry_ShakeFist_Masc.fbx`, 'emote_shake_fist'],
-  [`${EMOTES_M}/Angry/A_POLY_EMOT_Angry_Tantrum_Masc.fbx`, 'emote_tantrum'],
+  [`${EMOTES_M}/Aggressive/A_MOD_EMOT_Aggressive_MenacingFists_Masc.fbx`, 'emote_menacing_fists'],
+  [`${EMOTES_M}/Aggressive/A_MOD_EMOT_Aggressive_ThumbsDown_Roman_Masc.fbx`, 'emote_thumbs_down'],
+  [`${EMOTES_M}/Angry/A_MOD_EMOT_Angry_ShakeFist_Masc.fbx`, 'emote_shake_fist'],
+  [`${EMOTES_M}/Angry/A_MOD_EMOT_Angry_Tantrum_Masc.fbx`, 'emote_tantrum'],
   // Affection
-  [`${EMOTES_F}/Affection/A_POLY_EMOT_Affection_BlowKiss_Femn.fbx`, 'emote_blow_kiss'],
-  [`${EMOTES_F}/Affection/A_POLY_EMOT_Affection_HeartHands_Femn.fbx`, 'emote_heart_hands'],
-  [`${EMOTES_F}/Affection/A_POLY_EMOT_Affection_FingerHeart_Femn.fbx`, 'emote_finger_heart'],
+  [`${EMOTES_F}/Affection/A_MOD_EMOT_Affection_BlowKiss_Femn.fbx`, 'emote_blow_kiss'],
+  [`${EMOTES_F}/Affection/A_MOD_EMOT_Affection_HeartHands_Femn.fbx`, 'emote_heart_hands'],
+  [`${EMOTES_F}/Affection/A_MOD_EMOT_Affection_FingerHeart_Femn.fbx`, 'emote_finger_heart'],
   // Celebrate (more wins)
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_FingerGuns_Single_Masc.fbx`, 'emote_finger_guns'],
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_DustShoulder_Masc.fbx`, 'emote_dust_shoulder'],
-  [`${EMOTES_M}/Celebrate/A_POLY_EMOT_Celebrate_HandOnHeart_Masc.fbx`, 'emote_hand_on_heart'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_FingerGuns_Single_Masc.fbx`, 'emote_finger_guns'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_DustShoulder_Masc.fbx`, 'emote_dust_shoulder'],
+  [`${EMOTES_M}/Celebrate/A_MOD_EMOT_Celebrate_HandOnHeart_Masc.fbx`, 'emote_hand_on_heart'],
 ];
 
 // Dog animations — actions are already loops or one-shots
