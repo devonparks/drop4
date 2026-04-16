@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -261,11 +262,11 @@ export function ReplayViewerScreen() {
         <Text style={rStyles.subtitle}>{replays.length} saved</Text>
 
         {replays.length === 0 ? (
-          <View style={rStyles.emptyState}>
+          <Animated.View entering={FadeIn.duration(280)} style={rStyles.emptyState}>
             <Text style={rStyles.emptyIcon}>🎬</Text>
             <Text style={rStyles.emptyText}>No replays yet</Text>
             <Text style={rStyles.emptySubtext}>Play some games and they'll appear here</Text>
-          </View>
+          </Animated.View>
         ) : (
           <ScrollView contentContainerStyle={rStyles.replayList} showsVerticalScrollIndicator={false}>
             {replays.map(replay => (
