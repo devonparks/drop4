@@ -14,7 +14,6 @@ import { EmotePickerModal3D } from '../components/ui/EmotePickerModal3D';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
-import { IdlePicker } from '../components/ui/IdlePicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -275,7 +274,6 @@ export function HomeScreen() {
   // Subscribed so taps on the character resolve the current preference.
   const selectedHomeEmote = useShopStore((s) => s.selectedHomeEmote);
   const homeEmoteRandomMode = useShopStore((s) => s.homeEmoteRandomMode);
-  const [idlePickerOpen, setIdlePickerOpen] = useState(false);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
