@@ -40,8 +40,16 @@ export function PlayerHUD({ name, avatar, level, pieceColor, score, isActive, si
   const borderColor = pieceColor === 'red' ? colors.pieceRed : colors.pieceYellow;
   const glowColor = pieceColor === 'red' ? 'rgba(230,57,70,0.6)' : 'rgba(244,166,35,0.6)';
 
+  const pieceName = pieceColor === 'red' ? 'Red' : 'Yellow';
+  const hudLabel = `${name}, level ${level}, ${pieceName} piece, score ${score}${isActive ? ', current turn' : ''}`;
+
   return (
-    <Animated.View style={[styles.container, side === 'right' && styles.containerRight, animStyle]}>
+    <Animated.View
+      style={[styles.container, side === 'right' && styles.containerRight, animStyle]}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={hudLabel}
+    >
       {/* Avatar with frame */}
       <View style={[
         styles.avatarFrame,
