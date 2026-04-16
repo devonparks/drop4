@@ -206,7 +206,7 @@ export function MatchHistoryScreen() {
         ListHeaderComponent={
           <>
             {/* Header */}
-            <Text style={styles.title}>MATCH HISTORY</Text>
+            <Text style={styles.title} accessibilityRole="header">MATCH HISTORY</Text>
             <Text style={styles.subtitle}>{allMatches.length} total games played</Text>
 
             {/* Summary stats row */}
@@ -234,7 +234,7 @@ export function MatchHistoryScreen() {
             </View>
 
             {/* Filters */}
-            <Text style={styles.sectionLabel}>FILTER</Text>
+            <Text style={styles.sectionLabel} accessibilityRole="header">FILTER</Text>
             <View style={styles.chipRow}>
               {FILTER_OPTIONS.map(opt => (
                 <FilterChip
@@ -248,7 +248,7 @@ export function MatchHistoryScreen() {
             </View>
 
             {/* Sort */}
-            <Text style={styles.sectionLabel}>SORT BY</Text>
+            <Text style={styles.sectionLabel} accessibilityRole="header">SORT BY</Text>
             <View style={styles.chipRow}>
               {SORT_OPTIONS.map(opt => (
                 <SortChip
