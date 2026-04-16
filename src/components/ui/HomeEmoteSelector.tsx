@@ -50,7 +50,14 @@ function EmoteCard({ id, isSelected, onPress }: EmoteCardProps) {
   const emoji = EMOTE_EMOJI[id] || '❓';
   const name = EMOTE_NAME[id] || id;
   return (
-    <Pressable onPress={onPress} style={[styles.card, isSelected && styles.cardSelected]}>
+    <Pressable
+      onPress={onPress}
+      style={[styles.card, isSelected && styles.cardSelected]}
+      accessibilityRole="button"
+      accessibilityLabel={isSelected ? `${name} emote, equipped` : `Equip ${name} emote`}
+      accessibilityHint="Sets this emote as your home tap reaction"
+      accessibilityState={{ selected: isSelected }}
+    >
       <LinearGradient
         colors={
           isSelected
@@ -178,7 +185,13 @@ export function HomeEmoteSelector({ visible, onClose }: HomeEmoteSelectorProps) 
 
         {/* Close button */}
         <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
-          <Pressable onPress={onClose} style={styles.closeBtn}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close emote picker"
+            accessibilityHint="Returns to the home screen"
+          >
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
               style={styles.closeBtnGradient}
