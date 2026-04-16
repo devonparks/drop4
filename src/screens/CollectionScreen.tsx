@@ -48,6 +48,9 @@ export function CollectionScreen() {
             key={tab.id}
             onPress={() => { haptics.tap(); setActiveTab(tab.id); }}
             style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+            accessibilityRole="tab"
+            accessibilityLabel={tab.label}
+            accessibilityState={{ selected: activeTab === tab.id }}
           >
             <Text style={styles.tabIcon}>{tab.icon}</Text>
             <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
