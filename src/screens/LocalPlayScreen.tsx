@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { colors } from '../theme/colors';
@@ -49,11 +50,15 @@ export function LocalPlayScreen({ navigation }: Props) {
         />
 
         <View style={styles.mainContent}>
-          <Text style={styles.title}>LOCAL PLAY</Text>
-          <Text style={styles.subtitle}>Pass & Play on one device</Text>
+          <StaggeredEntry index={0} delay={60}>
+            <Text style={styles.title}>LOCAL PLAY</Text>
+          </StaggeredEntry>
+          <StaggeredEntry index={1} delay={60}>
+            <Text style={styles.subtitle}>Pass & Play on one device</Text>
+          </StaggeredEntry>
 
           {/* Player 1 */}
-          <View style={styles.playerCard}>
+          <StaggeredEntry index={2} delay={60} style={styles.playerCard}>
             <LinearGradient
               colors={['rgba(230,57,70,0.12)', 'rgba(230,57,70,0.04)']}
               style={styles.playerGradient}
@@ -73,16 +78,16 @@ export function LocalPlayScreen({ navigation }: Props) {
               />
               <Text style={styles.pieceIcon}>🔴</Text>
             </LinearGradient>
-          </View>
+          </StaggeredEntry>
 
-          <View style={styles.vsWrap}>
+          <StaggeredEntry index={3} delay={60} style={styles.vsWrap}>
             <View style={styles.vsLine} />
             <Text style={styles.vsText}>VS</Text>
             <View style={styles.vsLine} />
-          </View>
+          </StaggeredEntry>
 
           {/* Player 2 */}
-          <View style={styles.playerCard}>
+          <StaggeredEntry index={4} delay={60} style={styles.playerCard}>
             <LinearGradient
               colors={['rgba(244,166,35,0.12)', 'rgba(244,166,35,0.04)']}
               style={styles.playerGradient}
@@ -102,15 +107,17 @@ export function LocalPlayScreen({ navigation }: Props) {
               />
               <Text style={styles.pieceIcon}>🟡</Text>
             </LinearGradient>
-          </View>
+          </StaggeredEntry>
 
-          <GlossyButton
-            label="START GAME"
-            variant="orange"
-            iconRight="▶"
-            onPress={startLocalGame}
-            style={{ marginTop: 16 }}
-          />
+          <StaggeredEntry index={5} delay={60}>
+            <GlossyButton
+              label="START GAME"
+              variant="orange"
+              iconRight="▶"
+              onPress={startLocalGame}
+              style={{ marginTop: 16 }}
+            />
+          </StaggeredEntry>
         </View>
       </View>
     </ScreenBackground>
