@@ -116,7 +116,7 @@ export function LearnScreen({ navigation }: Props) {
 
           <ScrollView contentContainerStyle={styles.lessonDetail}>
             <Text style={styles.lessonIcon}>{selected.icon}</Text>
-            <Text style={styles.lessonTitle}>{selected.title}</Text>
+            <Text style={styles.lessonTitle} accessibilityRole="header">{selected.title}</Text>
             <Text style={[styles.diffLabel, { color: DIFF_COLORS[selected.difficulty] }]}>
               {selected.difficulty.toUpperCase()}
             </Text>
@@ -162,7 +162,7 @@ export function LearnScreen({ navigation }: Props) {
 
         <View style={styles.headerRow}>
           <Text style={styles.headerIcon}>{'\uD83D\uDCD6'}</Text>
-          <Text style={styles.title}>STRATEGY GUIDE</Text>
+          <Text style={styles.title} accessibilityRole="header">STRATEGY GUIDE</Text>
         </View>
         <Text style={styles.subtitle}>Master every technique</Text>
 
