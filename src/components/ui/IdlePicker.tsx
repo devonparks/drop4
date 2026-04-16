@@ -116,7 +116,13 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
           showsVerticalScrollIndicator={false}
         >
           {/* Reset to default option */}
-          <Pressable onPress={handleClear} style={[styles.idleCard, !equippedIdle && !previewIdle && styles.idleCardEquipped]}>
+          <Pressable
+            onPress={handleClear}
+            style={[styles.idleCard, !equippedIdle && !previewIdle && styles.idleCardEquipped]}
+            accessibilityRole="button"
+            accessibilityLabel="Default idle — random variants"
+            accessibilityState={{ selected: !equippedIdle && !previewIdle }}
+          >
             <LinearGradient
               colors={!equippedIdle && !previewIdle
                 ? ['rgba(100,180,255,0.15)', 'rgba(100,180,255,0.06)']
@@ -145,6 +151,10 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
                 key={id}
                 onPress={() => handleTap(id)}
                 style={[styles.idleCard, isActive && styles.idleCardEquipped]}
+                accessibilityRole="button"
+                accessibilityLabel={`${info.name} idle animation`}
+                accessibilityHint="Tap to preview"
+                accessibilityState={{ selected: isActive }}
               >
                 <LinearGradient
                   colors={isActive
@@ -162,7 +172,12 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
                   </View>
                   {isEquipped && <Text style={styles.equippedBadge}>EQUIPPED</Text>}
                   {isPreviewing && (
-                    <Pressable onPress={handleEquip} style={styles.equipBtn}>
+                    <Pressable
+                      onPress={handleEquip}
+                      style={styles.equipBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Equip ${info.name} idle`}
+                    >
                       <Text style={styles.equipBtnText}>EQUIP</Text>
                     </Pressable>
                   )}
@@ -175,7 +190,12 @@ export function IdlePicker({ visible, onClose, onPreview }: IdlePickerProps) {
 
         {/* Close button */}
         <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
-          <Pressable onPress={handleClose} style={styles.closeBtn}>
+          <Pressable
+            onPress={handleClose}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close idle picker"
+          >
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
               style={styles.closeBtnGradient}
