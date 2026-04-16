@@ -89,7 +89,7 @@ const MODE_BADGES: Record<string, { label: string; color: string }> = {
   online: { label: 'Online', color: '#1abc9c' },
 };
 
-function MatchRow({ match }: { match: MatchRecord }) {
+const MatchRow = React.memo(function MatchRow({ match }: { match: MatchRecord }) {
   const resultColors = {
     win: colors.green,
     loss: colors.pieceRed,
@@ -98,7 +98,6 @@ function MatchRow({ match }: { match: MatchRecord }) {
   const resultLabels = { win: 'WIN', loss: 'LOSS', draw: 'DRAW' };
 
   const modeBadge = MODE_BADGES[match.mode] || MODE_BADGES.ai;
-  // Build difficulty label: show "Easy"/"Medium"/"Hard" for AI, or just difficulty as-is
   const diffLabel = match.difficulty
     ? match.difficulty.charAt(0).toUpperCase() + match.difficulty.slice(1)
     : '';
@@ -135,7 +134,7 @@ function MatchRow({ match }: { match: MatchRecord }) {
       </View>
     </View>
   );
-}
+});
 
 export function MatchHistoryScreen() {
   const navigation = useNavigation();
