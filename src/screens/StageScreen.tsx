@@ -29,6 +29,14 @@ function CourtCard({ court, coins, playerLevel, playerTier, onPress }: {
     <Pressable
       onPress={() => { if (canPlay) { haptics.tap(); onPress(); } }}
       style={[styles.courtCard, !canPlay && { opacity: 0.4 }]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !canPlay }}
+      accessibilityLabel={
+        court.entryFee > 0
+          ? `Enter ${court.name}, entry ${court.entryFee} coins, win ${court.winnerGets} coins`
+          : `Enter ${court.name}, free play`
+      }
+      accessibilityHint={!canPlay && check.reason ? `Locked: ${check.reason}` : undefined}
     >
       <LinearGradient
         colors={[court.bgColor, 'rgba(0,0,0,0)']}
