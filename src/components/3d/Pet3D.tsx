@@ -96,8 +96,20 @@ function PetModel({
       mixerRef.current = null;
     }
     if (!prepared || !animGltf) return;
-    const clip = animGltf.animations?.[0];
-    if (!clip) return;
+    const rawClip = animGltf.animations?.[0];
+    if (!rawClip) return;
+    // Strip path prefixes so track names match bone names in the pet model
+    const clip = rawClip.clone();
+    for (const track of clip.tracks) {
+      const dotIdx = track.name.lastIndexOf('.');
+      if (dotIdx === -1) continue;
+      const pathPart = track.name.substring(0, dotIdx);
+      const propPart = track.name.substring(dotIdx);
+      const slashIdx = pathPart.lastIndexOf('/');
+      if (slashIdx !== -1) {
+        track.name = pathPart.substring(slashIdx + 1) + propPart;
+      }
+    }
     try {
       const mixer = new THREE.AnimationMixer(prepared);
       const action = mixer.clipAction(clip);

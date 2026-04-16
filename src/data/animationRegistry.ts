@@ -21,10 +21,13 @@ export interface AnimationMeta {
 }
 
 // ── Humans: Idles (loops) ──
+// NOTE: "idle_hands_on_hips" is first (= default) because Synty's "base"
+// idle has arms at 45° which looks like T-pose to players. Hands-on-hips
+// is a more natural, confident default stance with arms visibly down.
 export const HUMAN_IDLES: AnimationMeta[] = [
-  { id: 'idle_base',                 name: 'Base',          glb: require('../assets/models/animations/idles/idle_base.glb'),                 loop: true, category: 'idle' },
-  { id: 'idle_arms_folded',          name: 'Arms Folded',   glb: require('../assets/models/animations/idles/idle_arms_folded.glb'),          loop: true, category: 'idle' },
   { id: 'idle_hands_on_hips',        name: 'Hands On Hips', glb: require('../assets/models/animations/idles/idle_hands_on_hips.glb'),        loop: true, category: 'idle' },
+  { id: 'idle_arms_folded',          name: 'Arms Folded',   glb: require('../assets/models/animations/idles/idle_arms_folded.glb'),          loop: true, category: 'idle' },
+  { id: 'idle_base',                 name: 'Base',          glb: require('../assets/models/animations/idles/idle_base.glb'),                 loop: true, category: 'idle' },
   { id: 'idle_hands_on_hips_grumpy', name: 'Grumpy',        glb: require('../assets/models/animations/idles/idle_hands_on_hips_grumpy.glb'), loop: true, category: 'idle' },
   { id: 'idle_base_femn',            name: 'Base (F)',      glb: require('../assets/models/animations/idles/idle_base_femn.glb'),            loop: true, category: 'idle' },
   { id: 'idle_hands_on_hips_femn',   name: 'Hands On Hips (F)', glb: require('../assets/models/animations/idles/idle_hands_on_hips_femn.glb'), loop: true, category: 'idle' },

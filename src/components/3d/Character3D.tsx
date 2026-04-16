@@ -163,6 +163,22 @@ function CharacterModel({
     if (!bodyGltf) return null;
     const clone = bodyGltf.scene.clone(true);
 
+    // Fix skeleton binding: Object3D.clone(true) creates new bone objects
+    // in the cloned hierarchy but SkinnedMesh.skeleton.bones still points
+    // to the ORIGINAL bones. We rebind each SkinnedMesh to use the cloned
+    // bones so AnimationMixer transforms are visible on the rendered mesh.
+    const bonesByName = new Map<string, any>();
+    clone.traverse((n: any) => { if (n.isBone) bonesByName.set(n.name, n); });
+    clone.traverse((child: any) => {
+      if (child.isSkinnedMesh && child.skeleton) {
+        const newBones = child.skeleton.bones.map(
+          (b: any) => bonesByName.get(b.name) || b
+        );
+        child.skeleton = new THREE.Skeleton(newBones);
+        child.bind(child.skeleton);
+      }
+    });
+
     const meshes: any[] = [];
     clone.traverse((child: any) => {
       if (child.isMesh || child.isSkinnedMesh) {
@@ -276,13 +292,32 @@ function CharacterModel({
       }
       return;
     }
-    const clip = animGltf.animations?.[0];
-    if (!clip) return;
+    const rawClip = animGltf.animations?.[0];
+    if (!rawClip) return;
+
+    // Fix track binding: standalone animation GLBs store track paths as
+    // "Root/Hips/Spine/Chest.quaternion" but the character model's scene
+    // graph has a different hierarchy. Strip the directory prefix so THREE
+    // matches by BONE NAME only (e.g. "Chest.quaternion"). This is the
+    // standard retargeting approach for Synty Sidekick cross-GLB animations.
+    const clip = rawClip.clone();
+    for (const track of clip.tracks) {
+      const dotIdx = track.name.lastIndexOf('.');
+      if (dotIdx === -1) continue;
+      const pathPart = track.name.substring(0, dotIdx); // "Root/Hips/Spine/Chest"
+      const propPart = track.name.substring(dotIdx);     // ".quaternion"
+      const slashIdx = pathPart.lastIndexOf('/');
+      if (slashIdx !== -1) {
+        // Strip path, keep only the leaf bone name + property
+        track.name = pathPart.substring(slashIdx + 1) + propPart;
+      }
+    }
 
     try {
       // Reuse the same mixer if we already have one (keeps state consistent
       // for crossfade). Otherwise create a fresh one bound to the model.
       const mixer = mixerRef.current ?? new THREE.AnimationMixer(prepared.clone);
+      // (debug logging removed for production)
       const newAction = mixer.clipAction(clip);
       newAction.setLoop(
         animationLoop === false ? THREE.LoopOnce : THREE.LoopRepeat,
