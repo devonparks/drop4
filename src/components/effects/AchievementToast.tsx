@@ -33,7 +33,15 @@ export function AchievementToast({ name, icon = '🏆', visible, onDone }: Achie
 
   return (
     <View style={styles.container} pointerEvents="none">
-      <Animated.View entering={SlideInRight.springify()} exiting={FadeOut} style={styles.toast}>
+      <Animated.View
+        entering={SlideInRight.springify()}
+        exiting={FadeOut}
+        style={styles.toast}
+        accessible
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={`Achievement unlocked: ${name}`}
+      >
         <Text style={styles.icon}>{icon}</Text>
         <View>
           <Text style={styles.label}>ACHIEVEMENT UNLOCKED</Text>
