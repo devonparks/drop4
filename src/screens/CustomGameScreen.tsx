@@ -451,6 +451,8 @@ export function CustomGameScreen({ navigation }: Props) {
                     onChangeText={(text) => setMatchCode(text.toUpperCase().slice(0, 6))}
                     maxLength={6}
                     autoCapitalize="characters"
+                    accessibilityLabel="Match code"
+                    accessibilityHint="Enter the 6-character code your friend shared to join their match"
                   />
                   <Pressable
                     onPress={() => { haptics.tap(); }}
