@@ -12,7 +12,6 @@ import { OUTFITS } from '../data/outfitRegistry';
 import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
 import { EmotePickerModal3D } from '../components/ui/EmotePickerModal3D';
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
-import { HomeEmoteSelector } from '../components/ui/HomeEmoteSelector';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
