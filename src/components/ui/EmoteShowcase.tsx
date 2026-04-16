@@ -181,6 +181,9 @@ export function EmoteShowcase({ visible, onClose }: EmoteShowcaseProps) {
           <Pressable
             onPress={() => { haptics.tap(); setActiveCategory(null); }}
             style={[styles.categoryChip, !activeCategory && styles.categoryChipActive]}
+            accessibilityRole="button"
+            accessibilityLabel="Show all emote categories"
+            accessibilityState={{ selected: !activeCategory }}
           >
             <Text style={[styles.categoryChipText, !activeCategory && styles.categoryChipTextActive]}>
               All
@@ -193,6 +196,10 @@ export function EmoteShowcase({ visible, onClose }: EmoteShowcaseProps) {
                 key={cat.name}
                 onPress={() => { haptics.tap(); setActiveCategory(isActive ? null : cat.name); }}
                 style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                accessibilityRole="button"
+                accessibilityLabel={`${cat.name} emotes`}
+                accessibilityHint={isActive ? 'Tap to clear filter' : 'Tap to filter by this category'}
+                accessibilityState={{ selected: isActive }}
               >
                 <Text style={styles.categoryChipEmoji}>{CATEGORY_EMOJI[cat.name] || '🎭'}</Text>
                 <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
@@ -231,6 +238,14 @@ export function EmoteShowcase({ visible, onClose }: EmoteShowcaseProps) {
                         isPlaying && styles.emoteCardPlaying,
                         isLocked && styles.emoteCardLocked,
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        isLocked
+                          ? `${EMOTE_NAME[emoteId]} emote, locked. ${unlock.requirement ?? ''}`
+                          : `${EMOTE_NAME[emoteId]} emote`
+                      }
+                      accessibilityHint={isLocked ? undefined : 'Tap to preview'}
+                      accessibilityState={{ disabled: isLocked, selected: isPlaying }}
                     >
                       <LinearGradient
                         colors={isPlaying
@@ -270,7 +285,12 @@ export function EmoteShowcase({ visible, onClose }: EmoteShowcaseProps) {
 
         {/* Close button */}
         <View style={styles.closeArea}>
-          <Pressable onPress={onClose} style={styles.closeBtn}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close emote showcase"
+          >
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
               style={styles.closeBtnGradient}
