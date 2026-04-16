@@ -67,7 +67,7 @@ export function BoardEditorScreen({ navigation }: Props) {
           showBack onBackPress={() => navigation.goBack()}
         />
 
-        <Text style={styles.title}>BOARD EDITOR</Text>
+        <Text style={styles.title} accessibilityRole="header">BOARD EDITOR</Text>
         <Text style={styles.subtitle}>Create custom puzzle boards</Text>
 
         {/* Piece selector */}
@@ -138,7 +138,7 @@ export function BoardEditorScreen({ navigation }: Props) {
         {/* Save dialog */}
         {showSave && (
           <View style={styles.saveDialog}>
-            <Text style={styles.saveTitle}>Save Board</Text>
+            <Text style={styles.saveTitle} accessibilityRole="header">Save Board</Text>
             <TextInput
               style={styles.saveInput}
               value={boardName}
@@ -159,7 +159,7 @@ export function BoardEditorScreen({ navigation }: Props) {
         {/* My boards list */}
         {myBoards.length > 0 && (
           <View style={styles.myBoardsSection}>
-            <Text style={styles.myBoardsTitle}>MY BOARDS ({myBoards.length})</Text>
+            <Text style={styles.myBoardsTitle} accessibilityRole="header">MY BOARDS ({myBoards.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.myBoardsScroll}>
               {myBoards.map(board => (
                 <Pressable
