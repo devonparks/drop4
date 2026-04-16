@@ -70,6 +70,8 @@ export function TopBar({
         {showBack ? (
           <Pressable
             onPress={() => { haptics.tap(); onBackPress?.(); }}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <LinearGradient
               colors={['#ffa733', '#ff8c00', '#cc7000']}
@@ -82,6 +84,8 @@ export function TopBar({
           <Pressable
             onPress={() => { haptics.tap(); onSettingsPress?.(); }}
             style={styles.settingsBtn}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
           >
             <Text style={styles.settingsIcon}>{'⚙'}</Text>
           </Pressable>
@@ -95,15 +99,17 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} />
-        <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} />
-        <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} />
+        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
+        <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
+        <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} label={`Level ${level}`} />
       </LinearGradient>
 
       {/* Right: Profile avatar + rank */}
       <Pressable
         onPress={() => { haptics.tap(); onProfilePress?.(); }}
         style={styles.avatarWrap}
+        accessibilityLabel={`Open profile, level ${level}, ${rankLabel}`}
+        accessibilityRole="button"
       >
         <LinearGradient
           colors={['#d4ac0d', '#f1c40f', '#d4ac0d']}
@@ -122,8 +128,8 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor, scaleAnim }: {
-  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value;
+function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
+  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
 }) {
   const inner = (
     <>
@@ -134,7 +140,11 @@ function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextC
         <Text style={styles.pillValue}>{value}</Text>
       )}
       {onPlusPress && (
-        <Pressable onPress={() => { haptics.tap(); onPlusPress(); }}>
+        <Pressable
+          onPress={() => { haptics.tap(); onPlusPress(); }}
+          accessibilityLabel={plusLabel}
+          accessibilityRole="button"
+        >
           <LinearGradient
             colors={['#34c94d', '#27ae3d', '#1e8a30']}
             style={styles.plusBtn}
@@ -149,7 +159,12 @@ function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextC
   if (scaleAnim) {
     return (
       <Animated.View style={[styles.pill, { transform: [{ scale: scaleAnim }] }]}>
-        <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pillInner}>
+        <Pressable
+          onPress={() => { haptics.tap(); onPress?.(); }}
+          style={styles.pillInner}
+          accessibilityLabel={label}
+          accessibilityRole={onPress ? 'button' : 'text'}
+        >
           {inner}
         </Pressable>
       </Animated.View>
@@ -157,7 +172,12 @@ function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextC
   }
 
   return (
-    <Pressable onPress={() => { haptics.tap(); onPress?.(); }} style={styles.pill}>
+    <Pressable
+      onPress={() => { haptics.tap(); onPress?.(); }}
+      style={styles.pill}
+      accessibilityLabel={label}
+      accessibilityRole={onPress ? 'button' : 'text'}
+    >
       {inner}
     </Pressable>
   );
