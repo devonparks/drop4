@@ -28,12 +28,21 @@ export function LoadingOverlay({
       entering={FadeIn.duration(200)}
       exiting={FadeOut.duration(150)}
       style={styles.backdrop}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={message}
     >
       <View style={styles.card}>
-        <ActivityIndicator size="large" color={colors.orange} />
+        <ActivityIndicator size="large" color={colors.orange} accessibilityLabel="Loading" />
         <Text style={styles.message}>{message}</Text>
         {onCancel && (
-          <Pressable onPress={onCancel} style={styles.cancelBtn}>
+          <Pressable
+            onPress={onCancel}
+            style={styles.cancelBtn}
+            accessibilityRole="button"
+            accessibilityLabel={cancelLabel}
+            accessibilityHint="Cancels the current loading operation"
+          >
             <Text style={styles.cancelText}>{cancelLabel}</Text>
           </Pressable>
         )}
