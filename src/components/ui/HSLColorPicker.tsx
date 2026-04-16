@@ -5,7 +5,7 @@
  * picker. Shows live preview, accepts hex input, and outputs hex on confirm.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { PressScale } from '../animations';
