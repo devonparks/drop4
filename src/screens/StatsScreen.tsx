@@ -329,8 +329,9 @@ export function StatsScreen({ navigation }: Props) {
           ) : (
             <View style={styles.formRow}>
               {recentForm.map((m, i) => (
-                <View
+                <Animated.View
                   key={m.id}
+                  entering={FadeIn.delay(i * 45).duration(260)}
                   style={[
                     styles.formDot,
                     {
