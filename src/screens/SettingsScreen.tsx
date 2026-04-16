@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -164,7 +165,7 @@ export function SettingsScreen({ navigation }: Props) {
               {showPastSeasons && (
                 <View style={styles.pastSeasonsWrap}>
                   {rankedSeasonHistory.length === 0 ? (
-                    <Text style={styles.pastSeasonEmpty}>No past seasons yet</Text>
+                    <Animated.Text entering={FadeIn.duration(280)} style={styles.pastSeasonEmpty}>No past seasons yet</Animated.Text>
                   ) : (
                     rankedSeasonHistory.map((s) => (
                       <View key={s.season} style={styles.pastSeasonRow}>
