@@ -110,7 +110,12 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
         <View style={styles.cardRight}>
           {canClaim ? (
             <PulseGlow color="#27ae3d" size={36} active={canClaim}>
-            <Pressable onPress={onClaim} style={styles.claimBtnSmall}>
+            <Pressable
+              onPress={onClaim}
+              style={styles.claimBtnSmall}
+              accessibilityRole="button"
+              accessibilityLabel={`Claim reward for ${challenge.title}`}
+            >
               <LinearGradient
                 colors={['#34c94d', '#27ae3d', '#1e8a30']}
                 style={styles.claimBtnGradient}
@@ -154,6 +159,9 @@ function AchievementGroup({ difficulty, achievements }: { difficulty: Achievemen
       <Pressable
         onPress={() => { haptics.tap(); setExpanded(!expanded); }}
         style={styles.achGroupHeader}
+        accessibilityRole="button"
+        accessibilityLabel={`${meta.label} achievements, ${unlocked} of ${total} unlocked`}
+        accessibilityState={{ expanded }}
       >
         <PressScale>
         <LinearGradient
@@ -387,7 +395,12 @@ export function ChallengesScreen() {
           {/* Claim reward bag button */}
           {allComplete && !bonusClaimed && (
             <PulseGlow color="#27ae3d" size={50} active>
-            <Pressable onPress={() => { haptics.tap(); handleClaimBonus(); }} style={styles.claimBagBtn}>
+            <Pressable
+              onPress={() => { haptics.tap(); handleClaimBonus(); }}
+              style={styles.claimBagBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Claim daily reward bag, 200 coins"
+            >
               <LinearGradient
                 colors={['#34c94d', '#27ae3d', '#1e8a30']}
                 start={{ x: 0, y: 0 }}
@@ -466,7 +479,12 @@ export function ChallengesScreen() {
                   </View>
                   <View style={styles.cardRight}>
                     {canClaim ? (
-                      <Pressable onPress={() => handleClaimWeekly('wins20', 1000)} style={styles.claimBtnSmall}>
+                      <Pressable
+                        onPress={() => handleClaimWeekly('wins20', 1000)}
+                        style={styles.claimBtnSmall}
+                        accessibilityRole="button"
+                        accessibilityLabel="Claim weekly reward, 1000 coins for winning 20 games"
+                      >
                         <LinearGradient colors={['#9b59b6', '#7d4192', '#5a2d70']} style={styles.claimBtnGradient}>
                           <Text style={styles.claimBtnText}>CLAIM</Text>
                         </LinearGradient>
@@ -523,7 +541,12 @@ export function ChallengesScreen() {
                   </View>
                   <View style={styles.cardRight}>
                     {canClaim ? (
-                      <Pressable onPress={() => handleClaimWeekly('career5', 2000)} style={styles.claimBtnSmall}>
+                      <Pressable
+                        onPress={() => handleClaimWeekly('career5', 2000)}
+                        style={styles.claimBtnSmall}
+                        accessibilityRole="button"
+                        accessibilityLabel="Claim weekly reward, 2000 coins for completing 5 career levels"
+                      >
                         <LinearGradient colors={['#e84393', '#c23076', '#8e1f54']} style={styles.claimBtnGradient}>
                           <Text style={styles.claimBtnText}>CLAIM</Text>
                         </LinearGradient>
