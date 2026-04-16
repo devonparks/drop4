@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
+import { StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -239,10 +240,12 @@ export function LegalScreen({ navigation, route }: Props) {
         <Text style={styles.subtitle}>{doc.subtitle}</Text>
 
         {doc.sections.map((section, i) => (
-          <View key={i} style={styles.section}>
-            <Text style={styles.heading}>{section.heading}</Text>
-            <Text style={styles.body}>{fillPlaceholders(section.body)}</Text>
-          </View>
+          <StaggeredEntry key={i} index={i} delay={70}>
+            <View style={styles.section}>
+              <Text style={styles.heading}>{section.heading}</Text>
+              <Text style={styles.body}>{fillPlaceholders(section.body)}</Text>
+            </View>
+          </StaggeredEntry>
         ))}
         <View style={{ height: 60 }} />
       </ScrollView>
