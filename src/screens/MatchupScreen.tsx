@@ -24,8 +24,6 @@ import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { FEATURES } from '../config/features';
 import { getNpcCustomization } from '../data/npcCustomizations';
-import { PetDisplay } from '../components/ui/PetDisplay';
-import { getPetById } from '../data/pets';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
