@@ -324,7 +324,12 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
 
           {/* Close button */}
           {(!spinning || showResult) && (
-            <Pressable style={st.closeBtn} onPress={handleClose}>
+            <Pressable
+              style={st.closeBtn}
+              onPress={handleClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close daily spin"
+            >
               <Text style={st.closeBtnText}>{'\u2715'}</Text>
             </Pressable>
           )}
@@ -400,7 +405,14 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
 
           {/* ── Spin button / countdown ── */}
           {!showGoldenSpin && isSpinAvailable && !showResult ? (
-            <Pressable onPress={handleSpin} disabled={spinning} style={[st.spinBtn, spinning && { opacity: 0.5 }]}>
+            <Pressable
+              onPress={handleSpin}
+              disabled={spinning}
+              style={[st.spinBtn, spinning && { opacity: 0.5 }]}
+              accessibilityRole="button"
+              accessibilityLabel={spinning ? 'Spinning' : 'Spin free daily wheel'}
+              accessibilityState={{ disabled: spinning, busy: spinning }}
+            >
               <LinearGradient
                 colors={spinning ? ['#666', '#555'] : ['#00d2ff', '#0098d6', '#006ea0']}
                 style={st.spinBtnGradient}
@@ -435,20 +447,33 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
                   <Pressable
                     style={[st.goldenBtn, gems < 50 && { opacity: 0.5 }]}
                     onPress={handleGoldenSpin}
+                    accessibilityRole="button"
+                    accessibilityLabel="Golden spin for 50 gems"
+                    accessibilityState={{ disabled: gems < 50 }}
                   >
                     <LinearGradient colors={['#f1c40f', '#d4ac0d', '#b8960a']} style={st.goldenBtnGradient}>
                       <Text style={st.goldenBtnText}>SPIN 50 {'\u{1F48E}'}</Text>
                       {gems < 50 && <Text style={[st.goldenBtnText, { fontSize: 9, opacity: 0.8 }]}>({gems} gems)</Text>}
                     </LinearGradient>
                   </Pressable>
-                  <Pressable style={st.goldenBtn} onPress={() => haptics.tap()}>
+                  <Pressable
+                    style={st.goldenBtn}
+                    onPress={() => haptics.tap()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Golden spin for 0.99 dollars"
+                  >
                     <LinearGradient colors={['#e74c3c', '#c0392b']} style={st.goldenBtnGradient}>
                       <Text style={st.goldenBtnText}>SPIN $0.99</Text>
                     </LinearGradient>
                   </Pressable>
                 </View>
               </LinearGradient>
-              <Pressable onPress={handleClose} style={st.goldenSkip}>
+              <Pressable
+                onPress={handleClose}
+                style={st.goldenSkip}
+                accessibilityRole="button"
+                accessibilityLabel="Skip golden spin"
+              >
                 <Text style={st.goldenSkipText}>No thanks</Text>
               </Pressable>
             </Animated.View>
@@ -478,7 +503,12 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
                        resultSegment.rarity === 'rare' ? '#3498db' :
                        resultSegment.rarity === 'uncommon' ? colors.green : colors.textMuted,
               }]}>{getRarityLabel(resultSegment.rarity)}</Text>
-              <Pressable onPress={handleCollect} style={st.collectBtn}>
+              <Pressable
+                onPress={handleCollect}
+                style={st.collectBtn}
+                accessibilityRole="button"
+                accessibilityLabel={`Collect ${resultSegment.label}`}
+              >
                 <LinearGradient colors={['#27ae3d', '#1e8a30']} style={st.collectBtnGradient}>
                   <Text style={st.collectBtnText}>COLLECT</Text>
                 </LinearGradient>
