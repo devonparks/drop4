@@ -149,6 +149,10 @@ export function SettingsScreen({ navigation }: Props) {
               <Pressable
                 onPress={() => { haptics.tap(); setShowPastSeasons(!showPastSeasons); }}
                 style={styles.settingRow}
+                accessibilityRole="button"
+                accessibilityLabel="View Past Seasons"
+                accessibilityState={{ expanded: showPastSeasons }}
+                accessibilityHint={showPastSeasons ? 'Collapses past season history' : 'Expands past season history'}
               >
                 <Text style={styles.settingIcon}>📊</Text>
                 <Text style={styles.settingLabel}>View Past Seasons</Text>
