@@ -99,19 +99,31 @@ export function OutfitPreviewModal({
 
           {/* Action buttons */}
           <View style={styles.actionRow}>
-            <PressScale onPress={() => { haptics.tap(); onClose(); }}>
+            <PressScale
+              onPress={() => { haptics.tap(); onClose(); }}
+              accessibilityLabel="Close outfit preview"
+              accessibilityHint="Dismisses this preview without making changes"
+            >
               <View style={styles.cancelBtn}>
                 <Text style={styles.cancelText}>CLOSE</Text>
               </View>
             </PressScale>
             {isEquipped ? null : isOwned ? (
-              <PressScale onPress={handleEquip}>
+              <PressScale
+                onPress={handleEquip}
+                accessibilityLabel={`Equip ${outfit.packLabel}`}
+                accessibilityHint="Equips this outfit on your character"
+              >
                 <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.primaryBtn}>
                   <Text style={styles.primaryText}>EQUIP</Text>
                 </LinearGradient>
               </PressScale>
             ) : (
-              <PressScale onPress={canAfford ? handleBuy : () => haptics.error()}>
+              <PressScale
+                onPress={canAfford ? handleBuy : () => haptics.error()}
+                accessibilityLabel={canAfford ? `Buy ${outfit.packLabel} for ${price} coins` : 'Not enough coins'}
+                accessibilityHint={canAfford ? 'Spends coins to unlock this outfit' : 'Earn more coins to purchase'}
+              >
                 <LinearGradient
                   colors={canAfford ? ['#ff8c00', '#cc5500'] : ['#555', '#333']}
                   style={styles.primaryBtn}
