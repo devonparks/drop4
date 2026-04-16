@@ -10,11 +10,7 @@ import { getRosterCustomization } from '../data/npcCustomizations';
 import { useCharacterStore } from '../stores/characterStore';
 import { FEATURES } from '../config/features';
 import { useRosterStore } from '../stores/rosterStore';
-import {
-  ROSTER,
-  RosterCharacter,
-  DEFAULT_CHARACTER_ID,
-} from '../data/characterRoster';
+import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
 import { useCareerStore } from '../stores/careerStore';
 import { useShopStore } from '../stores/shopStore';
