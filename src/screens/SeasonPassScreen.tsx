@@ -130,7 +130,12 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
           </View>
         )}
         {canClaimFree && (
-          <Pressable onPress={handleClaimFree} style={styles.claimBtn}>
+          <Pressable
+            onPress={handleClaimFree}
+            style={styles.claimBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`Claim free tier ${reward.tier} reward: ${reward.freeReward?.name ?? ''}`}
+          >
             <LinearGradient
               colors={[colors.greenLight, colors.green, colors.greenDark]}
               style={styles.claimGradient}
@@ -166,7 +171,12 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
           </View>
         )}
         {canClaimPremium && (
-          <Pressable onPress={handleClaimPremium} style={styles.claimBtn}>
+          <Pressable
+            onPress={handleClaimPremium}
+            style={styles.claimBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`Claim premium tier ${reward.tier} reward: ${reward.premiumReward?.name ?? ''}`}
+          >
             <LinearGradient
               colors={[colors.goldLight, colors.gold, colors.goldDark]}
               style={styles.claimGradient}
