@@ -93,7 +93,13 @@ function GameEmoteButton({ emote, isActive, onPress }: {
   }, [emote.id, onPress, scaleAnim]);
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`${emote.label} emote`}
+      accessibilityHint="Send this emote to your opponent"
+      accessibilityState={{ selected: isActive }}
+    >
       <Animated.View style={[
         styles.gameFaceBtn,
         { borderColor: emote.color + '40', backgroundColor: emote.color + '15' },
@@ -156,6 +162,10 @@ export function EmoteBar({ onEmotePress, activeEmote, variant = 'lobby' }: Emote
               playSound('click');
               onEmotePress(emote.id);
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`${emote.label} emote`}
+            accessibilityHint="Preview this emote"
+            accessibilityState={{ selected: isActive }}
             style={[
               styles.lobbyBtn,
               { borderColor: emote.color + '30' },
