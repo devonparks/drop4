@@ -94,6 +94,10 @@ export function GlossyButton({
         onPress={handlePress}
         disabled={disabled}
         style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityHint={subtitle}
+        accessibilityState={{ disabled: !!disabled }}
       />
     </View>
   );

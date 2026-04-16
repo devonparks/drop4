@@ -8,10 +8,14 @@ The overnight polish agent adds ideas here when it notices something too big to 
 - Crossfade between outfits when the player switches in the creator (currently hard-cuts)
 - Add `React.memo` to `ShopItemCard` (renders often in grid)
 - Extract the inline `styles.overlay` blur backdrop into a reusable `<BlurOverlay>` component (repeated across ~4 modals)
-- Consolidate the three near-identical "pack chip" style blocks in Character3DCreatorScreen + ShopScreen into a shared `<FilterChip>` component
 - Audit all `Animated.Value` uses — a few could migrate to Reanimated `useSharedValue` for native-thread perf
-- Character3D: consider dropping shadow map 1024 → 512 on mobile (halves GPU cost, barely visible)
+- Migrate `Character3DCreatorScreen` and `ShopScreen` pack chips to the new `<FilterChip>` component
+- Preload emote GLBs at app startup for instant playback (currently first-tap has a brief delay)
 
 ## Done
 
-<!-- Move items here with commit SHA when completed -->
+- Shared `<FilterChip>` component created (src/components/ui/FilterChip.tsx)
+- Character3D shadow map 1024 → 512 (halves GPU)
+- PressScale + GlossyButton: accessibility labels wired through (a11y WCAG 2.1 Level A)
+- Dead `CharacterAvatar` imports removed from MatchmakingOverlay + CharacterCreatorScreen
+- Outfit shop cards: rarity-tinted gradient + pack emoji + index badge (no more blue-board placeholder)

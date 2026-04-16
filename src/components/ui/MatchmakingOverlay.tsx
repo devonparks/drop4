@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { GlossyButton } from './GlossyButton';
-import { CharacterAvatar } from './CharacterAvatar';
 import { PlayerProfileCard } from './PlayerProfileCard';
 import { useRankedStore, calculateOdds, RANKED_TIERS, formatRank } from '../../stores/rankedStore';
 import { useShopStore } from '../../stores/shopStore';

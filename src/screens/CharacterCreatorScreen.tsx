@@ -4,7 +4,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { PoseDisplay, PoseId, EMOTE_CATEGORIES, EmoteId } from '../components/ui/AnimatedCharacter';
 import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
 import { EMOTE_EMOJI, EMOTE_NAME, EMOTE_UNLOCKS, CATEGORY_EMOJI } from '../components/ui/EmoteShowcase';

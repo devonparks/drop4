@@ -430,8 +430,8 @@ export function Character3D({
           intensity={1.2}
           color="#fff4e0"
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
           shadow-camera-near={0.1}
           shadow-camera-far={20}
           shadow-camera-left={-2}

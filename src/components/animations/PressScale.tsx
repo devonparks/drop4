@@ -35,6 +35,10 @@ interface Props {
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   noHaptics?: boolean;
+  /** Screen-reader label. Strongly recommended — PressScale wraps most tappable UI. */
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: 'button' | 'link' | 'tab' | 'menuitem';
 }
 
 export function PressScale({
@@ -45,6 +49,9 @@ export function PressScale({
   disabled = false,
   style,
   noHaptics = false,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = 'button',
 }: Props) {
   const scale = useSharedValue(1);
 
@@ -77,6 +84,10 @@ export function PressScale({
       onPressOut={handlePressOut}
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole={accessibilityRole}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: !!disabled }}
       {...(webClickProps as any)}
     >
       <Animated.View style={[style, animStyle]}>

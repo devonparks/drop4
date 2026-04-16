@@ -275,6 +275,26 @@ function PremiumPiece({ color }: { color: string }) {
 }
 
 // ─── Shop Item Card (existing, improved) ───────────────────────
+// Pack slug → emoji icon mapping for outfit card previews. Pure decoration;
+// real 3D preview shows in the OutfitPreviewModal on tap.
+const PACK_ICON: Record<string, string> = {
+  modern_civilians: '\u{1F455}',      // shirt
+  modern_police: '\u{1F46E}',          // police officer
+  apocalypse_outlaws: '\u{1F3F4}',     // black flag
+  apocalypse_survivor: '\u{1F9EA}',    // test tube
+  apocalypse_zombies: '\u{1F9DF}',     // zombie
+  fantasy_villagers: '\u{1F33E}',      // sheaf of rice
+  fantasy_knights: '\u{1F6E1}',        // shield
+  fantasy_skeletons: '\u{1F480}',      // skull
+  elven_warriors: '\u{1F3F9}',         // bow and arrow
+  goblin_fighters: '\u{1F47A}',        // goblin
+  pirate_captains: '\u{1F3F4}\u200D\u2620\uFE0F', // pirate flag
+  samurai_warriors: '\u{1F5E1}',       // dagger
+  viking_warriors: '\u{2694}\uFE0F',   // crossed swords
+  sci_fi_civilians: '\u{1F680}',       // rocket
+  sci_fi_soldiers: '\u{1F52B}',        // pistol
+};
+
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }: {
   item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number; playerCoins: number;
 }) {
@@ -286,6 +306,8 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
   // Average ~50 coins per game (medium difficulty)
   const gamesNeeded = Math.ceil(coinsNeeded / 50);
   const unlockReq = UNLOCK_REQUIREMENTS[item.id];
+  // Detect outfit items (their id is in the OUTFITS registry)
+  const outfitMeta = OUTFITS[item.id];
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -295,7 +317,24 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
       >
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.itemPreview}>
-          {item.preview.p1Color && item.preview.p2Color ? (
+          {outfitMeta ? (
+            // Outfit preview: rarity-tinted backdrop with a pack emoji +
+            // large number overlay. 3D preview happens in the tap modal.
+            <View style={{ width: 108, height: 64, borderRadius: 6, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: rarityColor + '22' }}>
+              <LinearGradient
+                colors={[rarityColor + '44', '#0a0e27', '#060914']}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={{ fontSize: 30, zIndex: 1 }}>{PACK_ICON[outfitMeta.pack] ?? '\u{1F455}'}</Text>
+              <Text style={{
+                position: 'absolute', top: 4, right: 6, zIndex: 2,
+                fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 10,
+                color: rarityColor, letterSpacing: 0.5, opacity: 0.9,
+              }}>
+                {String(outfitMeta.index).padStart(2, '0')}
+              </Text>
+            </View>
+          ) : item.preview.p1Color && item.preview.p2Color ? (
             <View style={s.piecePreviewBackdrop}>
               {isPremium ? (
                 <AnimatedRarityBg rarity={item.rarity as any} width={108} height={64} style={StyleSheet.absoluteFill} />
