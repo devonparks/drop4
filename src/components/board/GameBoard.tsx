@@ -345,6 +345,10 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
               onHoverIn={() => setHoveredCol(col)}
               onHoverOut={() => setHoveredCol(null)}
               style={[styles.colTarget]}
+              accessibilityRole="button"
+              accessibilityLabel={`Column ${col + 1}`}
+              accessibilityHint={`Drop your ${currentPlayerColor} piece in column ${col + 1}`}
+              accessibilityState={{ disabled: !!disabled }}
             >
               {/* Dramatic column glow highlight */}
               {hoveredCol === col && (
