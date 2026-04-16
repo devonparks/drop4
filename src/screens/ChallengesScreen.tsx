@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-n
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useChallengeStore, Challenge } from '../stores/challengeStore';
-import { useShopStore } from '../stores/shopStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useAchievementStore, Achievement, AchievementDifficulty, getAchievementScore, getMaxAchievementPoints } from '../stores/achievementStore';
