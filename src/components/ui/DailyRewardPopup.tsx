@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Modal, Animated as RNAnimated } from 'react-nat
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { GlossyButton } from './GlossyButton';
-import { useDailyRewardStore } from '../../stores/dailyRewardStore';
+import { useDailyRewardStore, type DailyReward } from '../../stores/dailyRewardStore';
 import { useShopStore } from '../../stores/shopStore';
 import { useCharacterStore } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
@@ -60,7 +60,7 @@ function RewardSparkle({ angle, delay, radius }: { angle: number; delay: number;
 
 export function DailyRewardPopup() {
   const [visible, setVisible] = useState(false);
-  const [reward, setReward] = useState<any>(null);
+  const [reward, setReward] = useState<DailyReward | null>(null);
   const { checkAndShowReward, claimReward, currentStreak } = useDailyRewardStore();
   const addCoins = useShopStore(s => s.addCoins);
   const addGems = useShopStore(s => s.addGems);
