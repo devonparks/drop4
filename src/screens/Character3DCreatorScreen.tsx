@@ -319,12 +319,18 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
         {SPECIES_CHIPS.map((sp) => {
           const isLocked = sp.id !== 'all' && !unlockedSpecies.includes(sp.id);
           return (
-            <PressScale key={sp.id} onPress={() => {
-              if (isLocked) { haptics.error(); return; }
-              haptics.tap();
-              setSpecies(sp.id);
-              setPackFilter('all');
-            }}>
+            <PressScale
+              key={sp.id}
+              onPress={() => {
+                if (isLocked) { haptics.error(); return; }
+                haptics.tap();
+                setSpecies(sp.id);
+                setPackFilter('all');
+              }}
+              accessibilityLabel={isLocked ? `${sp.label} species, locked` : `${sp.label} species filter`}
+              accessibilityHint={isLocked ? 'Beat the matching career chapter to unlock' : 'Filters outfits to this species'}
+              accessibilityState={{ selected: species === sp.id, disabled: isLocked }}
+            >
               <View style={[
                 petsStyles.packChip,
                 species === sp.id && petsStyles.packChipActive,
@@ -341,13 +347,24 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
 
       {/* Pack chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }} contentContainerStyle={{ gap: 6, paddingRight: 20 }}>
-        <PressScale onPress={() => { haptics.tap(); setPackFilter('all'); }}>
+        <PressScale
+          onPress={() => { haptics.tap(); setPackFilter('all'); }}
+          accessibilityLabel="All packs filter"
+          accessibilityHint="Shows outfits from every pack"
+          accessibilityState={{ selected: packFilter === 'all' }}
+        >
           <View style={[petsStyles.packChip, packFilter === 'all' && petsStyles.packChipActive]}>
             <Text style={[petsStyles.packChipText, packFilter === 'all' && petsStyles.packChipTextActive]}>All Packs</Text>
           </View>
         </PressScale>
         {availablePacks.map((p) => (
-          <PressScale key={`${p.species}_${p.pack}`} onPress={() => { haptics.tap(); setPackFilter(p.pack); }}>
+          <PressScale
+            key={`${p.species}_${p.pack}`}
+            onPress={() => { haptics.tap(); setPackFilter(p.pack); }}
+            accessibilityLabel={`${p.label} pack filter`}
+            accessibilityHint="Shows only outfits from this pack"
+            accessibilityState={{ selected: packFilter === p.pack }}
+          >
             <View style={[petsStyles.packChip, packFilter === p.pack && petsStyles.packChipActive]}>
               <Text style={[petsStyles.packChipText, packFilter === p.pack && petsStyles.packChipTextActive]}>{p.label}</Text>
             </View>
@@ -363,8 +380,28 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
           const owned = ownedOutfits.includes(id);
           const shopItem = SHOP_BY_ID[id];
           const price = shopItem?.price ?? 500;
+          const statusLabel = isEquipped
+            ? 'equipped'
+            : owned
+            ? 'owned'
+            : price === 0
+            ? 'free to unlock'
+            : `costs ${price} coins`;
+          const hint = isEquipped
+            ? 'Already equipped'
+            : owned
+            ? 'Equips this outfit'
+            : price === 0
+            ? 'Unlocks and equips this outfit'
+            : `Buy and equip for ${price} coins`;
           return (
-            <PressScale key={id} onPress={() => handleTap(id)}>
+            <PressScale
+              key={id}
+              onPress={() => handleTap(id)}
+              accessibilityLabel={`Outfit ${String(outfit.index).padStart(2, '0')}, ${outfit.packLabel}, ${statusLabel}`}
+              accessibilityHint={hint}
+              accessibilityState={{ selected: isEquipped }}
+            >
               <View style={[styles.outfitCard, isEquipped && styles.outfitCardActive]}>
                 <LinearGradient
                   colors={isEquipped ? ['rgba(255,140,0,0.25)', 'rgba(255,140,0,0.08)'] : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']}
