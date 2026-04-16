@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, ScrollView, Pressable, Dimensions } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
+  FadeIn,
   FadeInDown,
   FadeInUp,
   useSharedValue,
@@ -903,10 +904,10 @@ export function ShopScreen() {
                 ))}
               </View>
             ) : (
-              <View style={s.comingSoon}>
+              <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
                 <Text style={s.comingSoonIcon}>{'\u{1F6A7}'}</Text>
                 <Text style={s.comingSoonText}>No items match this filter</Text>
-              </View>
+              </Animated.View>
             )}
           </View>
 
