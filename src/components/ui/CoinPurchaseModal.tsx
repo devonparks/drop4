@@ -32,7 +32,13 @@ export function CoinPurchaseModal({ visible, onClose }: CoinPurchaseModalProps) 
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable
+        style={styles.overlay}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close coin purchase"
+        accessibilityHint="Dismisses the coin bundle list"
+      >
         <View style={styles.card}>
           <Text style={styles.title}>GET COINS</Text>
           <Text style={styles.subtitle}>Power up your game</Text>
@@ -43,6 +49,8 @@ export function CoinPurchaseModal({ visible, onClose }: CoinPurchaseModalProps) 
                 key={bundle.id}
                 onPress={() => { haptics.tap(); /* In-app purchase would go here */ }}
                 style={[styles.bundleRow, bundle.popular && styles.popularRow, bundle.bestValue && styles.bestRow]}
+                accessibilityRole="button"
+                accessibilityLabel={`Buy ${bundle.coins.toLocaleString()} coins${bundle.bonus > 0 ? ` plus ${bundle.bonus} bonus` : ''} for ${bundle.price}${bundle.popular ? ', popular' : ''}${bundle.bestValue ? ', best value' : ''}`}
               >
                 {bundle.popular && <View style={styles.popularBadge}><Text style={styles.popularText}>POPULAR</Text></View>}
                 {bundle.bestValue && <View style={styles.bestBadge}><Text style={styles.bestText}>BEST VALUE</Text></View>}
