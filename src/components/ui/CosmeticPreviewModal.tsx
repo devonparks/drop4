@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { PremiumBoardThumbnail } from './PremiumBoardThumbnail';
 import { ShopItem, RARITY_COLORS, RARITY_LABELS } from '../../data/shopCatalog';
 import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeColors';
 import { PIECE_SKIN_VISUALS, PieceSkinVisuals } from '../../data/pieceSkinColors';
@@ -90,7 +89,6 @@ function InGameBoardPreview({ boardThemeId, pieceSkinId }: { boardThemeId: strin
   const gap = 2;
   const cellSize = Math.floor((W - pad * 2 - gap * (PREVIEW_COLS - 1)) / PREVIEW_COLS);
   const pieceSize = cellSize - 4;
-  const boardH = cellSize * PREVIEW_ROWS + gap * (PREVIEW_ROWS - 1) + pad * 2;
 
   return (
     <View style={{ alignItems: 'center', paddingVertical: 12 }}>
@@ -142,17 +140,6 @@ function InGameBoardPreview({ boardThemeId, pieceSkinId }: { boardThemeId: strin
         style={{ width: W + 8, height: 10, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, marginTop: -1 }}
       />
     </View>
-  );
-}
-
-function PremiumPiecePreview({ color }: { color: string }) {
-  return (
-    <LinearGradient
-      colors={[color, `${color}dd`, `${color}99`]}
-      style={s.previewPiece}
-    >
-      <View style={s.previewPieceShine} />
-    </LinearGradient>
   );
 }
 
@@ -309,26 +296,6 @@ const s = StyleSheet.create({
   rarityStrip: {
     height: 4,
     width: '100%',
-  },
-  previewPiece: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  previewPieceShine: {
-    width: '55%',
-    height: '28%',
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    marginTop: 6,
   },
   effectPreviewLarge: {
     width: '100%',
