@@ -26,7 +26,6 @@ type Props = {
 // Card sizing is flex-based so it works inside the web PhoneFrame (fixed 390)
 // AND on native devices of any width. We don't use Dimensions.get('window')
 // because that returns the BROWSER width on web, not the PhoneFrame width.
-// (cache-bust 1)
 const CARD_GAP = 12;
 // Conservative preview height — wide enough to look great on any phone, narrow
 // enough to never overflow the smallest target (iPhone SE @ 320).

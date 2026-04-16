@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { PortraitFrame } from '../components/ui/PortraitFrame';
-// cache-bust: portrait rating cleanup
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
 import { useShopStore, getCoinMilestoneInfo, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
