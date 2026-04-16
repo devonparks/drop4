@@ -110,7 +110,13 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
   };
 
   return (
-    <Pressable style={st.openingOverlay} onPress={handleTap}>
+    <Pressable
+      style={st.openingOverlay}
+      onPress={handleTap}
+      accessibilityRole="button"
+      accessibilityLabel={`Tap to open ${box.name}`}
+      accessibilityHint="Tap three times to reveal the reward"
+    >
       <LinearGradient
         colors={['#0a0e27', '#111b47', '#0a0e27']}
         style={st.openingBg}
@@ -119,7 +125,12 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
         <View style={st.halftoneOverlay} />
 
         {/* Back button */}
-        <Pressable style={st.openingBack} onPress={onCancel}>
+        <Pressable
+          style={st.openingBack}
+          onPress={onCancel}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel opening"
+        >
           <Text style={st.openingBackText}>{'\u2190'} Back</Text>
         </Pressable>
 
@@ -243,7 +254,13 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
             {/* Action */}
             <View style={st.boxActionArea}>
               {count > 0 ? (
-                <Pressable onPress={onOpen} disabled={isOpening}>
+                <Pressable
+                  onPress={onOpen}
+                  disabled={isOpening}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${box.name}`}
+                  accessibilityState={{ disabled: isOpening }}
+                >
                   <LinearGradient colors={['#27ae3d', '#1e8a30']} style={st.openBtnGradient}>
                     <Text style={st.openBtnText}>OPEN</Text>
                   </LinearGradient>
@@ -253,6 +270,9 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
                   onPress={onBuy}
                   disabled={playerCoins < box.cost}
                   style={{ opacity: playerCoins < box.cost ? 0.5 : 1 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Buy ${box.name} for ${box.cost} coins`}
+                  accessibilityState={{ disabled: playerCoins < box.cost }}
                 >
                   <LinearGradient
                     colors={playerCoins >= box.cost ? ['#d4ac0d', '#b8960a'] : ['#555', '#444']}
