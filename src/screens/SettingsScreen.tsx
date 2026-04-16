@@ -50,7 +50,12 @@ function SettingToggle({ label, value, onToggle, icon }: {
 
 function SettingLink({ label, icon, onPress }: { label: string; icon: string; onPress: () => void }) {
   return (
-    <Pressable onPress={() => { haptics.tap(); onPress(); }} style={styles.settingRow}>
+    <Pressable
+      onPress={() => { haptics.tap(); onPress(); }}
+      style={styles.settingRow}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <Text style={styles.settingIcon}>{icon}</Text>
       <Text style={styles.settingLabel}>{label}</Text>
       <Text style={styles.chevron}>›</Text>
@@ -357,7 +362,11 @@ export function SettingsScreen({ navigation }: Props) {
                 },
               ],
             );
-          }} style={styles.dangerRow}>
+          }}
+          style={styles.dangerRow}
+          accessibilityRole="button"
+          accessibilityLabel="Reset all progress"
+          accessibilityHint="Permanently erases coins, gems, levels, career, and all game data">
             <Text style={styles.settingIcon}>🗑️</Text>
             <Text style={styles.dangerLabel}>Reset All Progress</Text>
             <Text style={styles.dangerChevron}>›</Text>
