@@ -392,7 +392,13 @@ export function MatchupScreen({ navigation }: Props) {
             </View>
           )}
 
-          <Pressable onPress={handleBack} style={styles.backBtn}>
+          <Pressable
+            onPress={handleBack}
+            style={styles.backBtn}
+            accessibilityLabel="Back"
+            accessibilityRole="button"
+            accessibilityHint="Return to previous screen"
+          >
             <Text style={styles.backText}>{'< '}BACK</Text>
           </Pressable>
         </Animated.View>
