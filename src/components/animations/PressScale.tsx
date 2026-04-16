@@ -18,7 +18,7 @@
  *   style       — container style
  */
 import React from 'react';
-import { Pressable, ViewStyle, StyleProp, Platform } from 'react-native';
+import { Pressable, ViewStyle, StyleProp, Platform, AccessibilityState } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -39,6 +39,8 @@ interface Props {
   accessibilityLabel?: string;
   accessibilityHint?: string;
   accessibilityRole?: 'button' | 'link' | 'tab' | 'menuitem';
+  /** Extra a11y state flags (selected, checked, busy). `disabled` is auto-merged from props. */
+  accessibilityState?: AccessibilityState;
 }
 
 export function PressScale({
@@ -52,6 +54,7 @@ export function PressScale({
   accessibilityLabel,
   accessibilityHint,
   accessibilityRole = 'button',
+  accessibilityState,
 }: Props) {
   const scale = useSharedValue(1);
 
@@ -87,7 +90,7 @@ export function PressScale({
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: !!disabled }}
+      accessibilityState={{ ...accessibilityState, disabled: !!disabled }}
       {...(webClickProps as any)}
     >
       <Animated.View style={[style, animStyle]}>

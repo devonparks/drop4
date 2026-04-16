@@ -38,6 +38,7 @@ export function FilterChip({ label, icon, active, locked, onPress, style }: Prop
       }}
       accessibilityLabel={label}
       accessibilityHint={locked ? 'Locked' : active ? 'Selected filter' : 'Filter'}
+      accessibilityState={{ selected: !!active, disabled: !!locked }}
     >
       <View style={[
         styles.chip,
