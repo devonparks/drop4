@@ -43,6 +43,9 @@ function SettingToggle({ label, value, onToggle, icon }: {
         onValueChange={() => { haptics.tap(); onToggle(); }}
         trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(255,140,0,0.4)' }}
         thumbColor={value ? colors.orange : '#666'}
+        accessibilityLabel={label}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: value }}
       />
     </View>
   );
