@@ -129,7 +129,13 @@ export function Character3DCreatorScreen({ navigation }: Props) {
     <ScreenBackground>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          accessibilityHint="Returns to the previous screen"
+        >
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>CUSTOMIZE</Text>
