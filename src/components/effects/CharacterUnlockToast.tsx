@@ -57,7 +57,12 @@ export function CharacterUnlockToast() {
   return (
     <View style={styles.container} pointerEvents="box-none">
       <Animated.View entering={SlideInRight.springify()} exiting={FadeOut}>
-        <Pressable onPress={() => setActiveId(null)}>
+        <Pressable
+          onPress={() => setActiveId(null)}
+          accessibilityRole="button"
+          accessibilityLabel={`New character unlocked: ${character.name}, ${character.title}`}
+          accessibilityHint="Tap to dismiss"
+        >
           <LinearGradient
             colors={['rgba(155,89,182,0.95)', 'rgba(74,28,109,0.95)']}
             style={styles.toast}
