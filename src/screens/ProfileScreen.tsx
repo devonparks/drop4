@@ -4,7 +4,7 @@ import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { PortraitFrame, PortraitTier } from '../components/ui/PortraitFrame';
+import { PortraitFrame } from '../components/ui/PortraitFrame';
 // cache-bust: portrait rating cleanup
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
@@ -58,7 +58,6 @@ export function ProfileScreen() {
   const equipped = useShopStore(s => s.equipped);
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
-  const setEquippedCustomTitle = useShopStore(s => s.setEquippedCustomTitle);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
