@@ -23,7 +23,7 @@ type Props = {
 /* ---------- helper components ---------- */
 
 function SectionTitle({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
+  return <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>;
 }
 
 const CARD_GRADIENTS: Record<string, [string, string]> = {
@@ -198,7 +198,7 @@ export function StatsScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header with player level badge */}
         <View style={styles.screenHeaderRow}>
-          <Text style={styles.screenHeader}>YOUR STATS</Text>
+          <Text style={styles.screenHeader} accessibilityRole="header">YOUR STATS</Text>
           <View style={styles.levelBadge}>
             <Text style={styles.levelBadgeText}>LVL {level}</Text>
           </View>
