@@ -479,14 +479,22 @@ function SliderRow({ label, leftLabel, rightLabel, value, onChange }: {
         <Text style={styles.sliderEndLabel}>{rightLabel}</Text>
       </View>
       <View style={styles.sliderRowControls}>
-        <PressScale onPress={() => handleStep(-1)}>
+        <PressScale
+          onPress={() => handleStep(-1)}
+          accessibilityLabel={`Decrease ${label.toLowerCase()} toward ${leftLabel.toLowerCase()}`}
+          accessibilityHint={`Currently ${Math.round(value)} of 100`}
+        >
           <View style={styles.stepBtn}><Text style={styles.stepIcon}>−</Text></View>
         </PressScale>
         <View style={styles.sliderTrack}>
           <View style={[styles.sliderFill, { width: `${value}%` }]} />
           <View style={[styles.sliderThumb, { left: `${value}%` }]} />
         </View>
-        <PressScale onPress={() => handleStep(1)}>
+        <PressScale
+          onPress={() => handleStep(1)}
+          accessibilityLabel={`Increase ${label.toLowerCase()} toward ${rightLabel.toLowerCase()}`}
+          accessibilityHint={`Currently ${Math.round(value)} of 100`}
+        >
           <View style={styles.stepBtn}><Text style={styles.stepIcon}>+</Text></View>
         </PressScale>
       </View>
