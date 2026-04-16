@@ -102,7 +102,12 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close color picker"
+        />
         <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.card}>
           <Text style={styles.title}>{title}</Text>
 
@@ -116,11 +121,19 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
           {/* Preset hues */}
           <Text style={styles.sectionLabel}>PRESETS</Text>
           <View style={styles.presetRow}>
-            {PRESET_HUES.map((p) => (
-              <PressScale key={p.hex} onPress={() => { haptics.tap(); setHsl(hexToHSL(p.hex)); }}>
-                <View style={[styles.presetSwatch, { backgroundColor: p.hex }, currentHex.toLowerCase() === p.hex.toLowerCase() && styles.presetSwatchActive]} />
-              </PressScale>
-            ))}
+            {PRESET_HUES.map((p) => {
+              const selected = currentHex.toLowerCase() === p.hex.toLowerCase();
+              return (
+                <PressScale
+                  key={p.hex}
+                  onPress={() => { haptics.tap(); setHsl(hexToHSL(p.hex)); }}
+                  accessibilityLabel={`${p.name} preset`}
+                  accessibilityHint={selected ? 'Currently selected' : 'Pick this preset color'}
+                >
+                  <View style={[styles.presetSwatch, { backgroundColor: p.hex }, selected && styles.presetSwatchActive]} />
+                </PressScale>
+              );
+            })}
           </View>
 
           {/* Sliders */}
@@ -130,12 +143,19 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
 
           {/* Actions */}
           <View style={styles.actionRow}>
-            <PressScale onPress={() => { haptics.tap(); onClose(); }}>
+            <PressScale
+              onPress={() => { haptics.tap(); onClose(); }}
+              accessibilityLabel="Cancel"
+              accessibilityHint="Close without changing the color"
+            >
               <View style={styles.cancelBtn}>
                 <Text style={styles.cancelText}>CANCEL</Text>
               </View>
             </PressScale>
-            <PressScale onPress={() => { haptics.win(); onConfirm(currentHex); onClose(); }}>
+            <PressScale
+              onPress={() => { haptics.win(); onConfirm(currentHex); onClose(); }}
+              accessibilityLabel={`Apply color ${currentHex.toUpperCase()}`}
+            >
               <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.confirmBtn}>
                 <Text style={styles.confirmText}>APPLY</Text>
               </LinearGradient>
@@ -159,14 +179,14 @@ function SliderBar({ label, value, max, gradient, onMinus, onPlus }: {
         <Text style={styles.sliderValue}>{Math.round(value)}</Text>
       </View>
       <View style={styles.sliderControls}>
-        <PressScale onPress={onMinus}>
+        <PressScale onPress={onMinus} accessibilityLabel={`Decrease ${label.toLowerCase()}`}>
           <View style={styles.stepBtn}><Text style={styles.stepIcon}>−</Text></View>
         </PressScale>
         <View style={styles.sliderTrack}>
           <LinearGradient colors={gradient as any} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill as any} />
           <View style={[styles.sliderThumb, { left: `${pct}%` }]} />
         </View>
-        <PressScale onPress={onPlus}>
+        <PressScale onPress={onPlus} accessibilityLabel={`Increase ${label.toLowerCase()}`}>
           <View style={styles.stepBtn}><Text style={styles.stepIcon}>+</Text></View>
         </PressScale>
       </View>
