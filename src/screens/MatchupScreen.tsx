@@ -197,6 +197,9 @@ export function MatchupScreen({ navigation }: Props) {
       careerLevelReward: params.careerLevelReward,
       presetBoard: params.presetBoard,
       localPlayerNames: params.localPlayerNames,
+      // Forward opponent info so GameScreen can render correct 3D NPC
+      opponentName,
+      difficulty,
       wagerCourt: params.wagerAmount ? {
         name: courtName,
         entryFee: params.wagerAmount,
@@ -336,7 +339,7 @@ export function MatchupScreen({ navigation }: Props) {
                   {FEATURES.character3D
                     ? <Character3DPortrait
                         width={180} height={220} showFloor={false}
-                        customization={getNpcCustomization(params.difficulty)}
+                        customization={getNpcCustomization(opponentName || params.difficulty)}
                       />
                     : <CharacterAvatar size="xlarge" variant={botVariant as any} />}
                 </LinearGradient>

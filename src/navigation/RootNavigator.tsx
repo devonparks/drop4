@@ -77,6 +77,10 @@ export type GameParams = {
   onlineMatchId?: string;
   onlinePlayerNum?: 1 | 2;
   onlineOpponentName?: string;
+  // 3D NPC identity — forwarded from MatchupScreen so GameScreen renders
+  // the correct per-opponent 3D look (career NPCs, difficulty bots, etc.)
+  opponentName?: string;
+  difficulty?: string;
   // Game speed (private match)
   gameSpeed?: 'normal' | 'fast' | 'instant';
   // Series mode: wins needed to win the series (1 = no series, 2 = bo3, 3 = bo5, 4 = bo7)

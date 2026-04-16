@@ -1643,7 +1643,7 @@ export function GameScreen({ navigation }: Props) {
                     {FEATURES.character3D ? (
                       <Character3DPortrait
                         width={140} height={180} showFloor={false}
-                        customization={isVsAi ? getNpcCustomization(difficulty) : undefined}
+                        customization={isVsAi ? getNpcCustomization(params.opponentName || difficulty) : undefined}
                         animationId={
                           status === 'won' && winner === 2
                             ? 'emote_dab'
