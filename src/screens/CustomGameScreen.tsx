@@ -40,6 +40,9 @@ function SettingRow({ label, icon, value, options, onChange }: {
             key={opt.value}
             onPress={() => { haptics.tap(); onChange(opt.value); }}
             style={[styles.optionBtn, value === opt.value && styles.optionBtnActive]}
+            accessibilityRole="button"
+            accessibilityLabel={`Set ${label} to ${opt.label}`}
+            accessibilityState={{ selected: value === opt.value }}
           >
             <Text style={[styles.optionText, value === opt.value && styles.optionTextActive]}>
               {opt.label}
@@ -66,6 +69,9 @@ function ModifierToggle({ icon, name, description, value, onChange }: {
     <Pressable
       onPress={() => { haptics.tap(); onChange(!value); }}
       style={[styles.modifierRow, value && styles.modifierRowActive]}
+      accessibilityRole="switch"
+      accessibilityLabel={`${name} modifier. ${description}`}
+      accessibilityState={{ checked: value }}
     >
       <Text style={styles.modifierIcon}>{icon}</Text>
       <View style={styles.modifierInfo}>
@@ -404,7 +410,13 @@ export function CustomGameScreen({ navigation }: Props) {
             <SectionCard title="MATCH CODE" icon="🔑">
               <View style={styles.matchCodeSection}>
                 {/* Create Match */}
-                <Pressable onPress={handleCreateMatch} style={styles.createMatchBtn}>
+                <Pressable
+                  onPress={handleCreateMatch}
+                  style={styles.createMatchBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Create match code"
+                  accessibilityHint="Generates a 6-character code to share with a friend"
+                >
                   <LinearGradient
                     colors={['rgba(255,140,0,0.2)', 'rgba(255,140,0,0.08)']}
                     style={styles.createMatchGradient}
@@ -443,6 +455,9 @@ export function CustomGameScreen({ navigation }: Props) {
                   <Pressable
                     onPress={() => { haptics.tap(); }}
                     style={[styles.joinMatchBtn, matchCode.length < 6 && styles.joinMatchBtnDisabled]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Join match with entered code"
+                    accessibilityState={{ disabled: matchCode.length < 6 }}
                   >
                     <Text style={styles.joinMatchBtnText}>JOIN</Text>
                   </Pressable>
