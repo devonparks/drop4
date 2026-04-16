@@ -129,6 +129,7 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
                   onPress={() => { haptics.tap(); setHsl(hexToHSL(p.hex)); }}
                   accessibilityLabel={`${p.name} preset`}
                   accessibilityHint={selected ? 'Currently selected' : 'Pick this preset color'}
+                  accessibilityState={{ selected }}
                 >
                   <View style={[styles.presetSwatch, { backgroundColor: p.hex }, selected && styles.presetSwatchActive]} />
                 </PressScale>
