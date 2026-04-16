@@ -7,8 +7,6 @@ import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 import { EMOTE_EMOJI, EMOTE_NAME } from './EmoteShowcase';
-import { useRosterStore } from '../../stores/rosterStore';
-import { getCharacter } from '../../data/characterRoster';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const WHEEL_RADIUS = 110;
@@ -42,8 +40,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
   const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
 
   // v1: all characters share the same emote pool. Signature emotes are
-  // disabled until character art ships in v1.1. The roster store + getCharacter
-  // imports are kept for future use but not called in the render path.
+  // disabled until character art ships in v1.1.
   const slots: WheelSlot[] = useMemo(() => {
     const universals: WheelSlot[] = equippedEmotes.map((id) =>
       id
