@@ -1174,6 +1174,8 @@ export function GameScreen({ navigation }: Props) {
         <Pressable
           onPress={handleBack}
           style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Exit game"
         >
           <Text style={styles.backButtonText}>✕</Text>
         </Pressable>
@@ -1370,6 +1372,9 @@ export function GameScreen({ navigation }: Props) {
                 }}
                 style={[styles.controlBtn, !canAffordHint && { opacity: 0.4 }]}
                 disabled={!canAffordHint}
+                accessibilityRole="button"
+                accessibilityLabel={hintLabel}
+                accessibilityState={{ disabled: !canAffordHint }}
               >
                 <Text style={styles.controlIcon}>💡</Text>
                 <Text style={styles.controlLabel}>{hintLabel}</Text>
@@ -1384,20 +1389,30 @@ export function GameScreen({ navigation }: Props) {
 
           {/* Undo button — only available on Easy difficulty, hidden in online/ranked matches */}
           {!isOnlineMatch && !isRankedMode && difficulty === 'easy' && (
-            <Pressable onPress={() => {
-              if (undoMove()) {
-                setUndoCount(c => c + 1);
-                haptics.tap();
-                playSound('swoosh');
-              }
-            }} style={styles.controlBtn}>
+            <Pressable
+              onPress={() => {
+                if (undoMove()) {
+                  setUndoCount(c => c + 1);
+                  haptics.tap();
+                  playSound('swoosh');
+                }
+              }}
+              style={styles.controlBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Undo last move"
+            >
               <Text style={styles.controlIcon}>↩️</Text>
               <Text style={styles.controlLabel}>Undo</Text>
             </Pressable>
           )}
 
           {/* Resign button */}
-          <Pressable onPress={handleBack} style={styles.controlBtn}>
+          <Pressable
+            onPress={handleBack}
+            style={styles.controlBtn}
+            accessibilityRole="button"
+            accessibilityLabel={isOnlineMatch ? 'Resign match' : 'Quit game'}
+          >
             <Text style={styles.controlIcon}>🏳️</Text>
             <Text style={styles.resignLabel}>{isOnlineMatch ? 'Resign' : 'Quit'}</Text>
           </Pressable>
@@ -1463,6 +1478,8 @@ export function GameScreen({ navigation }: Props) {
             setEmoteWheelOpen(true);
           }}
           style={styles.emoteWheelTrigger}
+          accessibilityRole="button"
+          accessibilityLabel="Open emote wheel"
         >
           <LinearGradient
             colors={['rgba(255,140,0,0.3)', 'rgba(255,100,0,0.12)']}
@@ -1877,6 +1894,8 @@ export function GameScreen({ navigation }: Props) {
                       playSound('coin');
                       setShowCoinBurst(true);
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Watch ad to double coin reward"
                   >
                     <View style={styles.doubleCoinsAdBadge}>
                       <Text style={styles.doubleCoinsAdText}>AD</Text>
@@ -2040,6 +2059,9 @@ export function GameScreen({ navigation }: Props) {
                                   styles.goDiffBtn,
                                   isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
                                 ]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Switch to ${d} difficulty`}
+                                accessibilityState={{ selected: isActive }}
                               >
                                 <Text style={[
                                   styles.goDiffBtnText,
@@ -2072,7 +2094,12 @@ export function GameScreen({ navigation }: Props) {
                 )}
                 {/* Share Score */}
                 <PressScale scaleTo={0.95}>
-                  <Pressable style={styles.shareButton} onPress={handleShareScore}>
+                  <Pressable
+                    style={styles.shareButton}
+                    onPress={handleShareScore}
+                    accessibilityRole="button"
+                    accessibilityLabel={shareCopied ? 'Score copied to clipboard' : 'Share score'}
+                  >
                     <Text style={styles.shareButtonText}>
                       {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
                     </Text>
@@ -2085,6 +2112,8 @@ export function GameScreen({ navigation }: Props) {
                     <Pressable
                       style={styles.quickActionLink}
                       onPress={() => navigation.navigate('Stats' as any)}
+                      accessibilityRole="link"
+                      accessibilityLabel="View stats"
                     >
                       <Text style={styles.quickActionText}>View Stats</Text>
                     </Pressable>
@@ -2094,6 +2123,8 @@ export function GameScreen({ navigation }: Props) {
                     <Pressable
                       style={styles.quickActionLink}
                       onPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+                      accessibilityRole="link"
+                      accessibilityLabel="Open shop"
                     >
                       <Text style={styles.quickActionText}>Shop</Text>
                     </Pressable>
