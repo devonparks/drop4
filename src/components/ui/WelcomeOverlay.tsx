@@ -33,14 +33,18 @@ export function WelcomeOverlay() {
 
   return (
     <Modal transparent visible={visible} animationType="none">
-      <View style={styles.overlay}>
+      <View
+        style={styles.overlay}
+        accessibilityViewIsModal
+        accessibilityLiveRegion="polite"
+      >
         <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
           <LinearGradient
             colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.05)', 'transparent']}
             style={styles.glow}
           />
-          <Text style={styles.emoji}>🎮</Text>
-          <Text style={styles.title}>Welcome to Drop4!</Text>
+          <Text style={styles.emoji} accessibilityElementsHidden importantForAccessibility="no">🎮</Text>
+          <Text style={styles.title} accessibilityRole="header">Welcome to Drop4!</Text>
           <Text style={styles.message}>
             Stack pieces, connect four in a row, and dominate the competition.
             Start with a Quick Match or dive into Career Mode!
