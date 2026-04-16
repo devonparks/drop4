@@ -146,6 +146,8 @@ export function BoardEditorScreen({ navigation }: Props) {
               placeholder="Board name..."
               placeholderTextColor={colors.textMuted}
               maxLength={20}
+              accessibilityLabel="Board name"
+              accessibilityHint="Name your custom puzzle board, up to 20 characters"
             />
             <View style={styles.saveButtons}>
               <GlossyButton label="CANCEL" variant="navy" small onPress={() => setShowSave(false)} />
