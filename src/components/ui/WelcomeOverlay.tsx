@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import Animated, { SlideInDown, FadeIn } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GlossyButton } from './GlossyButton';
 import { colors } from '../../theme/colors';
@@ -46,10 +46,20 @@ export function WelcomeOverlay() {
             Start with a Quick Match or dive into Career Mode!
           </Text>
           <View style={styles.features}>
-            <Text style={styles.feature}>🎯 Play against AI at 3 difficulty levels</Text>
-            <Text style={styles.feature}>🏆 36 Career levels with boss battles</Text>
-            <Text style={styles.feature}>🎨 Unlock board skins and piece styles</Text>
-            <Text style={styles.feature}>🕺 Express yourself with emotes</Text>
+            {[
+              '🎯 Play against AI at 3 difficulty levels',
+              '🏆 36 Career levels with boss battles',
+              '🎨 Unlock board skins and piece styles',
+              '🕺 Express yourself with emotes',
+            ].map((line, i) => (
+              <Animated.Text
+                key={i}
+                entering={FadeIn.delay(450 + i * 110).duration(340)}
+                style={styles.feature}
+              >
+                {line}
+              </Animated.Text>
+            ))}
           </View>
           <GlossyButton
             label="LET'S GO!"
