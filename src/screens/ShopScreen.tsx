@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { PressScale, Shimmer, StaggeredEntry } from '../components/animations';
+import { PressScale, Shimmer } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
