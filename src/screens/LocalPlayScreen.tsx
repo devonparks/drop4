@@ -68,6 +68,8 @@ export function LocalPlayScreen({ navigation }: Props) {
                 placeholder="Player 1"
                 placeholderTextColor={colors.textMuted}
                 maxLength={12}
+                accessibilityLabel="Player 1 name"
+                accessibilityHint="Enter the name for the red player"
               />
               <Text style={styles.pieceIcon}>🔴</Text>
             </LinearGradient>
@@ -95,6 +97,8 @@ export function LocalPlayScreen({ navigation }: Props) {
                 placeholder="Player 2"
                 placeholderTextColor={colors.textMuted}
                 maxLength={12}
+                accessibilityLabel="Player 2 name"
+                accessibilityHint="Enter the name for the yellow player"
               />
               <Text style={styles.pieceIcon}>🟡</Text>
             </LinearGradient>
