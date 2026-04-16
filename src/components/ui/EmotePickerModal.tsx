@@ -91,7 +91,13 @@ function EmoteCard({ emote, onPress }: { emote: EmoteItem; onPress: (id: EmoteId
   }, [emote.id, onPress, scaleAnim]);
 
   return (
-    <Pressable onPress={handlePress} style={{ width: (SCREEN_WIDTH - 64) / 3 }}>
+    <Pressable
+      onPress={handlePress}
+      style={{ width: (SCREEN_WIDTH - 64) / 3 }}
+      accessibilityRole="button"
+      accessibilityLabel={`${emote.label} emote`}
+      accessibilityHint={emote.description}
+    >
       <Animated.View style={[
         styles.emoteCard,
         { borderColor: emote.color + '35', transform: [{ scale: scaleAnim }] },
@@ -129,7 +135,13 @@ function SignatureCard({ item, onPress }: { item: SignatureItem; onPress: (id: s
   }, [item.id, onPress, scaleAnim]);
 
   return (
-    <Pressable onPress={handlePress} style={{ width: (SCREEN_WIDTH - 64) / 3 }}>
+    <Pressable
+      onPress={handlePress}
+      style={{ width: (SCREEN_WIDTH - 64) / 3 }}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.label} signature emote`}
+      accessibilityHint="Exclusive emote for this character"
+    >
       <Animated.View style={[
         styles.emoteCard,
         styles.signatureCard,
@@ -168,7 +180,11 @@ function ChatPillItem({ message, onPress }: { message: QuickChatMessage; onPress
   }, [message, onPress, scaleAnim]);
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Send chat: ${message.text}`}
+    >
       <Animated.View style={[
         styles.chatPill,
         { borderColor: categoryColor + '40', transform: [{ scale: scaleAnim }] },
@@ -227,7 +243,12 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
     >
       <View style={styles.overlay}>
         {/* Tap backdrop to close */}
-        <Pressable style={styles.backdrop} onPress={onClose} />
+        <Pressable
+          style={styles.backdrop}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close emote picker"
+        />
 
         {/* Bottom sheet */}
         <View style={styles.sheet}>
@@ -239,12 +260,18 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
             <Pressable
               onPress={() => { setActiveTab('emotes'); haptics.tap(); }}
               style={[styles.tab, activeTab === 'emotes' && styles.tabActive]}
+              accessibilityRole="tab"
+              accessibilityLabel="Emotes tab"
+              accessibilityState={{ selected: activeTab === 'emotes' }}
             >
               <Text style={[styles.tabText, activeTab === 'emotes' && styles.tabTextActive]}>EMOTES</Text>
             </Pressable>
             <Pressable
               onPress={() => { setActiveTab('chat'); haptics.tap(); }}
               style={[styles.tab, activeTab === 'chat' && styles.tabActive]}
+              accessibilityRole="tab"
+              accessibilityLabel="Chat tab"
+              accessibilityState={{ selected: activeTab === 'chat' }}
             >
               <Text style={[styles.tabText, activeTab === 'chat' && styles.tabTextActive]}>CHAT</Text>
             </Pressable>
