@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
@@ -13,7 +12,6 @@ import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
-import { PETS } from '../data/pets';
 import { FEATURES } from '../config/features';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -22,15 +20,11 @@ type Props = {
 };
 
 export function PlayScreen({ navigation }: Props) {
-  const route = useRoute<RouteProp<RootStackParamList, 'Play'>>();
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const equipped = useShopStore(s => s.equipped);
-  const equippedPet = useShopStore(s => s.equippedPet);
   const newGame = useGameStore(s => s.newGame);
   const resetScores = useGameStore(s => s.resetScores);
-  const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
   const getMasteryStats = useMatchHistoryStore(s => s.getMasteryStats);
   const stats = useMemo(() => {
@@ -91,26 +85,9 @@ export function PlayScreen({ navigation }: Props) {
     return null;
   }, [matches]);
 
-  // Personal bests from match history
-  const personalBests = useMemo(() => {
-    const wins = matches.filter(m => m.result === 'win');
-    const fastestWin = wins.length > 0 ? Math.min(...wins.map(m => m.moves)) : null;
-    const mostCoins = matches.length > 0 ? Math.max(...matches.map(m => m.coinsEarned || 0)) : null;
-    return { fastestWin, longestStreak: bestStreak, mostCoins };
-  }, [matches, bestStreak]);
-
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
-
-  // Equipped summary — prettify IDs into display names
-  const equippedSummary = useMemo(() => {
-    const prettify = (id: string) => id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    const boardName = prettify(equipped.board);
-    const piecesName = prettify(equipped.pieces);
-    const petName = equippedPet ? (PETS.find(p => p.id === equippedPet)?.name ?? prettify(equippedPet)) : 'None';
-    return `Board: ${boardName}  |  Pieces: ${piecesName}  |  Pet: ${petName}`;
-  }, [equipped.board, equipped.pieces, equippedPet]);
 
   // Ranked is gated v1.1+. v1 is casual-only.
   const startGame = (difficulty: Difficulty) => {
@@ -211,12 +188,6 @@ const styles = StyleSheet.create({
   },
   buttonsWrap: {
     width: '100%', maxWidth: 340, gap: 8,
-  },
-  levelGateHint: {
-    fontFamily: fonts.body, fontWeight: weight.regular,
-    fontSize: 10, color: 'rgba(255,255,255,0.35)',
-    textAlign: 'center' as const, marginTop: 2,
-    letterSpacing: 0.3,
   },
   secondaryWrap: {
     flexDirection: 'row', width: '100%', maxWidth: 340, gap: 8,
