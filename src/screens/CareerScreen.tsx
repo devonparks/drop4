@@ -136,6 +136,10 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
   return (
     <Pressable
       onPress={() => { if (isUnlocked) { haptics.tap(); playSound('click'); onPress(); } }}
+      accessibilityRole="button"
+      accessibilityLabel={`Level ${level.id}: ${level.name}${level.isBoss ? ', boss' : ''}, ${badge.label}`}
+      accessibilityHint={isUnlocked ? (stars > 0 ? `Completed with ${stars} stars. Replay this level.` : 'Play this level.') : 'Locked. Complete the previous level to unlock.'}
+      accessibilityState={{ disabled: !isUnlocked }}
     >
     <NodeWrapper style={wrapperStyle}>
       <View style={styles.levelLeft}>
@@ -371,6 +375,9 @@ export function CareerScreen({ navigation }: Props) {
                   }
                 }}
                 style={[styles.chapterTab, isActive && styles.chapterTabActive, !isUnlocked && { opacity: 0.4 }]}
+                accessibilityRole="tab"
+                accessibilityLabel={`Chapter ${ch.id}: ${ch.name}, ${chapterStars} of ${ch.levels.length * 3} stars`}
+                accessibilityState={{ selected: isActive, disabled: !isUnlocked }}
               >
                 <View style={styles.chapterNameRow}>
                   <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
@@ -408,6 +415,9 @@ export function CareerScreen({ navigation }: Props) {
                   handlePlayLevel(nextUncompletedLevel);
                 }}
                 style={styles.continueCard}
+                accessibilityRole="button"
+                accessibilityLabel={`Continue: Level ${nextUncompletedLevel.id}, ${nextUncompletedLevel.name}`}
+                accessibilityHint="Resume career progress at the next unfinished level"
               >
                 <View style={styles.continueLeft}>
                   <Text style={styles.continueArrow}>▶</Text>
@@ -498,6 +508,9 @@ export function CareerScreen({ navigation }: Props) {
                   <Pressable
                     onPress={() => { haptics.tap(); setChapterCelebration(null); }}
                     style={styles.celebButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Continue"
+                    accessibilityHint="Dismiss the chapter complete celebration"
                   >
                     <Text style={styles.celebButtonText}>CONTINUE</Text>
                   </Pressable>
