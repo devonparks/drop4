@@ -216,25 +216,4 @@ const styles = StyleSheet.create({
   rakeText: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 8, color: colors.textMuted, marginTop: 1 },
   freeBadge: { backgroundColor: 'rgba(39,174,61,0.2)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 },
   freeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: colors.green },
-
-  // Spectator
-  spectatorSection: {
-    alignItems: 'center', padding: 16, marginTop: 8,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
-  },
-  spectatorTitle: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: colors.textSecondary },
-  spectatorDesc: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textMuted, marginTop: 2 },
-  spectatorLiveBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(231,76,60,0.15)', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 3, marginTop: 6,
-  },
-  spectatorDot: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: colors.red,
-  },
-  spectatorLiveText: {
-    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
-    color: colors.red, letterSpacing: 1,
-  },
 });
