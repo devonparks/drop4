@@ -60,7 +60,12 @@ export function OutfitPreviewModal({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close outfit preview"
+        />
         <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.card}>
           <Text style={styles.title}>{outfit.packLabel}</Text>
           <Text style={styles.subtitle}>#{String(outfit.index).padStart(2, '0')} · {outfit.species.toUpperCase()}</Text>

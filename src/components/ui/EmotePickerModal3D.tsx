@@ -72,7 +72,12 @@ export function EmotePickerModal3D({ visible, onClose, onPlay }: Props) {
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(160)} style={styles.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close emote picker"
+        />
         <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.card}>
           <Text style={styles.title}>EMOTES</Text>
           <Text style={styles.subtitle}>Tap to play</Text>

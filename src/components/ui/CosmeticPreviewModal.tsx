@@ -179,7 +179,12 @@ export function CosmeticPreviewModal({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(200)} style={s.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close preview"
+        />
 
         <Animated.View entering={SlideInDown.springify().damping(14)} style={s.card}>
           {/* Rarity accent strip */}

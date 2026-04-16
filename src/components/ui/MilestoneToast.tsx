@@ -82,7 +82,12 @@ export function MilestoneToast() {
   return (
     <Modal transparent visible animationType="none">
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={handleClaim} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={handleClaim}
+          accessibilityRole="button"
+          accessibilityLabel="Claim milestone reward"
+        />
         <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
           <LinearGradient
             colors={['rgba(255,209,102,0.2)', 'rgba(255,140,0,0.05)', 'transparent']}
