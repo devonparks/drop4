@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useTutorialStore } from '../stores/tutorialStore';
@@ -166,11 +167,11 @@ export function LearnScreen({ navigation }: Props) {
         <Text style={styles.subtitle}>Master every technique</Text>
 
         <ScrollView contentContainerStyle={styles.lessonList} showsVerticalScrollIndicator={false}>
-          {LESSONS.map(lesson => {
+          {LESSONS.map((lesson, i) => {
             const isMastered = hasViewedLesson(lesson.id);
             return (
+              <StaggeredEntry key={lesson.id} index={i}>
               <Pressable
-                key={lesson.id}
                 onPress={() => { haptics.tap(); setSelected(lesson); }}
                 style={styles.lessonCard}
                 accessibilityRole="button"
@@ -208,6 +209,7 @@ export function LearnScreen({ navigation }: Props) {
                   </View>
                 </LinearGradient>
               </Pressable>
+              </StaggeredEntry>
             );
           })}
         </ScrollView>
