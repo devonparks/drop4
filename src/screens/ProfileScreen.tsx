@@ -16,7 +16,6 @@ import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore'
 import { useChallengeStore } from '../stores/challengeStore';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
-import { RankBadge } from '../components/ui/RankBadge';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
 import { Shimmer, SlideReveal } from '../components/animations';
