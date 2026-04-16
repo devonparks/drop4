@@ -8,6 +8,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useRankedStore } from '../stores/rankedStore';
 import { RankBadge } from '../components/ui/RankBadge';
+import { StaggeredEntry } from '../components/animations';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { WAGER_COURTS, WagerCourt, canEnterCourt } from '../data/wagerTables';
@@ -147,15 +148,16 @@ export function StageScreen({ navigation }: Props) {
         </View>
 
         <ScrollView contentContainerStyle={styles.courtList} showsVerticalScrollIndicator={false}>
-          {WAGER_COURTS.map(court => (
-            <CourtCard
-              key={court.id}
-              court={court}
-              coins={coins}
-              playerLevel={level}
-              playerTier={tier}
-              onPress={() => handleSelectCourt(court)}
-            />
+          {WAGER_COURTS.map((court, i) => (
+            <StaggeredEntry key={court.id} index={i} delay={60}>
+              <CourtCard
+                court={court}
+                coins={coins}
+                playerLevel={level}
+                playerTier={tier}
+                onPress={() => handleSelectCourt(court)}
+              />
+            </StaggeredEntry>
           ))}
           {/* Spectator section removed with multiplayer kill for v1 */}
         </ScrollView>
