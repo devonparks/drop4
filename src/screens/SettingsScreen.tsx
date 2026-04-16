@@ -100,10 +100,10 @@ export function SettingsScreen({ navigation }: Props) {
         />
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>SETTINGS</Text>
+        <Text style={styles.title} accessibilityRole="header">SETTINGS</Text>
 
         {/* Audio */}
-        <Text style={styles.sectionTitle}>AUDIO</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">AUDIO</Text>
         <View style={styles.section}>
           <SettingToggle
             label="Sound Effects"
@@ -122,7 +122,7 @@ export function SettingsScreen({ navigation }: Props) {
         {/* Season Stats — only when ranked is enabled */}
         {FEATURES.rankedMode && (
           <>
-            <Text style={styles.sectionTitle}>SEASON STATS</Text>
+            <Text style={styles.sectionTitle} accessibilityRole="header">SEASON STATS</Text>
             <View style={styles.section}>
               <View style={styles.seasonStatsRow}>
                 <View style={styles.seasonStatItem}>
@@ -183,7 +183,7 @@ export function SettingsScreen({ navigation }: Props) {
         )}
 
         {/* Notifications */}
-        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">NOTIFICATIONS</Text>
         <View style={styles.section}>
           <SettingToggle
             label="Push Notifications"
@@ -194,7 +194,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* What's New */}
-        <Text style={styles.sectionTitle}>WHAT'S NEW IN v1.0.0</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">WHAT'S NEW IN v1.0.0</Text>
         <View style={styles.section}>
           {[
             { icon: '🎭', text: '30 emotes + Fortnite-style emote wheel in lobby' },
@@ -214,7 +214,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Your Journey */}
-        <Text style={styles.sectionTitle}>YOUR JOURNEY</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">YOUR JOURNEY</Text>
         <View style={styles.section}>
           <View style={styles.journeyGrid}>
             <View style={styles.journeyItem}>
@@ -245,7 +245,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Support & Purchases */}
-        <Text style={styles.sectionTitle}>SUPPORT</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">SUPPORT</Text>
         <View style={styles.section}>
           <SettingLink label="Contact Support" icon="💬" onPress={() => {
             haptics.tap();
@@ -265,7 +265,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* About */}
-        <Text style={styles.sectionTitle}>ABOUT</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">ABOUT</Text>
         <View style={styles.section}>
           <SettingLink label="Rate Drop4" icon="⭐" onPress={() => {
             haptics.tap();
@@ -289,7 +289,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Account */}
-        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">ACCOUNT</Text>
         <View style={styles.section}>
           <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
           <View style={styles.playerIdRow}>
