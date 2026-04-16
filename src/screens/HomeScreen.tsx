@@ -497,7 +497,8 @@ export function HomeScreen() {
             <Pressable
               onPress={handleCharacterTap}
               accessibilityRole="button"
-              accessibilityLabel="Tap character to play emote, long-press for random"
+              accessibilityLabel="Player character"
+              accessibilityHint="Double-tap to open the emote picker, long-press to play a random owned emote"
               onLongPress={() => {
                 if (!FEATURES.character3D) return;
                 // Long-press: play a random OWNED emote instantly (no modal).
@@ -535,7 +536,8 @@ export function HomeScreen() {
                 onPress={handlePetTap}
                 style={styles.petPosition}
                 accessibilityRole="button"
-                accessibilityLabel="Pet companion"
+                accessibilityLabel="Equipped pet"
+                accessibilityHint="Double-tap to interact with your pet"
               >
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
                   <PetDisplay petId={equippedPet} size={80} isIdle={!emote} />
@@ -560,6 +562,7 @@ export function HomeScreen() {
                 onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
                 accessibilityRole="button"
                 accessibilityLabel="Customize character"
+                accessibilityHint="Opens the character creator to change outfit, hair, body, and colors"
                 style={{
                   position: 'absolute',
                   bottom: -10,
