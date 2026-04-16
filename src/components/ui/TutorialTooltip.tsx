@@ -31,7 +31,12 @@ function TutorialCompleteBanner() {
   }, []);
 
   return (
-    <Animated.View style={[styles.completeBanner, { opacity, transform: [{ translateY }] }]}>
+    <Animated.View
+      style={[styles.completeBanner, { opacity, transform: [{ translateY }] }]}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
+      accessibilityLabel="Tutorial complete. Awarded 100 coins."
+    >
       <Text style={styles.completeBannerText}>Tutorial Complete! +100 coins</Text>
     </Animated.View>
   );
@@ -104,7 +109,13 @@ export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProp
           <Text style={styles.title}>{tip.title}</Text>
           <Text style={styles.message}>{tip.message}</Text>
 
-          <Pressable onPress={handleDismiss} style={styles.gotItBtn}>
+          <Pressable
+            onPress={handleDismiss}
+            style={styles.gotItBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`Dismiss tip: ${tip.title}`}
+            accessibilityHint="Marks this tutorial tip as seen"
+          >
             <Text style={styles.gotItText}>GOT IT</Text>
           </Pressable>
         </View>
