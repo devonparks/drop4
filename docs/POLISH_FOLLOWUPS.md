@@ -11,7 +11,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - PortraitFrame on ProfileScreen still uses the 2D player_idle.png. Swap to a Character3DPortrait wrapped in the tier frame for a premium card look
 <!-- MilestoneToast 3D preview + pulsing glow + confetti shipped below -->
 - DailyRewardPopup day-7+ could show a scaled-up celebration (confetti, bigger icon) when the reward is outfit/pet/title vs coins
-- Shop "Outfit of the Day" badge should pulse/glow (similar treatment to Streak Fire banner)
+<!-- Shop "Outfit of the Day" HOT badge pulse + warm glow shipped below -->
 
 ## Open — retention polish
 
@@ -55,5 +55,6 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Preload player outfit + default idle at app startup
 - T-pose fix (skeleton rebinding + track path stripping) — commit 67c3d97
 - MilestoneToast pulsing glow + confetti + 3D hero slot (character or pet) with emoji corner badge
+- Shop "Outfit of the Day" HOT badge pulse + warm orange glow (commit d3ac84f)
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->

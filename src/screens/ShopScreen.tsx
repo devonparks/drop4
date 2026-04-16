@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { PressScale, Shimmer, StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
@@ -142,10 +150,29 @@ function SectionHeader({ title, gradientColors, rightText }: { title: string; gr
 }
 
 // ─── Daily Deal Card ───────────────────────────────────────────
-function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge, onPress }: {
+function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge, pulseBadge, onPress }: {
   icon: string; title: string; subtitle: string; buttonLabel: string;
-  buttonColor: [string, string]; badge?: string; onPress: () => void;
+  buttonColor: [string, string]; badge?: string; pulseBadge?: boolean; onPress: () => void;
 }) {
+  // "Outfit of the Day" (and other hot deals) get a pulse/glow on the badge
+  // to steal the eye from the rest of the horizontal row.
+  const badgeScale = useSharedValue(1);
+  useEffect(() => {
+    if (pulseBadge) {
+      badgeScale.value = withRepeat(
+        withSequence(
+          withTiming(1.14, { duration: 700 }),
+          withTiming(1, { duration: 700 }),
+        ),
+        -1,
+        true,
+      );
+    } else {
+      badgeScale.value = 1;
+    }
+  }, [pulseBadge]);
+  const badgeAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: badgeScale.value }] }));
+
   return (
     <PressScale
       onPress={onPress}
@@ -156,9 +183,9 @@ function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge,
       <View style={s.dealCard}>
         <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={s.dealCardInner}>
           {badge && (
-            <View style={s.dealBadge}>
+            <Animated.View style={[s.dealBadge, pulseBadge && s.dealBadgeHot, pulseBadge && badgeAnimStyle]}>
               <Text style={s.dealBadgeText}>{badge}</Text>
-            </View>
+            </Animated.View>
           )}
           <Text style={s.dealIcon}>{icon}</Text>
           <Text style={s.dealTitle} numberOfLines={1}>{title}</Text>
@@ -929,6 +956,7 @@ export function ShopScreen() {
                       buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
                       buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
                       badge={deal.badge}
+                      pulseBadge={deal.badge.includes('HOT') && !isOwned}
                       onPress={() => {
                         haptics.tap();
                         if (isOutfit && !isOwned) {
@@ -1112,6 +1140,13 @@ const s = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 3,
+  },
+  dealBadgeHot: {
+    backgroundColor: '#ff6a00',
+    shadowColor: '#ff8c00',
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
+    elevation: 6,
   },
   dealBadgeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: '#fff', letterSpacing: 0.5 },
   dealIcon: { fontSize: 32, marginBottom: 4 },
