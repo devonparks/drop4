@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedCharacter, IdleVariantId, IDLE_VARIANT_IDS } from './AnimatedCharacter';
@@ -8,8 +8,6 @@ import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ── Display info for each idle variant ──
 const IDLE_INFO: Record<IdleVariantId, { name: string; icon: string }> = {
