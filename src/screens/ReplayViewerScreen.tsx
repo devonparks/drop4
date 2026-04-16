@@ -65,7 +65,12 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
   const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
   return (
-    <Pressable onPress={onWatch} style={rStyles.replayCard}>
+    <Pressable
+      onPress={onWatch}
+      style={rStyles.replayCard}
+      accessibilityRole="button"
+      accessibilityLabel={`Watch replay vs ${replay.opponent}, ${resultLabels[replay.result]}, ${replay.totalMoves} moves`}
+    >
       <View style={rStyles.replayLeft}>
         <Text style={[rStyles.replayResult, { color: resultColors[replay.result] }]}>
           {resultLabels[replay.result]}
@@ -76,10 +81,19 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
         </View>
       </View>
       <View style={rStyles.replayRight}>
-        <Pressable onPress={onToggleStar}>
+        <Pressable
+          onPress={onToggleStar}
+          accessibilityRole="button"
+          accessibilityLabel={replay.starred ? 'Unstar replay' : 'Star replay'}
+          accessibilityState={{ selected: replay.starred }}
+        >
           <Text style={rStyles.starIcon}>{replay.starred ? '⭐' : '☆'}</Text>
         </Pressable>
-        <Pressable onPress={onDelete}>
+        <Pressable
+          onPress={onDelete}
+          accessibilityRole="button"
+          accessibilityLabel="Delete replay"
+        >
           <Text style={rStyles.deleteIcon}>🗑</Text>
         </Pressable>
       </View>
@@ -169,7 +183,12 @@ export function ReplayViewerScreen() {
       <ScreenBackground>
         <View style={rStyles.container}>
           <View style={rStyles.watchHeader}>
-            <Pressable onPress={() => { setWatching(null); setIsPlaying(false); }} style={rStyles.backBtn}>
+            <Pressable
+              onPress={() => { setWatching(null); setIsPlaying(false); }}
+              style={rStyles.backBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Back to replay list"
+            >
               <Text style={rStyles.backText}>{'<'}</Text>
             </Pressable>
             <Text style={rStyles.watchTitle}>REPLAY</Text>
@@ -192,24 +211,39 @@ export function ReplayViewerScreen() {
           </Text>
 
           <View style={rStyles.controls}>
-            <Pressable onPress={() => {
-              // Reset
-              const emptyBoard: Cell[][] = Array.from({ length: watching.boardCols }, () =>
-                Array(watching.boardRows).fill(0)
-              );
-              setBoard(emptyBoard);
-              setMoveIndex(0);
-              setLastMove(null);
-              setIsPlaying(false);
-            }} style={rStyles.controlBtn}>
+            <Pressable
+              onPress={() => {
+                const emptyBoard: Cell[][] = Array.from({ length: watching.boardCols }, () =>
+                  Array(watching.boardRows).fill(0)
+                );
+                setBoard(emptyBoard);
+                setMoveIndex(0);
+                setLastMove(null);
+                setIsPlaying(false);
+              }}
+              style={rStyles.controlBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Reset replay to start"
+            >
               <Text style={rStyles.controlIcon}>⏮</Text>
             </Pressable>
 
-            <Pressable onPress={stepForward} style={rStyles.controlBtn}>
+            <Pressable
+              onPress={stepForward}
+              style={rStyles.controlBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Step forward one move"
+            >
               <Text style={rStyles.controlIcon}>⏭</Text>
             </Pressable>
 
-            <Pressable onPress={() => setIsPlaying(!isPlaying)} style={[rStyles.controlBtn, rStyles.playBtn]}>
+            <Pressable
+              onPress={() => setIsPlaying(!isPlaying)}
+              style={[rStyles.controlBtn, rStyles.playBtn]}
+              accessibilityRole="button"
+              accessibilityLabel={isPlaying ? 'Pause replay' : 'Play replay'}
+              accessibilityState={{ selected: isPlaying }}
+            >
               <Text style={rStyles.controlIcon}>{isPlaying ? '⏸' : '▶️'}</Text>
             </Pressable>
           </View>
