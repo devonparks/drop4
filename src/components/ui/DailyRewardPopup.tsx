@@ -13,6 +13,38 @@ import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
+// Pulsing ring around the current day's dot
+function DotPulseRing() {
+  const opacity = useRef(new RNAnimated.Value(0.6)).current;
+  const scale = useRef(new RNAnimated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.parallel([
+          RNAnimated.timing(opacity, { toValue: 0, duration: 900, useNativeDriver: true }),
+          RNAnimated.timing(scale, { toValue: 1.35, duration: 900, useNativeDriver: true }),
+        ]),
+        RNAnimated.parallel([
+          RNAnimated.timing(opacity, { toValue: 0.6, duration: 0, useNativeDriver: true }),
+          RNAnimated.timing(scale, { toValue: 1, duration: 0, useNativeDriver: true }),
+        ]),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  return (
+    <RNAnimated.View
+      style={[
+        styles.dotPulseRing,
+        { opacity, transform: [{ scale }] },
+      ]}
+    />
+  );
+}
+
 // Sparkle particle around the reward icon
 function RewardSparkle({ angle, delay, radius }: { angle: number; delay: number; radius: number }) {
   const opacity = useRef(new RNAnimated.Value(0)).current;
@@ -140,7 +172,7 @@ export function DailyRewardPopup() {
                   isActive && styles.dotActive,
                   isToday && styles.dotToday,
                 ]}>
-                  {isToday && <View style={styles.dotPulseRing} />}
+                  {isToday && <DotPulseRing />}
                   <Text style={[styles.dotText, isActive && styles.dotTextActive]}>{d}</Text>
                 </View>
               );
