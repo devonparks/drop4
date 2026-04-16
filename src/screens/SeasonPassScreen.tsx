@@ -64,7 +64,6 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
   hasPremium: boolean;
 }) {
   const isUnlocked = currentTier >= reward.tier;
-  const isCurrent = currentTier === reward.tier - 1;
 
   const isFreeClaimed = useSeasonStore(s => s.isFreeClaimed(reward.tier));
   const isPremiumClaimed = useSeasonStore(s => s.isPremiumClaimed(reward.tier));
@@ -101,7 +100,7 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
   }, [reward, claimPremiumReward, addCoins, purchaseItem, purchaseEmote, purchasePet]);
 
   return (
-    <View style={[styles.tierCard, isCurrent && styles.tierCardCurrent]}>
+    <View style={styles.tierCard}>
       {/* Tier number */}
       <View style={[styles.tierBadge, isUnlocked && styles.tierBadgeUnlocked]}>
         <Text style={[styles.tierNum, isUnlocked && { color: '#fff' }]}>{reward.tier}</Text>
@@ -506,9 +505,6 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     gap: 6,
     minHeight: 76,
-  },
-  tierCardCurrent: {
-    // Highlight current tier
   },
   tierBadge: {
     width: 36,
