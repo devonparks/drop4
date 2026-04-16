@@ -238,3 +238,79 @@ export function getNewlyEarnedMilestones(
 
   return earned;
 }
+
+/**
+ * Snapshot of a single milestone's progress for UI display. `current` and
+ * `required` drive the progress bar; `claimed` means the player has already
+ * cashed in the reward (MilestoneToast → claim). `complete` means they've
+ * hit the requirement — usually paired with claimed=false if the player
+ * hasn't tapped through the popup yet, or claimed=true after they did.
+ */
+export interface MilestoneProgress {
+  milestone: CollectionMilestone;
+  current: number;
+  required: number;
+  fraction: number; // clamped 0..1
+  complete: boolean;
+  claimed: boolean;
+}
+
+/**
+ * Compute progress for every milestone in the catalog. Used by the
+ * Awards tab in CollectionScreen to show the full ladder so the
+ * player can see what they're climbing toward — not just receive a
+ * surprise toast when it lands.
+ */
+export function getMilestoneProgressList(
+  ownedOutfits: string[],
+  ownedPets: string[],
+  claimedIds: string[],
+): MilestoneProgress[] {
+  const ownedSet = new Set(ownedOutfits);
+
+  const speciesOwned = new Set<string>();
+  for (const oid of ownedOutfits) {
+    const firstToken = oid.split('_')[0];
+    if (['human', 'elves', 'goblin', 'skeleton', 'zombie'].includes(firstToken)) {
+      speciesOwned.add(firstToken);
+    }
+  }
+
+  return COLLECTION_MILESTONES.map((m) => {
+    let current = 0;
+    const required = m.requiredCount;
+
+    if (m.id === 'apocalypse_complete') {
+      // Two-pack special case mirrored from getNewlyEarnedMilestones
+      const outlaws = PACKS.find((p) => p.pack === 'apocalypse_outlaws');
+      const survivors = PACKS.find((p) => p.pack === 'apocalypse_survivor');
+      current =
+        (outlaws ? outlaws.outfitIds.filter((id) => ownedSet.has(id)).length : 0) +
+        (survivors ? survivors.outfitIds.filter((id) => ownedSet.has(id)).length : 0);
+    } else if (m.packSlug) {
+      const pack = PACKS.find((p) => p.pack === m.packSlug);
+      current = pack
+        ? pack.outfitIds.filter((id) => ownedSet.has(id)).length
+        : 0;
+    } else if (m.specificOutfitIds) {
+      current = m.specificOutfitIds.filter((id) => ownedSet.has(id)).length;
+    } else if (m.anyOutfitsTotal !== undefined) {
+      current = ownedOutfits.length;
+    } else if (m.anyPetsTotal !== undefined) {
+      current = ownedPets.length;
+    } else if (m.uniqueSpeciesCount !== undefined) {
+      current = speciesOwned.size;
+    }
+
+    const fraction =
+      required <= 0 ? 1 : Math.max(0, Math.min(1, current / required));
+    return {
+      milestone: m,
+      current,
+      required,
+      fraction,
+      complete: current >= required,
+      claimed: claimedIds.includes(m.id),
+    };
+  });
+}

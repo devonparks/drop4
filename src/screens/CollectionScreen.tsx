@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useRosterStore } from '../stores/rosterStore';
+import { useCharacterStore } from '../stores/characterStore';
+import { usePetStore } from '../stores/petStore';
+import { useMilestoneStore } from '../stores/milestoneStore';
+import { getMilestoneProgressList, type MilestoneProgress } from '../data/collectionMilestones';
 import {
   ROSTER,
   RosterCharacter,
@@ -69,7 +73,7 @@ export function CollectionScreen() {
       >
         {activeTab === 'characters' && <CharactersTab />}
         {activeTab === 'loot' && <PlaceholderTab icon="📦" title="LOOT BOXES" desc="Win games to earn loot boxes. Open them for coins, board skins, and rare cosmetics." tip="Win 3 games → earn a Bronze Box" />}
-        {activeTab === 'awards' && <PlaceholderTab icon="🏅" title="ACHIEVEMENTS" desc="Track your achievements in the Challenges tab. Complete milestones to earn trophies and unlock titles." tip="22 achievements across 3 tiers" />}
+        {activeTab === 'awards' && <AwardsTab />}
       </ScrollView>
     </ScreenBackground>
   );
@@ -175,6 +179,139 @@ function CharCard({ char, equipped, unlocked, onEquip }: {
   );
 }
 
+// ─── Awards tab ──────────────────────────────────────────────────────
+// Shows every collection milestone with a progress bar, ordered so the
+// player always sees what's most imminently within reach first.
+//   1. Earned but unclaimed (the player owes themselves a tap on the toast)
+//   2. In-progress, highest fraction first — "you're 80% of the way to this"
+//   3. Claimed already (accomplishments, dimmed)
+//   4. Not started — full catalog visible so the ladder is legible
+function AwardsTab() {
+  const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
+  const ownedPets = usePetStore((s) => s.ownedPets);
+  const claimedIds = useMilestoneStore((s) => s.claimedIds);
+
+  const { earnedUnclaimed, inProgress, claimed, notStarted, total, claimedCount } = useMemo(() => {
+    const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds);
+    const earnedUnclaimed: MilestoneProgress[] = [];
+    const inProgress: MilestoneProgress[] = [];
+    const claimed: MilestoneProgress[] = [];
+    const notStarted: MilestoneProgress[] = [];
+    for (const p of list) {
+      if (p.complete && !p.claimed) earnedUnclaimed.push(p);
+      else if (p.claimed) claimed.push(p);
+      else if (p.current > 0) inProgress.push(p);
+      else notStarted.push(p);
+    }
+    inProgress.sort((a, b) => b.fraction - a.fraction);
+    return {
+      earnedUnclaimed,
+      inProgress,
+      claimed,
+      notStarted,
+      total: list.length,
+      claimedCount: list.filter((p) => p.claimed).length,
+    };
+  }, [ownedOutfits, ownedPets, claimedIds]);
+
+  return (
+    <Animated.View entering={FadeIn.duration(220)}>
+      {/* Summary header */}
+      <View style={awardStyles.summary}>
+        <LinearGradient
+          colors={['rgba(255,140,0,0.18)', 'rgba(255,140,0,0.03)']}
+          style={awardStyles.summaryInner}
+        >
+          <Text style={awardStyles.summaryKicker}>MILESTONES</Text>
+          <Text style={awardStyles.summaryBig}>
+            {claimedCount}
+            <Text style={awardStyles.summarySmall}> / {total}</Text>
+          </Text>
+          <Text style={awardStyles.summaryHint}>
+            Complete a pack or collect enough outfits / pets to unlock exclusive titles + rewards.
+          </Text>
+        </LinearGradient>
+      </View>
+
+      {earnedUnclaimed.length > 0 && (
+        <MilestoneSection title="READY TO CLAIM" emoji="✨" items={earnedUnclaimed} />
+      )}
+      {inProgress.length > 0 && (
+        <MilestoneSection title="IN PROGRESS" emoji="🎯" items={inProgress} />
+      )}
+      {claimed.length > 0 && (
+        <MilestoneSection title="UNLOCKED" emoji="🏆" items={claimed} dimmed />
+      )}
+      {notStarted.length > 0 && (
+        <MilestoneSection title="LOCKED" emoji="🔒" items={notStarted} dimmed />
+      )}
+    </Animated.View>
+  );
+}
+
+function MilestoneSection({
+  title, emoji, items, dimmed,
+}: {
+  title: string; emoji: string; items: MilestoneProgress[]; dimmed?: boolean;
+}) {
+  return (
+    <View style={{ marginBottom: 8 }}>
+      <Text style={awardStyles.sectionHeader}>
+        <Text>{emoji}  </Text>
+        <Text>{title}</Text>
+        <Text style={awardStyles.sectionCount}>  ({items.length})</Text>
+      </Text>
+      {items.map((p, i) => (
+        <StaggeredEntry key={p.milestone.id} index={i} delay={35}>
+          <MilestoneRow progress={p} dimmed={dimmed} />
+        </StaggeredEntry>
+      ))}
+    </View>
+  );
+}
+
+function MilestoneRow({ progress, dimmed }: { progress: MilestoneProgress; dimmed?: boolean }) {
+  const { milestone: m, current, required, fraction, complete, claimed } = progress;
+  return (
+    <View
+      style={[awardStyles.row, dimmed && awardStyles.rowDim]}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={
+        claimed
+          ? `${m.name} unlocked, reward ${m.reward.name}`
+          : complete
+          ? `${m.name} ready to claim, reward ${m.reward.name}`
+          : `${m.name}, ${current} of ${required}, reward ${m.reward.name}`
+      }
+    >
+      <Text style={awardStyles.rowIcon}>{m.reward.icon}</Text>
+      <View style={awardStyles.rowBody}>
+        <View style={awardStyles.rowTitleLine}>
+          <Text style={awardStyles.rowTitle} numberOfLines={1}>{m.name}</Text>
+          {claimed && <Text style={awardStyles.rowClaimedTag}>CLAIMED</Text>}
+          {complete && !claimed && <Text style={awardStyles.rowReadyTag}>READY</Text>}
+        </View>
+        <Text style={awardStyles.rowDesc} numberOfLines={2}>{m.description}</Text>
+        <View style={awardStyles.progressTrack}>
+          <View
+            style={[
+              awardStyles.progressFill,
+              { width: `${Math.round(fraction * 100)}%` },
+              claimed && awardStyles.progressFillClaimed,
+              complete && !claimed && awardStyles.progressFillReady,
+            ]}
+          />
+        </View>
+        <View style={awardStyles.rowMetaLine}>
+          <Text style={awardStyles.rowProgress}>{current} / {required}</Text>
+          <Text style={awardStyles.rowReward} numberOfLines={1}>🎁 {m.reward.name}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 // ─── Placeholder tab ─────────────────────────────────────────────────
 function PlaceholderTab({ icon, title, desc, tip }: { icon: string; title: string; desc: string; tip: string }) {
   return (
@@ -230,4 +367,87 @@ const styles = StyleSheet.create({
   placeholderDesc: { fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8, paddingHorizontal: 30, lineHeight: 18 },
   placeholderTip: { marginTop: 16, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'rgba(255,140,0,0.1)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.25)' },
   placeholderTipText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.orange },
+});
+
+const awardStyles = StyleSheet.create({
+  summary: {
+    borderRadius: 20, overflow: 'hidden', marginBottom: 14,
+    borderWidth: 1, borderColor: 'rgba(255,140,0,0.25)',
+  },
+  summaryInner: { alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 },
+  summaryKicker: {
+    fontFamily: fonts.body, fontWeight: weight.black, fontSize: 10,
+    color: colors.orange, letterSpacing: 2,
+  },
+  summaryBig: {
+    fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 38,
+    color: '#ffffff', marginTop: 2,
+  },
+  summarySmall: { fontSize: 18, color: colors.textSecondary, fontWeight: weight.bold },
+  summaryHint: {
+    fontFamily: fonts.body, fontSize: 11, color: colors.textMuted,
+    textAlign: 'center', marginTop: 6, paddingHorizontal: 8, lineHeight: 15,
+  },
+
+  sectionHeader: {
+    fontFamily: fonts.body, fontWeight: weight.black, fontSize: 11,
+    color: '#ffffff', letterSpacing: 1.4, marginTop: 8, marginBottom: 6,
+  },
+  sectionCount: {
+    color: colors.textMuted, fontWeight: weight.bold,
+  },
+
+  row: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14, padding: 10, marginBottom: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
+  rowDim: { opacity: 0.72 },
+  rowIcon: {
+    fontSize: 26, width: 40, textAlign: 'center',
+  },
+  rowBody: { flex: 1, marginLeft: 8 },
+  rowTitleLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowTitle: {
+    fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 13,
+    color: '#ffffff', flexShrink: 1,
+  },
+  rowClaimedTag: {
+    fontFamily: fonts.body, fontWeight: weight.black, fontSize: 8,
+    color: '#0d1030', backgroundColor: colors.greenLight,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5,
+    letterSpacing: 0.8, overflow: 'hidden',
+  },
+  rowReadyTag: {
+    fontFamily: fonts.body, fontWeight: weight.black, fontSize: 8,
+    color: '#0d1030', backgroundColor: colors.orange,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5,
+    letterSpacing: 0.8, overflow: 'hidden',
+  },
+  rowDesc: {
+    fontFamily: fonts.body, fontSize: 11, color: colors.textMuted,
+    marginTop: 1, lineHeight: 15,
+  },
+  progressTrack: {
+    marginTop: 6, height: 5, borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%', backgroundColor: colors.orange, borderRadius: 3,
+  },
+  progressFillReady: { backgroundColor: colors.orange },
+  progressFillClaimed: { backgroundColor: colors.greenLight },
+  rowMetaLine: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginTop: 4, gap: 8,
+  },
+  rowProgress: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10,
+    color: colors.textSecondary,
+  },
+  rowReward: {
+    fontFamily: fonts.body, fontSize: 10, color: colors.orange,
+    fontWeight: weight.bold, flexShrink: 1, textAlign: 'right',
+  },
 });
