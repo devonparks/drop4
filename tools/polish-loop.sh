@@ -123,15 +123,18 @@ while true; do
   START_TIME=$(date +%s)
   BEFORE_SHA=$(git rev-parse HEAD)
 
-  # Invoke Claude headless. Budget cap at $1.50 per iteration (tested
-  # working — $0.50 was too tight, the agent ran out before committing).
-  # Permission bypass because we trust the POLISH_CHARTER.md rails.
+  # Invoke Claude headless. You're on a Claude Max subscription (verified
+  # via empty ANTHROPIC_API_KEY), so --max-budget-usd limits token-spend
+  # per iteration but doesn't bill real money. Raised to $5 so iterations
+  # have enough headroom to read docs + edit + tsc + jest + commit +
+  # push without aborting mid-way. When you hit your plan's rate limit,
+  # the CLI just errors and the loop skips iterations until it resets.
   # < /dev/null so the CLI doesn't wait for stdin.
-  log "Invoking Claude (max \$1.50/iter, ~5min timeout)..."
+  log "Invoking Claude (max \$5/iter token budget, subscription-billed)..."
   claude -p "$POLISH_PROMPT" \
     --permission-mode bypassPermissions \
-    --max-budget-usd 1.50 \
-    --effort low \
+    --max-budget-usd 5 \
+    --effort medium \
     < /dev/null \
     >> "$LOG" 2>&1 || {
       log "${C_YELLOW}Claude iteration failed or exited non-zero.${C_OFF}"

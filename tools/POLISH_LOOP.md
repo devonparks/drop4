@@ -35,11 +35,18 @@ The loop checks for that file at the top of every iteration and exits cleanly.
 3. The inner Claude agent reads `docs/POLISH_CHARTER.md` and related docs, picks a task, edits, runs `npx tsc --noEmit` + `npx jest`, commits with the standard trailer, pushes
 4. Loop waits 15s, checks stop signal, repeats
 
-## Budget math
+## Billing — subscription, not wallet
 
-At ~$1.50/iteration × 1 iteration every ~5 min = ~$18/hour in the worst case. Usually it's much less (the agent gives up early on empty targets). Expect **$50-150/day** if you leave it running 24h.
+Verified: the `claude` CLI on this machine uses OAuth to your Claude Max account, not per-token API billing. Proof: `ANTHROPIC_API_KEY` is unset and `claude -p` invocations succeed. That means:
 
-Cap it yourself: open a second terminal and `touch ~/Desktop/Drop4/.STOP_POLISH` whenever you want. Or just close the terminal window.
+- **Every iteration counts against your Claude Max quota**, same as talking to Claude in the desktop app
+- **No real dollars leave your account** from running this loop
+- When you hit your plan's rate limit, the CLI errors and the loop sits idle until quota resets
+- The `--max-budget-usd 5` flag in the script is a token-spend throttle per iteration (not a dollar cap), keeping any one iteration from consuming your entire daily quota
+
+Leave it running as long as you want — the only cost is your subscription you're already paying for. When you're rate-limited, it auto-pauses.
+
+To stop early: `Ctrl+C` in the terminal, or `touch ~/Desktop/Drop4/.STOP_POLISH` from another terminal.
 
 ## Logs
 
