@@ -77,7 +77,13 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       {/* Dark overlay — tap to close */}
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable
+        style={styles.overlay}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close emote wheel"
+        accessibilityHint="Tap outside the wheel to dismiss"
+      >
         <View style={styles.wheelArea}>
           {/* Center glow + label */}
           <View style={styles.centerGlow}>
@@ -108,6 +114,14 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
                 onPressIn={() => setHoveredSlot(index)}
                 onPressOut={() => setHoveredSlot(null)}
                 onPress={() => handleSlotPress(index)}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isEmpty
+                    ? `Empty emote slot ${index + 1}`
+                    : `Play ${name} emote${isSignature ? ', signature' : ''}, slot ${index + 1}`
+                }
+                accessibilityHint={isEmpty ? 'Equip an emote to this slot in the shop' : 'Triggers this emote and closes the wheel'}
+                accessibilityState={{ disabled: isEmpty }}
                 style={[
                   styles.slot,
                   {
