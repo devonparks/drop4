@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -268,7 +269,7 @@ export function MatchHistoryScreen() {
         }
         renderItem={({ item }) => <MatchRow match={item} />}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <Animated.View entering={FadeIn.duration(280)} style={styles.emptyState}>
             <Text style={styles.emptyIcon}>{'\uD83C\uDFAE'}</Text>
             <Text style={styles.emptyTitle}>No matches yet</Text>
             <Text style={styles.emptyDesc}>
@@ -276,7 +277,7 @@ export function MatchHistoryScreen() {
                 ? 'Play some games and your match history will appear here.'
                 : `No ${filter === 'draw' ? 'draws' : filter + 's'} found.`}
             </Text>
-          </View>
+          </Animated.View>
         }
         ListFooterComponent={
           hasMore ? (
