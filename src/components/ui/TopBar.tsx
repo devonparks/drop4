@@ -315,9 +315,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEmoji: {
-    fontSize: 22,
-  },
   levelBadge: {
     position: 'absolute',
     bottom: -3,
