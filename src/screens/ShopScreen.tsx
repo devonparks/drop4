@@ -699,6 +699,9 @@ export function ShopScreen() {
                     key={tab.key}
                     onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); }}
                     style={[s.tab, activeTab === tab.key && s.tabActive]}
+                    accessibilityRole="tab"
+                    accessibilityLabel={`${tab.label} tab`}
+                    accessibilityState={{ selected: activeTab === tab.key }}
                   >
                     <Text style={s.tabIcon}>{tab.icon}</Text>
                     <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
@@ -741,6 +744,9 @@ export function ShopScreen() {
                           outfitSpecies === sp.id && s.collectionPillActive,
                           isLocked && { opacity: 0.45 },
                         ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={isLocked ? `${sp.label} species (locked)` : `Filter outfits by ${sp.label}`}
+                        accessibilityState={{ selected: outfitSpecies === sp.id, disabled: isLocked }}
                       >
                         <Text style={[s.collectionPillText, outfitSpecies === sp.id && s.collectionPillTextActive]}>
                           {isLocked ? '\u{1F512} ' : sp.icon + ' '}{sp.label}
@@ -768,6 +774,9 @@ export function ShopScreen() {
                       key={cf}
                       onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
                       style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Filter by ${cf}`}
+                      accessibilityState={{ selected: collectionFilter === cf }}
                     >
                       <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
                     </Pressable>
