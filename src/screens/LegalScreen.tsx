@@ -213,6 +213,13 @@ export function LegalScreen({ navigation, route }: Props) {
   if (!doc) {
     return (
       <ScreenBackground>
+        <TopBar
+          coins={coins}
+          gems={gems}
+          level={level}
+          showBack
+          onBackPress={() => navigation.goBack()}
+        />
         <Text style={styles.errorText}>Document not found.</Text>
       </ScreenBackground>
     );
