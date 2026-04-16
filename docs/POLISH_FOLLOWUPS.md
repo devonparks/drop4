@@ -9,7 +9,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Extract the blur backdrop style from modals (EmotePickerModal3D, OutfitPreviewModal, MilestoneToast, HSLColorPicker) into a reusable `<BlurOverlay>` component
 - Audit `Animated.Value` uses — some could move to Reanimated `useSharedValue` for native-thread perf
 - PortraitFrame on ProfileScreen still uses the 2D player_idle.png. Swap to a Character3DPortrait wrapped in the tier frame for a premium card look
-- MilestoneToast could show a mini 3D preview of the unlocked reward (Character3DPortrait or Pet3D) instead of just the emoji icon
+<!-- MilestoneToast 3D preview + pulsing glow + confetti shipped below -->
 - DailyRewardPopup day-7+ could show a scaled-up celebration (confetti, bigger icon) when the reward is outfit/pet/title vs coins
 - Shop "Outfit of the Day" badge should pulse/glow (similar treatment to Streak Fire banner)
 
@@ -54,5 +54,6 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Outfit shop cards with rarity gradients + pack emojis
 - Preload player outfit + default idle at app startup
 - T-pose fix (skeleton rebinding + track path stripping) — commit 67c3d97
+- MilestoneToast pulsing glow + confetti + 3D hero slot (character or pet) with emoji corner badge
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->

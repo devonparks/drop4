@@ -7,12 +7,26 @@
  *
  * Mount this near the app root (e.g. in App.tsx alongside DailyRewardPopup)
  * so it can fire from anywhere the player unlocks a cosmetic.
+ *
+ * Visual treatment: pulsing orange glow + confetti on reveal + a 3D hero
+ * slot that shows the player's character (or their pet for pet milestones)
+ * with the reward emoji as a corner badge so the milestone's identity
+ * survives. Celebrates the player, not just the payload.
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  SlideInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useCharacterStore } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useShopStore } from '../../stores/shopStore';
@@ -25,10 +39,37 @@ import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
+import { ConfettiOverlay } from '../effects/ConfettiOverlay';
+import { Character3DPortrait } from '../3d/Character3DPortrait';
+import { Pet3D } from '../3d/Pet3D';
+import { PETS, STARTER_PET_ID, type PetId } from '../../data/petRegistry';
+
+// Pet milestones celebrate the kennel, so the hero slot should show a pet.
+// Everything else (pack completion, total outfits, species collector) is
+// centered on the character — we render the player's current customization.
+function isPetMilestone(m: CollectionMilestone): boolean {
+  return typeof m.anyPetsTotal === 'number';
+}
+
+// Prefer the player's active pet (the one they've equipped) for the hero
+// slot. If that's somehow null (legacy save), fall back to the most recently
+// owned pet, then to the starter Labrador. Never returns undefined.
+function pickShowcasePetGlb(
+  activePetId: PetId | null,
+  ownedPets: string[],
+): number {
+  if (activePetId && PETS[activePetId]) return PETS[activePetId].glb;
+  for (let i = ownedPets.length - 1; i >= 0; i--) {
+    const id = ownedPets[i] as PetId;
+    if (PETS[id]) return PETS[id].glb;
+  }
+  return PETS[STARTER_PET_ID].glb;
+}
 
 export function MilestoneToast() {
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
   const ownedPets = usePetStore((s) => s.ownedPets);
+  const activePetId = usePetStore((s) => s.activePetId);
   const claimedIds = useMilestoneStore((s) => s.claimedIds);
   const claimMilestone = useMilestoneStore((s) => s.claim);
   const unlockTitle = useMilestoneStore((s) => s.unlockTitle);
@@ -59,6 +100,28 @@ export function MilestoneToast() {
     setQueue((q) => q.slice(1));
   }, [active, queue]);
 
+  // Continuous glow pulse while a milestone is visible. Drives shadow radius,
+  // shadow opacity, and border alpha so the card breathes in orange.
+  const glow = useSharedValue(0.35);
+  useEffect(() => {
+    if (!active) return;
+    glow.value = 0.35;
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0.35, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      false,
+    );
+  }, [active, glow]);
+
+  const cardGlowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: 0.3 + glow.value * 0.5,
+    shadowRadius: 16 + glow.value * 14,
+    borderColor: `rgba(255,140,0,${0.35 + glow.value * 0.55})`,
+  }));
+
   if (!active) return null;
 
   const handleClaim = () => {
@@ -79,8 +142,12 @@ export function MilestoneToast() {
     setActive(null);
   };
 
+  const showPet = isPetMilestone(active);
+
   return (
     <Modal transparent visible animationType="none">
+      {/* key by milestone id so confetti re-fires for each queued toast */}
+      <ConfettiOverlay key={active.id} visible />
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
@@ -88,13 +155,39 @@ export function MilestoneToast() {
           accessibilityRole="button"
           accessibilityLabel="Claim milestone reward"
         />
-        <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
+        <Animated.View
+          entering={SlideInDown.springify().damping(12)}
+          style={[styles.card, cardGlowStyle]}
+        >
           <LinearGradient
             colors={['rgba(255,209,102,0.2)', 'rgba(255,140,0,0.05)', 'transparent']}
             style={StyleSheet.absoluteFill}
           />
           <Text style={styles.kicker}>MILESTONE UNLOCKED</Text>
-          <Text style={styles.icon}>{active.reward.icon}</Text>
+
+          <View style={styles.heroSlot}>
+            {showPet ? (
+              <Pet3D
+                width={150}
+                height={150}
+                petGlb={pickShowcasePetGlb(activePetId, ownedPets)}
+                cameraDistance={1.8}
+                cameraHeight={0.45}
+                autoRotate
+              />
+            ) : (
+              <Character3DPortrait
+                width={140}
+                height={160}
+                autoRotate
+                showFloor={false}
+              />
+            )}
+            <View style={styles.emojiBadge} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Text style={styles.emojiBadgeText}>{active.reward.icon}</Text>
+            </View>
+          </View>
+
           <Text style={styles.title}>{active.name}</Text>
           <Text style={styles.description}>{active.description}</Text>
 
@@ -139,8 +232,23 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
     color: colors.orange, letterSpacing: 2,
   },
-  icon: {
-    fontSize: 56, marginTop: 4,
+  heroSlot: {
+    width: 160, height: 160,
+    alignItems: 'center', justifyContent: 'center',
+    position: 'relative',
+    marginTop: 4, marginBottom: 4,
+  },
+  emojiBadge: {
+    position: 'absolute',
+    bottom: 0, right: 0,
+    width: 44, height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(13,16,48,0.95)',
+    borderWidth: 2, borderColor: 'rgba(255,140,0,0.7)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  emojiBadgeText: {
+    fontSize: 22,
   },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22,
