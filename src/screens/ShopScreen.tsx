@@ -147,7 +147,12 @@ function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge,
   buttonColor: [string, string]; badge?: string; onPress: () => void;
 }) {
   return (
-    <PressScale onPress={onPress}>
+    <PressScale
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}${badge ? `, ${badge}` : ''}, ${subtitle}`}
+      accessibilityHint={`Opens ${buttonLabel.toLowerCase()} deal`}
+    >
       <View style={s.dealCard}>
         <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']} style={s.dealCardInner}>
           {badge && (
@@ -173,7 +178,12 @@ function LootBagCard({ tier, icon, name, price, color, borderCol, onPress }: {
   color: [string, string]; borderCol: string; onPress: () => void;
 }) {
   return (
-    <PressScale onPress={onPress}>
+    <PressScale
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${name} loot bag, ${tier} tier, ${price}`}
+      accessibilityHint="Opens loot bag purchase and reveal"
+    >
       <View style={[s.bagCard, { borderColor: borderCol }]}>
         <LinearGradient colors={color} style={s.bagCardInner}>
           <View style={s.bagIconWrap}>
@@ -196,7 +206,12 @@ function BundleCard({ icon, amount, bonus, price, color, highlight, onPress }: {
   color: [string, string]; highlight?: boolean; onPress: () => void;
 }) {
   return (
-    <PressScale onPress={onPress}>
+    <PressScale
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${amount} bundle${bonus ? `, ${bonus}` : ''}${highlight ? ', most popular' : ''}, ${price}`}
+      accessibilityHint="Opens gem bundle purchase"
+    >
       <View style={[s.bundleCard, highlight && s.bundleCardHighlight]}>
         <LinearGradient colors={color} style={s.bundleInner}>
           {bonus && (
