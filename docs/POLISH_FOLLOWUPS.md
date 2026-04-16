@@ -15,7 +15,6 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 
 ## Open — retention polish
 
-- Push notification content variants (rotate 3-4 message variations per slot so players don't ignore the same copy)
 - Streak-recovery mechanic — one "freeze" per week so a single missed day doesn't reset progress
 - Milestone screen in Profile showing progress toward each milestone (bars, percentages)
 - Welcome-back bonus if player returns after 3+ days away (coins + free outfit of choice)
@@ -56,5 +55,6 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - T-pose fix (skeleton rebinding + track path stripping) — commit 67c3d97
 - MilestoneToast pulsing glow + confetti + 3D hero slot (character or pet) with emoji corner badge
 - Shop "Outfit of the Day" HOT badge pulse + warm orange glow (commit d3ac84f)
+- Push notification content variants — 4 morning / 4 evening / 4 Saturday copy rotations
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->
