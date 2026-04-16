@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -324,7 +325,7 @@ export function StatsScreen({ navigation }: Props) {
         <SectionTitle title="RECENT FORM" />
         <View style={styles.card}>
           {recentForm.length === 0 ? (
-            <Text style={styles.emptyText}>No recent games</Text>
+            <Animated.Text entering={FadeIn.duration(280)} style={styles.emptyText}>No recent games</Animated.Text>
           ) : (
             <View style={styles.formRow}>
               {recentForm.map((m, i) => (
