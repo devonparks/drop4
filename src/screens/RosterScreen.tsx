@@ -128,6 +128,14 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
     <Pressable
       onPress={isUnlocked ? onEquip : undefined}
       disabled={!isUnlocked}
+      accessibilityRole="button"
+      accessibilityLabel={
+        isUnlocked
+          ? `${character.name}, ${tierStyle.name} tier, rating ${rating}`
+          : `Locked character${character.unlockedAtCareerLevel != null ? `, unlocks at career level ${character.unlockedAtCareerLevel}` : ''}`
+      }
+      accessibilityState={{ disabled: !isUnlocked, selected: isEquipped }}
+      accessibilityHint={isUnlocked && !isEquipped ? 'Double tap to equip' : undefined}
       style={[
         styles.card,
         {
