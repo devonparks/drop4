@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -178,14 +179,14 @@ function CharCard({ char, equipped, unlocked, onEquip }: {
 // ─── Placeholder tab ─────────────────────────────────────────────────
 function PlaceholderTab({ icon, title, desc, tip }: { icon: string; title: string; desc: string; tip: string }) {
   return (
-    <View style={styles.placeholder}>
+    <Animated.View entering={FadeIn.duration(280)} style={styles.placeholder}>
       <Text style={{ fontSize: 48, marginBottom: 12 }}>{icon}</Text>
       <Text style={styles.placeholderTitle}>{title}</Text>
       <Text style={styles.placeholderDesc}>{desc}</Text>
       <View style={styles.placeholderTip}>
         <Text style={styles.placeholderTipText}>{tip}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
