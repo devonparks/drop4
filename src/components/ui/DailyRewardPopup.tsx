@@ -134,13 +134,17 @@ export function DailyRewardPopup() {
 
   return (
     <Modal transparent visible={visible} animationType="none">
-      <View style={styles.overlay}>
+      <View
+        style={styles.overlay}
+        accessibilityViewIsModal
+        accessibilityLiveRegion="polite"
+      >
         <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
           <LinearGradient
             colors={['rgba(255,209,102,0.15)', 'rgba(255,140,0,0.05)', 'transparent']}
             style={styles.glow}
           />
-          <Text style={styles.title}>DAILY REWARD</Text>
+          <Text style={styles.title} accessibilityRole="header">DAILY REWARD</Text>
           <Text style={styles.streak}>Day {(currentStreak % 7) + 1} of 7</Text>
 
           {/* Golden glow + sparkles around reward icon */}
@@ -150,7 +154,7 @@ export function DailyRewardPopup() {
               style={styles.iconGlow}
             />
             <View style={styles.iconGlowRing} />
-            <Text style={styles.icon}>{reward.icon}</Text>
+            <Text style={styles.icon} accessibilityElementsHidden importantForAccessibility="no">{reward.icon}</Text>
             {/* Sparkle particles */}
             <RewardSparkle angle={0} delay={0} radius={48} />
             <RewardSparkle angle={60} delay={300} radius={52} />
