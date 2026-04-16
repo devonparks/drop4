@@ -235,7 +235,11 @@ export function CosmeticPreviewModal({
                 <Text style={s.equippedText}>✓ EQUIPPED</Text>
               </View>
             ) : isOwned ? (
-              <PressScale onPress={() => { haptics.win(); onEquip(); }}>
+              <PressScale
+                onPress={() => { haptics.win(); onEquip(); }}
+                accessibilityLabel={`Equip ${item.name}`}
+                accessibilityHint="Sets this cosmetic as active"
+              >
                 <LinearGradient colors={['#27ae3d', '#1e8a30']} style={s.actionBtn}>
                   <Text style={s.actionBtnText}>EQUIP</Text>
                 </LinearGradient>
@@ -245,7 +249,15 @@ export function CosmeticPreviewModal({
                 <Text style={[s.earnOnlyText, { color: rarityColor }]}>EARN ONLY</Text>
               </View>
             ) : (
-              <PressScale onPress={() => { haptics.win(); onBuy(); }} disabled={!canAfford}>
+              <PressScale
+                onPress={() => { haptics.win(); onBuy(); }}
+                disabled={!canAfford}
+                accessibilityLabel={
+                  canAfford
+                    ? `Buy ${item.name} for ${item.price.toLocaleString()} coins`
+                    : `Cannot afford ${item.name}, need ${item.price.toLocaleString()} coins`
+                }
+              >
                 <Shimmer color="rgba(255,215,0,0.2)" duration={2500} paused={!canAfford}>
                   <LinearGradient
                     colors={canAfford ? ['#ff8c00', '#cc5500'] : ['#333', '#222']}
@@ -260,7 +272,7 @@ export function CosmeticPreviewModal({
             )}
 
             {/* Cancel */}
-            <PressScale onPress={onClose}>
+            <PressScale onPress={onClose} accessibilityLabel="Close preview">
               <View style={s.cancelBtn}>
                 <Text style={s.cancelText}>BACK</Text>
               </View>
