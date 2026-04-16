@@ -72,11 +72,16 @@ export function BoardEditorScreen({ navigation }: Props) {
 
         {/* Piece selector */}
         <View style={styles.pieceSelector}>
-          {([1, 2, 0] as Cell[]).map(piece => (
+          {([1, 2, 0] as Cell[]).map(piece => {
+            const pieceName = piece === 1 ? 'Red' : piece === 2 ? 'Yellow' : 'Erase';
+            return (
             <Pressable
               key={piece}
               onPress={() => { haptics.tap(); setCurrentPiece(piece); }}
               style={[styles.pieceBtn, currentPiece === piece && styles.pieceBtnActive]}
+              accessibilityRole="radio"
+              accessibilityLabel={`${pieceName} piece`}
+              accessibilityState={{ selected: currentPiece === piece }}
             >
               <View style={[styles.pieceDot, {
                 backgroundColor: piece === 1 ? colors.pieceRed : piece === 2 ? colors.pieceYellow : 'transparent',
@@ -87,7 +92,8 @@ export function BoardEditorScreen({ navigation }: Props) {
                 {piece === 1 ? 'Red' : piece === 2 ? 'Yellow' : 'Erase'}
               </Text>
             </Pressable>
-          ))}
+            );
+          })}
         </View>
 
         {/* Board grid */}
@@ -97,11 +103,15 @@ export function BoardEditorScreen({ navigation }: Props) {
               <View key={row} style={styles.boardRow}>
                 {Array.from({ length: editorCols }).map((_, col) => {
                   const cell = editorBoard[col]?.[row] || 0;
+                  const cellName = cell === 1 ? 'red' : cell === 2 ? 'yellow' : 'empty';
                   return (
                     <Pressable
                       key={`${col}-${row}`}
                       onPress={() => handleCellPress(col, row)}
                       style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Cell column ${col + 1} row ${row + 1}, ${cellName}`}
+                      accessibilityHint="Place selected piece here"
                     >
                       {cell !== 0 && (
                         <View style={[styles.cellPiece, {
@@ -150,7 +160,13 @@ export function BoardEditorScreen({ navigation }: Props) {
             <Text style={styles.myBoardsTitle}>MY BOARDS ({myBoards.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.myBoardsScroll}>
               {myBoards.map(board => (
-                <Pressable key={board.id} onPress={() => { haptics.tap(); loadBoard(board); }} style={styles.boardCard}>
+                <Pressable
+                  key={board.id}
+                  onPress={() => { haptics.tap(); loadBoard(board); }}
+                  style={styles.boardCard}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Load board ${board.name}, ${board.cols} by ${board.rows}`}
+                >
                   <Text style={styles.boardCardName}>{board.name}</Text>
                   <Text style={styles.boardCardInfo}>{board.cols}x{board.rows}</Text>
                 </Pressable>
