@@ -138,9 +138,7 @@ export function StatsScreen({ navigation }: Props) {
     const fastestWin = winMatches.length > 0 ? Math.min(...winMatches.map(m => m.moves)) : null;
     const mostCoins = matches.length > 0 ? Math.max(...matches.map(m => m.coinsEarned || 0)) : null;
 
-    // Recent form & ranked recent
     const recentForm = matches.slice(0, 10);
-    const rankedMatches = matches.filter(m => m.mode === 'stage').slice(0, 10);
 
     return {
       totalGames, wins, losses, draws, winRate, totalCoinsEarned,
@@ -149,7 +147,7 @@ export function StatsScreen({ navigation }: Props) {
       hoursPlayed,
       longestLoseStreak,
       fastestWin, mostCoins,
-      recentForm, rankedMatches,
+      recentForm,
     };
   }, [matches]);
 
@@ -184,7 +182,7 @@ export function StatsScreen({ navigation }: Props) {
     hoursPlayed,
     longestLoseStreak,
     fastestWin, mostCoins,
-    recentForm, rankedMatches,
+    recentForm,
   } = stats;
 
   return (
