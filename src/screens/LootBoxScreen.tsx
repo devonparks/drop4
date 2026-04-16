@@ -136,7 +136,7 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 
         {/* Open your bag header */}
         <Animated.View entering={FadeInUp.delay(200).springify()} style={st.openingHeader}>
-          <Text style={st.openingTitle}>Open your bag!</Text>
+          <Text style={st.openingTitle} accessibilityRole="header">Open your bag!</Text>
           <Text style={st.openingArrow}>{'\u25BC'}</Text>
         </Animated.View>
 
@@ -366,7 +366,7 @@ export function LootBoxScreen() {
         {/* Header */}
         <Animated.View entering={FadeInUp.springify()} style={st.headerWrap}>
           <LinearGradient colors={['#8e44ad', '#9b59b6']} style={st.headerBanner}>
-            <Text style={st.title}>LOOT BOXES</Text>
+            <Text style={st.title} accessibilityRole="header">LOOT BOXES</Text>
             <Text style={st.subtitle}>Open boxes to win cosmetics and coins</Text>
           </LinearGradient>
         </Animated.View>
@@ -392,7 +392,7 @@ export function LootBoxScreen() {
           <Animated.View entering={FadeInUp.delay(400).springify()}>
             <View style={st.ratesSection}>
               <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']} style={st.ratesGradient}>
-                <Text style={st.ratesTitle}>DROP RATES</Text>
+                <Text style={st.ratesTitle} accessibilityRole="header">DROP RATES</Text>
                 <View style={st.ratesGrid}>
                   {[
                     { label: 'Common', pct: '60%', color: RARITY_COLORS.common },
