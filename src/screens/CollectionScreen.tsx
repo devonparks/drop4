@@ -4,7 +4,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { useShopStore } from '../stores/shopStore';
 import { useRosterStore } from '../stores/rosterStore';
 import {
   ROSTER,
