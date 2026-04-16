@@ -174,7 +174,12 @@ const NEWS_ITEMS = [
 
 function NewsCard({ item, onPress }: { item: typeof NEWS_ITEMS[0]; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.text} news card`}
+      accessibilityHint="Opens this section"
+    >
       <LinearGradient colors={[...item.gradient]} style={styles.newsCard}>
         <Text style={styles.newsEmoji}>{item.emoji}</Text>
         <Text style={styles.newsText} numberOfLines={1}>{item.text}</Text>
