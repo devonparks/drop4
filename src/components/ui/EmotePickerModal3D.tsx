@@ -13,7 +13,7 @@ import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { PressScale } from '../animations';
 import { useShopStore } from '../../stores/shopStore';
-import { HUMAN_EMOTES, findAnimation } from '../../data/animationRegistry';
+import { HUMAN_EMOTES } from '../../data/animationRegistry';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
