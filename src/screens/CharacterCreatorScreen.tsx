@@ -519,6 +519,10 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                               styles.wheelSlot,
                               isSelected && styles.wheelSlotSelected,
                             ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Wheel slot ${index + 1}: ${EMOTE_NAME[eid] || 'Empty'}`}
+                            accessibilityHint="Tap to select this slot, then tap an emote to assign it"
+                            accessibilityState={{ selected: isSelected }}
                           >
                             <Text style={styles.wheelSlotEmoji}>
                               {EMOTE_EMOJI[eid] || '?'}
@@ -570,6 +574,15 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                                 isLocked && styles.emoteTabCardLocked,
                                 isInWheel && styles.emoteTabCardInWheel,
                               ]}
+                              accessibilityRole="button"
+                              accessibilityLabel={
+                                isLocked
+                                  ? `${EMOTE_NAME[emoteId]} emote, locked: ${unlock?.requirement || 'requirement not met'}`
+                                  : selectedWheelSlot !== null
+                                    ? `Assign ${EMOTE_NAME[emoteId]} to wheel slot ${selectedWheelSlot + 1}`
+                                    : `Preview ${EMOTE_NAME[emoteId]} emote`
+                              }
+                              accessibilityState={{ disabled: isLocked, selected: isInWheel }}
                             >
                               <Text style={[styles.emoteTabCardEmoji, isLocked && { opacity: 0.3 }]}>
                                 {EMOTE_EMOJI[emoteId]}
@@ -634,6 +647,17 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           isOwned && styles.itemCardOwned,
                           isEquipped && styles.itemCardSelected,
                         ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          isEquipped
+                            ? `${pet.name}, ${PET_RARITY_LABELS[pet.rarity]} pet, equipped`
+                            : isOwned
+                              ? `${pet.name}, ${PET_RARITY_LABELS[pet.rarity]} pet, owned`
+                              : pet.price > 0
+                                ? `${pet.name}, ${PET_RARITY_LABELS[pet.rarity]} pet, costs ${pet.price} coins`
+                                : `${pet.name}, ${PET_RARITY_LABELS[pet.rarity]} pet, locked`
+                        }
+                        accessibilityState={{ selected: isEquipped }}
                       >
                         {/* Rarity strip at top */}
                         <View style={[styles.rarityStrip, { backgroundColor: rarityColor }]} />
@@ -696,6 +720,14 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           isDefault && styles.itemCardOwned,
                           isSelected && styles.itemCardSelected,
                         ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          isDefault
+                            ? `${item.name}, ${RARITY_LABELS[item.rarity]}, owned`
+                            : `${item.name}, ${RARITY_LABELS[item.rarity]}, locked: ${unlockDesc}`
+                        }
+                        accessibilityHint="Opens item details"
+                        accessibilityState={{ selected: isSelected, disabled: isLocked }}
                       >
                         {/* Rarity strip at top */}
                         <View style={[styles.rarityStrip, { backgroundColor: rarityColor }]} />
@@ -756,7 +788,12 @@ export function CharacterCreatorScreen({ navigation }: Props) {
         {/* ══ ITEM DETAIL PANEL (B) — bottom sheet ══ */}
         {selectedItem && (
           <View style={styles.detailOverlay}>
-            <Pressable style={styles.detailDismiss} onPress={closeDetailPanel} />
+            <Pressable
+              style={styles.detailDismiss}
+              onPress={closeDetailPanel}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss item details"
+            />
             <View style={styles.detailPanel}>
               {/* Grab handle */}
               <View style={styles.detailHandle} />
@@ -793,6 +830,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                   <Pressable
                     onPress={() => { haptics.tap(); closeDetailPanel(); }}
                     style={styles.detailEquipButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Equip ${selectedItem.name}`}
                   >
                     <LinearGradient
                       colors={['#ff8c00', '#e07800']}
@@ -816,6 +855,8 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                   <Pressable
                     onPress={() => { haptics.tap(); }}
                     style={styles.detailBuyButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Buy ${selectedItem.name} for ${selectedItem.unlock.price} coins`}
                   >
                     <Text style={styles.detailBuyIcon}>{'\uD83E\uDE99'}</Text>
                     <Text style={styles.detailBuyText}>{selectedItem.unlock.price} COINS</Text>
