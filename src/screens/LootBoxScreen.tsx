@@ -461,7 +461,6 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
-  boxCardIcon: { fontSize: 36 },
   boxCardInfo: { flex: 1, gap: 4 },
   boxCardName: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 17, color: '#ffffff',
@@ -492,7 +491,6 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12,
   },
   emptyText: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 13, color: colors.textMuted },
-  buyPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.coinGold, marginTop: 2 },
 
   // ── Rates ──
   ratesSection: { borderRadius: 16, overflow: 'hidden', marginTop: 4 },
