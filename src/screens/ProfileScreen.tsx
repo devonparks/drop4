@@ -523,41 +523,6 @@ const styles = StyleSheet.create({
   avatarSection: {
     marginBottom: 12,
   },
-  avatarGlow: {
-    shadowColor: colors.coinGold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  avatarRingOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    padding: 3,
-  },
-  avatarRingGap: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 57,
-    backgroundColor: '#0a0e27',
-    padding: 3,
-  },
-  avatarRingInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 54,
-    padding: 3,
-  },
-  avatarInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 51,
-    backgroundColor: '#1a1a3a',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
   playerName: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
