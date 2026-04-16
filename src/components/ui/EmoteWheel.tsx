@@ -55,7 +55,13 @@ export function EmoteWheel({ visible, onClose, onSelect }: EmoteWheelProps) {
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable
+        style={styles.overlay}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close emote wheel"
+        accessibilityHint="Dismisses the emote wheel without selecting an emote"
+      >
         <View style={styles.wheelContainer}>
           {/* Center button (close) */}
           <View style={styles.centerBtn}>
@@ -80,6 +86,10 @@ export function EmoteWheel({ visible, onClose, onSelect }: EmoteWheelProps) {
                   },
                   !item.unlocked && styles.lockedSlot,
                 ]}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} emote`}
+                accessibilityHint={item.unlocked ? 'Plays this emote on your character' : 'Locked — unlock this emote to use it'}
+                accessibilityState={{ disabled: !item.unlocked }}
               >
                 <LinearGradient
                   colors={item.unlocked
@@ -117,7 +127,13 @@ interface EmoteWheelTriggerProps {
 
 export function EmoteWheelTrigger({ onPress }: EmoteWheelTriggerProps) {
   return (
-    <Pressable onPress={() => { haptics.tap(); onPress(); }} style={styles.triggerBtn}>
+    <Pressable
+      onPress={() => { haptics.tap(); onPress(); }}
+      style={styles.triggerBtn}
+      accessibilityRole="button"
+      accessibilityLabel="Open emote wheel"
+      accessibilityHint="Opens the radial emote picker"
+    >
       <LinearGradient
         colors={['rgba(255,140,0,0.2)', 'rgba(255,140,0,0.08)']}
         style={styles.triggerGradient}
