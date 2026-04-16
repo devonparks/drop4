@@ -1,11 +1,18 @@
 import React, { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /**
+   * Optional callback invoked when the user taps "Go Home". If not
+   * provided, the button is hidden (so we don't offer a dead action
+   * when there's nowhere to go). The parent can use this to call
+   * navigation.navigate('MainTabs', { screen: 'Home' }) or the equivalent.
+   */
+  onGoHome?: () => void;
 }
 
 interface State {
@@ -28,6 +35,24 @@ export class ErrorBoundary extends Component<Props, State> {
     if (__DEV__) console.error('[Drop4 Error]', error, errorInfo);
   }
 
+  handleTryAgain = () => {
+    // On web, a true reload is cheap and clears any corrupted runtime
+    // state. On native, there's no equivalent API, so we clear the
+    // error state and hope the re-render is enough — usually it is, since
+    // error boundaries catch transient errors more often than structural
+    // ones.
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.reload();
+      return;
+    }
+    this.setState({ hasError: false, error: null, showDetails: false });
+  };
+
+  handleGoHome = () => {
+    this.setState({ hasError: false, error: null, showDetails: false });
+    this.props.onGoHome?.();
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
@@ -41,9 +66,6 @@ export class ErrorBoundary extends Component<Props, State> {
             <Text style={styles.title}>Something went wrong</Text>
             <Text style={styles.subtitle}>
               Don't worry — this is usually a quick fix.
-            </Text>
-            <Text style={styles.instruction}>
-              Tap "Try Again" to reload
             </Text>
             <Pressable
               onPress={() => this.setState({ showDetails: !this.state.showDetails })}
@@ -62,26 +84,28 @@ export class ErrorBoundary extends Component<Props, State> {
               </Text>
             )}
             <Pressable
-              onPress={() => this.setState({ hasError: false, error: null, showDetails: false })}
+              onPress={this.handleTryAgain}
               style={({ pressed }) => [
                 styles.retryBtn,
                 pressed && styles.retryBtnPressed,
               ]}
               accessibilityRole="button"
               accessibilityLabel="Try again"
-              accessibilityHint="Reloads the screen"
+              accessibilityHint="Reloads the app"
             >
               <Text style={styles.retryText}>Try Again</Text>
             </Pressable>
-            <Pressable
-              onPress={() => this.setState({ hasError: false, error: null, showDetails: false })}
-              style={styles.secondaryBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Go home"
-              accessibilityHint="Dismisses this error and returns to the app"
-            >
-              <Text style={styles.secondaryText}>Go Home</Text>
-            </Pressable>
+            {this.props.onGoHome && (
+              <Pressable
+                onPress={this.handleGoHome}
+                style={styles.secondaryBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Go home"
+                accessibilityHint="Dismisses this error and returns to the home screen"
+              >
+                <Text style={styles.secondaryText}>Go Home</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       );
@@ -144,16 +168,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 6,
   },
-  instruction: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 13,
-    color: colors.orange,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
   detailsToggle: {
     paddingVertical: 6,
+    marginTop: 6,
     marginBottom: 4,
   },
   detailsToggleText: {

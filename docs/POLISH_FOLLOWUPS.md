@@ -8,7 +8,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Migrate Character3DCreatorScreen + ShopScreen pack chips to the shared `<FilterChip>` component (src/components/ui/FilterChip.tsx exists)
 - Extract the blur backdrop style from modals (EmotePickerModal3D, OutfitPreviewModal, MilestoneToast, HSLColorPicker) into a reusable `<BlurOverlay>` component
 - Audit `Animated.Value` uses — some could move to Reanimated `useSharedValue` for native-thread perf
-- PortraitFrame on ProfileScreen still uses the 2D player_idle.png. Swap to a Character3DPortrait wrapped in the tier frame for a premium card look
+<!-- ProfileScreen 3D portrait shipped below -->
 <!-- MilestoneToast 3D preview + pulsing glow + confetti shipped below -->
 - DailyRewardPopup day-7+ could show a scaled-up celebration (confetti, bigger icon) when the reward is outfit/pet/title vs coins
 <!-- Shop "Outfit of the Day" HOT badge pulse + warm glow shipped below -->
@@ -22,10 +22,9 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 
 ## Open — code quality
 
-- Dead Firebase-related services (friends.ts, matchmaking.ts, emotes.ts remote, firebase.ts itself) now unused after MP kill — safe to delete but test first
+<!-- friends.ts, friendsStore.ts, EmoteWheel.tsx, EmoteBar.tsx deleted (commit cc58c09) -->
+- Delete `src/services/matchmaking.ts` + `src/services/emotes.ts` remote paths — still imported by GameScreen but only reached if onlineMatchId is set (never, post MP-kill). Careful diff to strip the MP branches in GameScreen first, then delete.
 - `seriesStore.ts` still referenced by GameScreen for single-player series — keep but simplify
-- Delete `src/services/friends.ts` and `src/services/matchmaking.ts` — nothing imports them post MP-kill
-- Delete `src/components/ui/EmoteWheel.tsx` (~250 lines) and `src/components/ui/EmoteBar.tsx` (~255 lines) — both unimported. `EmoteWheel` is superseded by `FortniteEmoteWheel` (in-game) and `EmoteBar` by `HomeEmoteSelector`'s built-in grid (lobby).
 - MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
 - StageScreen (wager courts) — kept the file but the courts require multiplayer to actually wager. Either gate behind `goldCourt` flag or reframe as "practice courts"
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
@@ -33,7 +32,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 ## Open — beta prep
 
 - App Store / Google Play screenshots — use web preview at 1920×1080 bucket
-- Privacy policy + terms of service legal pages (LegalScreen exists, write real content)
+<!-- LegalScreen privacy + terms content shipped (commit f14b12d). Still needs a lawyer review pass + the {{SUPPORT_EMAIL}} / {{COMPANY_ADDRESS}} constants updated with final values before submission. -->
 - App icon final export (1024×1024, no alpha for iOS)
 - Splash screen polish (already has SplashAnimation component)
 - Error boundary coverage — ensure ErrorBoundary wraps every screen, not just root
@@ -57,5 +56,8 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - MilestoneToast pulsing glow + confetti + 3D hero slot (character or pet) with emoji corner badge
 - Shop "Outfit of the Day" HOT badge pulse + warm orange glow (commit d3ac84f)
 - Push notification content variants — 4 morning / 4 evening / 4 Saturday copy rotations
+- ProfileScreen portrait upgraded to live 3D character (commit c74c94f)
+- Deleted dead friends + emote wheel/bar code, 1,103 lines (commit cc58c09)
+- LegalScreen privacy + terms ready for app store review — account deletion, analytics disclosure, push notifications, GDPR/CCPA, governing law (commit f14b12d)
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->

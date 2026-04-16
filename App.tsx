@@ -120,7 +120,15 @@ export default function App() {
   }
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary
+      onGoHome={() => {
+        // Reset nav to the Home tab. If the nav ref isn't ready
+        // (shouldn't happen when the app is past the splash gate, but
+        // defensively anyway), we just clear the error and the user
+        // stays on whatever Home renders by default.
+        navRef.current?.navigate('MainTabs', { screen: 'Home' } as any);
+      }}
+    >
     <PhoneFrame>
     <GestureHandlerRootView style={styles.container} onLayout={onLayoutRootView}>
       <StatusBar style="light" />
