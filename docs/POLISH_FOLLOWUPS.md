@@ -25,6 +25,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Dead Firebase-related services (friends.ts, matchmaking.ts, emotes.ts remote, firebase.ts itself) now unused after MP kill — safe to delete but test first
 - `seriesStore.ts` still referenced by GameScreen for single-player series — keep but simplify
 - Delete `src/services/friends.ts` and `src/services/matchmaking.ts` — nothing imports them post MP-kill
+- Delete `src/components/ui/EmoteWheel.tsx` (~250 lines) and `src/components/ui/EmoteBar.tsx` (~255 lines) — both unimported. `EmoteWheel` is superseded by `FortniteEmoteWheel` (in-game) and `EmoteBar` by `HomeEmoteSelector`'s built-in grid (lobby).
 - MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
 - StageScreen (wager courts) — kept the file but the courts require multiplayer to actually wager. Either gate behind `goldCourt` flag or reframe as "practice courts"
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
