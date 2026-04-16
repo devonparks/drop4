@@ -9,6 +9,9 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
+import { preloadGLBs } from './src/utils/glbLoader';
+import { OUTFITS } from './src/data/outfitRegistry';
+import { DEFAULT_HUMAN_IDLE } from './src/data/animationRegistry';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
 import { useRosterStore } from './src/stores/rosterStore';
@@ -79,6 +82,18 @@ export default function App() {
         }
         // Preload sound effects
         await preloadSounds();
+
+        // Preload the player's current outfit + default idle so the home
+        // screen character mounts without a loading spinner. Other outfits
+        // load lazily when swapped in the creator.
+        try {
+          const cust = useCharacterStore.getState().customization;
+          const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['human_modern_civilians_01'];
+          const preloadList: number[] = [];
+          if (outfit?.glb != null) preloadList.push(outfit.glb);
+          if (DEFAULT_HUMAN_IDLE?.glb != null) preloadList.push(DEFAULT_HUMAN_IDLE.glb);
+          if (preloadList.length) await preloadGLBs(preloadList);
+        } catch { /* best-effort */ }
       } catch (e) {
         console.warn('Font loading error:', e);
       } finally {
