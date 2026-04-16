@@ -84,7 +84,13 @@ export function EmotePickerModal3D({ visible, onClose, onPlay }: Props) {
 
           <View style={styles.grid}>
             {slots.map((slot, i) => (
-              <PressScale key={`${slot.id || 'empty'}-${i}`} onPress={() => handleTap(slot)}>
+              <PressScale
+                key={`${slot.id || 'empty'}-${i}`}
+                onPress={() => handleTap(slot)}
+                accessibilityRole="button"
+                accessibilityLabel={slot.meta ? `Play ${slot.meta.name} emote` : `Empty emote slot ${i + 1}`}
+                accessibilityHint={slot.meta ? 'Triggers the emote and closes this picker' : 'Equip an emote to this slot in the shop'}
+              >
                 <View style={[styles.slot, !slot.meta && styles.slotEmpty]}>
                   {slot.meta ? (
                     <>
