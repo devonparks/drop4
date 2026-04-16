@@ -157,6 +157,14 @@ export function CareerMapScreen({ navigation }: Props) {
                     navigation.navigate('CareerCity', { cityId: city.id });
                   }
                 }}
+                disabled={!unlocked}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  unlocked
+                    ? `${city.name}, ${city.state} — ${stats.completed} of ${stats.total} levels complete`
+                    : `${city.name} locked. Complete ${activeCities[cityIdx - 1]?.name || 'previous city'} to unlock`
+                }
+                accessibilityState={{ disabled: !unlocked }}
                 style={[styles.zoneCard, !unlocked && styles.zoneCardLocked]}
               >
                 <LinearGradient
