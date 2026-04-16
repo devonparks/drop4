@@ -111,12 +111,18 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
           <Pressable
             onPress={() => { haptics.tap(); setActiveTab('emotes'); }}
             style={[styles.tab, activeTab === 'emotes' && styles.tabActive]}
+            accessibilityRole="tab"
+            accessibilityLabel="Emotes tab"
+            accessibilityState={{ selected: activeTab === 'emotes' }}
           >
             <Text style={[styles.tabText, activeTab === 'emotes' && styles.tabTextActive]}>🕺 EMOTES</Text>
           </Pressable>
           <Pressable
             onPress={() => { haptics.tap(); setActiveTab('idles'); }}
             style={[styles.tab, activeTab === 'idles' && styles.tabActive]}
+            accessibilityRole="tab"
+            accessibilityLabel="Idles tab"
+            accessibilityState={{ selected: activeTab === 'idles' }}
           >
             <Text style={[styles.tabText, activeTab === 'idles' && styles.tabTextActive]}>💫 IDLES</Text>
           </Pressable>
@@ -174,6 +180,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                           key={id}
                           onPress={() => handleSelectEmote(id)}
                           style={[styles.emoteCard, selected && styles.emoteCardSelected]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Select ${EMOTE_NAME[id] || id} emote`}
+                          accessibilityState={{ selected }}
                         >
                           <Text style={styles.emoteEmoji}>{EMOTE_EMOJI[id] || '?'}</Text>
                           <Text style={[styles.emoteName, selected && { color: colors.orange }]} numberOfLines={1}>
@@ -192,6 +201,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
               <Pressable
                 onPress={() => handleSelectIdle(null)}
                 style={[styles.idleRow, !equippedIdle && styles.idleRowActive]}
+                accessibilityRole="button"
+                accessibilityLabel="Default idle, random variants"
+                accessibilityState={{ selected: !equippedIdle }}
               >
                 <Text style={styles.idleIcon}>🔄</Text>
                 <View style={{ flex: 1 }}>
@@ -210,6 +222,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                     key={id}
                     onPress={() => handleSelectIdle(id)}
                     style={[styles.idleRow, active && styles.idleRowActive]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Equip ${info.name} idle`}
+                    accessibilityState={{ selected: active }}
                   >
                     <Text style={styles.idleIcon}>{info.icon}</Text>
                     <View style={{ flex: 1 }}>
@@ -228,7 +243,12 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
 
         {/* Close button */}
         <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
-          <Pressable onPress={onClose} style={styles.closeBtn}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close animation picker"
+          >
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
               style={styles.closeBtnGradient}
