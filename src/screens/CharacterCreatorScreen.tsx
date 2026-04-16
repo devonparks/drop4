@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Modal } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -768,7 +769,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                   })}
                 </ScrollView>
               ) : (
-                <View style={styles.emptyTab}>
+                <Animated.View entering={FadeIn.duration(280)} style={styles.emptyTab}>
                   <Text style={styles.emptyTabIcon}>
                     {viewMode === 'species' ? '\uD83E\uDDD1' : '\uD83C\uDFA8'}
                   </Text>
@@ -776,7 +777,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                     {viewMode === 'species' ? 'Species' : 'Color Palettes'}
                   </Text>
                   <Text style={styles.emptyTabSub}>Coming soon in a future update</Text>
-                </View>
+                </Animated.View>
               )}
             </>
           )}
