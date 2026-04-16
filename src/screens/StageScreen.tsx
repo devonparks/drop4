@@ -149,22 +149,7 @@ export function StageScreen({ navigation }: Props) {
               onPress={() => handleSelectCourt(court)}
             />
           ))}
-
-          {/* Spectator section */}
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              navigation.navigate('Spectator');
-            }}
-            style={styles.spectatorSection}
-          >
-            <Text style={styles.spectatorTitle}>{'👁'} SPECTATE</Text>
-            <Text style={styles.spectatorDesc}>Watch live Gold Court matches</Text>
-            <View style={styles.spectatorLiveBadge}>
-              <View style={styles.spectatorDot} />
-              <Text style={styles.spectatorLiveText}>LIVE</Text>
-            </View>
-          </Pressable>
+          {/* Spectator section removed with multiplayer kill for v1 */}
         </ScrollView>
       </View>
     </ScreenBackground>

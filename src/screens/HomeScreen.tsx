@@ -169,7 +169,7 @@ const NEWS_ITEMS = [
   { id: 'emotes', emoji: '🕺', text: 'NEW: 30 Emotes!', screen: 'CharacterCreator', gradient: ['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.12)'] as const },
   { id: 'season', emoji: '⭐', text: 'Season 0 Rewards', screen: 'SeasonPass', gradient: ['rgba(155,89,182,0.25)', 'rgba(155,89,182,0.12)'] as const },
   { id: 'spin', emoji: '🎰', text: 'Daily Spin!', screen: null, gradient: ['rgba(241,196,15,0.25)', 'rgba(241,196,15,0.12)'] as const },
-  { id: 'ranked', emoji: '🏆', text: 'Ranked Mode', screen: 'Multiplayer', gradient: ['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.12)'] as const },
+  { id: 'career', emoji: '🏆', text: 'Career Mode', screen: 'CareerMap', gradient: ['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.12)'] as const },
 ];
 
 function NewsCard({ item, onPress }: { item: typeof NEWS_ITEMS[0]; onPress: () => void }) {
@@ -698,18 +698,7 @@ export function HomeScreen() {
               />
             </PressScaleView>
           </SlideReveal>
-          {FEATURES.onlineMultiplayer && (
-            <PressScaleView onPress={() => navigateTo('Multiplayer')}>
-              <GlossyButton
-                label="MULTIPLAYER"
-                subtitle="Ranked · Wager Courts · Online"
-                variant="teal"
-                small
-                iconRight="›"
-                onPress={() => navigateTo('Multiplayer')}
-              />
-            </PressScaleView>
-          )}
+          {/* Multiplayer removed for v1 — see docs/MULTIPLAYER_V1_KILL.md */}
           {false && (
             // Deprecated "Coming Soon" placeholder — kept in source as a
             // reference for when multiplayer ships. Do not re-enable until

@@ -19,9 +19,7 @@ export const TUTORIAL_TIPS: TutorialTip[] = [
   // Career
   { id: 'career_stars', screen: 'Career', title: 'Earn Stars!', message: 'Win in fewer moves for more stars. 3 stars = perfect game!', position: 'top', showOnce: true },
 
-  // Multiplayer
-  { id: 'multi_party', screen: 'Multiplayer', title: 'Party Up!', message: 'Invite friends to your Party Lobby to hang out and play together.', position: 'center', showOnce: true },
-  { id: 'multi_ranked', screen: 'Multiplayer', title: 'Ranked Mode', message: 'Play Ranked to earn MMR and climb from Iron to Dark Matter!', position: 'center', showOnce: true },
+  // (Multiplayer tutorials removed with MP kill for v1)
 
   // Shop
   { id: 'shop_collections', screen: 'Shop', title: 'Collections', message: 'Filter by collection to find themed sets like Neon Pack or Mythic Collection.', position: 'top', showOnce: true },
@@ -29,8 +27,7 @@ export const TUTORIAL_TIPS: TutorialTip[] = [
   // Gold Court
   { id: 'stage_rake', screen: 'Stage', title: 'House Rake', message: 'Each court takes a 10% rake. The rest goes to the winner!', position: 'top', showOnce: true },
 
-  // Friends
-  { id: 'friends_invite', screen: 'Friends', title: 'Add Friends', message: 'Share your Friend Code to add friends and play together!', position: 'center', showOnce: true },
+  // (Friends tutorial removed with MP kill for v1)
 ];
 
 /** Get tips for a specific screen */

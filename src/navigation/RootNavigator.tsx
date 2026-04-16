@@ -6,9 +6,7 @@ import { GameScreen } from '../screens/GameScreen';
 import { LocalPlayScreen } from '../screens/LocalPlayScreen';
 import { CustomGameScreen } from '../screens/CustomGameScreen';
 import { CareerScreen } from '../screens/CareerScreen';
-import { MultiplayerScreen } from '../screens/MultiplayerScreen';
 import { StageScreen } from '../screens/StageScreen';
-import { TournamentScreen } from '../screens/TournamentScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { LearnScreen } from '../screens/LearnScreen';
 import { SeasonPassScreen } from '../screens/SeasonPassScreen';
@@ -22,11 +20,8 @@ import { BoardEditorScreen } from '../screens/BoardEditorScreen';
 import { ReplayViewerScreen } from '../screens/ReplayViewerScreen';
 import { LootBoxScreen } from '../screens/LootBoxScreen';
 import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
-import { SpectatorScreen } from '../screens/SpectatorScreen';
-import { FriendsScreen } from '../screens/FriendsScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
-import { PartyLobbyScreen } from '../screens/PartyLobbyScreen';
 import { CollectionScreen } from '../screens/CollectionScreen';
 
 export type WagerCourtParams = {
@@ -95,9 +90,7 @@ export type RootStackParamList = {
   LocalPlay: undefined;
   CustomGame: undefined;
   Career: undefined;
-  Multiplayer: undefined;
   Stage: undefined;
-  Tournament: undefined;
   Settings: undefined;
   Learn: undefined;
   SeasonPass: undefined;
@@ -111,10 +104,7 @@ export type RootStackParamList = {
   ReplayViewer: undefined;
   LootBox: undefined;
   MatchHistory: undefined;
-  Spectator: undefined;
-  Friends: undefined;
   Stats: undefined;
-  PartyLobby: undefined;
   Collection: undefined;
 };
 
@@ -140,9 +130,7 @@ export function RootNavigator() {
       <Stack.Screen name="LocalPlay" component={LocalPlayScreen} />
       <Stack.Screen name="CustomGame" component={CustomGameScreen} />
       <Stack.Screen name="Career" component={CareerScreen} />
-      <Stack.Screen name="Multiplayer" component={MultiplayerScreen} />
       <Stack.Screen name="Stage" component={StageScreen} />
-      <Stack.Screen name="Tournament" component={TournamentScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Learn" component={LearnScreen} />
       <Stack.Screen
@@ -200,20 +188,9 @@ export function RootNavigator() {
         component={MatchHistoryScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
-      <Stack.Screen name="Spectator" component={SpectatorScreen} />
-      <Stack.Screen
-        name="Friends"
-        component={FriendsScreen}
-        options={{ animation: 'fade_from_bottom' }}
-      />
       <Stack.Screen
         name="Stats"
         component={StatsScreen}
-        options={{ animation: 'fade_from_bottom' }}
-      />
-      <Stack.Screen
-        name="PartyLobby"
-        component={PartyLobbyScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

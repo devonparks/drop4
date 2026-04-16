@@ -6,7 +6,6 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { CollectionScreen } from '../screens/CollectionScreen';
-import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { haptics } from '../services/haptics';
 import { useChallengeStore } from '../stores/challengeStore';
 import { FEATURES } from '../config/features';
@@ -28,10 +27,6 @@ function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: st
       )}
     </View>
   );
-}
-
-function FriendsTab() {
-  return <LeaderboardScreen />;
 }
 
 function RanksTab() {
@@ -73,15 +68,6 @@ export function MainTabs() {
           tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} />,
         }}
       />
-      {FEATURES.leaderboards && (
-        <Tab.Screen
-          name="Leaderboards"
-          component={FriendsTab}
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon icon="🏆" label="Leaderboards" focused={focused} />,
-          }}
-        />
-      )}
       <Tab.Screen
         name="Challenges"
         component={RanksTab}

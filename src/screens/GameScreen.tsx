@@ -40,7 +40,6 @@ import { getRandomGameOverQuote } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { AchievementToast } from '../components/effects/AchievementToast';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
-import { MatchmakingOverlay } from '../components/ui/MatchmakingOverlay';
 import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { sendEmote, listenForEmotes } from '../services/emotes';
@@ -1532,14 +1531,7 @@ export function GameScreen({ navigation }: Props) {
           />
         )}
 
-        {/* Matchmaking overlay for wager / stage games */}
-        <MatchmakingOverlay
-          visible={showMatchmaking}
-          onAccept={() => setShowMatchmaking(false)}
-          onDecline={() => { setShowMatchmaking(false); navigation.goBack(); }}
-          opponentName={wagerCourt?.name || undefined}
-          opponentElo={wagerCourt ? undefined : undefined}
-        />
+        {/* Matchmaking overlay removed with multiplayer kill for v1 */}
 
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
