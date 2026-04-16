@@ -315,6 +315,9 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
       <Pressable
         onPress={onPress}
         style={[s.itemCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name}, ${RARITY_LABELS[item.rarity]}${isEquipped ? ', equipped' : isOwned ? ', owned' : `, ${item.price.toLocaleString()} coins`}`}
+        accessibilityState={{ selected: isEquipped, disabled: !isOwned && !canAfford && !isDarkMatter }}
       >
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.itemPreview}>
@@ -408,6 +411,9 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
       <Pressable
         onPress={onPress}
         style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
+        accessibilityRole="button"
+        accessibilityLabel={`${pet.name}, ${pet.breed}, ${PET_RARITY_LABELS[pet.rarity]}${isEquipped ? ', equipped' : isOwned ? ', owned' : isEarnOnly ? ', earn only' : `, ${pet.price.toLocaleString()} coins`}`}
+        accessibilityState={{ selected: isEquipped }}
       >
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.petPreview}>
