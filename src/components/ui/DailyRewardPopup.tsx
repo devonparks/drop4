@@ -5,6 +5,8 @@ import Animated, { SlideInDown } from 'react-native-reanimated';
 import { GlossyButton } from './GlossyButton';
 import { useDailyRewardStore } from '../../stores/dailyRewardStore';
 import { useShopStore } from '../../stores/shopStore';
+import { useCharacterStore } from '../../stores/characterStore';
+import { usePetStore } from '../../stores/petStore';
 import { useLootBoxStore } from '../../stores/lootBoxStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
@@ -78,6 +80,18 @@ export function DailyRewardPopup() {
       if (claimed.type === 'coins') addCoins(claimed.amount);
       if (claimed.type === 'gems') addGems(claimed.amount);
       if (claimed.type === 'lootbox') addBox(claimed.day === 7 ? 'gold_box' : 'bronze_box');
+      // New reward types from the escalating streak system
+      if (claimed.type === 'outfit' && claimed.unlockId) {
+        useCharacterStore.getState().unlockOutfit(claimed.unlockId);
+      }
+      if (claimed.type === 'pet' && claimed.unlockId) {
+        usePetStore.getState().unlockPet(claimed.unlockId as any);
+      }
+      if (claimed.type === 'emote' && claimed.unlockId) {
+        // Add to owned emotes without charging
+        useShopStore.getState().purchaseEmote(claimed.unlockId, 0);
+      }
+      // title rewards handled by the PlayerTitle system later
       haptics.win();
       playSound('coin');
     }

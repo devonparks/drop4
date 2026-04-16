@@ -44,3 +44,7 @@ yarn-error.*
 fbx_export/
 src/assets/models/**/*.glb
 src/assets/models/**/*.fbx
+
+# Local polish loop runtime artifacts
+tools/polish-loop.log
+.STOP_POLISH

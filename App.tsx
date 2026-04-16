@@ -9,6 +9,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
+import { scheduleDailyReminders } from './src/services/notifications';
 import { preloadGLBs } from './src/utils/glbLoader';
 import { OUTFITS } from './src/data/outfitRegistry';
 import { DEFAULT_HUMAN_IDLE } from './src/data/animationRegistry';
@@ -16,6 +17,7 @@ import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
 import { useRosterStore } from './src/stores/rosterStore';
 import { useAchievementStore } from './src/stores/achievementStore';
+import { useMilestoneStore } from './src/stores/milestoneStore';
 import { useMatchHistoryStore } from './src/stores/matchHistoryStore';
 import { useReplayStore } from './src/stores/replayStore';
 import { useDailyRewardStore } from './src/stores/dailyRewardStore';
@@ -32,6 +34,7 @@ import { useTutorialStore } from './src/stores/tutorialStore';
 import { useCharacterStore } from './src/stores/characterStore';
 import { usePetStore } from './src/stores/petStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
+import { MilestoneToast } from './src/components/ui/MilestoneToast';
 import { CharacterUnlockToast } from './src/components/effects/CharacterUnlockToast';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 // WelcomeOverlay is rendered in HomeScreen (first-launch only, AsyncStorage-gated)
@@ -73,6 +76,7 @@ export default function App() {
         await useTutorialStore.getState().loadFromStorage();
         await useCharacterStore.getState().loadFromStorage();
         await usePetStore.getState().hydrate();
+        await useMilestoneStore.getState().loadFromStorage();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();
@@ -82,6 +86,10 @@ export default function App() {
         }
         // Preload sound effects
         await preloadSounds();
+
+        // Schedule local daily reminder notifications (non-blocking).
+        // Covers next 7 days — re-runs every app launch.
+        scheduleDailyReminders().catch(() => { /* best-effort */ });
 
         // Preload the player's current outfit + default idle so the home
         // screen character mounts without a loading spinner. Other outfits
@@ -146,6 +154,7 @@ export default function App() {
       >
         <RootNavigator />
         <DailyRewardPopup />
+        <MilestoneToast />
         <CharacterUnlockToast />
       </NavigationContainer>
     </GestureHandlerRootView>

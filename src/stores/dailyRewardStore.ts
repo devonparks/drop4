@@ -1,18 +1,23 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 
+export type DailyRewardType = 'coins' | 'gems' | 'lootbox' | 'outfit' | 'pet' | 'emote' | 'title';
+
 export interface DailyReward {
   day: number;
-  type: 'coins' | 'gems' | 'lootbox';
+  type: DailyRewardType;
   amount: number;
   icon: string;
   name: string;
+  /** For outfit/pet/emote/title rewards: the ID to unlock */
+  unlockId?: string;
   claimed: boolean;
 }
 
 interface DailyRewardState {
   currentStreak: number;
   lastClaimDate: string | null; // ISO date string
+  longestStreak: number;
   rewards: DailyReward[];
 
   // Actions
@@ -21,14 +26,40 @@ interface DailyRewardState {
   loadFromStorage: () => Promise<void>;
 }
 
+/**
+ * Escalating 7-day cycle with milestone bonuses at 14 and 30 total days.
+ * Missing a day resets the 7-day cycle but NOT the lifetime streak.
+ *
+ * Day 7 gives a rare outfit unlock (real cosmetic, not just coins).
+ * Day 14 (milestone) gives an epic pet.
+ * Day 30 (milestone) gives a legendary title.
+ */
 const DAILY_REWARDS: Omit<DailyReward, 'claimed'>[] = [
-  { day: 1, type: 'coins', amount: 50, icon: '🪙', name: '50 Coins' },
-  { day: 2, type: 'coins', amount: 100, icon: '🪙', name: '100 Coins' },
-  { day: 3, type: 'lootbox', amount: 1, icon: '📦', name: 'Bronze Box' },
-  { day: 4, type: 'coins', amount: 200, icon: '🪙', name: '200 Coins' },
-  { day: 5, type: 'gems', amount: 5, icon: '💎', name: '5 Gems' },
-  { day: 6, type: 'coins', amount: 500, icon: '🪙', name: '500 Coins' },
-  { day: 7, type: 'lootbox', amount: 1, icon: '🎁', name: 'Gold Box' },
+  { day: 1, type: 'coins',   amount: 50,   icon: '🪙', name: '50 Coins' },
+  { day: 2, type: 'coins',   amount: 150,  icon: '🪙', name: '150 Coins' },
+  { day: 3, type: 'lootbox', amount: 1,    icon: '📦', name: 'Bronze Box' },
+  { day: 4, type: 'coins',   amount: 300,  icon: '🪙', name: '300 Coins' },
+  { day: 5, type: 'gems',    amount: 10,   icon: '💎', name: '10 Gems' },
+  { day: 6, type: 'coins',   amount: 750,  icon: '🪙', name: '750 Coins' },
+  { day: 7, type: 'outfit',  amount: 1,    icon: '👑', name: 'Rare Outfit', unlockId: 'human_fantasy_knights_03' },
+];
+
+/** Milestone rewards on top of the 7-day cycle */
+export interface StreakMilestone {
+  atStreakDays: number;
+  type: DailyRewardType;
+  amount: number;
+  icon: string;
+  name: string;
+  description: string;
+  unlockId?: string;
+}
+
+export const STREAK_MILESTONES: StreakMilestone[] = [
+  { atStreakDays: 14, type: 'pet',   amount: 1, icon: '🐺', name: 'Wolf Pet',       description: '14-day streak legend', unlockId: 'dog_wolf' },
+  { atStreakDays: 30, type: 'title', amount: 1, icon: '🏆', name: 'Devoted',        description: '30 days loyal',         unlockId: 'devoted' },
+  { atStreakDays: 60, type: 'pet',   amount: 1, icon: '👹', name: 'Hellhound',      description: '60-day iron will',      unlockId: 'dog_hellhound' },
+  { atStreakDays: 100, type: 'outfit', amount: 1, icon: '🛸', name: 'Cyber Hound Crew', description: '100 days — whole squad', unlockId: 'human_sci_fi_soldiers_10' },
 ];
 
 function getTodayString(): string {
@@ -40,6 +71,7 @@ function getTodayString(): string {
 export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
   currentStreak: 0,
   lastClaimDate: null,
+  longestStreak: 0,
   rewards: DAILY_REWARDS.map(r => ({ ...r, claimed: false })),
 
   checkAndShowReward: () => {
@@ -68,24 +100,49 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
     const yesterdayString = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
     const isConsecutive = lastClaimDate === null || lastClaimDate === yesterdayString;
 
+    const newStreak = isConsecutive ? currentStreak + 1 : 1;
     set({
-      currentStreak: isConsecutive ? currentStreak + 1 : 1,
+      currentStreak: newStreak,
       lastClaimDate: today,
+      longestStreak: Math.max(get().longestStreak, newStreak),
     });
 
     return reward;
   },
 
   loadFromStorage: async () => {
-    const saved = await loadState<{ currentStreak: number; lastClaimDate: string | null }>('dailyReward');
+    const saved = await loadState<{
+      currentStreak: number;
+      lastClaimDate: string | null;
+      longestStreak?: number;
+    }>('dailyReward');
     if (saved) {
       set({
         currentStreak: saved.currentStreak || 0,
         lastClaimDate: saved.lastClaimDate || null,
+        longestStreak: saved.longestStreak ?? saved.currentStreak ?? 0,
       });
     }
   },
 }));
+
+/**
+ * Returns any milestone reward the player has earned but not seen yet.
+ * Compares current streak against STREAK_MILESTONES and returns the first
+ * unclaimed one. Callers persist a "milestonesClaimed" set to prevent
+ * double-granting.
+ */
+export function getPendingMilestone(
+  claimedMilestoneDays: number[] = [],
+): StreakMilestone | null {
+  const streak = useDailyRewardStore.getState().currentStreak;
+  for (const m of STREAK_MILESTONES) {
+    if (streak >= m.atStreakDays && !claimedMilestoneDays.includes(m.atStreakDays)) {
+      return m;
+    }
+  }
+  return null;
+}
 
 /**
  * Returns a coin multiplier based on the daily login streak.

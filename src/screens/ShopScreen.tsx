@@ -17,6 +17,7 @@ import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
 import { OUTFIT_SHOP_ITEMS, OUTFIT_COLLECTIONS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
+import { getDailyFeatured, formatRefreshCountdown } from '../data/shopRotation';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
@@ -877,40 +878,36 @@ export function ShopScreen() {
                 buttonColor={['#3498db', '#2471a3']}
                 onPress={() => haptics.tap()}
               />
-              <DailyDealCard
-                icon={'\u2728'}
-                title="Featured"
-                subtitle="50% OFF!"
-                buttonLabel="VIEW"
-                buttonColor={['#9b59b6', '#7d4192']}
-                badge="-50%"
-                onPress={() => haptics.tap()}
-              />
-              {/* Daily outfit deal — 20% off, rotates by day-of-year so the same
-                  deal shows all day but flips at midnight */}
+              {/* Featured Today — 4 deterministic picks that rotate at midnight.
+                  See src/data/shopRotation.ts for the seeded selection logic. */}
               {(() => {
-                const dayOfYear = Math.floor(
-                  (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-                );
-                const paidOutfits = OUTFIT_SHOP_ITEMS.filter((i) => i.price > 0);
-                if (paidOutfits.length === 0) return null;
-                const pick = paidOutfits[dayOfYear % paidOutfits.length];
-                const discountedPrice = Math.round(pick.price * 0.8);
-                const isOwned = ownedOutfits.includes(pick.id);
-                return (
-                  <DailyDealCard
-                    icon={'\u{1F455}'}
-                    title={`Outfit of the Day`}
-                    subtitle={`${pick.name} · ${discountedPrice}🪙`}
-                    buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
-                    buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
-                    badge="-20%"
-                    onPress={() => {
-                      haptics.tap();
-                      if (!isOwned) setOutfitPreview({ ...pick, price: discountedPrice });
-                    }}
-                  />
-                );
+                const featured = getDailyFeatured();
+                return featured.deals.map((deal) => {
+                  const isOutfit = deal.category === 'outfit';
+                  const isOwned = isOutfit && ownedOutfits.includes(deal.item.id);
+                  const iconByCategory: Record<string, string> = {
+                    outfit: '\u{1F455}',
+                    pet: '\u{1F436}',
+                    emote: '\u{1F483}',
+                  };
+                  return (
+                    <DailyDealCard
+                      key={deal.item.id}
+                      icon={iconByCategory[deal.category] ?? '\u2728'}
+                      title={deal.item.name}
+                      subtitle={`${deal.discountedPrice}🪙 (was ${deal.originalPrice})`}
+                      buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
+                      buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
+                      badge={deal.badge}
+                      onPress={() => {
+                        haptics.tap();
+                        if (isOutfit && !isOwned) {
+                          setOutfitPreview({ ...deal.item, price: deal.discountedPrice });
+                        }
+                      }}
+                    />
+                  );
+                });
               })()}
             </ScrollView>
           </Animated.View>

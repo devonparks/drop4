@@ -1,231 +1,143 @@
+/**
+ * Push notifications service — local scheduled reminders only.
+ *
+ * Multiplayer was killed for v1 so we dropped the remote push / Firebase
+ * registration path. Everything here is on-device local notifications:
+ *
+ *   • Morning (10am): "Your daily spin is ready!"
+ *   • Evening (8pm): "Don't lose your {N}-day streak!" (only if streak > 0)
+ *   • Saturday noon: "New featured items in the shop today!"
+ *
+ * Re-scheduled on every app launch, covering the next 7 days. Silently
+ * no-ops if the user hasn't granted permission or we're on web.
+ */
+
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { db, getCurrentUser } from './firebase';
-import { doc, updateDoc } from 'firebase/firestore';
-import { logger } from '../utils/logger';
+import { useDailyRewardStore } from '../stores/dailyRewardStore';
 
-// ============ NOTIFICATION HANDLER (module-level) ============
+const DROP4_CATEGORY = 'drop4-daily';
 
+// Show banner even when the app is in the foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: true,
+    shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
 
-// ============ PUSH TOKEN REGISTRATION ============
-
 /**
- * Registers the device for push notifications and stores the
- * Expo push token on the user's Firestore profile.
- * Returns the token string or null if registration fails.
+ * Request notification permission. Safe to call on every launch —
+ * iOS shows the dialog only once.
  */
-export async function registerForPushNotifications(): Promise<string | null> {
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
   try {
-    // Push notifications only work on physical devices
-    if (!Device.isDevice) {
-      logger.warn('Push notifications require a physical device');
-      return null;
-    }
-
-    // Check / request permission
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      logger.warn('Push notification permission not granted');
-      return null;
-    }
-
-    // Get the Expo push token
-    const tokenData = await Notifications.getExpoPushTokenAsync();
-    const token = tokenData.data;
-
-    // Android needs a notification channel
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#ff8c00',
-      });
-    }
-
-    // Store token in Firestore on the user's profile
-    const user = getCurrentUser();
-    if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, { pushToken: token }).catch(() => {
-        // If the doc doesn't exist yet, that's fine — it will be created later
-        logger.warn('Could not update push token on user profile (doc may not exist yet)');
-      });
-    }
-
-    return token;
-  } catch (error) {
-    logger.warn('registerForPushNotifications failed:', error);
-    return null;
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return true;
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch (e) {
+    if (__DEV__) console.warn('[notifications] permission request failed:', e);
+    return false;
   }
 }
 
-// ============ LOCAL SCHEDULED NOTIFICATIONS ============
-
-/**
- * Schedules a daily local notification at 7 PM reminding the user
- * to collect their daily rewards.
- */
-export async function scheduleDailyReminder(): Promise<string | null> {
-  try {
-    // Cancel any existing daily reminder first
-    await cancelNotificationsByTag('daily-reminder');
-
-    const id = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Drop4',
-        body: 'Your daily rewards are waiting! 🎁',
-        data: { screen: 'Home', tag: 'daily-reminder' },
-        sound: true,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: 19,
-        minute: 0,
-      },
-    });
-
-    return id;
-  } catch (error) {
-    logger.warn('scheduleDailyReminder failed:', error);
-    return null;
-  }
-}
-
-/**
- * Schedules a notification 24 hours from now reminding the user
- * that their win streak is waiting.
- */
-export async function scheduleInactivityReminder(): Promise<string | null> {
-  try {
-    // Cancel any existing inactivity reminder first
-    await cancelNotificationsByTag('inactivity-reminder');
-
-    const id = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Drop4',
-        body: 'Your win streak is waiting! 🔥',
-        data: { screen: 'Home', tag: 'inactivity-reminder' },
-        sound: true,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 24 * 60 * 60, // 24 hours
-      },
-    });
-
-    return id;
-  } catch (error) {
-    logger.warn('scheduleInactivityReminder failed:', error);
-    return null;
-  }
-}
-
-// ============ IMMEDIATE LOCAL NOTIFICATIONS ============
-
-/**
- * Shows a local notification when a friend invites the user to a match.
- */
-export async function sendMatchInviteNotification(friendName: string): Promise<void> {
-  try {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Match Invite!',
-        body: `${friendName} invited you to play!`,
-        data: { screen: 'Lobby', tag: 'match-invite' },
-        sound: true,
-      },
-      trigger: null, // Show immediately
-    });
-  } catch (error) {
-    logger.warn('sendMatchInviteNotification failed:', error);
-  }
-}
-
-// ============ RESPONSE HANDLING ============
-
-/**
- * Handles when the user taps on a notification.
- * Returns the target screen name from the notification data,
- * so the caller can navigate accordingly.
- */
-export function handleNotificationResponse(
-  response: Notifications.NotificationResponse
-): { screen: string } | null {
-  try {
-    const data = response.notification.request.content.data;
-    if (data && typeof data.screen === 'string') {
-      return { screen: data.screen };
-    }
-    return null;
-  } catch (error) {
-    logger.warn('handleNotificationResponse failed:', error);
-    return null;
-  }
-}
-
-/**
- * Sets up the global notification response listener.
- * Call this once at app startup (e.g., in App.tsx).
- * Returns a cleanup function.
- */
-export function setupNotificationResponseListener(
-  onNavigate: (screen: string) => void
-): () => void {
-  const subscription = Notifications.addNotificationResponseReceivedListener(
-    (response: Notifications.NotificationResponse) => {
-      const result = handleNotificationResponse(response);
-      if (result) {
-        onNavigate(result.screen);
-      }
-    }
-  );
-
-  return () => subscription.remove();
-}
-
-// ============ CANCELLATION ============
-
-/**
- * Cancels all scheduled notifications.
- */
-export async function cancelAllScheduled(): Promise<void> {
-  try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-  } catch (error) {
-    logger.warn('cancelAllScheduled failed:', error);
-  }
-}
-
-/**
- * Cancels scheduled notifications matching a specific tag.
- */
-async function cancelNotificationsByTag(tag: string): Promise<void> {
+async function cancelDrop4Notifications(): Promise<void> {
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    for (const notification of scheduled) {
-      if (notification.content.data?.tag === tag) {
-        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+    await Promise.all(
+      scheduled
+        .filter((n) => n.content.categoryIdentifier === DROP4_CATEGORY)
+        .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+    );
+  } catch {
+    /* best-effort */
+  }
+}
+
+async function safeSchedule(req: Notifications.NotificationRequestInput): Promise<void> {
+  try {
+    await Notifications.scheduleNotificationAsync(req);
+  } catch (e) {
+    if (__DEV__) console.warn('[notifications] schedule failed:', e);
+  }
+}
+
+/**
+ * Schedule the next 7 days of daily reminders. Call on app launch.
+ * Re-entrant: first cancels any prior Drop4 notifications to avoid dupes.
+ */
+export async function scheduleDailyReminders(): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+
+  await cancelDrop4Notifications();
+
+  const streak = useDailyRewardStore.getState().currentStreak;
+  const now = new Date();
+
+  for (let offset = 1; offset <= 7; offset++) {
+    const day = new Date(now);
+    day.setDate(day.getDate() + offset);
+
+    // 10 AM local — daily spin ready
+    const morning = new Date(day);
+    morning.setHours(10, 0, 0, 0);
+    if (morning.getTime() > now.getTime()) {
+      await safeSchedule({
+        content: {
+          title: '\u{1F3B0} Your daily spin is ready!',
+          body: 'Spin the wheel for coins, gems, and exclusive rewards.',
+          categoryIdentifier: DROP4_CATEGORY,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: morning } as any,
+      });
+    }
+
+    // 8 PM local — streak preservation nudge (only if they have a streak)
+    if (streak > 0) {
+      const evening = new Date(day);
+      evening.setHours(20, 0, 0, 0);
+      if (evening.getTime() > now.getTime()) {
+        await safeSchedule({
+          content: {
+            title: `\u{1F525} Don't lose your ${streak}-day streak!`,
+            body: 'Claim today\u2019s reward before midnight.',
+            categoryIdentifier: DROP4_CATEGORY,
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: evening } as any,
+        });
       }
     }
-  } catch (error) {
-    logger.warn('cancelNotificationsByTag failed:', error);
+  }
+
+  // Saturday noon — shop rotation reminder
+  const daysUntilSat = ((6 - now.getDay()) + 7) % 7 || 7;
+  const sat = new Date(now);
+  sat.setDate(sat.getDate() + daysUntilSat);
+  sat.setHours(12, 0, 0, 0);
+  await safeSchedule({
+    content: {
+      title: '\u{1F6CD}\uFE0F New items in the shop today!',
+      body: 'Fresh outfits, pets, and emotes on sale. Limited time.',
+      categoryIdentifier: DROP4_CATEGORY,
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: sat } as any,
+  });
+}
+
+/** Kill switch — useful for a Settings toggle. */
+export async function cancelAllNotifications(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } catch {
+    /* best-effort */
   }
 }
