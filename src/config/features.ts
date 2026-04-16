@@ -1,37 +1,13 @@
 /**
  * Feature flags for Drop4 release scoping.
  *
- * v1.0 ships single-player + cosmetics + career.
- * Multiplayer / wagers / tournaments / season pass / friends move to v1.1+.
- *
- * Flagged features remain in the codebase. They render as disabled menu items
- * with a "Coming Soon" badge so the surface area is documented for players.
+ * v1.0 ships single-player + cosmetics + career + retention hooks.
+ * Multiplayer / wagers / friends / tournaments were REMOVED (not flagged
+ * off, actually deleted — see commit 00d9891) so they'll return via new
+ * implementation in v1.5, not as flag flips.
  */
 export const FEATURES = {
-  // ── Online & Social (v1.1) ───────────────────────────────────
-  onlineMultiplayer: false,   // Quick Match, Ranked
-  rankedMode: false,          // ELO ladder, season resets
-  goldCourt: false,           // Wager courts (depends on online)
-  partyLobby: false,          // Room codes, friend invites
-  spectator: false,           // Live match watching
-  friends: false,             // Friend system
-
-  // ── Tournaments (v1.1) ───────────────────────────────────────
-  tournaments: false,         // 4/8/16 player local brackets
-
-  // ── Monetization extras (v1.2) ───────────────────────────────
-  seasonPass: false,          // Battle pass tracks
-  lootBoxes: true,            // Keep — simple, self-contained, fun
-
-  // ── Power-user features (v1.1) ───────────────────────────────
-  customGame: false,          // Private match settings
-  boardEditor: false,         // Puzzle board creator
-  replayViewer: false,        // Saved replays
-
-  // ── 3D Characters (in progress) ──────────────────────────────
-  character3D: true,          // react-three-fiber 3D character system
-
-  // ── Always on (core game) ────────────────────────────────────
+  // ── Core game (always on) ────────────────────────────────────
   career: true,
   localPlay: true,
   shop: true,
@@ -40,7 +16,29 @@ export const FEATURES = {
   achievements: true,
   dailyReward: true,
   dailySpin: true,
-  leaderboards: false,        // Needs real online data
+
+  // ── 3D character system ──────────────────────────────────────
+  character3D: true,
+
+  // ── Retention hooks (v1.0) ───────────────────────────────────
+  shopRotation: true,         // Daily featured 4-pack with countdown
+  streakEscalation: true,     // 7-day cycle + 14/30/60/100-day milestones
+  collectionMilestones: true, // Pack completion rewards
+  pushNotifications: true,    // Local daily reminders
+
+  // ── Monetization extras ──────────────────────────────────────
+  lootBoxes: true,
+  seasonPass: false,          // v1.1
+
+  // ── Power-user features (v1.1) ───────────────────────────────
+  customGame: false,          // Private match settings
+  boardEditor: false,         // Puzzle board creator
+  replayViewer: false,        // Saved replays
+
+  // ── v1.5+ (requires new implementation, not just flag flip) ──
+  onlineMultiplayer: false,
+  rankedMode: false,
+  leaderboards: false,
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
