@@ -38,7 +38,7 @@ export function CollectionScreen() {
   return (
     <ScreenBackground>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Text style={styles.headerTitle}>COLLECTION</Text>
+        <Text style={styles.headerTitle} accessibilityRole="header">COLLECTION</Text>
       </View>
 
       {/* Sub-tab bar */}
@@ -112,7 +112,7 @@ function CharactersTab() {
       </View>
 
       {/* Starters */}
-      <Text style={styles.sectionTitle}>YOUR CHARACTERS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">YOUR CHARACTERS</Text>
       <View style={styles.charGrid}>
         {starters.map((c, i) => (
           <StaggeredEntry key={c.id} index={i}>
@@ -122,7 +122,7 @@ function CharactersTab() {
       </View>
 
       {/* Bosses */}
-      <Text style={styles.sectionTitle}>BOSS UNLOCKS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">BOSS UNLOCKS</Text>
       <Text style={styles.sectionSub}>Beat chapter bosses to unlock</Text>
       <View style={styles.charGrid}>
         {bosses.map((c, i) => (
