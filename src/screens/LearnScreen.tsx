@@ -173,6 +173,9 @@ export function LearnScreen({ navigation }: Props) {
                 key={lesson.id}
                 onPress={() => { haptics.tap(); setSelected(lesson); }}
                 style={styles.lessonCard}
+                accessibilityRole="button"
+                accessibilityLabel={`${lesson.title} lesson, ${lesson.difficulty}${isMastered ? ', mastered' : ''}`}
+                accessibilityHint="Opens lesson details and practice option"
               >
                 <LinearGradient
                   colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
