@@ -129,65 +129,6 @@ function PressScaleView({ children, onPress }: { children: React.ReactNode; onPr
   );
 }
 
-// Animated fire streak banner — flickers orange/red with pulse
-function StreakFireBanner({ streak }: { streak: number }) {
-  const flicker = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Flicker loop
-    const flickerLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(flicker, { toValue: 0.7, duration: 200 + Math.random() * 100, useNativeDriver: true }),
-        Animated.timing(flicker, { toValue: 1, duration: 200 + Math.random() * 100, useNativeDriver: true }),
-      ])
-    );
-    // Pulse scale
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1.03, duration: 800, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ])
-    );
-    flickerLoop.start();
-    pulseLoop.start();
-    return () => { flickerLoop.stop(); pulseLoop.stop(); };
-  }, []);
-
-  const fireEmojis = streak >= 5 ? '\uD83D\uDD25\uD83D\uDD25\uD83D\uDD25' : streak >= 3 ? '\uD83D\uDD25\uD83D\uDD25' : '\uD83D\uDD25';
-
-  return (
-    <Animated.View style={[styles.streakBanner, { opacity: flicker, transform: [{ scale: scaleAnim }] }]}>
-      <Text style={styles.streakFireEmoji}>{fireEmojis}</Text>
-      <Text style={styles.streakText}>{streak} Win Streak!</Text>
-      <Text style={styles.streakFireEmoji}>{fireEmojis}</Text>
-    </Animated.View>
-  );
-}
-
-const NEWS_ITEMS = [
-  { id: 'emotes', emoji: '🕺', text: 'NEW: 30 Emotes!', screen: 'CharacterCreator', gradient: ['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.12)'] as const },
-  { id: 'season', emoji: '⭐', text: 'Season 0 Rewards', screen: 'SeasonPass', gradient: ['rgba(155,89,182,0.25)', 'rgba(155,89,182,0.12)'] as const },
-  { id: 'spin', emoji: '🎰', text: 'Daily Spin!', screen: null, gradient: ['rgba(241,196,15,0.25)', 'rgba(241,196,15,0.12)'] as const },
-  { id: 'career', emoji: '🏆', text: 'Career Mode', screen: 'CareerMap', gradient: ['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.12)'] as const },
-];
-
-function NewsCard({ item, onPress }: { item: typeof NEWS_ITEMS[0]; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${item.text} news card`}
-      accessibilityHint="Opens this section"
-    >
-      <LinearGradient colors={[...item.gradient]} style={styles.newsCard}>
-        <Text style={styles.newsEmoji}>{item.emoji}</Text>
-        <Text style={styles.newsText} numberOfLines={1}>{item.text}</Text>
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const coins = useShopStore(s => s.coins);
@@ -1113,33 +1054,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(100,180,255,0.08)',
     marginTop: 2,
   },
-  // News banner
-  newsBanner: {
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 6,
-  },
-  newsCard: {
-    width: 105,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-    gap: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  newsEmoji: {
-    fontSize: 18,
-  },
-  newsText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-  },
   // Customize link under character
   characterLinkRow: {
     flexDirection: 'row',
@@ -1197,35 +1111,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontSize: 22,
     zIndex: 20,
-  },
-  // Win streak fire banner
-  streakBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255,100,0,0.12)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 5,
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-  },
-  streakFireEmoji: {
-    fontSize: 14,
-  },
-  streakText: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 14,
-    color: '#ff8c00',
-    textAlign: 'center',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(255,140,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   // Menu buttons
   menuButtons: {
