@@ -95,7 +95,7 @@ export default function App() {
           if (preloadList.length) await preloadGLBs(preloadList);
         } catch { /* best-effort */ }
       } catch (e) {
-        console.warn('Font loading error:', e);
+        if (__DEV__) console.warn('Font loading error:', e);
       } finally {
         setAppReady(true);
       }
