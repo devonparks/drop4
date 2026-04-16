@@ -82,7 +82,13 @@ const POSE_LIST: { id: PoseId; label: string }[] = [
 // ── Equipped Summary Pill ──────────────────────────────────────────────
 function EquipPill({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={styles.equipPill}>
+    <Pressable
+      onPress={onPress}
+      style={styles.equipPill}
+      accessibilityRole="button"
+      accessibilityLabel={`Equipped: ${label}`}
+      accessibilityHint="Opens the category to change this item"
+    >
       <Text style={styles.equipPillIcon}>{icon}</Text>
       <Text style={styles.equipPillLabel} numberOfLines={1}>{label}</Text>
     </Pressable>
@@ -344,6 +350,13 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                       key={card.id}
                       onPress={() => openCategory(card.id)}
                       style={styles.categoryCardWrap}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        hasItems
+                          ? `${card.label} category, ${counts.owned} of ${counts.total} owned`
+                          : `${card.label} category, coming soon`
+                      }
+                      accessibilityHint={hasItems ? 'Opens this category' : undefined}
                     >
                       <LinearGradient
                         colors={[card.color[0] + '25', card.color[0] + '08']}
@@ -385,7 +398,13 @@ export function CharacterCreatorScreen({ navigation }: Props) {
 
               {/* ── RANDOMIZE BUTTON ── */}
               <View style={styles.randomRow}>
-                <Pressable onPress={handleRandomize} style={styles.randomButton}>
+                <Pressable
+                  onPress={handleRandomize}
+                  style={styles.randomButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Random look"
+                  accessibilityHint="Randomizes the character's cosmetics"
+                >
                   <Text style={styles.randomIcon}>{'\uD83C\uDFB2'}</Text>
                   <Text style={styles.randomLabel}>Random Look</Text>
                 </Pressable>
@@ -410,6 +429,9 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                       key={pose.id}
                       onPress={() => { haptics.tap(); setSelectedPose(pose.id); }}
                       style={[styles.poseCard, isSelected && styles.poseCardSelected]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${pose.label} pose`}
+                      accessibilityState={{ selected: isSelected }}
                     >
                       <View style={styles.posePreview}>
                         <PoseDisplay pose={pose.id} size={80} />
@@ -426,7 +448,13 @@ export function CharacterCreatorScreen({ navigation }: Props) {
           ) : (
             <>
               {/* ── BACK TO CATEGORIES button ── */}
-              <Pressable onPress={backToGrid} style={styles.backBtn}>
+              <Pressable
+                onPress={backToGrid}
+                style={styles.backBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Back to categories"
+                accessibilityHint="Returns to the category grid"
+              >
                 <LinearGradient
                   colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
                   style={styles.backBtnGradient}
