@@ -30,7 +30,12 @@ function ChatPill({ message, onPress }: { message: QuickChatMessage; onPress: (m
   }[message.category];
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Quick chat: ${message.text}`}
+      accessibilityHint="Send this message to your opponent"
+    >
       <Animated.View style={[
         styles.pill,
         { borderColor: `${categoryColor}44`, transform: [{ scale: scaleAnim }] },
