@@ -527,7 +527,12 @@ export function HomeScreen() {
             style={styles.sideBtn}
             {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
           >
-            <Pressable onPress={() => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }} style={StyleSheet.absoluteFill} />
+            <Pressable
+              onPress={() => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }}
+              style={StyleSheet.absoluteFill}
+              accessibilityRole="button"
+              accessibilityLabel="Open emotes picker"
+            />
             <LinearGradient
               colors={['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.15)', 'rgba(255,40,0,0.1)']}
               style={styles.sideBtnCircle}
@@ -547,6 +552,8 @@ export function HomeScreen() {
             <BreathingView intensity={0.015} speed={4000}>
             <Pressable
               onPress={handleCharacterTap}
+              accessibilityRole="button"
+              accessibilityLabel="Tap character to play emote, long-press for random"
               onLongPress={() => {
                 if (!FEATURES.character3D) return;
                 // Long-press: play a random OWNED emote instantly (no modal).
@@ -580,7 +587,12 @@ export function HomeScreen() {
             </Pressable>
             </BreathingView>
             {equippedPet && (
-              <Pressable onPress={handlePetTap} style={styles.petPosition}>
+              <Pressable
+                onPress={handlePetTap}
+                style={styles.petPosition}
+                accessibilityRole="button"
+                accessibilityLabel="Pet companion"
+              >
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
                   <PetDisplay petId={equippedPet} size={80} isIdle={!emote} />
                 </Animated.View>
@@ -602,6 +614,8 @@ export function HomeScreen() {
             {FEATURES.character3D && (
               <Pressable
                 onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
+                accessibilityRole="button"
+                accessibilityLabel="Customize character"
                 style={{
                   position: 'absolute',
                   bottom: -10,
@@ -635,7 +649,12 @@ export function HomeScreen() {
             style={styles.sideBtn}
             {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
           >
-            <Pressable onPress={() => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }} style={StyleSheet.absoluteFill} />
+            <Pressable
+              onPress={() => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }}
+              style={StyleSheet.absoluteFill}
+              accessibilityRole="button"
+              accessibilityLabel="Open idle animations picker"
+            />
             <LinearGradient
               colors={['rgba(80,140,255,0.25)', 'rgba(60,100,255,0.15)', 'rgba(40,80,255,0.1)']}
               style={styles.sideBtnCircle}
