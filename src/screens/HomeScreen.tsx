@@ -321,10 +321,19 @@ export function HomeScreen() {
     setShowTapHint(false);
     tapHintOpacity.setValue(0);
 
-    // 3D path: tapping the character opens the 3D emote picker modal.
-    // Long-press / double-tap could later play a random owned emote.
+    // 3D path: tapping the character plays a random owned emote directly.
+    // The Emotes/Idles side buttons open the full AnimationPicker for browsing.
     if (FEATURES.character3D) {
-      setEmotePicker3DOpen(true);
+      const ownedEmoteIds = useShopStore.getState().ownedEmotes;
+      const pool = HUMAN_EMOTES.filter(
+        (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
+      );
+      if (pool.length > 0) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        haptics.win();
+        playSound('click');
+        setActive3DEmote(pick.id);
+      }
       return;
     }
 

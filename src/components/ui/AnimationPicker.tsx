@@ -10,8 +10,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AnimatedCharacter, EMOTE_CATEGORIES, EmoteId, IdleVariantId } from './AnimatedCharacter';
+import { EMOTE_CATEGORIES, EmoteId, IdleVariantId } from './AnimatedCharacter';
 import { EMOTE_EMOJI, EMOTE_NAME } from './EmoteShowcase';
+import { Character3DPortrait } from '../3d/Character3DPortrait';
+import { FEATURES } from '../../config/features';
 import { useShopStore } from '../../stores/shopStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
@@ -128,13 +130,16 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
           </Pressable>
         </View>
 
-        {/* Character preview */}
+        {/* Character preview — 3D when available, 2D fallback */}
         <View style={styles.previewArea}>
-          <AnimatedCharacter
-            size={140}
-            emote={previewEmote as EmoteId | null}
-            selectedIdle={previewIdle}
-          />
+          {FEATURES.character3D ? (
+            <Character3DPortrait
+              width={140}
+              height={170}
+              showFloor={false}
+              autoRotate={false}
+            />
+          ) : null}
           <View style={styles.nowPlaying}>
             <Text style={styles.nowPlayingText}>
               {activeTab === 'emotes'
