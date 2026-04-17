@@ -18,7 +18,7 @@ import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
-import { Shimmer, SlideReveal, PressScale } from '../components/animations';
+import { Shimmer, PressScale, StaggeredEntry } from '../components/animations';
 import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -150,6 +150,7 @@ export function ProfileScreen() {
     <ScreenBackground>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile header */}
+        <StaggeredEntry index={0} delay={60}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarSection}>
             {/*
@@ -258,8 +259,10 @@ export function ProfileScreen() {
             </Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Daily Goals */}
+        <StaggeredEntry index={1} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">DAILY GOALS</Text>
         <View style={styles.dailyGoalsCard}>
           <View style={styles.dailyGoalRow}>
@@ -291,8 +294,10 @@ export function ProfileScreen() {
             </Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Coin Milestone */}
+        <StaggeredEntry index={2} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">COIN GOAL</Text>
         <View style={styles.milestoneCard}>
           {milestoneInfo.currentTitle && (
@@ -319,12 +324,14 @@ export function ProfileScreen() {
             <Text style={styles.milestoneMaxText}>All milestones achieved!</Text>
           )}
         </View>
+        </StaggeredEntry>
 
         {/* v1: Stats, Achievements, Quick Actions, Match History all removed from Profile.
             Stats/Achievements moved to Collection tab. Settings accessible from home gear icon.
             This keeps Profile as a clean single-screen player card with no scrolling. */}
 
         {/* Compact links */}
+        <StaggeredEntry index={3} delay={60}>
         <View style={styles.profileLinks}>
           <PressScale
             onPress={() => navigateTo('Stats')}
@@ -353,10 +360,11 @@ export function ProfileScreen() {
             </View>
           </PressScale>
         </View>
+        </StaggeredEntry>
 
         {/* v1 simplified: Stats/Achievements/Quick Actions/Match History removed.
             See git history for the full Profile implementation if needed for v1.1. */}
-        <SlideReveal from="bottom" delay={100}>
+        <StaggeredEntry index={4} delay={60}>
           <View style={styles.statsGrid}>
             <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
             <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
@@ -365,7 +373,7 @@ export function ProfileScreen() {
             <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
             <StatCard label="Gems" value={gems} color={colors.gemGreen} />
           </View>
-        </SlideReveal>
+        </StaggeredEntry>
 
         {/* Favorite Opponent */}
         {favOpponent && (
@@ -379,8 +387,8 @@ export function ProfileScreen() {
         )}
 
         {/* Equipped cosmetics */}
+        <StaggeredEntry index={5} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">EQUIPPED</Text>
-        <SlideReveal from="bottom" delay={200}>
           <View style={styles.equippedGrid}>
             <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
             <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
@@ -392,9 +400,10 @@ export function ProfileScreen() {
               rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
             />
           </View>
-        </SlideReveal>
+        </StaggeredEntry>
 
         {/* Achievements — compact summary, full list is in Challenges tab */}
+        <StaggeredEntry index={6} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ACHIEVEMENTS</Text>
         {(() => {
           const unlocked = achievements.filter(a => a.unlocked).length;
@@ -430,6 +439,7 @@ export function ProfileScreen() {
             </View>
           );
         })()}
+        </StaggeredEntry>
 
         {/* Ranked Progress — only when ranked is enabled */}
         {FEATURES.rankedMode && (
@@ -442,11 +452,13 @@ export function ProfileScreen() {
         )}
 
         {/* Streaks */}
+        <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">STREAKS</Text>
         <View style={styles.statsGrid}>
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
           <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
         </View>
+        </StaggeredEntry>
 
         {/* Season History — only when ranked is enabled */}
         {FEATURES.rankedMode && seasonHistory.length > 0 && (
