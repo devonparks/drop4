@@ -225,7 +225,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
         <PressScale>
         <Pressable
-          onPress={() => { haptics.tap(); navigation.navigate('CharacterCreator'); }}
+          onPress={() => { haptics.tap(); navigation.navigate('Character3DCreator'); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"

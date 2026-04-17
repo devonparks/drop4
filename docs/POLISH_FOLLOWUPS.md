@@ -29,6 +29,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - `seriesStore.ts` still referenced by GameScreen for single-player series — keep but simplify
 - MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
+- `src/screens/CharacterCreatorScreen.tsx` (2D creator) now unreachable after CareerCityScreen HUD was rerouted to Character3DCreator. Delete the file + its RootNavigator registration + its `CharacterCreator` key from `RootStackParamList`. Non-loop cleanup — touches a shared type (charter rule 5).
 <!-- GameScreen isOnlineMatch / onlineMatchId / myPlayerNum stripped — 26 dead refs removed (commit 40316bc). wagerCourt dead variable removed from GameScreen + MatchupScreen wagerAmount local code stripped (commit TBD). Shared type fields (WagerCourtParams, rankedMode, rankedClockSeconds in RootNavigator) still present — blocked by charter rule 5. -->
 
 ## Open — beta prep
