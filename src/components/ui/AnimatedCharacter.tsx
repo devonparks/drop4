@@ -303,9 +303,6 @@ const POSE_IMAGES: Record<PoseId, ImageSourcePropType> = {
 // TIMING
 // ═══════════════════════════════════════════════════════════
 
-const IDLE_INTERVAL = 100;   // 100ms per frame
-const EMOTE_INTERVAL = 42;   // 42ms per frame — 24fps
-
 const IDLE_VARIANT_MIN_DELAY = 8000;
 const IDLE_VARIANT_MAX_DELAY = 12000;
 
