@@ -15,7 +15,7 @@ import { ALL_CAREER_LEVELS } from './careerLevels';
 
 export type RosterCharacterId = string;
 
-export interface SignatureEmote {
+interface SignatureEmote {
   id: string;          // unique signature emote id (also the sprite sheet basename)
   name: string;        // display name shown in the emote wheel
   icon: string;        // emoji used until we have a proper icon asset
