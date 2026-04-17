@@ -1,6 +1,6 @@
 // Loading screen tips shown during game transitions
 
-export const LOADING_TIPS: string[] = [
+const LOADING_TIPS: string[] = [
   'Controlling the center column gives you the most winning opportunities.',
   'A trap is when you have two ways to win and your opponent can only block one.',
   'Always check for your opponent\'s three-in-a-row before making your move.',
@@ -24,7 +24,7 @@ export function getRandomTip(): string {
 }
 
 // Game-over quotes shown in the results modal
-export const GAME_OVER_WIN_QUOTES: string[] = [
+const GAME_OVER_WIN_QUOTES: string[] = [
   'The center column is key to victory!',
   'Every master was once a beginner.',
   'Your pet is proud of you! 🐕',
@@ -37,7 +37,7 @@ export const GAME_OVER_WIN_QUOTES: string[] = [
   'Pro tip: diagonal traps are the hardest to spot!',
 ];
 
-export const GAME_OVER_LOSS_QUOTES: string[] = [
+const GAME_OVER_LOSS_QUOTES: string[] = [
   'Every loss is a lesson. You\'ll get them next time!',
   'The best players learn more from losses than wins.',
   'That was close! One more move could have changed everything.',
@@ -48,7 +48,7 @@ export const GAME_OVER_LOSS_QUOTES: string[] = [
   'Tip: always check for your opponent\'s three-in-a-row first.',
 ];
 
-export const GAME_OVER_DRAW_QUOTES: string[] = [
+const GAME_OVER_DRAW_QUOTES: string[] = [
   'Well played! A draw means you were evenly matched.',
   'Nobody wins, nobody loses — a true battle of equals!',
   'So close! One move could have swung it either way.',

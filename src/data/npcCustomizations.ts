@@ -159,8 +159,7 @@ export function getNpcCustomization(key: string | null | undefined): CharacterCu
   return BOT_MEDIUM;
 }
 
-// Stable exports for anyone who wants direct access
-export const NPC_CUSTOMIZATIONS = {
+const NPC_CUSTOMIZATIONS = {
   bot_easy:     BOT_EASY,
   bot_medium:   BOT_MEDIUM,
   bot_hard:     BOT_HARD,

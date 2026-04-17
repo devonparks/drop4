@@ -15,7 +15,6 @@ export interface Pet {
   sitImage: ImageSourcePropType;
 }
 
-export const RARITY_ORDER = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
 export const PET_RARITY_COLORS: Record<string, string> = {
   common: '#8892b0',
