@@ -1,16 +1,11 @@
 /**
- * Character3DPortrait — drop-in replacement for legacy 2D
- * AnimatedCharacter/CharacterAvatar usage.
+ * Character3DPortrait — the standard player portrait component.
  *
  * Reads the current player's customization from characterStore and renders
- * a Character3D at the given size. Falls back silently to null if the
- * 3D feature flag is off — call sites should keep their 2D fallback and
- * swap in this portrait when FEATURES.character3D is true.
+ * a Character3D at the given size.
  *
  * Usage:
- *   {FEATURES.character3D
- *     ? <Character3DPortrait width={120} height={160} />
- *     : <AnimatedCharacter ... />}
+ *   <Character3DPortrait width={120} height={160} />
  *
  * For NPC opponents (not the local player), pass an explicit
  * customization object via the `customization` prop.

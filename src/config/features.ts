@@ -10,9 +10,6 @@
  * Always-on features (career, shop, challenges, etc.) don't need flags.
  */
 export const FEATURES = {
-  // ── 3D character system ──────────────────────────────────────
-  character3D: true,
-
   // ── Power-user features (v1.1) ───────────────────────────────
   customGame: false,          // Private match settings
 
