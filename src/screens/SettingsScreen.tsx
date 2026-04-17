@@ -22,6 +22,7 @@ import { useRosterStore } from '../stores/rosterStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted, playSound } from '../services/audio';
+import { PressScale } from '../components/animations';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -54,16 +55,18 @@ function SettingToggle({ label, value, onToggle, icon }: {
 
 function SettingLink({ label, icon, onPress }: { label: string; icon: string; onPress: () => void }) {
   return (
-    <Pressable
+    <PressScale
       onPress={() => { haptics.tap(); onPress(); }}
-      style={styles.settingRow}
+      scaleTo={0.98}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={styles.settingIcon}>{icon}</Text>
-      <Text style={styles.settingLabel}>{label}</Text>
-      <Text style={styles.chevron}>›</Text>
-    </Pressable>
+      <View style={styles.settingRow}>
+        <Text style={styles.settingIcon}>{icon}</Text>
+        <Text style={styles.settingLabel}>{label}</Text>
+        <Text style={styles.chevron}>›</Text>
+      </View>
+    </PressScale>
   );
 }
 
