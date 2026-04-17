@@ -82,9 +82,7 @@ function formatDate(timestamp: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Mode badges — v1 is single-player only so stage/ranked/wager/online are
-// dead but kept here in case a legacy save surfaces one. They won't render
-// in active filter UI.
+// Mode badges for the three v1 game types
 const MODE_BADGES: Record<string, { label: string; color: string }> = {
   ai: { label: 'AI', color: '#6c7a89' },
   local: { label: 'Local', color: '#8e44ad' },
