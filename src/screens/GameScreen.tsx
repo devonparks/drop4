@@ -807,7 +807,7 @@ export function GameScreen({ navigation }: Props) {
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
   // Helper: compute hint arrow left offset for a given column
-  const _getHintArrowOffset = (col: number): number => {
+  const getHintArrowOffset = (col: number): number => {
     const BOARD_PAD = 10;
     const GAP = 4;
     return BOARD_PAD + col * (CELL_SIZE + GAP) + CELL_SIZE / 2 - 10;
@@ -1016,7 +1016,7 @@ export function GameScreen({ navigation }: Props) {
             <RNAnimated.View
               style={[
                 styles.hintBestMoveBanner,
-                { left: _getHintArrowOffset(hintCol) - 22, opacity: hintPulseAnim },
+                { left: getHintArrowOffset(hintCol) - 22, opacity: hintPulseAnim },
               ]}
             >
               <Text style={styles.hintBestMoveText}>BEST MOVE</Text>
@@ -1024,7 +1024,7 @@ export function GameScreen({ navigation }: Props) {
             <RNAnimated.Text style={[
               styles.hintArrow,
               {
-                left: _getHintArrowOffset(hintCol),
+                left: getHintArrowOffset(hintCol),
                 opacity: hintPulseAnim,
                 transform: [{ scale: hintPulseAnim.interpolate({ inputRange: [0.2, 1], outputRange: [0.85, 1.2] }) }],
               },
