@@ -1799,67 +1799,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
   },
-  // Chess clock styles
-  chessClockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 16,
-    marginBottom: 6,
-    gap: 8,
-  },
-  clockBox: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  clockBoxActive: {
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderColor: 'rgba(255,140,0,0.4)',
-  },
-  clockBoxDanger: {
-    backgroundColor: 'rgba(231,76,60,0.12)',
-    borderColor: 'rgba(231,76,60,0.4)',
-  },
-  clockTime: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 22,
-    color: colors.textSecondary,
-    letterSpacing: 1,
-  },
-  clockTimeActive: {
-    color: '#ffffff',
-  },
-  clockLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    color: colors.textMuted,
-    letterSpacing: 1,
-    marginTop: 2,
-  },
-  clockCenter: {
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  clockVs: {
-    fontSize: 18,
-  },
-  clockModeLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 8,
-    color: colors.orange,
-    letterSpacing: 1.5,
-    marginTop: 2,
-  },
   hudRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2425,28 +2364,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     letterSpacing: 0.5,
     marginTop: 1,
-  },
-  // Wager display
-  goWagerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    marginHorizontal: 16,
-    backgroundColor: 'rgba(255,215,0,0.08)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.2)',
-  },
-  goWagerIcon: {
-    fontSize: 14,
-  },
-  goWagerText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-    color: colors.coinGold,
   },
   // Double Coins button
   doubleCoinsBtn: {
