@@ -604,65 +604,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Status bar
-  statusBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    gap: 6,
-    marginTop: 4,
-  },
-  statusPill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  statusIcon: { fontSize: 14 },
-  statusLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 10,
-    color: '#ffffff',
-  },
-  progressBarSmall: {
-    flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFillSmall: {
-    height: '100%',
-    backgroundColor: '#9b59b6',
-    borderRadius: 2,
-  },
-  statusValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: '#9b59b6',
-  },
-  challengeBadge: {
-    marginLeft: 'auto',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.green,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeNum: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: '#ffffff',
-  },
   // Logo — layered title card
   logoArea: {
     alignItems: 'center',
