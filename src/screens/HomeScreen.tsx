@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, Pressable, Animated, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,11 +18,8 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
-import { useChallengeStore } from '../stores/challengeStore';
 import { useCareerStore } from '../stores/careerStore';
-import { useSeasonStore } from '../stores/seasonStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
-import { COIN_REWARDS } from '../engine/constants';
 import { playSound } from '../services/audio';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
 import { WelcomeOverlay } from '../components/ui/WelcomeOverlay';
@@ -131,11 +128,9 @@ export function HomeScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  // Season & challenge details moved to tab bar — store import kept for future use
   const equippedIdle = useShopStore(s => s.equippedIdle);
   const equippedPet = useShopStore(s => s.equippedPet);
   const winStreak = useGameStore(s => s.winStreak);
-  const challenges = useChallengeStore(s => s.challenges);
   const careerCompletedCount = useCareerStore(s => Object.values(s.progress).filter(p => p.completed).length);
   const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
   const spinAvailable = (() => {
@@ -143,45 +138,16 @@ export function HomeScreen() {
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return lastSpinDate !== today;
   })();
-  const seasonMaxTier = useSeasonStore(s => s.maxTier);
-  const seasonRewards = useSeasonStore(s => s.rewards);
-  const seasonXp = useSeasonStore(s => s.xp);
-  const seasonXpPerTier = useSeasonStore(s => s.xpPerTier);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
-  const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
   const clearLevelUp = useShopStore(s => s.clearLevelUp);
-  const ownedPets = useShopStore(s => s.ownedPets);
-  const claimedStarterPack = useShopStore(s => s.claimedStarterPack);
-  const claimStarterPack = useShopStore(s => s.claimStarterPack);
   const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const matches = useMatchHistoryStore(s => s.matches);
 
   // ═══ Play Counts for menu buttons ═══
   const aiGameCount = matches.filter(m => m.mode === 'ai' || m.mode === 'local').length;
   const totalCareerLevels = ALL_CAREER_LEVELS.length;
-
-  // ═══ XP Earned Today ═══
-  const xpEarnedToday = (() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayMs = todayStart.getTime();
-    return matches
-      .filter(m => m.timestamp >= todayMs && m.result === 'win')
-      .reduce((sum, m) => {
-        const diff = m.difficulty as keyof typeof COIN_REWARDS;
-        return sum + (COIN_REWARDS[diff] || 0);
-      }, 0);
-  })();
-
-  // ═══ Season Countdown (~30 day seasons) ═══
-  const seasonDaysRemaining = useMemo(() => {
-    const seasonLengthDays = 30;
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    const dayInSeason = dayOfYear % seasonLengthDays;
-    return Math.max(seasonLengthDays - dayInSeason, 1);
-  }, []);
 
   // ═══ Pet tap interaction ═══
   const petBounce = useRef(new Animated.Value(1)).current;
@@ -208,13 +174,6 @@ export function HomeScreen() {
         Animated.timing(heartOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]),
     ]).start(() => setShowPetHeart(false));
-  };
-
-  // Starter Pack — show for level 1-2 players with no pets who haven't claimed yet
-  const showStarterPack = level <= 2 && ownedPets.length === 0 && !claimedStarterPack;
-  const handleClaimStarterPack = () => {
-    haptics.win();
-    claimStarterPack();
   };
 
   // ═══ Coin earn animation ═══
@@ -377,25 +336,6 @@ export function HomeScreen() {
       triggerEmote(selectedHomeEmote as EmoteId);
     }
   };
-
-  // ═══ Smart Suggestion — contextual hint based on game state ═══
-  const smartSuggestion = useMemo(() => {
-    // Priority 1: Unclaimed challenge rewards
-    const unclaimedChallenge = challenges.find(c => c.progress >= c.target && !c.completed);
-    if (unclaimedChallenge) {
-      return { text: '\uD83C\uDFAF Claim your challenge reward!', screen: 'MainTabs', tabParams: { screen: 'Challenges' } };
-    }
-    // Priority 2: Win streak momentum (only shown when streak > 0, replaces streak text)
-    if (winStreak >= 2) {
-      return { text: `\uD83D\uDD25 You're on fire! Keep the streak going!`, screen: null };
-    }
-    // Priority 3: Career nudge — suggest continuing career
-    const nextCareerLevel = careerCompletedCount + 1;
-    if (careerCompletedCount > 0) {
-      return { text: `\uD83C\uDFC6 Continue your career \u2014 Level ${nextCareerLevel} awaits!`, screen: 'Career' };
-    }
-    return null;
-  }, [challenges, winStreak, careerCompletedCount]);
 
   const navigateTo = (screen: string) => {
     navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -974,31 +914,6 @@ const styles = StyleSheet.create({
     fontWeight: weight.semibold,
     fontSize: 12,
     color: 'rgba(200,220,255,0.25)',
-  },
-  // Smart suggestion
-  smartSuggestion: {
-    alignSelf: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    marginBottom: 2,
-  },
-  smartSuggestionText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 12,
-    color: 'rgba(200,220,255,0.7)',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
-  // XP Earned Today
-  xpTodayText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: 'rgba(155,89,182,0.8)',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-    marginBottom: 2,
   },
   // Pet heart animation
   petHeart: {
