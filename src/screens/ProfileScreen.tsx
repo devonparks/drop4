@@ -260,7 +260,7 @@ export function ProfileScreen() {
         </View>
 
         {/* Daily Goals */}
-        <Text style={styles.sectionTitle}>DAILY GOALS</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">DAILY GOALS</Text>
         <View style={styles.dailyGoalsCard}>
           <View style={styles.dailyGoalRow}>
             <Text style={styles.dailyGoalIcon}>🎮</Text>
@@ -293,7 +293,7 @@ export function ProfileScreen() {
         </View>
 
         {/* Coin Milestone */}
-        <Text style={styles.sectionTitle}>COIN GOAL</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">COIN GOAL</Text>
         <View style={styles.milestoneCard}>
           {milestoneInfo.currentTitle && (
             <View style={styles.milestoneCurrentRow}>
@@ -375,7 +375,7 @@ export function ProfileScreen() {
         )}
 
         {/* Equipped cosmetics */}
-        <Text style={styles.sectionTitle}>EQUIPPED</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">EQUIPPED</Text>
         <SlideReveal from="bottom" delay={200}>
           <View style={styles.equippedGrid}>
             <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
@@ -391,7 +391,7 @@ export function ProfileScreen() {
         </SlideReveal>
 
         {/* Achievements — compact summary, full list is in Challenges tab */}
-        <Text style={styles.sectionTitle}>ACHIEVEMENTS</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">ACHIEVEMENTS</Text>
         {(() => {
           const unlocked = achievements.filter(a => a.unlocked).length;
           const total = achievements.length;
@@ -428,7 +428,7 @@ export function ProfileScreen() {
         {/* Ranked Progress — only when ranked is enabled */}
         {FEATURES.rankedMode && (
           <>
-            <Text style={styles.sectionTitle}>RANKED PROGRESS</Text>
+            <Text style={styles.sectionTitle} accessibilityRole="header">RANKED PROGRESS</Text>
             <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
               <RankProgressCard />
             </View>
@@ -436,7 +436,7 @@ export function ProfileScreen() {
         )}
 
         {/* Streaks */}
-        <Text style={styles.sectionTitle}>STREAKS</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">STREAKS</Text>
         <View style={styles.statsGrid}>
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
           <StatCard label="Best" value={bestStreak} color={colors.coinGold} />
@@ -445,7 +445,7 @@ export function ProfileScreen() {
         {/* Season History — only when ranked is enabled */}
         {FEATURES.rankedMode && seasonHistory.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>SEASON HISTORY</Text>
+            <Text style={styles.sectionTitle} accessibilityRole="header">SEASON HISTORY</Text>
             <View style={styles.statsGrid}>
               {seasonHistory.map((s, i) => (
                 <StatCard
@@ -469,7 +469,7 @@ export function ProfileScreen() {
         {recentMatches.length > 0 && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RECENT MATCHES</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]} accessibilityRole="header">RECENT MATCHES</Text>
               <Pressable
                 onPress={() => { haptics.tap(); navigateTo('MatchHistory'); }}
                 accessibilityRole="button"
