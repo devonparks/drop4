@@ -16,8 +16,6 @@ import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 import { QUICK_CHAT_MESSAGES, type QuickChatMessage } from '../../data/quickChat';
-import { useRosterStore } from '../../stores/rosterStore';
-import { getCharacter } from '../../data/characterRoster';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -211,7 +209,6 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
   const [activeTab, setActiveTab] = useState<'emotes' | 'chat'>(initialTab);
 
   // v1: signature emotes disabled — all characters share the universal pool.
-  // The rosterStore + getCharacter imports are kept for v1.1 reactivation.
   const signatureItems: SignatureItem[] = [];
 
   // Reset tab when modal opens
