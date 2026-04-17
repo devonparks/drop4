@@ -27,7 +27,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 <!-- matchmaking.ts + emotes.ts + firebase.ts + EloChangeAnimation deleted (commits 0c037bf, 61d02ac, 79b2b2b) -->
 <!-- GameScreen 202 lines of MP code stripped (commit df49f2a) -->
 <!-- StageScreen.tsx deleted — unreachable (commit a9d922b) -->
-- `seriesStore.ts` still referenced by GameScreen for single-player series — keep but simplify
+<!-- seriesStore.ts deleted — zero importers after MP kill (commit TBD) -->
 - MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
 - `src/screens/CharacterCreatorScreen.tsx` (2D creator) now unreachable after CareerCityScreen HUD was rerouted to Character3DCreator. Delete the file + its RootNavigator registration + its `CharacterCreator` key from `RootStackParamList`. Non-loop cleanup — touches a shared type (charter rule 5).

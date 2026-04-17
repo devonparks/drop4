@@ -27,7 +27,6 @@ import { useSeasonStore } from './src/stores/seasonStore';
 import { useBoardEditorStore } from './src/stores/boardEditorStore';
 import { useGameStore } from './src/stores/gameStore';
 import { useChallengeStore } from './src/stores/challengeStore';
-import { useSeriesStore } from './src/stores/seriesStore';
 import { useDailySpinStore } from './src/stores/dailySpinStore';
 import { useTutorialStore } from './src/stores/tutorialStore';
 import { useCharacterStore } from './src/stores/characterStore';
@@ -69,7 +68,6 @@ export default function App() {
         await useBoardEditorStore.getState().loadFromStorage();
         await useGameStore.getState().loadFromStorage();
         await useChallengeStore.getState().loadFromStorage();
-        await useSeriesStore.getState().loadFromStorage();
         await useDailySpinStore.getState().loadFromStorage();
         await useTutorialStore.getState().loadFromStorage();
         await useCharacterStore.getState().loadFromStorage();
