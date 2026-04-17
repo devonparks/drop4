@@ -12,6 +12,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { CHARACTER_ITEMS, CharacterItem, getUnlockDescription } from '../data/characterCatalog';
@@ -559,7 +560,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                             <Pressable
                               key={emoteId}
                               onPress={() => {
-                                if (isLocked) { haptics.error(); return; }
+                                if (isLocked) { haptics.error(); playSound('error'); return; }
                                 haptics.tap();
                                 if (selectedWheelSlot !== null) {
                                   setEquippedEmote(selectedWheelSlot, emoteId);
@@ -640,7 +641,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                           } else if (pet.price > 0) {
                             const success = purchasePet(pet.id, pet.price);
                             if (success) { haptics.win(); equipPet(pet.id); }
-                            else { haptics.error(); }
+                            else { haptics.error(); playSound('error'); }
                           }
                         }}
                         style={[

@@ -21,7 +21,7 @@ import { useTutorialStore } from '../stores/tutorialStore';
 import { useRosterStore } from '../stores/rosterStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RankBadge } from '../components/ui/RankBadge';
-import { toggleMute, getMuted } from '../services/audio';
+import { toggleMute, getMuted, playSound } from '../services/audio';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -41,7 +41,7 @@ function SettingToggle({ label, value, onToggle, icon }: {
       <Text style={styles.settingLabel}>{label}</Text>
       <Switch
         value={value}
-        onValueChange={() => { haptics.tap(); onToggle(); }}
+        onValueChange={() => { haptics.tap(); playSound('toggle'); onToggle(); }}
         trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(255,140,0,0.4)' }}
         thumbColor={value ? colors.orange : '#666'}
         accessibilityLabel={label}

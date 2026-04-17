@@ -262,7 +262,7 @@ export function GameScreen({ navigation }: Props) {
       if (result.expired && result.player) {
         // Time expired — player loses
         if (chessClockRef.current) clearInterval(chessClockRef.current);
-        haptics.error();
+        haptics.error(); playSound('error');
         playSound('lose');
         // Force game over — the player who ran out of time loses
         const loser = result.player;
@@ -307,7 +307,7 @@ export function GameScreen({ navigation }: Props) {
           if (validCols.length > 0) {
             const randomCol = validCols[Math.floor(Math.random() * validCols.length)];
             dropPiece(randomCol);
-            haptics.error();
+            haptics.error(); playSound('error');
           }
           return timerSecs;
         }
@@ -687,7 +687,7 @@ export function GameScreen({ navigation }: Props) {
         }))]);
       }
       addXp(5); // Participation XP on loss
-      haptics.error();
+      haptics.error(); playSound('error');
       playSound('lose');
       // Comeback mechanic — grant pity coins on losing streak to keep players engaged
       const recentMatches = useMatchHistoryStore.getState().matches.slice(0, 5);

@@ -16,6 +16,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { PressScale } from '../animations';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -32,7 +33,7 @@ export function FilterChip({ label, icon, active, locked, onPress, style }: Prop
   return (
     <PressScale
       onPress={() => {
-        if (locked) { haptics.error(); return; }
+        if (locked) { haptics.error(); playSound('error'); return; }
         haptics.tap();
         onPress();
       }}

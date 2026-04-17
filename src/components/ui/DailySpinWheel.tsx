@@ -188,7 +188,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   const handleGoldenSpin = () => {
     if (spinning) return;
     if (!spendGems(50)) {
-      haptics.error();
+      haptics.error(); playSound('error');
       return;
     }
     haptics.tap();

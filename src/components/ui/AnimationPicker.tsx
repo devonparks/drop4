@@ -61,7 +61,10 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
 
   // Sync tab when initialTab changes (e.g. left button = emotes, right = idles)
   React.useEffect(() => {
-    if (visible) setActiveTab(initialTab);
+    if (visible) {
+      setActiveTab(initialTab);
+      playSound('modal_in');
+    }
   }, [visible, initialTab]);
   const insets = useSafeAreaInsets();
 
@@ -242,7 +245,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
         {/* Close button */}
         <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
           <Pressable
-            onPress={onClose}
+            onPress={() => { playSound('modal_out'); onClose(); }}
             style={styles.closeBtn}
             accessibilityRole="button"
             accessibilityLabel="Close animation picker"

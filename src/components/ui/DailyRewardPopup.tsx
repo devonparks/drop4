@@ -103,6 +103,7 @@ export function DailyRewardPopup() {
     if (available) {
       setReward(available);
       setVisible(true);
+      playSound('modal_in');
     }
   }, []);
 
