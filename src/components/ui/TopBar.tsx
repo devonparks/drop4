@@ -4,9 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
-import { CharacterAvatar } from './CharacterAvatar';
 import { Character3DPortrait } from '../3d/Character3DPortrait';
-import { FEATURES } from '../../config/features';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../../stores/rankedStore';
 
 interface TopBarProps {
@@ -118,9 +116,7 @@ export function TopBar({
           style={styles.avatarRing}
         >
           <View style={styles.avatarInner}>
-            {FEATURES.character3D
-              ? <Character3DPortrait width={34} height={34} showFloor={false} />
-              : <CharacterAvatar size="small" variant="player" />}
+            <Character3DPortrait width={34} height={34} showFloor={false} />
           </View>
         </LinearGradient>
         <View style={styles.levelBadge}>
