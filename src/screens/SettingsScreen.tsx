@@ -300,7 +300,7 @@ export function SettingsScreen({ navigation }: Props) {
 
         {/* Danger Zone */}
         <View style={styles.dangerDivider} />
-        <Text style={styles.dangerTitle}>DANGER ZONE</Text>
+        <Text style={styles.dangerTitle} accessibilityRole="header">DANGER ZONE</Text>
         <View style={styles.dangerSection}>
           <Pressable onPress={() => {
             haptics.error();

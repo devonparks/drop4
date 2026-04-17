@@ -310,7 +310,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
               style={st.headerGradient}
             >
               <View style={st.headerNeonBorder} />
-              <Text style={st.headerTitle}>SPIN & WIN</Text>
+              <Text style={st.headerTitle} accessibilityRole="header">SPIN & WIN</Text>
               <Text style={st.headerSub}>Spin the wheel for free rewards!</Text>
             </LinearGradient>
           </View>
@@ -437,7 +437,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
               </View>
               <LinearGradient colors={['rgba(241,196,15,0.15)', 'rgba(241,196,15,0.03)']} style={st.goldenCard}>
                 <View style={st.goldenHeader}>
-                  <Text style={st.goldenTitle}>{'\u2728'} GOLDEN SPIN</Text>
+                  <Text style={st.goldenTitle} accessibilityRole="header">{'\u2728'} GOLDEN SPIN</Text>
                   <View style={st.goldenBadge}>
                     <Text style={st.goldenBadgeText}>10x PRIZES</Text>
                   </View>
