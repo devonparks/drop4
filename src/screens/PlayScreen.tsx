@@ -10,7 +10,6 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
-import { FEATURES } from '../config/features';
 import { StaggeredEntry } from '../components/animations';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -158,9 +157,6 @@ export function PlayScreen({ navigation }: Props) {
           <StaggeredEntry index={4} delay={60}>
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
-            {FEATURES.customGame && (
-              <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
-            )}
           </View>
           </StaggeredEntry>
         </View>
