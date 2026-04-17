@@ -569,8 +569,7 @@ export function HomeScreen() {
           onClose={() => setSpinWheelOpen(false)}
         />
 
-        {/* EmotePickerModal3D removed from lobby — character tap now plays
-            emotes directly. The wheel is for in-game (GameScreen) only. */}
+
 
         {/* First-launch welcome modal — auto-shows once for new users */}
         <WelcomeOverlay />
