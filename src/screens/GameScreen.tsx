@@ -100,7 +100,6 @@ export function GameScreen({ navigation }: Props) {
   // Rewards summary tracking
   const [streakReward, setStreakReward] = useState<{ coins: number; lootBox?: string; milestone: number } | null>(null);
   const [didLevelUp, setDidLevelUp] = useState(false);
-  const [seasonTierUp, setSeasonTierUp] = useState<number | null>(null);
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
@@ -109,8 +108,6 @@ export function GameScreen({ navigation }: Props) {
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
   // Last move indicator
-  const [lastMoveCol, setLastMoveCol] = useState<number | null>(null);
-  const lastMoveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMoveFade = useRef(new RNAnimated.Value(0)).current;
 
   // Emote Picker Modal
@@ -197,8 +194,6 @@ export function GameScreen({ navigation }: Props) {
 
   // Game count milestone celebration
   const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
-  const [undoCount, setUndoCount] = useState(0);
-
   // Quick Chat (Tier 3) — now handled by EmotePickerModal
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
   const [opponentChatBubble, setOpponentChatBubble] = useState<{ text: string; senderName: string; key: number } | null>(null);
@@ -453,7 +448,6 @@ export function GameScreen({ navigation }: Props) {
       addSeasonXp(reward);
       const postTier = useSeasonStore.getState().currentTier;
       if (postTier > preTier) {
-        setSeasonTierUp(postTier);
         playSound('level_up');
         haptics.levelUp();
       }
@@ -586,7 +580,6 @@ export function GameScreen({ navigation }: Props) {
       addSeasonXp(10);
       const postTierLoss = useSeasonStore.getState().currentTier;
       if (postTierLoss > preTierLoss) {
-        setSeasonTierUp(postTierLoss);
         playSound('level_up');
         haptics.levelUp();
       }
@@ -644,7 +637,6 @@ export function GameScreen({ navigation }: Props) {
       addSeasonXp(15);
       const postTierDraw = useSeasonStore.getState().currentTier;
       if (postTierDraw > preTierDraw) {
-        setSeasonTierUp(postTierDraw);
         playSound('level_up');
         haptics.levelUp();
       }
@@ -704,11 +696,8 @@ export function GameScreen({ navigation }: Props) {
   }, [status, winner]);
 
   const showLastMove = useCallback((col: number) => {
-    if (lastMoveTimerRef.current) clearTimeout(lastMoveTimerRef.current);
-    setLastMoveCol(col);
     lastMoveFade.setValue(1);
     RNAnimated.timing(lastMoveFade, { toValue: 0, duration: 1000, useNativeDriver: true }).start();
-    lastMoveTimerRef.current = setTimeout(() => setLastMoveCol(null), 1000);
   }, []);
 
   const handleColumnPress = useCallback((col: number) => {
@@ -763,7 +752,6 @@ export function GameScreen({ navigation }: Props) {
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
     setDidLevelUp(false);
-    setSeasonTierUp(null);
     setStreakReward(null);
     setCompletedChallengeName(null);
     setStreakBrokenAt(null);
@@ -809,7 +797,6 @@ export function GameScreen({ navigation }: Props) {
   const p2Name = isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
 
   // Turn / status text
-  const isMyTurn = currentPlayer === 1;
   const turnText = status === 'playing'
     ? (isAiThinking ? 'Thinking...'
       : (currentPlayer === 1 ? (p1Name === 'You' ? 'Your Turn' : `${p1Name}'s Turn`) : `${p2Name}'s Turn`))
@@ -1109,7 +1096,6 @@ export function GameScreen({ navigation }: Props) {
             <Pressable
               onPress={() => {
                 if (undoMove()) {
-                  setUndoCount(c => c + 1);
                   haptics.tap();
                   playSound('swoosh');
                 }
@@ -1667,7 +1653,6 @@ export function GameScreen({ navigation }: Props) {
                                     setWasCareerLevel(false);
                                     setFreeHintsRemaining(3);
                                     setDidLevelUp(false);
-                                    setSeasonTierUp(null);
                                     setStreakReward(null);
                                     setCompletedChallengeName(null);
                                     setStreakBrokenAt(null);
