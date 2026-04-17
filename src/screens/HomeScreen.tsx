@@ -544,15 +544,6 @@ export function HomeScreen() {
               />
             </PressScaleView>
           </SlideReveal>
-          {/* Multiplayer removed for v1 — see docs/MULTIPLAYER_V1_KILL.md */}
-          {false && (
-            // Deprecated "Coming Soon" placeholder — kept in source as a
-            // reference for when multiplayer ships. Do not re-enable until
-            // FEATURES.onlineMultiplayer is true AND the screen is tested.
-            <PressScaleView onPress={() => { haptics.tap(); }}>
-              <View style={{ position: 'relative' }}><GlossyButton label="MULTIPLAYER" subtitle="Coming Soon" variant="teal" small iconRight="›" onPress={() => {}} disabled /></View>
-            </PressScaleView>
-          )}
           {/* Local play — pass and play, available in v1 */}
           <SlideReveal from="bottom" delay={160}>
             <PressScaleView onPress={() => navigateTo('LocalPlay')}>
