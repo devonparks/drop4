@@ -90,10 +90,6 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
     setEquippedIdle(id);
   };
 
-  // What's currently active for the character preview
-  const previewEmote = activeTab === 'emotes' && !homeEmoteRandomMode ? selectedHomeEmote : null;
-  const previewIdle = activeTab === 'idles' ? (equippedIdle as IdleVariantId | null) : null;
-
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
