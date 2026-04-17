@@ -263,7 +263,14 @@ function AchievementsSection() {
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export function ChallengesScreen() {
-  const { challenges, claimReward, claimDailyBonus, claimWeeklyReward, refreshChallenges, lastRefresh, bonusClaimed, weeklyClaimed } = useChallengeStore();
+  const challenges = useChallengeStore(s => s.challenges);
+  const lastRefresh = useChallengeStore(s => s.lastRefresh);
+  const bonusClaimed = useChallengeStore(s => s.bonusClaimed);
+  const weeklyClaimed = useChallengeStore(s => s.weeklyClaimed);
+  const claimReward = useChallengeStore(s => s.claimReward);
+  const claimDailyBonus = useChallengeStore(s => s.claimDailyBonus);
+  const claimWeeklyReward = useChallengeStore(s => s.claimWeeklyReward);
+  const refreshChallenges = useChallengeStore(s => s.refreshChallenges);
   const hasAutoRefreshed = useRef(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
