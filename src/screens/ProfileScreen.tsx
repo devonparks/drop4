@@ -554,31 +554,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase' as const,
   },
-  achievementScoreCard: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(241,196,15,0.15)',
-  },
-  achievementScoreLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  achievementScoreValue: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 16,
-    color: colors.coinGold,
-  },
   rankBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -755,70 +730,6 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 15,
   },
-  achievementsList: {
-    paddingHorizontal: 16,
-    gap: 6,
-  },
-  achievementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
-    padding: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
-    opacity: 0.5,
-  },
-  achievementDone: {
-    opacity: 1,
-    borderColor: 'rgba(255,209,102,0.2)',
-    backgroundColor: 'rgba(255,209,102,0.05)',
-  },
-  achievementIcon: {
-    fontSize: 24,
-  },
-  achievementInfo: {
-    flex: 1,
-  },
-  achievementName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 14,
-    color: '#ffffff',
-  },
-  achievementDesc: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  checkmark: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: colors.green,
-  },
-  titleChip: {
-    backgroundColor: 'rgba(241,196,15,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(241,196,15,0.4)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  titleChipActive: {
-    backgroundColor: colors.coinGold,
-    borderColor: colors.coinGold,
-  },
-  titleChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    color: colors.coinGold,
-    letterSpacing: 0.5,
-  },
   quickActions: {
     flexDirection: 'row',
     gap: 8,
@@ -980,37 +891,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 6,
   },
-  achNextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  achNextLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: colors.orange,
-  },
-  achNextIcon: {
-    fontSize: 14,
-  },
-  achNextName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 11,
-    color: '#ffffff',
-    flex: 1,
-  },
-  achNextReward: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 10,
-    color: colors.coinGold,
-  },
   // Coin Milestone
   milestoneCard: {
     marginHorizontal: 16,
@@ -1120,32 +1000,4 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  // Recent Activity
-  activityList: {
-    marginHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    gap: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  activityIcon: {
-    fontSize: 18,
-  },
-  activityText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 13,
-    flex: 1,
-  },
 });
