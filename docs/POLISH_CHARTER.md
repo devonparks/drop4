@@ -12,11 +12,12 @@ Drop4 is a 3D Connect 4 game. The 3D character pipeline is already built (see `d
 2. **One small polish per run.** Three 30-line improvements > one 300-line rewrite. Keep each commit self-contained and reviewable.
 3. **Don't scope-creep.** If you notice a big refactor opportunity, write it in `docs/POLISH_FOLLOWUPS.md` and move on. Don't do it.
 4. **Clean up ONLY your own mess.** If your commit orphans a local variable or import, remove it. Do NOT do drive-by cleanup on code your change didn't touch — even if it's obviously dead. Unsolicited refactors compound overnight and nobody can tell what actually moved. Flag dead neighbors in POLISH_FOLLOWUPS.md instead.
-5. **Push to `main`.** Pre-commit hook (tsc + jest) is the only safety gate — red commits are blocked automatically.
-6. **GLB files are gitignored.** `require('../assets/models/...')` calls are valid even though the files don't exist in the remote clone — Metro resolves them at build time on the user's machine. Don't "fix" them.
-7. **Respect `CLAUDE.md`** conventions (Zustand selectors, GlossyButton web fallback, sprite sheet grids, etc.).
-8. **Commit format:** `polish: <scope> — <one-line description>`. Co-Authored-By trailer for Claude.
-9. **Stop after 1-3 commits.** Quality over quantity.
+5. **Do NOT modify shared types.** `RootStackParamList`, `GameParams`, `MatchupParams`, Zustand store shapes, and any exported `type`/`interface` live in a blast radius larger than one file. Changing them cascades through every call site. These are structural refactors, not polish. If you spot dead type fields, flag them in POLISH_FOLLOWUPS.md and move on.
+6. **Push to `main`.** Pre-commit hook (tsc + jest) is the only safety gate — red commits are blocked automatically.
+7. **GLB files are gitignored.** `require('../assets/models/...')` calls are valid even though the files don't exist in the remote clone — Metro resolves them at build time on the user's machine. Don't "fix" them.
+8. **Respect `CLAUDE.md`** conventions (Zustand selectors, GlossyButton web fallback, sprite sheet grids, etc.).
+9. **Commit format:** `polish: <scope> — <one-line description>`. Co-Authored-By trailer for Claude.
+10. **Stop after 1-3 commits.** Quality over quantity.
 
 ## Good polish targets (in priority order)
 
