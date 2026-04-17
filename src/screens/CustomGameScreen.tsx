@@ -10,6 +10,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
+import { PressScale } from '../components/animations';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -36,18 +37,20 @@ function SettingRow({ label, icon, value, options, onChange }: {
       </View>
       <View style={styles.optionRow}>
         {options.map(opt => (
-          <Pressable
+          <PressScale
             key={opt.value}
             onPress={() => { haptics.tap(); onChange(opt.value); }}
-            style={[styles.optionBtn, value === opt.value && styles.optionBtnActive]}
+            scaleTo={0.94}
             accessibilityRole="button"
             accessibilityLabel={`Set ${label} to ${opt.label}`}
             accessibilityState={{ selected: value === opt.value }}
           >
-            <Text style={[styles.optionText, value === opt.value && styles.optionTextActive]}>
-              {opt.label}
-            </Text>
-          </Pressable>
+            <View style={[styles.optionBtn, value === opt.value && styles.optionBtnActive]}>
+              <Text style={[styles.optionText, value === opt.value && styles.optionTextActive]}>
+                {opt.label}
+              </Text>
+            </View>
+          </PressScale>
         ))}
       </View>
     </View>
