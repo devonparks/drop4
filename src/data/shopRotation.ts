@@ -28,7 +28,7 @@ interface FeaturedDeal {
   badge: string;
 }
 
-export interface DailyFeatured {
+interface DailyFeatured {
   deals: FeaturedDeal[];
   /** ISO date string for the day these deals are valid (YYYY-MM-DD) */
   dateKey: string;
