@@ -15,6 +15,7 @@ import { Character3D } from '../components/3d/Character3D';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { HSLColorPicker } from '../components/ui/HSLColorPicker';
 import { PressScale } from '../components/animations';
+import { FilterChip } from '../components/ui/FilterChip';
 import {
   useCharacterStore,
   FREE_HAIR_COLORS,
@@ -319,56 +320,32 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
         {SPECIES_CHIPS.map((sp) => {
           const isLocked = sp.id !== 'all' && !unlockedSpecies.includes(sp.id);
           return (
-            <PressScale
+            <FilterChip
               key={sp.id}
-              onPress={() => {
-                if (isLocked) { haptics.error(); playSound('error'); return; }
-                haptics.tap();
-                setSpecies(sp.id);
-                setPackFilter('all');
-              }}
-              accessibilityLabel={isLocked ? `${sp.label} species, locked` : `${sp.label} species filter`}
-              accessibilityHint={isLocked ? 'Beat the matching career chapter to unlock' : 'Filters outfits to this species'}
-              accessibilityState={{ selected: species === sp.id, disabled: isLocked }}
-            >
-              <View style={[
-                petsStyles.packChip,
-                species === sp.id && petsStyles.packChipActive,
-                isLocked && { opacity: 0.45 },
-              ]}>
-                <Text style={[petsStyles.packChipText, species === sp.id && petsStyles.packChipTextActive]}>
-                  {isLocked ? '\u{1F512} ' : sp.icon + ' '}{sp.label}
-                </Text>
-              </View>
-            </PressScale>
+              label={sp.label}
+              icon={sp.icon}
+              active={species === sp.id}
+              locked={isLocked}
+              onPress={() => { setSpecies(sp.id); setPackFilter('all'); }}
+            />
           );
         })}
       </ScrollView>
 
       {/* Pack chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }} contentContainerStyle={{ gap: 6, paddingRight: 20 }}>
-        <PressScale
-          onPress={() => { haptics.tap(); setPackFilter('all'); }}
-          accessibilityLabel="All packs filter"
-          accessibilityHint="Shows outfits from every pack"
-          accessibilityState={{ selected: packFilter === 'all' }}
-        >
-          <View style={[petsStyles.packChip, packFilter === 'all' && petsStyles.packChipActive]}>
-            <Text style={[petsStyles.packChipText, packFilter === 'all' && petsStyles.packChipTextActive]}>All Packs</Text>
-          </View>
-        </PressScale>
+        <FilterChip
+          label="All Packs"
+          active={packFilter === 'all'}
+          onPress={() => setPackFilter('all')}
+        />
         {availablePacks.map((p) => (
-          <PressScale
+          <FilterChip
             key={`${p.species}_${p.pack}`}
-            onPress={() => { haptics.tap(); setPackFilter(p.pack); }}
-            accessibilityLabel={`${p.label} pack filter`}
-            accessibilityHint="Shows only outfits from this pack"
-            accessibilityState={{ selected: packFilter === p.pack }}
-          >
-            <View style={[petsStyles.packChip, packFilter === p.pack && petsStyles.packChipActive]}>
-              <Text style={[petsStyles.packChipText, packFilter === p.pack && petsStyles.packChipTextActive]}>{p.label}</Text>
-            </View>
-          </PressScale>
+            label={p.label}
+            active={packFilter === p.pack}
+            onPress={() => setPackFilter(p.pack)}
+          />
         ))}
       </ScrollView>
 
@@ -1120,22 +1097,6 @@ const petsStyles = StyleSheet.create({
   },
   emoteCategory: {
     fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary,
-  },
-  packChip: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-  },
-  packChipActive: {
-    backgroundColor: 'rgba(255,140,0,0.25)',
-    borderColor: colors.orange,
-  },
-  packChipText: {
-    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
-    color: colors.textSecondary, letterSpacing: 0.3,
-  },
-  packChipTextActive: {
-    color: '#fff',
   },
   ownedPill: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9,

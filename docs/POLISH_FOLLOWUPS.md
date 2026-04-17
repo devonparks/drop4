@@ -5,7 +5,8 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 ## Open — visual / UX polish
 
 - Crossfade outfit mesh when the player switches in the creator (currently hard-cuts on GLB swap)
-- Migrate Character3DCreatorScreen + ShopScreen pack chips to the shared `<FilterChip>` component (src/components/ui/FilterChip.tsx exists)
+- Migrate ShopScreen pack chips to the shared `<FilterChip>` component (src/components/ui/FilterChip.tsx exists)
+<!-- Character3DCreatorScreen species + pack chips migrated to FilterChip (commit TBD) -->
 - Extract the blur backdrop style from modals (EmotePickerModal3D, OutfitPreviewModal, MilestoneToast, HSLColorPicker) into a reusable `<BlurOverlay>` component
 - Audit `Animated.Value` uses — some could move to Reanimated `useSharedValue` for native-thread perf
 <!-- ProfileScreen 3D portrait shipped below -->
