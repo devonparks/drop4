@@ -1288,20 +1288,6 @@ const s = StyleSheet.create({
   itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   piecePreviewBackdrop: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
   piecePreviewRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
-  miniPiece: {
-    width: 30, height: 30, borderRadius: 15,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 3,
-  },
-  boardPreviewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, width: 60, justifyContent: 'center' },
-  miniHole: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.4)' },
-  boardPreviewFrame: {
-    width: 54, height: 54, borderRadius: 8, borderWidth: 1.5,
-    flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
-    gap: 3, padding: 5,
-  },
-  boardPreviewHole: {
-    width: 12, height: 12, borderRadius: 6, borderWidth: 1,
-  },
   itemName: {
     fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, color: '#ffffff',
     textAlign: 'center', marginTop: 6, paddingHorizontal: 6,
@@ -1377,8 +1363,6 @@ const s = StyleSheet.create({
   boxItemCount: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
   boxItemPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
 
-  loadingWrap: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
-  loadingText: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 15, color: colors.textSecondary },
   comingSoon: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   comingSoonIcon: { fontSize: 48, marginBottom: 12 },
   comingSoonText: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22, color: colors.textSecondary },
