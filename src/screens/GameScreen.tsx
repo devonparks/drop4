@@ -33,20 +33,16 @@ import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
-import { listenToMatch, makeMove, resignMatch, requestRematch, listenForRematch, acceptRematch } from '../services/matchmaking';
+// MP imports removed — matchmaking/emotes services killed for v1 (commit 00d9891)
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomGameOverQuote } from '../data/tips';
 import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { AchievementToast } from '../components/effects/AchievementToast';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
-import { EloChangeAnimation } from '../components/effects/EloChangeAnimation';
 import { CoinBurst } from '../components/effects/CoinBurst';
-import { sendEmote, listenForEmotes } from '../services/emotes';
-// QuickChatBar replaced by EmotePickerModal
 import { ChatBubble } from '../components/effects/ChatBubble';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
-import type { QuickChatMessage } from '../data/quickChat';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
@@ -290,95 +286,8 @@ export function GameScreen({ navigation }: Props) {
     };
   }, [isRankedMode, status, activeClockPlayer]);
 
-  // Online match: listen to Firestore for board updates from opponent
-  useEffect(() => {
-    if (!isOnlineMatch || !onlineMatchId) return;
-
-    const unsubscribe = listenToMatch(onlineMatchId, (matchData) => {
-      // Sync board and current player from Firestore
-      // Cast number[][] from Firestore to Cell[][] (0 | 1 | 2)
-      useGameStore.setState({
-        board: matchData.board as (0 | 1 | 2)[][],
-        currentPlayer: matchData.currentPlayer,
-      });
-
-      // Handle game end states from the server
-      if (matchData.status === 'won' && matchData.winner) {
-        useGameStore.setState({
-          status: 'won',
-          winner: matchData.winner,
-        });
-      } else if (matchData.status === 'draw') {
-        useGameStore.setState({ status: 'draw' });
-      } else if (matchData.status === 'resigned' && matchData.winner) {
-        useGameStore.setState({
-          status: 'won',
-          winner: matchData.winner,
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, [isOnlineMatch, onlineMatchId]);
-
-  // Online match: listen for opponent emotes via Firestore subcollection
-  useEffect(() => {
-    if (!isOnlineMatch || !onlineMatchId || !myPlayerNum) return;
-
-    const unsubscribe = listenForEmotes(onlineMatchId, (emote) => {
-      // Only show emotes from the opponent, not our own
-      if (emote.playerNum === myPlayerNum) return;
-
-      // Handle quick chat messages (prefixed with "chat:")
-      if (emote.emoteId.startsWith('chat:')) {
-        const chatId = emote.emoteId.replace('chat:', '');
-        // Look up message text from quickChat data
-        const CHAT_LOOKUP: Record<string, string> = {
-          gl: 'Good luck!', hf: 'Have fun!', nm: 'Nice move!', wp: 'Well played!',
-          ez: 'Too easy!', bm: 'Bring it on!', uh: 'Uh oh...', wow: 'Wow!',
-          oops: 'Oops!', close: 'That was close!', think: 'Hmm...', what: 'Wait what?!',
-          gg: 'Good game!', rematch: 'Rematch?', thanks: 'Thanks!', bye: 'See ya!',
-        };
-        const chatText = CHAT_LOOKUP[chatId];
-        if (chatText) {
-          setOpponentChatBubble({ text: chatText, senderName: p2Name, key: emote.timestamp });
-        }
-        return;
-      }
-
-      setOpponentEmote({ emoteId: emote.emoteId, key: emote.timestamp });
-    });
-
-    return () => unsubscribe();
-  }, [isOnlineMatch, onlineMatchId, myPlayerNum]);
-
-  // Online match: listen for rematch requests
-  useEffect(() => {
-    if (!isOnlineMatch || !onlineMatchId || !myPlayerNum) return;
-    if (status === 'playing') return; // Only listen when game is over
-
-    const unsubscribe = listenForRematch(onlineMatchId, (rematch) => {
-      if (!rematch) {
-        setRematchState('idle');
-        return;
-      }
-
-      // If a new match was created, navigate to it
-      if (rematch.newMatchId) {
-        setRematchNewMatchId(rematch.newMatchId);
-        return;
-      }
-
-      // Determine if we requested or the opponent did
-      if (rematch.acceptedBy.includes(myPlayerNum)) {
-        setRematchState('requested');
-      } else {
-        setRematchState('opponent-requested');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [isOnlineMatch, onlineMatchId, myPlayerNum, status]);
+  // [MP-KILL] Online match listeners removed — listenToMatch, listenForEmotes,
+  // listenForRematch were all gated on isOnlineMatch (always false post v1).
 
   // Navigate to new rematch game when both accept
   useEffect(() => {
@@ -908,14 +817,7 @@ export function GameScreen({ navigation }: Props) {
     if (status !== 'playing' || isAiThinking) return;
 
     // Online match: only allow moves on our turn, send to Firestore
-    if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-      if (currentPlayer !== myPlayerNum) return;
-      haptics.drop();
-      playSound('drop');
-      showLastMove(col);
-      makeMove(onlineMatchId, col, myPlayerNum);
-      return;
-    }
+    // [MP-KILL] Online makeMove branch removed
 
     if (isVsAi && currentPlayer !== 1) return;
     // Center-first challenge: first move in center column
@@ -978,24 +880,7 @@ export function GameScreen({ navigation }: Props) {
   };
 
   const handleBack = () => {
-    if (isOnlineMatch && onlineMatchId && myPlayerNum && status === 'playing') {
-      Alert.alert(
-        'Resign Match?',
-        'Leaving will count as a loss.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Resign',
-            style: 'destructive',
-            onPress: () => {
-              resignMatch(onlineMatchId, myPlayerNum);
-              navigation.goBack();
-            },
-          },
-        ]
-      );
-      return;
-    }
+    // [MP-KILL] Online resign branch removed
     // Quit penalty for ranked / wager games
     if ((isRankedMode || wagerCourt) && status === 'playing') {
       Alert.alert(
@@ -1428,18 +1313,12 @@ export function GameScreen({ navigation }: Props) {
           onEmotePress={(id) => {
             // Show player's emote locally
             setMyEmote({ emoteId: id, key: Date.now() });
-            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-              sendEmote(onlineMatchId, id, myPlayerNum);
-            } else {
-              // Local game: trigger AI reaction
-              triggerAiEmoteReaction(id);
-            }
+            // Local/AI game: trigger AI reaction
+            triggerAiEmoteReaction(id);
           }}
-          onChatSend={(msg: QuickChatMessage) => {
+          onChatSend={(msg: any) => {
             setMyChatBubble({ text: msg.text, key: Date.now() });
-            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-              sendEmote(onlineMatchId, `chat:${msg.id}`, myPlayerNum);
-            } else if (isVsAi) {
+            if (isVsAi) {
               // AI chat reaction for local games — respond with a contextual chat bubble
               const aiChatDelay = 1000 + Math.random() * 1000;
               setTimeout(() => {
@@ -1495,11 +1374,7 @@ export function GameScreen({ navigation }: Props) {
           equippedEmotes={equippedEmotes as any}
           onSelect={(emoteId) => {
             setMyEmote({ emoteId, key: Date.now() });
-            if (isOnlineMatch && onlineMatchId && myPlayerNum) {
-              sendEmote(onlineMatchId, emoteId, myPlayerNum);
-            } else {
-              triggerAiEmoteReaction(emoteId);
-            }
+            triggerAiEmoteReaction(emoteId);
           }}
           onClose={() => setEmoteWheelOpen(false)}
         />
@@ -1869,15 +1744,7 @@ export function GameScreen({ navigation }: Props) {
                 </Shimmer>
               )}
 
-              {/* ELO change for ranked/wager matches */}
-              {(isRankedMode || wagerCourt) && (
-                <View style={styles.goEloWrap}>
-                  <EloChangeAnimation
-                    eloBefore={preGameEloRef.current}
-                    eloAfter={elo}
-                  />
-                </View>
-              )}
+              {/* [MP-KILL] EloChangeAnimation removed — ranked/wager killed for v1 */}
 
               {/* Double Coins — UI-only ad concept */}
               {status === 'won' && winner === 1 && !doubleCoinsUsed && (
@@ -1935,64 +1802,8 @@ export function GameScreen({ navigation }: Props) {
 
               {/* ---- Action Buttons ---- */}
               <View style={styles.goButtons}>
-                {isOnlineMatch ? (
-                  <>
-                    {rematchState === 'opponent-requested' && (
-                      <View style={styles.goRematchBanner}>
-                        <Text style={styles.goRematchBannerText}>Opponent wants a rematch!</Text>
-                      </View>
-                    )}
-                    {rematchState === 'opponent-requested' ? (
-                      <>
-                        <GlossyButton
-                          label="ACCEPT REMATCH"
-                          icon="🤝"
-                          variant="green"
-                          onPress={() => {
-                            if (onlineMatchId && myPlayerNum) {
-                              acceptRematch(onlineMatchId, myPlayerNum);
-                              setRematchState('requested');
-                            }
-                          }}
-                        />
-                        <GlossyButton
-                          label="DECLINE"
-                          variant="red"
-                          onPress={handleGoHome}
-                          style={{ marginTop: 8 }}
-                        />
-                      </>
-                    ) : rematchState === 'requested' ? (
-                      <GlossyButton
-                        label="WAITING FOR OPPONENT..."
-                        variant="navy"
-                        onPress={() => {}}
-                        disabled
-                      />
-                    ) : (
-                      <>
-                        <GlossyButton
-                          label="REMATCH"
-                          icon="🔄"
-                          variant="orange"
-                          onPress={() => {
-                            if (onlineMatchId && myPlayerNum) {
-                              requestRematch(onlineMatchId, myPlayerNum);
-                              setRematchState('requested');
-                            }
-                          }}
-                        />
-                        <GlossyButton
-                          label="LEAVE"
-                          icon="🚪"
-                          variant="navy"
-                          onPress={handleGoHome}
-                          style={{ marginTop: 8 }}
-                        />
-                      </>
-                    )}
-                  </>
-                ) : isSeriesMode && seriesOver ? (
+                {/* [MP-KILL] Online rematch UI removed — 57 lines of dead buttons */}
+                {isSeriesMode && seriesOver ? (
                   <>
                     {/* Series complete banner */}
                     <View style={styles.seriesCompleteRow}>
