@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, Pressable, Animated, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -430,39 +430,13 @@ export function HomeScreen() {
         </View>
 
         {/* ═══ DROP4 LOGO — layered title card ═══ */}
+        {/* ═══ DROP4 LOGO — PNG asset ═══ */}
         <View style={styles.logoArea}>
-          {/* Glow backdrop — wide elliptical orange haze */}
-          <View style={styles.logoGlowHalo} pointerEvents="none" />
-
-          {/* Horizontal accent lines */}
-          <View style={styles.logoFlareRow} pointerEvents="none">
-            <LinearGradient
-              colors={['transparent', 'rgba(255,160,40,0.5)']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.logoFlareLeft}
-            />
-            <View style={styles.logoFlareSpacer} />
-            <LinearGradient
-              colors={['rgba(255,160,40,0.5)', 'transparent']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.logoFlareRight}
-            />
-          </View>
-
-          {/* Title text — "DROP" in white with hard shadow, "4" oversized orange */}
-          <View style={styles.logoTextRow}>
-            <Text style={styles.logoDrop}>DROP</Text>
-            <View style={styles.logo4Wrap}>
-              {/* Orange glow ring behind the "4" */}
-              <View style={styles.logo4Ring} pointerEvents="none" />
-              <Text style={styles.logo4}>4</Text>
-            </View>
-          </View>
-
-          {/* Subtitle tagline */}
-          <Text style={styles.logoTagline}>CONNECT TO WIN</Text>
+          <Image
+            source={require('../assets/images/drop4_logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
@@ -557,39 +531,6 @@ export function HomeScreen() {
             />
             <View style={styles.stageRing} />
 
-            {/* CUSTOMIZE button (only when 3D is enabled) */}
-            {FEATURES.character3D && (
-              <Pressable
-                onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
-                accessibilityRole="button"
-                accessibilityLabel="Customize character"
-                accessibilityHint="Opens the character creator to change outfit, hair, body, and colors"
-                style={{
-                  position: 'absolute',
-                  bottom: 4,
-                  alignSelf: 'center',
-                  backgroundColor: 'rgba(255,140,0,0.22)',
-                  borderWidth: 1.5,
-                  borderColor: 'rgba(255,140,0,0.6)',
-                  borderRadius: 20,
-                  paddingHorizontal: 20,
-                  paddingVertical: 8,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  zIndex: 20,
-                }}
-              >
-                <Text style={{ fontSize: 14 }}>✨</Text>
-                <Text style={{
-                  fontFamily: fonts.body,
-                  fontWeight: weight.bold,
-                  fontSize: 12,
-                  color: colors.orange,
-                  letterSpacing: 1.5,
-                }}>CUSTOMIZE</Text>
-              </Pressable>
-            )}
           </View>
 
           {/* Idles button (right) — opens unified picker on Idles tab */}
@@ -614,9 +555,21 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* v1: Roster/Customize links removed — characters now live in
-            the Collection tab (bottom nav). Keeping the spacer for layout. */}
-        <View style={{ height: 8 }} />
+        {/* CUSTOMIZE button — lives in normal flow so it can't be covered */}
+        {FEATURES.character3D && (
+          <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10 }}>
+            <Pressable
+              onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
+              accessibilityRole="button"
+              accessibilityLabel="Customize character"
+              accessibilityHint="Opens the character creator to change outfit, hair, body, and colors"
+              style={styles.customizeBtn}
+            >
+              <Text style={{ fontSize: 14 }}>✨</Text>
+              <Text style={styles.customizeBtnText}>CUSTOMIZE</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
@@ -792,94 +745,32 @@ const styles = StyleSheet.create({
   // Logo — layered title card
   logoArea: {
     alignItems: 'center',
-    height: 72,
+    height: 64,
     justifyContent: 'center',
     marginTop: 0,
-    marginBottom: 2,
-    zIndex: 20,
-    position: 'relative',
+    marginBottom: 0,
   },
-  logoGlowHalo: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    width: 320,
+  logoImage: {
+    width: 240,
     height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255,140,0,0.14)',
-    marginLeft: -160,
-    marginTop: -32,
-    transform: [{ scaleY: 0.7 }],
   },
-  logoFlareRow: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '42%',
-    height: 2,
+  customizeBtn: {
+    backgroundColor: 'rgba(255,140,0,0.22)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.6)',
+    borderRadius: 20,
+    paddingHorizontal: 22,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
-  logoFlareLeft: {
-    flex: 1,
-    height: 1.5,
-    borderRadius: 1,
-  },
-  logoFlareSpacer: {
-    width: 220,
-  },
-  logoFlareRight: {
-    flex: 1,
-    height: 1.5,
-    borderRadius: 1,
-  },
-  logoTextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 0,
-  },
-  logoDrop: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 40,
-    color: '#ffffff',
-    letterSpacing: 6,
-    textShadowColor: 'rgba(0,0,0,0.7)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 6,
-  },
-  logo4Wrap: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -2,
-  },
-  logo4Ring: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,140,0,0.4)',
-    backgroundColor: 'rgba(255,140,0,0.08)',
-  },
-  logo4: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 52,
-    color: '#ff9a1a',
-    textShadowColor: 'rgba(255,100,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 18,
-    includeFontPadding: false,
-  },
-  logoTagline: {
+  customizeBtnText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 9,
-    color: 'rgba(255,200,120,0.55)',
-    letterSpacing: 4,
-    marginTop: -4,
+    fontSize: 13,
+    color: colors.orange,
+    letterSpacing: 1.5,
   },
   comingSoonBadge: {
     position: 'absolute',
