@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeIn,
   FadeInDown,
-  FadeInUp,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -13,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { PressScale, Shimmer } from '../components/animations';
+import { PressScale, Shimmer, StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -711,6 +710,7 @@ export function ShopScreen() {
     <ScreenBackground>
       <View style={[s.container, { paddingTop: insets.top + 12 }]}>
         {/* ── Header ── */}
+        <StaggeredEntry index={0} delay={60}>
         <View style={s.header}>
           <View>
             <Text style={s.title} accessibilityRole="header">SHOP</Text>
@@ -735,11 +735,13 @@ export function ShopScreen() {
             </Shimmer>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* ── Main scrollable content ── */}
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
           {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══ */}
+          <StaggeredEntry index={1} delay={60}>
           <View style={s.itemShopSection}>
             <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
 
@@ -898,9 +900,10 @@ export function ShopScreen() {
               </Animated.View>
             )}
           </View>
+          </StaggeredEntry>
 
           {/* ═══ 2. DAILY DEALS ═══ */}
-          <Animated.View entering={FadeInUp.delay(100).springify()}>
+          <StaggeredEntry index={2} delay={60}>
             <SectionHeader
               title="TODAY'S DEALS"
               gradientColors={['#ff6a00', '#ff8c00']}
@@ -957,10 +960,10 @@ export function ShopScreen() {
                 });
               })()}
             </ScrollView>
-          </Animated.View>
+          </StaggeredEntry>
 
           {/* ═══ 2. LOOT BAGS ═══ */}
-          <Animated.View entering={FadeInUp.delay(200).springify()}>
+          <StaggeredEntry index={3} delay={60}>
             <SectionHeader title="LOOT BAGS" gradientColors={['#8e44ad', '#9b59b6']} />
             <View style={s.bagsRow}>
               <LootBagCard
@@ -991,10 +994,10 @@ export function ShopScreen() {
                 onPress={() => haptics.tap()}
               />
             </View>
-          </Animated.View>
+          </StaggeredEntry>
 
           {/* ═══ 3. COIN & GEM BUNDLES ═══ */}
-          <Animated.View entering={FadeInUp.delay(300).springify()}>
+          <StaggeredEntry index={4} delay={60}>
             <SectionHeader title="GET MORE COINS" gradientColors={['#d4ac0d', '#f1c40f']} />
             <View style={s.bundlesGrid}>
               <BundleCard icon={'\u{1FA99}'} amount="500" price="Free Daily" color={['rgba(39,174,61,0.25)', 'rgba(39,174,61,0.08)']} onPress={() => haptics.tap()} />
@@ -1010,7 +1013,7 @@ export function ShopScreen() {
               <BundleCard icon={'\u{1F48E}'} amount="150" bonus="x2" price="$9.99" color={['rgba(26,188,156,0.3)', 'rgba(26,188,156,0.08)']} highlight onPress={() => haptics.tap()} />
               <BundleCard icon={'\u{1F48E}'} amount="500" bonus="BEST" price="$19.99" color={['rgba(26,188,156,0.35)', 'rgba(26,188,156,0.12)']} onPress={() => haptics.tap()} />
             </View>
-          </Animated.View>
+          </StaggeredEntry>
 
           {/* Item shop is now rendered first (above deals) */}
         </ScrollView>
