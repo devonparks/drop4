@@ -320,7 +320,7 @@ function CityEnvironmentLayer({ city }: { city: CareerCity }) {
   return null;
 }
 
-function BrooklynScene({ city }: { city: CareerCity }) {
+function BrooklynScene(_props: { city: CareerCity }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Distant building silhouettes */}
@@ -365,7 +365,7 @@ function BrooklynScene({ city }: { city: CareerCity }) {
   );
 }
 
-function VeniceBeachScene({ city }: { city: CareerCity }) {
+function VeniceBeachScene(_props: { city: CareerCity }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Sun */}
@@ -417,7 +417,7 @@ function VeniceBeachScene({ city }: { city: CareerCity }) {
   );
 }
 
-function HarlemScene({ city }: { city: CareerCity }) {
+function HarlemScene(_props: { city: CareerCity }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Building silhouettes with window lights */}
@@ -518,7 +518,7 @@ interface OpponentNodeProps {
 }
 
 function OpponentNode({
-  level, index, total, isComplete, isNext, isLocked, stars, city, onPress,
+  level, index, total: _total, isComplete, isNext, isLocked, stars, city, onPress,
 }: OpponentNodeProps) {
   const pulse = useRef(new Animated.Value(0)).current;
 
