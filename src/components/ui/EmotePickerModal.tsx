@@ -114,7 +114,7 @@ function EmoteCard({ emote, onPress }: { emote: EmoteItem; onPress: (id: EmoteId
 // ═══════════════════════════════════════════
 
 interface SignatureItem {
-  id: string;       // signature emote id (also the sprite sheet basename)
+  id: string;       // signature emote id (matches animationRegistry)
   emoji: string;
   label: string;
 }
