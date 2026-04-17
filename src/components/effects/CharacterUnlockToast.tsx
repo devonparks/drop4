@@ -5,6 +5,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRosterStore } from '../../stores/rosterStore';
 import { getCharacter } from '../../data/characterRoster';
 import { AnimatedCharacter } from '../ui/AnimatedCharacter';
+import { CharacterSnapshot } from '../3d/CharacterSnapshot';
+import { getRosterCustomization } from '../../data/npcCustomizations';
+import { useCharacterStore } from '../../stores/characterStore';
+import { FEATURES } from '../../config/features';
 import { playSound } from '../../services/audio';
 import { haptics } from '../../services/haptics';
 import { fonts, weight } from '../../theme/typography';
@@ -19,6 +23,19 @@ import { fonts, weight } from '../../theme/typography';
  * Triggered indirectly: completeLevel() → unlockForCareerLevel() pushes the
  * id into pendingUnlocks. This component does the rest — no caller wiring.
  */
+/** 3D snapshot for the unlock preview — uses cached PNG like RosterScreen. */
+function UnlockPreview3D({ characterId }: { characterId: string }) {
+  const playerCust = useCharacterStore((s) => s.customization);
+  const custom = getRosterCustomization(characterId);
+  return (
+    <CharacterSnapshot
+      width={64}
+      height={64}
+      customization={custom ?? playerCust}
+    />
+  );
+}
+
 export function CharacterUnlockToast() {
   const pendingUnlocks = useRosterStore((s) => s.pendingUnlocks);
   const consumePendingUnlock = useRosterStore((s) => s.consumePendingUnlock);
@@ -67,7 +84,9 @@ export function CharacterUnlockToast() {
             style={styles.toast}
           >
             <View style={styles.previewWrap}>
-              <AnimatedCharacter characterId={character.id} size={64} />
+              {FEATURES.character3D
+                ? <UnlockPreview3D characterId={character.id} />
+                : <AnimatedCharacter characterId={character.id} size={64} />}
             </View>
             <View style={styles.textCol}>
               <Text style={styles.eyebrow}>NEW CHARACTER UNLOCKED</Text>
