@@ -102,7 +102,7 @@ function SectionCard({ title, icon, children }: {
     <View style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionIcon}>{icon}</Text>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
       </View>
       {children}
     </View>
@@ -235,7 +235,7 @@ export function CustomGameScreen({ navigation }: Props) {
         >
           {/* ══ HEADER ══ */}
           <View style={styles.header}>
-            <Text style={styles.title}>PRIVATE MATCH</Text>
+            <Text style={styles.title} accessibilityRole="header">PRIVATE MATCH</Text>
             <Text style={styles.subtitle}>Your rules, your way</Text>
           </View>
 
