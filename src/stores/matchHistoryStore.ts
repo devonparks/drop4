@@ -9,7 +9,7 @@ export interface MatchRecord {
   difficulty: string;
   moves: number;
   coinsEarned: number;
-  mode: 'ai' | 'local' | 'stage' | 'career' | 'ranked' | 'wager' | 'online';
+  mode: 'ai' | 'local' | 'career';
 }
 
 interface MatchHistoryState {
