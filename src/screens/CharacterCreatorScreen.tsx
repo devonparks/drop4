@@ -7,7 +7,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { PoseDisplay, PoseId, EMOTE_CATEGORIES, EmoteId } from '../components/ui/AnimatedCharacter';
 import { AnimatedCharacter, useEmoteTrigger } from '../components/ui/AnimatedCharacter';
-import { EMOTE_EMOJI, EMOTE_NAME, EMOTE_UNLOCKS, CATEGORY_EMOJI } from '../components/ui/EmoteShowcase';
+import { EMOTE_EMOJI, EMOTE_NAME } from '../components/ui/EmoteShowcase';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -150,7 +150,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
     for (const card of CATEGORY_CARDS) {
       if (card.id === 'emotes') {
         const allEmotes = EMOTE_CATEGORIES.flatMap(c => c.emotes);
-        const unlocked = allEmotes.filter(e => EMOTE_UNLOCKS[e]?.unlocked);
+        const unlocked = allEmotes;
         counts.emotes = { total: allEmotes.length, owned: unlocked.length };
         continue;
       }
@@ -544,14 +544,13 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                   {EMOTE_CATEGORIES.map(category => (
                     <View key={category.name} style={styles.emoteCategorySection}>
                       <View style={styles.emoteCategoryHeader}>
-                        <Text style={styles.emoteCategoryEmoji}>{CATEGORY_EMOJI[category.name] || '\uD83C\uDFAD'}</Text>
+                        <Text style={styles.emoteCategoryEmoji}>{'\uD83C\uDFAD'}</Text>
                         <Text style={styles.emoteCategoryName}>{category.name.toUpperCase()}</Text>
                         <View style={styles.emoteCategoryLine} />
                       </View>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emoteHScroll}>
                         {category.emotes.map(emoteId => {
-                          const unlock = EMOTE_UNLOCKS[emoteId];
-                          const isLocked = !unlock?.unlocked;
+                          const isLocked = false;
                           const isPlaying = playingEmoteId === emoteId;
                           const isInWheel = equippedEmotes.includes(emoteId);
 
@@ -578,7 +577,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                               accessibilityRole="button"
                               accessibilityLabel={
                                 isLocked
-                                  ? `${EMOTE_NAME[emoteId]} emote, locked: ${unlock?.requirement || 'requirement not met'}`
+                                  ? `${EMOTE_NAME[emoteId]} emote, locked`
                                   : selectedWheelSlot !== null
                                     ? `Assign ${EMOTE_NAME[emoteId]} to wheel slot ${selectedWheelSlot + 1}`
                                     : `Preview ${EMOTE_NAME[emoteId]} emote`
@@ -594,7 +593,7 @@ export function CharacterCreatorScreen({ navigation }: Props) {
                               {isLocked && (
                                 <View style={styles.emoteTabLockBadge}>
                                   <Text style={styles.emoteTabLockIcon}>{'\uD83D\uDD12'}</Text>
-                                  <Text style={styles.emoteTabLockReq} numberOfLines={1}>{unlock?.requirement}</Text>
+                                  <Text style={styles.emoteTabLockReq} numberOfLines={1}>{'Locked'}</Text>
                                 </View>
                               )}
                               {isPlaying && (
