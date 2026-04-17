@@ -253,6 +253,8 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
 
   const handleClose = () => {
     if (spinning && !showResult) return;
+    haptics.tap();
+    playSound('click');
     setSpinning(false);
     setShowResult(false);
     setResultSegment(null);
