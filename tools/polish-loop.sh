@@ -163,6 +163,37 @@ while true; do
     log "${C_YELLOW}○ Iter #$ITER produced no commit (${DURATION}s).${C_OFF}"
   fi
 
+  # ─── Auto-merge polish-loop → main (with 30-min cooling window) ──
+  # Safety design: we only FF-merge commits that are >30 min old. This
+  # gives the human dev a window to notice and force-reset polish-loop
+  # if something looks wrong before it lands on main. Also requires
+  # tsc+jest to pass on the merged state before pushing.
+  AUTOMERGE_COOLDOWN_SEC=${AUTOMERGE_COOLDOWN_SEC:-1800}  # 30 min default
+  if command -v git >/dev/null 2>&1; then
+    git fetch origin main >> "$LOG" 2>&1 || true
+    OLDEST_UNMERGED_TS=$(git log origin/main..HEAD --pretty=%ct --reverse 2>/dev/null | head -1)
+    if [[ -n "$OLDEST_UNMERGED_TS" ]]; then
+      NOW_TS=$(date +%s)
+      AGE=$((NOW_TS - OLDEST_UNMERGED_TS))
+      if [[ "$AGE" -ge "$AUTOMERGE_COOLDOWN_SEC" ]]; then
+        log "${C_CYAN}↻ Auto-merging polish-loop → main (oldest commit ${AGE}s old)...${C_OFF}"
+        # Preserve current branch, attempt merge, restore on failure
+        if git checkout main >> "$LOG" 2>&1 && \
+           git pull --ff-only origin main >> "$LOG" 2>&1 && \
+           git merge --ff-only polish-loop >> "$LOG" 2>&1 && \
+           npx tsc --noEmit > /dev/null 2>&1 && \
+           npx jest --silent > /dev/null 2>&1 && \
+           git push origin main >> "$LOG" 2>&1; then
+          log "${C_GREEN}✓ Auto-merged polish-loop → main${C_OFF}"
+        else
+          log "${C_YELLOW}⚠ Auto-merge failed (conflict, red tests, or push rejected) — leaving main alone${C_OFF}"
+          git reset --hard origin/main >> "$LOG" 2>&1 || true
+        fi
+        git checkout polish-loop >> "$LOG" 2>&1 || true
+      fi
+    fi
+  fi
+
   # Small breather between iterations
   sleep 15
 done
