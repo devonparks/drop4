@@ -127,5 +127,6 @@ useDailyRewardStore.subscribe((state) => {
   saveState('dailyReward', {
     currentStreak: state.currentStreak,
     lastClaimDate: state.lastClaimDate,
+    longestStreak: state.longestStreak,
   });
 });
