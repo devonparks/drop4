@@ -23,18 +23,6 @@ import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { CollectionScreen } from '../screens/CollectionScreen';
 
-export type WagerCourtParams = {
-  id?: string;
-  name: string;
-  entryFee: number;
-  winnerGets: number;
-  rake?: number;
-  minLevel?: number;
-  minTier?: string;
-  isVIP?: boolean;
-  color?: string;
-};
-
 export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
   amount?: number;
@@ -60,17 +48,12 @@ export type MatchupParams = {
 };
 
 export type GameParams = {
-  wagerCourt?: WagerCourtParams;
   rankedMode?: boolean;
   rankedClockSeconds?: number;
   presetBoard?: number[][];
   careerLevelId?: number;
   careerLevelReward?: CareerRewardParams;
   localPlayerNames?: { player1: string; player2: string };
-  // Online multiplayer
-  onlineMatchId?: string;
-  onlinePlayerNum?: 1 | 2;
-  onlineOpponentName?: string;
   // 3D NPC identity — forwarded from MatchupScreen so GameScreen renders
   // the correct per-opponent 3D look (career NPCs, difficulty bots, etc.)
   opponentName?: string;
