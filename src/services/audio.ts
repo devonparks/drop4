@@ -124,8 +124,3 @@ export function getMuted(): boolean {
   return isMuted;
 }
 
-export async function unloadSounds() {
-  for (const sound of Object.values(sounds)) {
-    if (sound) await sound.unloadAsync();
-  }
-}

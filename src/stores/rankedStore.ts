@@ -7,7 +7,7 @@ import { saveState, loadState } from '../services/storage';
 // Master → Grandmaster → Champion → Dark Matter
 // ═══════════════════════════════════════════════════════
 
-export type RankedTier =
+type RankedTier =
   | 'iron'
   | 'bronze'
   | 'silver'
@@ -43,7 +43,7 @@ export const RANKED_TIERS: RankedTierInfo[] = [
 ];
 
 /** Number of placement matches before regular MMR kicks in */
-export const PLACEMENT_MATCH_COUNT = 10;
+const PLACEMENT_MATCH_COUNT = 10;
 
 // ═══ HELPER — get tier from raw ELO ═══
 function eloToTier(elo: number): RankedTier {
