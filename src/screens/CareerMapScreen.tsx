@@ -83,17 +83,6 @@ export function CareerMapScreen({ navigation }: Props) {
 
   const scrollRef = useRef<ScrollView>(null);
 
-  const handleNodePress = (city: CareerCity, level: CareerLevel) => {
-    const unlocked = isCityUnlocked(city.id, completedIds);
-    if (!unlocked) {
-      haptics.error?.();
-      return;
-    }
-    haptics.tap();
-    playSound('click');
-    navigation.navigate('CareerCity', { cityId: city.id });
-  };
-
   return (
     <ScreenBackground>
       <TopBar
