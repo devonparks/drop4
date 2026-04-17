@@ -746,17 +746,19 @@ export function ShopScreen() {
             <View style={s.tabScrollWrap}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
                 {tabs.map(tab => (
-                  <Pressable
+                  <PressScale
                     key={tab.key}
                     onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); }}
-                    style={[s.tab, activeTab === tab.key && s.tabActive]}
+                    scaleTo={0.94}
                     accessibilityRole="tab"
                     accessibilityLabel={`${tab.label} tab`}
                     accessibilityState={{ selected: activeTab === tab.key }}
                   >
-                    <Text style={s.tabIcon}>{tab.icon}</Text>
-                    <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
-                  </Pressable>
+                    <View style={[s.tab, activeTab === tab.key && s.tabActive]}>
+                      <Text style={s.tabIcon}>{tab.icon}</Text>
+                      <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
+                    </View>
+                  </PressScale>
                 ))}
               </ScrollView>
               <LinearGradient
