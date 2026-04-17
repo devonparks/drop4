@@ -5,9 +5,9 @@ export type Player = 1 | 2;
 export type Cell = 0 | Player;
 export type Board = Cell[][];
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type GameStatus = 'idle' | 'playing' | 'won' | 'draw';
+type GameStatus = 'idle' | 'playing' | 'won' | 'draw';
 
-export interface CustomGameSettings {
+interface CustomGameSettings {
   rows: number;
   cols: number;
   connectCount: number;
