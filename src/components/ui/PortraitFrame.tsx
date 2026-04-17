@@ -20,7 +20,7 @@ type RenderContent = (innerSize: number) => React.ReactNode;
 // No image assets needed for the frame — only the player portrait PNG.
 // ═══════════════════════════════════════════════════════════════════════
 
-export type PortraitTier = 'bronze' | 'silver' | 'gold' | 'ruby' | 'amethyst' | 'diamond' | 'darkmatter';
+type PortraitTier = 'bronze' | 'silver' | 'gold' | 'ruby' | 'amethyst' | 'diamond' | 'darkmatter';
 
 interface TierFrame {
   outer: [string, string, string];   // outer ring gradient

@@ -10,7 +10,7 @@ export interface CharacterItem {
   icon: string;
 }
 
-export type UnlockCondition =
+type UnlockCondition =
   | { type: 'default' }                    // Available from start
   | { type: 'wins'; count: number }        // Win X games
   | { type: 'level'; level: number }       // Reach level X
