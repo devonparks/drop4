@@ -58,7 +58,9 @@ function outfitToShopItem(o: OutfitMeta): ShopItem {
     price: isStarter ? 0 : pricing.price,
     rarity: pricing.rarity,
     preview: {},
-    collection: `${SPECIES_LABEL[o.species]} · ${pricing.collection}`,
+    collection: SPECIES_LABEL[o.species] === pricing.collection
+      ? pricing.collection
+      : `${SPECIES_LABEL[o.species]} · ${pricing.collection}`,
     description: `${SPECIES_LABEL[o.species]} ${pricing.collection} #${o.index}`,
   };
 }
