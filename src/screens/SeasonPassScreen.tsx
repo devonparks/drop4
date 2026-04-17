@@ -9,7 +9,7 @@ import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
-import { PressScale, PulseGlow } from '../components/animations';
+import { PressScale, PulseGlow, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -223,6 +223,7 @@ export function SeasonPassScreen() {
       <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Gradient header banner */}
+        <StaggeredEntry index={0} delay={60}>
         <LinearGradient
           colors={[colors.purpleDark, '#5b2d8e', colors.goldDark, colors.gold]}
           start={{ x: 0, y: 0 }}
@@ -256,9 +257,11 @@ export function SeasonPassScreen() {
             </View>
           </View>
         </LinearGradient>
+        </StaggeredEntry>
 
         {/* Premium upgrade CTA */}
         {!hasPremium && (
+          <StaggeredEntry index={1} delay={60}>
           <View style={styles.premiumCta}>
             <LinearGradient
               colors={[colors.goldDark, '#b8960a', colors.gold, colors.goldLight]}
@@ -306,9 +309,11 @@ export function SeasonPassScreen() {
               </View>
             </LinearGradient>
           </View>
+          </StaggeredEntry>
         )}
 
         {/* Track labels as colored pills */}
+        <StaggeredEntry index={2} delay={60}>
         <View style={styles.trackHeaders}>
           <View style={{ width: 40 }} />
           <View style={[styles.trackHeaderPill, { flex: 1 }]}>
@@ -318,8 +323,10 @@ export function SeasonPassScreen() {
             <Text style={[styles.trackHeaderPillText, { color: '#1a1a00' }]} accessibilityRole="header">PREMIUM TRACK</Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Reward tiers */}
+        <StaggeredEntry index={3} delay={60}>
         <View style={styles.tierList}>
           {rewards.map(reward => (
             <RewardTierCard
@@ -330,6 +337,7 @@ export function SeasonPassScreen() {
             />
           ))}
         </View>
+        </StaggeredEntry>
       </ScrollView>
     </ScreenBackground>
   );
