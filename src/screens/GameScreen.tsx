@@ -1091,7 +1091,9 @@ export function GameScreen({ navigation }: Props) {
         <View style={styles.hudRow}>
           <PlayerHUD
             name={p1Name}
-            avatar={<CharacterAvatar size="medium" variant="player" />}
+            avatar={FEATURES.character3D
+              ? <Character3DPortrait width={40} height={40} showFloor={false} />
+              : <CharacterAvatar size="medium" variant="player" />}
             level={level}
             pieceColor="red"
             score={scores.player1}
@@ -1137,8 +1139,12 @@ export function GameScreen({ navigation }: Props) {
             <PlayerHUD
               name={p2Name}
               avatar={isVsAi
-                ? <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />
-                : <CharacterAvatar size="medium" variant="player" />
+                ? (FEATURES.character3D
+                  ? <Character3DPortrait width={40} height={40} showFloor={false} customization={getNpcCustomization(params.opponentName || difficulty)} />
+                  : <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />)
+                : (FEATURES.character3D
+                  ? <Character3DPortrait width={40} height={40} showFloor={false} />
+                  : <CharacterAvatar size="medium" variant="player" />)
               }
               level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
               pieceColor="yellow"
