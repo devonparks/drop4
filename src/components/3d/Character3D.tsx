@@ -354,16 +354,28 @@ function CharacterModel({
 
 function Floor() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
-      <circleGeometry args={[1.5, 48]} />
-      <meshStandardMaterial
-        color="#0a0e27"
-        roughness={0.9}
-        metalness={0}
-        transparent
-        opacity={0.45}
-      />
-    </mesh>
+    <group>
+      {/* Shadow-receiving disc */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
+        <circleGeometry args={[1.5, 48]} />
+        <meshStandardMaterial
+          color="#0a0e27"
+          roughness={0.9}
+          metalness={0}
+          transparent
+          opacity={0.55}
+        />
+      </mesh>
+      {/* Warm orange platform glow — reads the character as standing on something */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
+        <ringGeometry args={[0.95, 1.45, 48]} />
+        <meshBasicMaterial
+          color="#ff8c00"
+          transparent
+          opacity={0.18}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -421,13 +433,13 @@ export function Character3D({
       >
         {/* ── AAA three-point lighting ── */}
 
-        {/* Ambient baseline (slight cool tint) */}
-        <ambientLight intensity={0.35} color="#b8c4e0" />
+        {/* Ambient baseline — brightened so outfit details are readable */}
+        <ambientLight intensity={0.55} color="#c0ccf0" />
 
         {/* Key light — warm, from upper-front-right */}
         <directionalLight
           position={[2.5, 4, 3]}
-          intensity={1.2}
+          intensity={1.3}
           color="#fff4e0"
           castShadow
           shadow-mapSize-width={512}
@@ -441,23 +453,23 @@ export function Character3D({
           shadow-bias={-0.0005}
         />
 
-        {/* Fill light — cool, from opposite side, softer */}
+        {/* Fill light — cool, from opposite side */}
         <directionalLight
           position={[-2, 2, 1.5]}
-          intensity={0.5}
+          intensity={0.6}
           color="#a8c8f0"
         />
 
-        {/* Rim light — behind character, creates silhouette highlight */}
+        {/* Rim light — behind character, stronger silhouette separation */}
         <directionalLight
           position={[0, 3, -3]}
-          intensity={0.9}
+          intensity={1.4}
           color="#ff9a5a"
         />
 
-        {/* Hemisphere for ambient gradient (sky → ground) */}
+        {/* Hemisphere for ambient gradient (sky → ground) — brighter sky */}
         <hemisphereLight
-          args={['#6080a0', '#1a1820', 0.35]}
+          args={['#6080a0', '#1a1820', 0.5]}
         />
 
         {/* Character + animation rigs */}
