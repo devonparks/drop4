@@ -10,7 +10,7 @@
  * these entries update automatically.
  */
 
-import { OUTFITS, PACKS, type OutfitMeta, type Species } from './outfitRegistry';
+import { OUTFITS, type OutfitMeta, type Species } from './outfitRegistry';
 import { PETS, type PetMeta } from './petRegistry';
 import { HUMAN_EMOTES, type AnimationMeta } from './animationRegistry';
 import type { ShopItem } from './shopCatalog';
@@ -67,21 +67,6 @@ function outfitToShopItem(o: OutfitMeta): ShopItem {
 
 export const OUTFIT_SHOP_ITEMS: ShopItem[] = Object.values(OUTFITS).map(outfitToShopItem);
 
-// Group by pack for UI display
-export interface OutfitCollection {
-  species: Species;
-  pack: string;
-  label: string;
-  items: ShopItem[];
-}
-
-export const OUTFIT_COLLECTIONS: OutfitCollection[] = PACKS.map((p) => ({
-  species: p.species,
-  pack: p.pack,
-  label: `${SPECIES_LABEL[p.species]} · ${p.label}`,
-  items: p.outfitIds.map((id) => outfitToShopItem(OUTFITS[id])),
-}));
-
 // ── Pet pricing → ShopItem ────────────────────────────────────────
 
 const PET_RARITY_TO_SHOP: Record<PetMeta['rarity'], ShopItem['rarity']> = {
@@ -133,7 +118,3 @@ function emoteToShopItem(e: AnimationMeta): ShopItem {
 
 export const EMOTE_SHOP_ITEMS: ShopItem[] = HUMAN_EMOTES.map(emoteToShopItem);
 
-// ── Summary helpers ───────────────────────────────────────────────
-
-export const TOTAL_COSMETIC_COUNT =
-  OUTFIT_SHOP_ITEMS.length + PET_SHOP_ITEMS.length + EMOTE_SHOP_ITEMS.length;
