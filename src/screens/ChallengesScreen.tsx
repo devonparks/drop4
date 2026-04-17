@@ -236,7 +236,7 @@ function AchievementsSection() {
         colors={['rgba(244,166,35,0.15)', 'rgba(244,166,35,0.04)', 'transparent']}
         style={styles.achHeaderGradient}
       >
-        <Text style={styles.achTitle}>ACHIEVEMENTS</Text>
+        <Text style={styles.achTitle} accessibilityRole="header">ACHIEVEMENTS</Text>
         <Text style={styles.achSubtitle}>{unlocked}/{achievements.length} unlocked · {score} pts</Text>
       </LinearGradient>
 
@@ -347,7 +347,7 @@ export function ChallengesScreen() {
           colors={['rgba(255,140,0,0.15)', 'rgba(255,100,0,0.06)', 'transparent']}
           style={styles.headerGradient}
         >
-          <Text style={styles.title}>DAILY CHALLENGES</Text>
+          <Text style={styles.title} accessibilityRole="header">DAILY CHALLENGES</Text>
           <Text style={styles.subtitle}>Complete challenges to earn a reward bag!</Text>
         </LinearGradient>
 
@@ -438,7 +438,7 @@ export function ChallengesScreen() {
             colors={['rgba(155,89,182,0.15)', 'rgba(155,89,182,0.04)', 'transparent']}
             style={styles.weeklyHeaderGradient}
           >
-            <Text style={styles.weeklyTitle}>WEEKLY CHALLENGES</Text>
+            <Text style={styles.weeklyTitle} accessibilityRole="header">WEEKLY CHALLENGES</Text>
             <Text style={styles.weeklySubtitle}>Bigger goals, bigger rewards</Text>
           </LinearGradient>
 
