@@ -219,7 +219,3 @@ export function getCharacterUnlockedAtLevel(levelId: number): RosterCharacter | 
   return ROSTER_BY_CAREER_LEVEL[levelId];
 }
 
-/** All signature emote ids exclusive to a single character. Used by the emote wheel. */
-export function getSignatureEmoteIds(characterId: RosterCharacterId): string[] {
-  return getCharacter(characterId)?.signatureEmotes.map((e) => e.id) ?? [];
-}

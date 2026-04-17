@@ -524,10 +524,6 @@ export const CHAPTERS = [
   { id: 3, name: 'The Elite', levels: CHAPTER_3, unlockLevel: 21 },
 ];
 
-export function getChapterForLevel(levelId: number): typeof CHAPTERS[0] | undefined {
-  return CHAPTERS.find(ch => ch.levels.some(l => l.id === levelId));
-}
-
 // ═══════════════════════════════════════════════════════════════════════
 // CAREER MODE 2.0 — "TAKE THE CITY"
 //
@@ -707,16 +703,6 @@ export const CAREER_CITIES: CareerCity[] = [
 export const CITY_BY_ID: Record<string, CareerCity> = CAREER_CITIES.reduce(
   (acc, c) => { acc[c.id] = c; return acc; },
   {} as Record<string, CareerCity>,
-);
-
-// For each level id, what city does it belong to? Used by the city screen
-// and by any analytics that want to tag level plays with a region.
-export const CITY_ID_BY_LEVEL_ID: Record<number, string> = CAREER_CITIES.reduce(
-  (acc, city) => {
-    for (const id of city.levelIds) acc[id] = city.id;
-    return acc;
-  },
-  {} as Record<number, string>,
 );
 
 // ─── Helpers ──────────────────────────────────────────────────────────

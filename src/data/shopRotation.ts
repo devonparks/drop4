@@ -140,10 +140,3 @@ export function getDailyFeatured(now: Date = new Date()): DailyFeatured {
   };
 }
 
-/** Format seconds-to-refresh as "Xh Ym" for the UI countdown */
-export function formatRefreshCountdown(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
