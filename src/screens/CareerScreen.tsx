@@ -345,7 +345,7 @@ export function CareerScreen({ navigation }: Props) {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>CAREER</Text>
+          <Text style={styles.title} accessibilityRole="header">CAREER</Text>
           <View style={styles.progressRow}>
             <Text style={styles.progressText}>{completedCount}/{ALL_CAREER_LEVELS.length} completed</Text>
             <Text style={styles.starsTotal}>⭐ {totalStars}/{ALL_CAREER_LEVELS.length * 3}</Text>
@@ -488,7 +488,7 @@ export function CareerScreen({ navigation }: Props) {
                   <Animated.Text entering={ZoomIn.delay(300).springify()} style={styles.celebEmoji}>
                     🏆
                   </Animated.Text>
-                  <Text style={styles.celebTitle}>CHAPTER COMPLETE!</Text>
+                  <Text style={styles.celebTitle} accessibilityRole="header">CHAPTER COMPLETE!</Text>
                 </LinearGradient>
                 <View style={styles.celebBody}>
                   <Text style={styles.celebChapterName}>
