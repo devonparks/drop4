@@ -712,6 +712,8 @@ export function GameScreen({ navigation }: Props) {
   }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
 
   const handleShareScore = async () => {
+    haptics.tap();
+    playSound('click');
     const isWin = status === 'won' && winner === 1;
     const isLoss = status === 'won' && winner === 2;
     const resultLine = isWin ? 'VICTORY' : isLoss ? 'DEFEAT' : 'DRAW';
@@ -1667,7 +1669,7 @@ export function GameScreen({ navigation }: Props) {
                   <PressScale scaleTo={0.93}>
                     <Pressable
                       style={styles.quickActionLink}
-                      onPress={() => navigation.navigate('Stats' as any)}
+                      onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Stats' as any); }}
                       accessibilityRole="link"
                       accessibilityLabel="View stats"
                     >
@@ -1678,7 +1680,7 @@ export function GameScreen({ navigation }: Props) {
                   <PressScale scaleTo={0.93}>
                     <Pressable
                       style={styles.quickActionLink}
-                      onPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
+                      onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
                       accessibilityRole="link"
                       accessibilityLabel="Open shop"
                     >
