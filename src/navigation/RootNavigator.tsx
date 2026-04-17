@@ -48,8 +48,6 @@ export type MatchupParams = {
 };
 
 export type GameParams = {
-  rankedMode?: boolean;
-  rankedClockSeconds?: number;
   presetBoard?: number[][];
   careerLevelId?: number;
   careerLevelReward?: CareerRewardParams;
@@ -66,7 +64,7 @@ export type GameParams = {
 
 export type RootStackParamList = {
   MainTabs: undefined;
-  Play: { rankedMode?: boolean; rankedClockSeconds?: number } | undefined;
+  Play: undefined;
   Matchup: MatchupParams;
   Game: GameParams | undefined;
   LocalPlay: undefined;
