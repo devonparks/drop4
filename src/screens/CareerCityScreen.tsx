@@ -133,7 +133,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
           </LinearGradient>
         </Pressable>
         <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerNickname}>{city.nickname.toUpperCase()}</Text>
+          <Text style={styles.headerNickname} accessibilityRole="header">{city.nickname.toUpperCase()}</Text>
           <Text style={styles.headerCity}>
             {city.name}, <Text style={styles.headerState}>{city.state}</Text>
           </Text>
@@ -753,7 +753,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
               <Text style={styles.modalRatingLabel}>OVR</Text>
             </View>
 
-            <Text style={styles.modalName}>{level.opponent}</Text>
+            <Text style={styles.modalName} accessibilityRole="header">{level.opponent}</Text>
             <Text style={styles.modalLevelName}>{level.name}</Text>
             <Text style={styles.modalPersonality}>"{level.opponentPersonality}"</Text>
 
@@ -769,7 +769,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
 
             {level.reward && (
               <View style={styles.modalReward}>
-                <Text style={styles.modalRewardLabel}>REWARD</Text>
+                <Text style={styles.modalRewardLabel} accessibilityRole="header">REWARD</Text>
                 <Text style={styles.modalRewardName}>
                   {level.reward.icon} {level.reward.name}
                 </Text>
