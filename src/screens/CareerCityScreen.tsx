@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import {
   CITY_BY_ID,
   CareerCity,
@@ -115,6 +115,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
       <CityEnvironmentLayer city={city} />
 
       {/* ─── Header ─── */}
+      <StaggeredEntry index={0} delay={60}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable
           onPress={() => navigation.goBack()}
@@ -142,8 +143,10 @@ export function CareerCityScreen({ navigation, route }: Props) {
           </Text>
         </View>
       </View>
+      </StaggeredEntry>
 
       {/* ─── Node path ─── */}
+      <StaggeredEntry index={1} delay={60} style={{ flex: 1 }}>
       <ScrollView
         style={styles.pathScroll}
         contentContainerStyle={[styles.pathContent, { paddingBottom: 120 + insets.bottom }]}
@@ -178,8 +181,10 @@ export function CareerCityScreen({ navigation, route }: Props) {
           })}
         </View>
       </ScrollView>
+      </StaggeredEntry>
 
       {/* ─── Bottom HUD (Basketball Stars style) ─── */}
+      <StaggeredEntry index={2} delay={60}>
       {/* Persistent bar along the bottom. Gives the screen proper structure
           on mobile instead of letting the path scroll fade into empty space. */}
       <View style={[styles.bottomHud, { paddingBottom: Math.max(12, insets.bottom) }]}>
@@ -255,6 +260,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         </Pressable>
         </PressScale>
       </View>
+      </StaggeredEntry>
 
       {/* ─── Opponent detail modal ─── */}
       <OpponentCardModal
