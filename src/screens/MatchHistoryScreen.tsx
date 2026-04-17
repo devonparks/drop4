@@ -8,6 +8,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { useMatchHistoryStore, MatchRecord } from '../stores/matchHistoryStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -36,7 +37,7 @@ function FilterChip({ label, active, color, onPress }: {
 }) {
   return (
     <PressScale
-      onPress={() => { haptics.select(); onPress(); }}
+      onPress={() => { haptics.select(); playSound('click'); onPress(); }}
       scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={`Filter by ${label}`}
@@ -54,7 +55,7 @@ function SortChip({ label, active, onPress }: {
 }) {
   return (
     <PressScale
-      onPress={() => { haptics.select(); onPress(); }}
+      onPress={() => { haptics.select(); playSound('click'); onPress(); }}
       scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={`Sort by ${label}`}
@@ -291,7 +292,7 @@ export function MatchHistoryScreen() {
         ListFooterComponent={
           hasMore ? (
             <PressScale
-              onPress={() => { haptics.tap(); loadMore(); }}
+              onPress={() => { haptics.tap(); playSound('click'); loadMore(); }}
               scaleTo={0.96}
               style={styles.loadMore}
               accessibilityRole="button"
