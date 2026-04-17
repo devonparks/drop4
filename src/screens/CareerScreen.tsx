@@ -15,7 +15,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { ALL_CAREER_LEVELS, CHAPTERS, getChallengeTypeLabel, CareerLevel } from '../data/careerLevels';
 import { colors } from '../theme/colors';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -345,6 +345,7 @@ export function CareerScreen({ navigation }: Props) {
         />
 
         {/* Header */}
+        <StaggeredEntry index={0} delay={60}>
         <View style={styles.header}>
           <Text style={styles.title} accessibilityRole="header">CAREER</Text>
           <View style={styles.progressRow}>
@@ -353,8 +354,10 @@ export function CareerScreen({ navigation }: Props) {
             <Text style={styles.coinsTotal}>🪙 {totalCoinsAvailable.toLocaleString()} available</Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Chapter tabs */}
+        <StaggeredEntry index={1} delay={60}>
         <View style={styles.chapterTabs}>
           {CHAPTERS.map(ch => {
             const isActive = activeChapter === ch.id;
@@ -401,8 +404,10 @@ export function CareerScreen({ navigation }: Props) {
             );
           })}
         </View>
+        </StaggeredEntry>
 
         {/* Level list */}
+        <StaggeredEntry index={2} delay={60} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.levelList} showsVerticalScrollIndicator={false}>
           {/* Quick Resume button */}
           {nextUncompletedLevel && (
@@ -478,6 +483,7 @@ export function CareerScreen({ navigation }: Props) {
             );
           })}
         </ScrollView>
+        </StaggeredEntry>
 
         {/* Chapter Complete Celebration Overlay */}
         {chapterCelebration !== null && (() => {
