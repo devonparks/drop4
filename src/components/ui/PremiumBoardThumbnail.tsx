@@ -198,7 +198,6 @@ export function PremiumBoardThumbnail({
   const boardX = (width - boardW) / 2;
   const boardY = height * 0.22;
   const holeR = boardH * 0.16;
-  const holeSpacing = boardW / 7;
 
   return (
     <View style={{ width, height, overflow: 'hidden' }}>
@@ -347,45 +346,6 @@ export function PremiumBoardThumbnail({
           borderWidth: 8,
           borderColor: 'rgba(0,0,0,0.25)',
           borderRadius: 12,
-        }}
-      />
-    </View>
-  );
-}
-
-// ─── Single colored disc with glow + gradient (feels like real plastic) ──
-function Piece({ x, y, r, color, glow }: { x: number; y: number; r: number; color: string; glow: string }) {
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        left: x - r,
-        top: y - r,
-        width: r * 2,
-        height: r * 2,
-        borderRadius: r,
-        backgroundColor: color,
-        shadowColor: glow,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.9,
-        shadowRadius: 6,
-        elevation: 6,
-        borderWidth: 0.5,
-        borderColor: 'rgba(255,255,255,0.5)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Gloss highlight */}
-      <View
-        style={{
-          position: 'absolute',
-          top: r * 0.2,
-          left: r * 0.35,
-          width: r * 0.7,
-          height: r * 0.6,
-          borderRadius: r,
-          backgroundColor: 'rgba(255,255,255,0.5)',
-          transform: [{ rotate: '-20deg' }],
         }}
       />
     </View>
