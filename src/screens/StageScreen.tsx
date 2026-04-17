@@ -134,7 +134,7 @@ export function StageScreen({ navigation }: Props) {
         <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
 
         <View style={styles.header}>
-          <Text style={styles.title}>GOLD COURT</Text>
+          <Text style={styles.title} accessibilityRole="header">GOLD COURT</Text>
           <Text style={styles.subtitle}>Wager coins. Winner takes all minus rake.</Text>
 
           {/* Ranked badge */}

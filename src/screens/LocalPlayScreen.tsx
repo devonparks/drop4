@@ -51,7 +51,7 @@ export function LocalPlayScreen({ navigation }: Props) {
 
         <View style={styles.mainContent}>
           <StaggeredEntry index={0} delay={60}>
-            <Text style={styles.title}>LOCAL PLAY</Text>
+            <Text style={styles.title} accessibilityRole="header">LOCAL PLAY</Text>
           </StaggeredEntry>
           <StaggeredEntry index={1} delay={60}>
             <Text style={styles.subtitle}>Pass & Play on one device</Text>
