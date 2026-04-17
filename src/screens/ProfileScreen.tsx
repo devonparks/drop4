@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -58,7 +58,6 @@ export function ProfileScreen() {
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
-  const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
   const bestStreak = useGameStore(s => s.bestStreak);
   const allMatches = useMatchHistoryStore(s => s.matches);
@@ -116,7 +115,6 @@ export function ProfileScreen() {
   }, [allMatches]);
 
   // Share Profile handler
-  const [shareCopied, setShareCopied] = useState(false);
   const handleShareProfile = async () => {
     haptics.tap();
     const playerName = useShopStore.getState().playerName;

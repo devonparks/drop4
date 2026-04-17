@@ -87,7 +87,7 @@ Commit message format: `polish: <scope> — <description>`
 Include the trailer:
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
-Push with: `git push origin polish-loop`. Do NOT push to main — main is protected for manual review merges.
+Push with: `git push origin main`. Pre-commit hook (tsc + jest) is the safety net.
 
 HARD RULES (will break the build if violated):
 - GLB files under src/assets/models/ ARE gitignored but `require('../assets/models/...')` calls ARE VALID. NEVER remove them.
@@ -111,22 +111,12 @@ while true; do
   ITER=$((ITER + 1))
   log "${C_GREEN}── Iteration #$ITER ──${C_OFF}"
 
-  # Always start fresh. Switch to polish-loop branch, rebase on main so
-  # we pick up any manual changes the human devs shipped.
-  log "Syncing polish-loop branch with main..."
-  git fetch origin main polish-loop >> "$LOG" 2>&1 || true
-  # Create the branch if it doesn't exist locally
-  if ! git show-ref --verify --quiet refs/heads/polish-loop; then
-    git checkout -b polish-loop origin/polish-loop 2>/dev/null || \
-      git checkout -b polish-loop origin/main
-  else
-    git checkout polish-loop >> "$LOG" 2>&1
-  fi
-  if ! git pull --rebase origin polish-loop >> "$LOG" 2>&1; then
-    git rebase --abort 2>/dev/null || true
-  fi
-  if ! git rebase origin/main >> "$LOG" 2>&1; then
-    log "${C_YELLOW}Rebase on main failed — aborting and skipping iteration.${C_OFF}"
+  # Always start fresh from main. Simple single-branch workflow —
+  # pre-commit hook (tsc + jest) protects against red commits.
+  log "Pulling latest main..."
+  git checkout main >> "$LOG" 2>&1 || true
+  if ! git pull --rebase origin main >> "$LOG" 2>&1; then
+    log "${C_YELLOW}Pull failed — aborting rebase and skipping iteration.${C_OFF}"
     git rebase --abort 2>/dev/null || true
     sleep 30
     continue
@@ -161,37 +151,6 @@ while true; do
     log "${C_GREEN}✓ Iter #$ITER committed in ${DURATION}s:${C_OFF} $COMMIT_MSG"
   else
     log "${C_YELLOW}○ Iter #$ITER produced no commit (${DURATION}s).${C_OFF}"
-  fi
-
-  # ─── Auto-merge polish-loop → main (with 30-min cooling window) ──
-  # Safety design: we only FF-merge commits that are >30 min old. This
-  # gives the human dev a window to notice and force-reset polish-loop
-  # if something looks wrong before it lands on main. Also requires
-  # tsc+jest to pass on the merged state before pushing.
-  AUTOMERGE_COOLDOWN_SEC=${AUTOMERGE_COOLDOWN_SEC:-1800}  # 30 min default
-  if command -v git >/dev/null 2>&1; then
-    git fetch origin main >> "$LOG" 2>&1 || true
-    OLDEST_UNMERGED_TS=$(git log origin/main..HEAD --pretty=%ct --reverse 2>/dev/null | head -1)
-    if [[ -n "$OLDEST_UNMERGED_TS" ]]; then
-      NOW_TS=$(date +%s)
-      AGE=$((NOW_TS - OLDEST_UNMERGED_TS))
-      if [[ "$AGE" -ge "$AUTOMERGE_COOLDOWN_SEC" ]]; then
-        log "${C_CYAN}↻ Auto-merging polish-loop → main (oldest commit ${AGE}s old)...${C_OFF}"
-        # Preserve current branch, attempt merge, restore on failure
-        if git checkout main >> "$LOG" 2>&1 && \
-           git pull --ff-only origin main >> "$LOG" 2>&1 && \
-           git merge --ff-only polish-loop >> "$LOG" 2>&1 && \
-           npx tsc --noEmit > /dev/null 2>&1 && \
-           npx jest --silent > /dev/null 2>&1 && \
-           git push origin main >> "$LOG" 2>&1; then
-          log "${C_GREEN}✓ Auto-merged polish-loop → main${C_OFF}"
-        else
-          log "${C_YELLOW}⚠ Auto-merge failed (conflict, red tests, or push rejected) — leaving main alone${C_OFF}"
-          git reset --hard origin/main >> "$LOG" 2>&1 || true
-        fi
-        git checkout polish-loop >> "$LOG" 2>&1 || true
-      fi
-    fi
   fi
 
   # Small breather between iterations

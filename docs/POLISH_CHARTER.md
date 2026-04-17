@@ -12,7 +12,7 @@ Drop4 is a 3D Connect 4 game. The 3D character pipeline is already built (see `d
 2. **One small polish per run.** Three 30-line improvements > one 300-line rewrite. Keep each commit self-contained and reviewable.
 3. **Don't scope-creep.** If you notice a big refactor opportunity, write it in `docs/POLISH_FOLLOWUPS.md` and move on. Don't do it.
 4. **Clean up ONLY your own mess.** If your commit orphans a local variable or import, remove it. Do NOT do drive-by cleanup on code your change didn't touch — even if it's obviously dead. Unsolicited refactors compound overnight and nobody can tell what actually moved. Flag dead neighbors in POLISH_FOLLOWUPS.md instead.
-5. **Push to `polish-loop` branch, NOT `main`.** Main is protected for manual review merges. The loop rebases on main each iteration and pushes to polish-loop; a human merges weekly.
+5. **Push to `main`.** Pre-commit hook (tsc + jest) is the only safety gate — red commits are blocked automatically.
 6. **GLB files are gitignored.** `require('../assets/models/...')` calls are valid even though the files don't exist in the remote clone — Metro resolves them at build time on the user's machine. Don't "fix" them.
 7. **Respect `CLAUDE.md`** conventions (Zustand selectors, GlossyButton web fallback, sprite sheet grids, etc.).
 8. **Commit format:** `polish: <scope> — <one-line description>`. Co-Authored-By trailer for Claude.
