@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { FEATURES } from '../config/features';
+import { StaggeredEntry } from '../components/animations';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -105,9 +106,12 @@ export function PlayScreen({ navigation }: Props) {
 
         <View style={styles.mainContent}>
           {/* Screen heading */}
+          <StaggeredEntry index={0} delay={60}>
           <Text style={styles.screenHeading} accessibilityRole="header">QUICK PLAY</Text>
+          </StaggeredEntry>
 
-          {/* Compact stats line */}
+          {/* Compact stats line + suggestion */}
+          <StaggeredEntry index={1} delay={60}>
           <Text style={styles.statsLine}>
             {stats.totalGames > 0
               ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
@@ -120,8 +124,10 @@ export function PlayScreen({ navigation }: Props) {
               {difficultySuggestion.emoji} {difficultySuggestion.text}
             </Text>
           )}
+          </StaggeredEntry>
 
           {/* Difficulty buttons — the main event */}
+          <StaggeredEntry index={2} delay={60}>
           <View style={styles.buttonsWrap}>
             <GlossyButton
               label="EASY"
@@ -139,19 +145,24 @@ export function PlayScreen({ navigation }: Props) {
               variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')}
             />
           </View>
+          </StaggeredEntry>
 
           {/* Tip */}
+          <StaggeredEntry index={3} delay={60}>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>{'\uD83D\uDCA1'} {tip}</Text>
           </View>
+          </StaggeredEntry>
 
           {/* Secondary buttons — only show enabled features */}
+          <StaggeredEntry index={4} delay={60}>
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
             {FEATURES.customGame && (
               <GlossyButton label="CUSTOM" variant="navy" icon="🔧" small onPress={() => navigation.navigate('CustomGame')} style={{ flex: 1 }} />
             )}
           </View>
+          </StaggeredEntry>
         </View>
       </View>
     </ScreenBackground>
