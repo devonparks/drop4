@@ -221,7 +221,7 @@ export function SeasonPassScreen() {
           style={styles.headerBanner}
         >
           <View style={styles.headerBannerInner}>
-            <Text style={styles.title}>{seasonName.toUpperCase()}</Text>
+            <Text style={styles.title} accessibilityRole="header">{seasonName.toUpperCase()}</Text>
             <View style={styles.tierCountdownRow}>
               <Text style={styles.subtitle}>Tier {currentTier} / {maxTier}</Text>
               <View style={styles.daysRemainingBadge}>
@@ -260,7 +260,7 @@ export function SeasonPassScreen() {
               <View style={styles.premiumCardInner}>
                 <View style={styles.premiumSparkleRow}>
                   <Text style={styles.premiumStar}>{'\u2728'}</Text>
-                  <Text style={styles.premiumTitle}>{'\uD83D\uDC51'} Upgrade to Premium</Text>
+                  <Text style={styles.premiumTitle} accessibilityRole="header">{'\uD83D\uDC51'} Upgrade to Premium</Text>
                   <Text style={styles.premiumStar}>{'\u2728'}</Text>
                 </View>
                 <Text style={styles.premiumDesc}>Unlock exclusive rewards on every tier</Text>
@@ -303,10 +303,10 @@ export function SeasonPassScreen() {
         <View style={styles.trackHeaders}>
           <View style={{ width: 40 }} />
           <View style={[styles.trackHeaderPill, { flex: 1 }]}>
-            <Text style={styles.trackHeaderPillText}>FREE TRACK</Text>
+            <Text style={styles.trackHeaderPillText} accessibilityRole="header">FREE TRACK</Text>
           </View>
           <View style={[styles.trackHeaderPill, styles.trackHeaderPillPremium, { flex: 1 }]}>
-            <Text style={[styles.trackHeaderPillText, { color: '#1a1a00' }]}>PREMIUM TRACK</Text>
+            <Text style={[styles.trackHeaderPillText, { color: '#1a1a00' }]} accessibilityRole="header">PREMIUM TRACK</Text>
           </View>
         </View>
 
