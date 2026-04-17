@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 import { Cell } from './gameStore';
 
-export interface CustomBoard {
+interface CustomBoard {
   id: string;
   name: string;
   creator: string;
