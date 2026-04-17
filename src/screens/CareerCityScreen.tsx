@@ -118,7 +118,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
       <StaggeredEntry index={0} delay={60}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
           style={styles.backBtn}
           hitSlop={8}
           accessibilityRole="button"
@@ -195,7 +195,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         />
         <PressScale>
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -211,7 +211,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
         <PressScale>
         <Pressable
-          onPress={() => { haptics.tap(); navigation.navigate('Roster'); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Roster'); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -230,7 +230,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
         <PressScale>
         <Pressable
-          onPress={() => { haptics.tap(); navigation.navigate('Character3DCreator'); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Character3DCreator'); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -246,7 +246,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
         <PressScale>
         <Pressable
-          onPress={() => { haptics.tap(); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
