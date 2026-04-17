@@ -6,19 +6,71 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Infrastructure cleanup — final dead MP code strip, pre-commit hook, move polish loop to branch.
+**Now:** Waiting on Devon to finish DoorDash weekend shifts + generate art in ComfyUI using docs/COMFYUI_PROMPT_PACK.md.
 
 **Next (in order):**
-1. **Art pipeline** — Devon generates app icon + splash + logo iteration in ComfyUI.
-2. **Store screenshots** — Claude captures from web preview at 1920x1080.
+1. **Art generation (Devon)** — app icon + splash + logo iteration in ComfyUI. Prompts ready in docs/COMFYUI_PROMPT_PACK.md.
+2. **Store screenshots** — Claude captures from web preview at 1920x1080 when Devon picks a visual direction.
 3. **First-launch tutorial** — replace WelcomeOverlay bullet list with interactive 3-screen walkthrough.
 4. **`eas build`** — iOS + Android binaries.
 5. **TestFlight / Play Console upload.**
 6. **Find 5 beta testers.**
 
-**Blocked on:** nothing. Every item above is unblocked and actionable.
+**Blocked on:** art assets from Devon. Everything else is ready.
 
 **Target:** beta on real phones by end of this week.
+
+---
+
+## 2026-04-17 — Audio + Animation Polish Sprint
+
+### What was built/changed
+
+**Audio overhaul (1 commit, 24 sounds total, up from 13):**
+- Integrated Kenney Interface Sounds pack (CC0) — extracted 13 sounds, converted OGG→WAV
+- Added new sound events: tick, pluck, select, toggle, tab_switch, back, open, close, modal_in, modal_out, error, purchase
+- Fixed 5 silent `playSound('purchase')` callers that had been failing because the key didn't exist in the audio service
+- Wired 20 `haptics.error()` sites to also play the error sound
+- MainTabs: tab_switch sound on every press
+- TopBar: back sound
+- Settings: toggle sound on every switch
+- 3 modal lifecycle events (AnimationPicker, DailyRewardPopup, MilestoneToast)
+
+**Animation polish (8 commits, CRITICAL items first):**
+- GlossyButton internal PressScale — ~40 call sites (Play/Home/Matchup/Profile/Learn/LocalPlay/SeasonPass/Roster) gain tactile press feedback + click sound in one file change
+- MainTabs TabIcon scale bounce — spring to 1.18 then settle on focus change
+- CosmeticPreviewModal + OutfitPreviewModal — animationType "none" → "slide" (snapped in previously)
+- ShopScreen item/pet cards — PressScale wrap with scaleTo=0.96
+- Character3D lighting — ambient 0.35→0.55, rim 0.9→1.4, plus warm orange platform glow ring. Character now pops off the background.
+- CollectionScreen sub-tabs + ProfileScreen link cards + ChallengesScreen CLAIM buttons — PressScale
+- ShopScreen category tabs — PressScale
+- SeasonPass CLAIM buttons — PressScale + PulseGlow halo
+- SettingsScreen SettingLink rows — one shared component change, every link row benefits
+- HomeScreen character tap — onPressIn/onPressOut driven scale pinch so tap feels instant (was feeling laggy because emote animation takes ~200ms to fire)
+
+**Workflow simplification:**
+- Killed polish-loop branch entirely. Main-only workflow now.
+- Polish loop pushes directly to main, pre-commit hook (tsc+jest) is the safety gate.
+- Removed tools/merge-polish.sh + auto-merge cooling window (over-engineered).
+
+**Docs:**
+- docs/ANIMATION_INVENTORY.md (126 lines, severity-graded audit of every interactive element)
+- docs/COMFYUI_PROMPT_PACK.md (254 lines, ready-to-paste Flux prompts for 4 art assets)
+
+### Why these decisions
+
+- **Kenney over Dustyroom**: Dustyroom is mediocre baseline quality. Kenney Interface Sounds are CC0, 5 variations per category, industry-standard quality. 12MB download, 13 WAV files extracted, massive quality uplift for zero cost.
+- **GlossyButton internal PressScale** was the highest-leverage animation change available. One file edit, ~40 buttons benefit. The alternative (wrapping each individual GlossyButton call site) would have been 40 diffs and more fragile.
+- **Branch simplification**: the polish-loop branch + auto-merge cooling window added friction every time I wanted to commit from this session (kept accidentally ending up on the wrong branch). Pre-commit hook is protection enough for a solo dev — red commits are blocked regardless of branch.
+- **Character3D lighting** was the highest-impact 3D change. Every screen that renders a Character3D or Character3DPortrait benefits (Home, Profile, Matchup, Collection cards, MilestoneToast hero slot, Character3D Creator). One file change.
+- **Can't do art generation**: coplay-mcp's generate_or_edit_images requires Unity Editor running. Pivoted to code-based visual polish (lighting, animations) and left art asset generation for Devon to do in ComfyUI using the prompt pack.
+
+### Patterns for reuse
+
+- **Press-scale via shared component internal wrap**: If a widely-used button component lacks press feedback, the highest-leverage fix is to add the feedback inside the component (one edit, N sites benefit). Avoid wrapping each call site individually — it compounds fragility.
+- **Ambient+rim lighting formula for stylized 3D**: For Synty-style characters on dark backgrounds, ambient 0.55 (outfit detail readable) + rim 1.4 (silhouette separation) + warm platform ring at 0.18 opacity (grounds the character) is a clean premium look. Key light 1.3, fill 0.6, hemisphere 0.5.
+- **Pre-commit hook as single safety gate**: For solo devs, branch protection is overkill. A hook that runs `tsc --noEmit` and `jest --silent` on every commit catches the same class of issues as a PR check without the friction.
+- **OGG → WAV conversion via soundfile**: For projects that prefer WAV, `soundfile.read()` + `soundfile.write(subtype='PCM_16')` handles OGG Vorbis decoding without needing ffmpeg. No Unicode arrows in print statements on Windows (cp1252 codec fails).
 
 ---
 
