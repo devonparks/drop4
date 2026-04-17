@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
