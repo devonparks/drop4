@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -21,13 +20,11 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useRosterStore } from '../stores/rosterStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RankBadge } from '../components/ui/RankBadge';
 import { toggleMute, getMuted, playSound } from '../services/audio';
 import { PressScale } from '../components/animations';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
-import { FEATURES } from '../config/features';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -77,12 +74,6 @@ export function SettingsScreen({ navigation }: Props) {
   const level = useShopStore(s => s.level);
   const playerName = useShopStore(s => s.playerName);
   const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
-  const rankedElo = useRankedStore(s => s.elo);
-  const rankedWins = useRankedStore(s => s.rankedWins);
-  const rankedLosses = useRankedStore(s => s.rankedLosses);
-  const seasonHighElo = useRankedStore(s => s.seasonHighElo);
-  const rankedSeasonHistory = useRankedStore(s => s.seasonHistory);
-  const seasonNumber = useSeasonStore(s => s.seasonNumber);
   const matches = useMatchHistoryStore(s => s.matches);
   const achievements = useAchievementStore(s => s.achievements);
   const careerProgress = useCareerStore(s => s.progress);
@@ -90,7 +81,6 @@ export function SettingsScreen({ navigation }: Props) {
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const [showPastSeasons, setShowPastSeasons] = useState(false);
 
   return (
     <ScreenBackground>
@@ -126,69 +116,6 @@ export function SettingsScreen({ navigation }: Props) {
           />
         </View>
         </StaggeredEntry>
-
-        {/* Season Stats — only when ranked is enabled */}
-        {FEATURES.rankedMode && (
-          <>
-            <Text style={styles.sectionTitle} accessibilityRole="header">SEASON STATS</Text>
-            <View style={styles.section}>
-              <View style={styles.seasonStatsRow}>
-                <View style={styles.seasonStatItem}>
-                  <Text style={styles.seasonStatLabel}>Season</Text>
-                  <Text style={styles.seasonStatValue}>{seasonNumber}</Text>
-                </View>
-                <View style={styles.seasonStatItem}>
-                  <Text style={styles.seasonStatLabel}>ELO</Text>
-                  <Text style={styles.seasonStatValue}>{rankedElo}</Text>
-                </View>
-                <View style={styles.seasonStatItem}>
-                  <Text style={styles.seasonStatLabel}>Tier</Text>
-                  <RankBadge size="small" showElo={false} />
-                </View>
-              </View>
-              <View style={styles.seasonRecordRow}>
-                <Text style={styles.seasonRecordLabel}>Record</Text>
-                <Text style={styles.seasonRecordValue}>
-                  {rankedWins}W - {rankedLosses}L
-                </Text>
-              </View>
-              <View style={styles.seasonRecordRow}>
-                <Text style={styles.seasonRecordLabel}>Season High</Text>
-                <Text style={[styles.seasonRecordValue, { color: colors.coinGold }]}>
-                  {seasonHighElo} ELO
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => { haptics.tap(); setShowPastSeasons(!showPastSeasons); }}
-                style={styles.settingRow}
-                accessibilityRole="button"
-                accessibilityLabel="View Past Seasons"
-                accessibilityState={{ expanded: showPastSeasons }}
-                accessibilityHint={showPastSeasons ? 'Collapses past season history' : 'Expands past season history'}
-              >
-                <Text style={styles.settingIcon}>📊</Text>
-                <Text style={styles.settingLabel}>View Past Seasons</Text>
-                <Text style={styles.chevron}>{showPastSeasons ? '⌄' : '›'}</Text>
-              </Pressable>
-              {showPastSeasons && (
-                <View style={styles.pastSeasonsWrap}>
-                  {rankedSeasonHistory.length === 0 ? (
-                    <Animated.Text entering={FadeIn.duration(280)} style={styles.pastSeasonEmpty}>No past seasons yet</Animated.Text>
-                  ) : (
-                    rankedSeasonHistory.map((s) => (
-                      <View key={s.season} style={styles.pastSeasonRow}>
-                        <Text style={styles.pastSeasonNum}>S{s.season}</Text>
-                        <Text style={styles.pastSeasonTier}>{s.tier.charAt(0).toUpperCase() + s.tier.slice(1)}</Text>
-                        <Text style={styles.pastSeasonElo}>{s.elo} ELO</Text>
-                        <Text style={styles.pastSeasonRecord}>{s.wins}W {s.losses}L</Text>
-                      </View>
-                    ))
-                  )}
-                </View>
-              )}
-            </View>
-          </>
-        )}
 
         {/* Notifications */}
         <StaggeredEntry index={2} delay={60}>
@@ -476,99 +403,6 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 20,
     color: colors.textSecondary,
-  },
-  seasonStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  seasonStatItem: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  seasonStatLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 10,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  seasonStatValue: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: '#ffffff',
-  },
-  seasonRecordRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  seasonRecordLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  seasonRecordValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-    color: '#ffffff',
-  },
-  pastSeasonsWrap: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  pastSeasonEmpty: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  pastSeasonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.03)',
-  },
-  pastSeasonNum: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: colors.orange,
-    width: 28,
-  },
-  pastSeasonTier: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 12,
-    color: '#ffffff',
-    flex: 1,
-  },
-  pastSeasonElo: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  pastSeasonRecord: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textMuted,
   },
   whatsNewRow: {
     flexDirection: 'row',
