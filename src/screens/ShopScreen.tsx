@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -19,6 +19,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { CosmeticPreviewModal } from '../components/ui/CosmeticPreviewModal';
+import { FilterChip } from '../components/ui/FilterChip';
 import { AnimatedRarityBg } from '../components/effects/AnimatedRarityBg';
 
 const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
@@ -784,27 +785,14 @@ export function ShopScreen() {
                   ] as const).map((sp) => {
                     const isLocked = sp.id !== 'All' && !unlockedSpecies.includes(sp.id);
                     return (
-                      <Pressable
+                      <FilterChip
                         key={sp.id}
-                        onPress={() => {
-                          if (isLocked) { haptics.error(); playSound('error'); return; }
-                          setOutfitSpecies(sp.id as any);
-                          setCollectionFilter('All');
-                          haptics.tap();
-                        }}
-                        style={[
-                          s.collectionPill,
-                          outfitSpecies === sp.id && s.collectionPillActive,
-                          isLocked && { opacity: 0.45 },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityLabel={isLocked ? `${sp.label} species (locked)` : `Filter outfits by ${sp.label}`}
-                        accessibilityState={{ selected: outfitSpecies === sp.id, disabled: isLocked }}
-                      >
-                        <Text style={[s.collectionPillText, outfitSpecies === sp.id && s.collectionPillTextActive]}>
-                          {isLocked ? '\u{1F512} ' : sp.icon + ' '}{sp.label}
-                        </Text>
-                      </Pressable>
+                        label={sp.label}
+                        icon={sp.icon}
+                        active={outfitSpecies === sp.id}
+                        locked={isLocked}
+                        onPress={() => { setOutfitSpecies(sp.id as any); setCollectionFilter('All'); }}
+                      />
                     );
                   })}
                 </ScrollView>
@@ -823,16 +811,12 @@ export function ShopScreen() {
               <View style={s.tabScrollWrap}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
                   {collectionFilters.map(cf => (
-                    <Pressable
+                    <FilterChip
                       key={cf}
-                      onPress={() => { setCollectionFilter(cf); haptics.tap(); }}
-                      style={[s.collectionPill, collectionFilter === cf && s.collectionPillActive]}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Filter by ${cf}`}
-                      accessibilityState={{ selected: collectionFilter === cf }}
-                    >
-                      <Text style={[s.collectionPillText, collectionFilter === cf && s.collectionPillTextActive]}>{cf}</Text>
-                    </Pressable>
+                      label={cf}
+                      active={collectionFilter === cf}
+                      onPress={() => setCollectionFilter(cf)}
+                    />
                   ))}
                 </ScrollView>
                 <LinearGradient
@@ -1275,13 +1259,6 @@ const s = StyleSheet.create({
   tabLabelActive: { color: colors.orange },
 
   collectionRow: { paddingHorizontal: 16, gap: 6, marginBottom: 10 },
-  collectionPill: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  collectionPillActive: { borderColor: 'rgba(255,140,0,0.5)', backgroundColor: 'rgba(255,140,0,0.1)' },
-  collectionPillText: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
-  collectionPillTextActive: { color: colors.orange },
 
   grid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16,
