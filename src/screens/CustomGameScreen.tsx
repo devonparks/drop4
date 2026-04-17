@@ -387,16 +387,14 @@ export function CustomGameScreen({ navigation }: Props) {
                 {opponent === 'ai_easy' ? '🤖' :
                  opponent === 'ai_medium' ? '🤖' :
                  opponent === 'ai_hard' ? '🤖' :
-                 opponent === 'ai_impossible' ? '💀' :
-                 opponent === 'local' ? '🎮' : '🌐'}
+                 opponent === 'ai_impossible' ? '💀' : '🎮'}
               </Text>
               <Text style={styles.opponentDescText}>
                 {opponent === 'ai_easy' ? 'A casual opponent. Good for warming up.' :
                  opponent === 'ai_medium' ? 'A balanced challenge for most players.' :
                  opponent === 'ai_hard' ? 'Thinks several moves ahead. Bring your A-game.' :
                  opponent === 'ai_impossible' ? 'Maximum depth search. Nearly unbeatable.' :
-                 opponent === 'local' ? 'Pass & Play on the same device.' :
-                 'Share a code to invite a friend.'}
+                 'Pass & Play on the same device.'}
               </Text>
             </View>
           </SectionCard>
