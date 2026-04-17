@@ -24,7 +24,7 @@ import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
-import { PressScale, BreathingView, SlideReveal, StaggeredEntry } from '../components/animations';
+import { BreathingView, SlideReveal, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -503,7 +503,6 @@ export function HomeScreen() {
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
           <SlideReveal from="bottom" delay={0}>
-            <PressScale onPress={() => navigateTo('Play')}>
               <GlossyButton
                 label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
                 subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
@@ -513,10 +512,8 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('Play')}
               />
-            </PressScale>
           </SlideReveal>
           <SlideReveal from="bottom" delay={80}>
-            <PressScale onPress={() => navigateTo('CareerMap')}>
               <GlossyButton
                 label="CAREER"
                 subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : 'Take the City · 3 launch cities'}
@@ -526,11 +523,9 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('CareerMap')}
               />
-            </PressScale>
           </SlideReveal>
           {/* Local play — pass and play, available in v1 */}
           <SlideReveal from="bottom" delay={160}>
-            <PressScale onPress={() => navigateTo('LocalPlay')}>
               <GlossyButton
                 label="LOCAL PLAY"
                 subtitle="Pass & play on one device"
@@ -540,7 +535,6 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('LocalPlay')}
               />
-            </PressScale>
           </SlideReveal>
         </View>
 
