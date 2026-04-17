@@ -237,7 +237,7 @@ export function MatchupScreen({ navigation }: Props) {
 
         {/* ── Top area: Court name + mode badge ── */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.topArea}>
-          <Text style={[styles.courtName, isBossMatch && styles.courtNameBoss]}>{courtName}</Text>
+          <Text style={[styles.courtName, isBossMatch && styles.courtNameBoss]} accessibilityRole="header">{courtName}</Text>
           {isBossMatch && (
             <View style={styles.bossBadge}>
               <Text style={styles.bossBadgeText}>BOSS BATTLE</Text>
@@ -279,7 +279,7 @@ export function MatchupScreen({ navigation }: Props) {
 
             {/* Name plate */}
             <View style={[styles.namePlate, styles.namePlatePlayer]}>
-              <Text style={styles.nameText} numberOfLines={1}>
+              <Text style={styles.nameText} numberOfLines={1} accessibilityRole="header">
                 {playerName || 'Player'}
               </Text>
             </View>
@@ -302,7 +302,7 @@ export function MatchupScreen({ navigation }: Props) {
                   <Animated.View style={vsPulseStyle}>
                     <Text style={styles.vsGlowText}>VS</Text>
                   </Animated.View>
-                  <Text style={styles.vsText}>VS</Text>
+                  <Text style={styles.vsText} accessibilityLabel="versus">VS</Text>
                 </Animated.View>
 
                 {/* Match details below VS — only show non-standard rules */}
@@ -351,7 +351,7 @@ export function MatchupScreen({ navigation }: Props) {
 
               {/* Name plate */}
               <View style={[styles.namePlate, styles.namePlateOpponent]}>
-                <Text style={styles.nameText} numberOfLines={1}>{opponentName}</Text>
+                <Text style={styles.nameText} numberOfLines={1} accessibilityRole="header">{opponentName}</Text>
               </View>
               <Text style={styles.opponentTitle}>{opponentTitle.toUpperCase()}</Text>
             </Animated.View>
