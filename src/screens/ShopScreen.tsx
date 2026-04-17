@@ -143,7 +143,7 @@ function useCountdown() {
 function SectionHeader({ title, gradientColors, rightText }: { title: string; gradientColors: [string, string]; rightText?: string }) {
   return (
     <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.sectionHeader}>
-      <Text style={s.sectionHeaderText}>{title}</Text>
+      <Text style={s.sectionHeaderText} accessibilityRole="header">{title}</Text>
       {rightText && <Text style={s.sectionHeaderRight}>{rightText}</Text>}
     </LinearGradient>
   );
@@ -709,7 +709,7 @@ export function ShopScreen() {
         {/* ── Header ── */}
         <View style={s.header}>
           <View>
-            <Text style={s.title}>SHOP</Text>
+            <Text style={s.title} accessibilityRole="header">SHOP</Text>
             <View style={s.equippedRow}>
               <Text style={s.equippedLabel}>{'\u{1F3AF}'} {equippedBoardName}</Text>
               <Text style={s.equippedDot}>{'\u2022'}</Text>
