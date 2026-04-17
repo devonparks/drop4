@@ -18,7 +18,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { getNpcCustomization } from '../data/npcCustomizations';
@@ -69,8 +68,6 @@ export function MatchupScreen({ navigation }: Props) {
   const params = route.params;
   const playerName = useShopStore(s => s.playerName);
   const playerLevel = useShopStore(s => s.level);
-  const coins = useShopStore(s => s.coins);
-  const gems = useShopStore(s => s.gems);
   const resetScores = useGameStore(s => s.resetScores);
 
   // State
@@ -101,7 +98,6 @@ export function MatchupScreen({ navigation }: Props) {
 
   // Board/match info
   const connectCount = params.connectCount || 4;
-  const boardSize = params.boardSize || '7x6';
   const timerSeconds = params.timerSeconds;
   const wagerAmount = params.wagerAmount;
 
