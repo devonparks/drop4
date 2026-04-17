@@ -100,11 +100,13 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
   const handleTap = () => {
     if (revealedRef.current) return; // Prevent double-reveal
     haptics.tap();
+    playSound('click');
     setTapCount(prev => {
       const next = prev + 1;
       if (next >= 3 && !revealedRef.current) {
         revealedRef.current = true;
         haptics.heavy();
+        playSound('whoosh');
         onReveal();
       }
       return next;
