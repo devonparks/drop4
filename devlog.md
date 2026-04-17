@@ -6,7 +6,7 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Waiting on Devon to finish DoorDash weekend shifts + generate art in ComfyUI using docs/COMFYUI_PROMPT_PACK.md.
+**Now:** Devon is resting. Claude continues code-based polish on main until Devon wakes up. Art-pipeline / beta-submit work is blocked on Devon.
 
 **Next (in order):**
 1. **Art generation (Devon)** — app icon + splash + logo iteration in ComfyUI. Prompts ready in docs/COMFYUI_PROMPT_PACK.md.
@@ -19,6 +19,37 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 **Blocked on:** art assets from Devon. Everything else is ready.
 
 **Target:** beta on real phones by end of this week.
+
+---
+
+## 2026-04-17 (late) — Overnight Polish Round 2
+
+### What was built/changed (while Devon rested)
+
+**Animation polish across 6 screens/components:**
+- `b3f9595` — DailyRewardPopup premium-day treatment: outfit/pet/title/emote/lootbox days get confetti + larger icon (76px vs 56px) + bigger glow + "✨ RARE REWARD ✨" kicker + gold-tinted name. Coin/gem days keep the understated look.
+- `b3f9595` — TutorialTooltip GOT IT button → PressScale scaleTo=0.94
+- `b3f9595` — EmotePickerModal ALL_EMOTES grid wrapped in StaggeredEntry (28ms stagger, cascade reveal)
+- `596952b` — CustomGameScreen option buttons (Connect N, board size, timer, speed): bare Pressable → PressScale scaleTo=0.94
+- `16bc24a` — LearnScreen 11 lesson cards → PressScale scaleTo=0.97
+- `ab77b26` — RosterScreen character cards → PressScale scaleTo=0.96
+- `ef66085` — CareerScreen chapter tabs (Ch.1/2/3) + CONTINUE resume card → PressScale
+
+**Workflow fix:**
+- `fa3754b` — POLISH_CHARTER rule 5 added: "Do NOT modify shared types." The overnight loop attempted to strip `GameParams.wagerCourt`/`rankedMode` fields, which cascaded through MatchupScreen. Devon had to stop the loop. Rule now fences off RootStackParamList, GameParams, MatchupParams, Zustand store shapes from polish runs.
+- Reverted the loop's mid-iteration uncommitted changes that broke MatchupScreen type-checking.
+
+### Why these decisions
+
+- **Every PressScale wrap uses the Animated.View-with-children-View pattern**: Wrapping an existing `<Pressable style={...}>` means pulling the style onto an inner View because PressScale already provides its own Animated.View. Consistent across all 6 commits. Easier to review.
+- **Premium-day celebration threshold**: the animation inventory flagged DailyReward as "day-7+ should feel bigger." But the actual differentiator is reward TYPE (outfit/pet/title/emote/lootbox = real unlock content; coins/gems = just more of what you have). Keyed the treatment off `reward.type` rather than day number so the 14/30/60/100-day milestone rewards all get the treatment too.
+- **Charter rule 5 is defensive**: the loop's isOnlineMatch strip was clean and passed tsc+jest. Where it went wrong was bleeding into `GameParams` type edits — a shared surface. Rule 5 keeps polish runs out of that blast radius without blocking legitimate dead-code removal.
+
+### Patterns for reuse
+
+- **Shared-component internal PressScale > per-site wrap**: GlossyButton (commit 360bc51) fixed ~40 sites with one edit. Same principle: when a widely-used interactive component lacks press feedback, add it inside the component, not at each call site.
+- **"Rare reward" signal via type, not day**: Milestone celebrations should fire on content type (outfit/pet/title) not on hitting day N. This lets 7-day + 14-day + 30-day + 60-day + 100-day rewards all feel distinct from regular coin days without separate code paths per milestone.
+- **Shared-type freeze**: For solo-dev autonomous polish bots, forbidding shared-type edits in polish commits is the cheapest safety rail. Dead type fields get noted for a future dedicated refactor, not stripped incrementally.
 
 ---
 
