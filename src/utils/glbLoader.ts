@@ -10,7 +10,6 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { Asset } from 'expo-asset';
-import * as THREE from 'three';
 // @ts-ignore — three.js examples path types may not resolve in all configs
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
