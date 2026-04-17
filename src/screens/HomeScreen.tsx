@@ -153,6 +153,11 @@ export function HomeScreen() {
   const heartTranslateY = useRef(new Animated.Value(0)).current;
   const [showPetHeart, setShowPetHeart] = useState(false);
 
+  // ═══ Character tap press-scale ═══
+  // Instant-feedback scale so the tap registers before the emote animation
+  // starts (~200ms later). See HomeScreen character Pressable below.
+  const characterPressScale = useRef(new Animated.Value(1)).current;
+
   const handlePetTap = () => {
     haptics.tap();
     playSound('tap');
@@ -415,6 +420,24 @@ export function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Player character"
               accessibilityHint="Double-tap to open the emote picker, long-press to play a random owned emote"
+              onPressIn={() => {
+                // Instant-feedback scale pinch so the tap feels responsive
+                // (emote animation doesn't fire for ~200ms after tap).
+                Animated.spring(characterPressScale, {
+                  toValue: 0.97,
+                  useNativeDriver: true,
+                  speed: 60,
+                  bounciness: 0,
+                }).start();
+              }}
+              onPressOut={() => {
+                Animated.spring(characterPressScale, {
+                  toValue: 1,
+                  useNativeDriver: true,
+                  speed: 20,
+                  bounciness: 8,
+                }).start();
+              }}
               onLongPress={() => {
                 if (!FEATURES.character3D) return;
                 // Long-press: play a random OWNED emote instantly (no modal).
@@ -435,6 +458,7 @@ export function HomeScreen() {
                   <View style={styles.tapHintArrow} />
                 </Animated.View>
               )}
+              <Animated.View style={{ transform: [{ scale: characterPressScale }] }}>
               {FEATURES.character3D ? (
                 <Character3DWrapper activeEmoteId={active3DEmote} />
               ) : (
@@ -445,6 +469,7 @@ export function HomeScreen() {
                   onEmoteComplete={clearEmote}
                 />
               )}
+              </Animated.View>
             </Pressable>
             </BreathingView>
             {equippedPet && (
