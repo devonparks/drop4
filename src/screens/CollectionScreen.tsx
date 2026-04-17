@@ -47,20 +47,22 @@ export function CollectionScreen() {
           { id: 'loot' as SubTab, icon: '📦', label: 'Loot' },
           { id: 'awards' as SubTab, icon: '🏅', label: 'Awards' },
         ]).map((tab) => (
-          <Pressable
+          <PressScale
             key={tab.id}
             onPress={() => { haptics.tap(); setActiveTab(tab.id); }}
-            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+            scaleTo={0.94}
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
             accessibilityState={{ selected: activeTab === tab.id }}
           >
-            <Text style={styles.tabIcon}>{tab.icon}</Text>
-            <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-            {activeTab === tab.id && <View style={styles.tabIndicator} />}
-          </Pressable>
+            <View style={[styles.tab, activeTab === tab.id && styles.tabActive]}>
+              <Text style={styles.tabIcon}>{tab.icon}</Text>
+              <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+              {activeTab === tab.id && <View style={styles.tabIndicator} />}
+            </View>
+          </PressScale>
         ))}
       </View>
 

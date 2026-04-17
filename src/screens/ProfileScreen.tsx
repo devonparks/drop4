@@ -18,7 +18,7 @@ import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
-import { Shimmer, SlideReveal } from '../components/animations';
+import { Shimmer, SlideReveal, PressScale } from '../components/animations';
 import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -324,28 +324,32 @@ export function ProfileScreen() {
 
         {/* Compact links */}
         <View style={styles.profileLinks}>
-          <Pressable
+          <PressScale
             onPress={() => navigateTo('Stats')}
-            style={styles.profileLink}
+            scaleTo={0.98}
             accessibilityRole="button"
             accessibilityLabel="Stats"
             accessibilityHint="Open the stats screen"
           >
-            <Text style={styles.profileLinkIcon}>📊</Text>
-            <Text style={styles.profileLinkText}>Stats</Text>
-            <Text style={styles.profileLinkArrow}>›</Text>
-          </Pressable>
-          <Pressable
+            <View style={styles.profileLink}>
+              <Text style={styles.profileLinkIcon}>📊</Text>
+              <Text style={styles.profileLinkText}>Stats</Text>
+              <Text style={styles.profileLinkArrow}>›</Text>
+            </View>
+          </PressScale>
+          <PressScale
             onPress={() => navigateTo('Settings')}
-            style={styles.profileLink}
+            scaleTo={0.98}
             accessibilityRole="button"
             accessibilityLabel="Settings"
             accessibilityHint="Open the settings screen"
           >
-            <Text style={styles.profileLinkIcon}>⚙️</Text>
-            <Text style={styles.profileLinkText}>Settings</Text>
-            <Text style={styles.profileLinkArrow}>›</Text>
-          </Pressable>
+            <View style={styles.profileLink}>
+              <Text style={styles.profileLinkIcon}>⚙️</Text>
+              <Text style={styles.profileLinkText}>Settings</Text>
+              <Text style={styles.profileLinkArrow}>›</Text>
+            </View>
+          </PressScale>
         </View>
 
         {/* v1 simplified: Stats/Achievements/Quick Actions/Match History removed.

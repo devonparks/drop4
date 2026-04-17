@@ -109,19 +109,21 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
         <View style={styles.cardRight}>
           {canClaim ? (
             <PulseGlow color="#27ae3d" size={36} active={canClaim}>
-            <Pressable
-              onPress={onClaim}
-              style={styles.claimBtnSmall}
-              accessibilityRole="button"
-              accessibilityLabel={`Claim reward for ${challenge.title}`}
-            >
-              <LinearGradient
-                colors={['#34c94d', '#27ae3d', '#1e8a30']}
-                style={styles.claimBtnGradient}
+              <PressScale
+                onPress={onClaim}
+                scaleTo={0.93}
+                accessibilityRole="button"
+                accessibilityLabel={`Claim reward for ${challenge.title}`}
               >
-                <Text style={styles.claimBtnText}>CLAIM</Text>
-              </LinearGradient>
-            </Pressable>
+                <View style={styles.claimBtnSmall}>
+                  <LinearGradient
+                    colors={['#34c94d', '#27ae3d', '#1e8a30']}
+                    style={styles.claimBtnGradient}
+                  >
+                    <Text style={styles.claimBtnText}>CLAIM</Text>
+                  </LinearGradient>
+                </View>
+              </PressScale>
             </PulseGlow>
           ) : challenge.completed ? (
             <View style={styles.doneBadge}>
