@@ -12,9 +12,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
 import { AnimatedStarRating } from '../components/effects/AnimatedStarRating';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
-import { FEATURES } from '../config/features';
 import { getNpcCustomization } from '../data/npcCustomizations';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { EmotePickerModal } from '../components/ui/EmotePickerModal';
@@ -1083,9 +1081,7 @@ export function GameScreen({ navigation }: Props) {
         <View style={styles.hudRow}>
           <PlayerHUD
             name={p1Name}
-            avatar={FEATURES.character3D
-              ? <Character3DPortrait width={40} height={40} showFloor={false} />
-              : <CharacterAvatar size="medium" variant="player" />}
+            avatar={<Character3DPortrait width={40} height={40} showFloor={false} />}
             level={level}
             pieceColor="red"
             score={scores.player1}
@@ -1131,12 +1127,8 @@ export function GameScreen({ navigation }: Props) {
             <PlayerHUD
               name={p2Name}
               avatar={isVsAi
-                ? (FEATURES.character3D
-                  ? <Character3DPortrait width={40} height={40} showFloor={false} customization={getNpcCustomization(params.opponentName || difficulty)} />
-                  : <CharacterAvatar size="medium" variant={`bot_${difficulty}` as any} />)
-                : (FEATURES.character3D
-                  ? <Character3DPortrait width={40} height={40} showFloor={false} />
-                  : <CharacterAvatar size="medium" variant="player" />)
+                ? <Character3DPortrait width={40} height={40} showFloor={false} customization={getNpcCustomization(params.opponentName || difficulty)} />
+                : <Character3DPortrait width={40} height={40} showFloor={false} />
               }
               level={isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
               pieceColor="yellow"
@@ -1477,13 +1469,11 @@ export function GameScreen({ navigation }: Props) {
                     <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
                   )}
                   <View style={styles.goAvatarWrap}>
-                    {FEATURES.character3D
-                      ? <Character3DPortrait
-                          width={140} height={180} showFloor={false}
-                          animationId={status === 'won' && winner === 1 ? 'emote_dab' : 'idle_base'}
-                          animationLoop={status !== 'won' || winner !== 1}
-                        />
-                      : <CharacterAvatar size="large" variant="player" />}
+                    <Character3DPortrait
+                      width={140} height={180} showFloor={false}
+                      animationId={status === 'won' && winner === 1 ? 'emote_dab' : 'idle_base'}
+                      animationLoop={status !== 'won' || winner !== 1}
+                    />
                     {/* Level badge */}
                     <View style={styles.goLevelBadge}>
                       <Text style={styles.goLevelText}>{level}</Text>
@@ -1522,25 +1512,18 @@ export function GameScreen({ navigation }: Props) {
                     <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
                   )}
                   <View style={styles.goAvatarWrap}>
-                    {FEATURES.character3D ? (
-                      <Character3DPortrait
-                        width={140} height={180} showFloor={false}
-                        customization={isVsAi ? getNpcCustomization(params.opponentName || difficulty) : undefined}
-                        animationId={
-                          status === 'won' && winner === 2
-                            ? 'emote_dab'
-                            : status === 'won' && winner === 1
-                            ? 'emote_tantrum'
-                            : 'idle_base'
-                        }
-                        animationLoop={status !== 'won'}
-                      />
-                    ) : (
-                      <CharacterAvatar
-                        size="large"
-                        variant={isVsAi ? `bot_${difficulty}` as any : 'player'}
-                      />
-                    )}
+                    <Character3DPortrait
+                      width={140} height={180} showFloor={false}
+                      customization={isVsAi ? getNpcCustomization(params.opponentName || difficulty) : undefined}
+                      animationId={
+                        status === 'won' && winner === 2
+                          ? 'emote_dab'
+                          : status === 'won' && winner === 1
+                          ? 'emote_tantrum'
+                          : 'idle_base'
+                      }
+                      animationLoop={status !== 'won'}
+                    />
                     <View style={[styles.goLevelBadge, { backgroundColor: colors.surfaceLight }]}>
                       <Text style={styles.goLevelText}>
                         {isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
