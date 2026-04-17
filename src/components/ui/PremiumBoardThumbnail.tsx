@@ -358,7 +358,7 @@ function AtmosphereLayer({ scene, width, height }: { scene: ThemeScene; width: n
     case 'stars':
       return <Stars width={width} height={height} />;
     case 'stripes':
-      return <NeonStripes width={width} height={height} color={scene.accent} />;
+      return <NeonStripes height={height} color={scene.accent} />;
     case 'flames':
       return <Flames width={width} height={height} color={scene.accent} />;
     case 'snow':
@@ -408,7 +408,7 @@ function Stars({ width, height }: { width: number; height: number }) {
   );
 }
 
-function NeonStripes({ width, height, color }: { width: number; height: number; color: string }) {
+function NeonStripes({ height, color }: { height: number; color: string }) {
   return (
     <>
       {/* Horizontal scan lines */}

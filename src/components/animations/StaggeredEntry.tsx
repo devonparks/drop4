@@ -21,19 +21,18 @@ interface Props {
   children: React.ReactNode;
   index: number;
   delay?: number;    // ms between each item (default 50)
-  distance?: number; // slide distance in px (default 15)
   direction?: Direction;
   style?: StyleProp<ViewStyle>;
 }
 
 const ENTERING_MAP = {
-  up: (delay: number, distance: number) =>
+  up: (delay: number) =>
     FadeInDown.delay(delay).springify().damping(14).stiffness(120),
-  down: (delay: number, distance: number) =>
+  down: (delay: number) =>
     FadeInUp.delay(delay).springify().damping(14).stiffness(120),
-  left: (delay: number, distance: number) =>
+  left: (delay: number) =>
     FadeInRight.delay(delay).springify().damping(14).stiffness(120),
-  right: (delay: number, distance: number) =>
+  right: (delay: number) =>
     FadeInLeft.delay(delay).springify().damping(14).stiffness(120),
 };
 
@@ -41,12 +40,11 @@ export function StaggeredEntry({
   children,
   index,
   delay = 50,
-  distance = 15,
   direction = 'up',
   style,
 }: Props) {
   const totalDelay = index * delay;
-  const entering = ENTERING_MAP[direction](totalDelay, distance);
+  const entering = ENTERING_MAP[direction](totalDelay);
 
   return (
     <Animated.View entering={entering} style={style}>
