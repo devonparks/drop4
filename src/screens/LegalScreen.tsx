@@ -187,7 +187,7 @@ const DOCS: Record<DocType, Doc> = {
       {
         heading: 'Tech stack',
         body:
-          'React Native + Expo SDK 54\nFirebase (auth + firestore)\nZustand + AsyncStorage\nReact Navigation 7\nReact Native Reanimated 3\nexpo-linear-gradient\n@shopify/react-native-skia',
+          'React Native + Expo SDK 54\nZustand + AsyncStorage\nReact Navigation 7\nReact Native Reanimated 3\n@react-three/fiber (3D characters)\nexpo-linear-gradient\n@shopify/react-native-skia',
       },
       {
         heading: 'Sound',
