@@ -11,7 +11,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
 import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
 // EmotePickerModal3D removed from lobby — wheel is for in-game only
-import { EmoteShowcase } from '../components/ui/EmoteShowcase';
+// EmoteShowcase removed — showcaseOpen was never set to true
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
@@ -221,7 +221,7 @@ export function HomeScreen() {
       });
     }
   }, [justLeveledUp]);
-  const [showcaseOpen, setShowcaseOpen] = useState(false);
+  // showcaseOpen removed — EmoteShowcase was never opened
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
   // Subscribed so taps on the character resolve the current preference.
@@ -576,11 +576,7 @@ export function HomeScreen() {
           initialTab={animPickerTab}
         />
 
-        {/* Legacy modals kept for deep link / programmatic access */}
-        <EmoteShowcase
-          visible={showcaseOpen}
-          onClose={() => setShowcaseOpen(false)}
-        />
+        {/* EmoteShowcase removed — was dead code, never triggered */}
 
         {/* Daily Spin Wheel */}
         <DailySpinWheel
