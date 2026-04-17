@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -91,7 +91,7 @@ const MODE_BADGES: Record<string, { label: string; color: string }> = {
   career: { label: 'Career', color: '#f39c12' },
 };
 
-const MatchRow = React.memo(function MatchRow({ match }: { match: MatchRecord }) {
+const MatchRow = React.memo(function MatchRow({ match, index }: { match: MatchRecord; index: number }) {
   const resultColors = {
     win: colors.green,
     loss: colors.pieceRed,
@@ -105,7 +105,7 @@ const MatchRow = React.memo(function MatchRow({ match }: { match: MatchRecord })
     : '';
 
   return (
-    <View style={styles.matchRow}>
+    <Animated.View entering={FadeInDown.delay(index * 40).duration(260).springify()} style={styles.matchRow}>
       {/* Result badge */}
       <View style={[styles.resultBadge, { backgroundColor: resultColors[match.result] + '20' }]}>
         <Text style={[styles.resultText, { color: resultColors[match.result] }]}>
@@ -134,7 +134,7 @@ const MatchRow = React.memo(function MatchRow({ match }: { match: MatchRecord })
         )}
         <Text style={styles.timestamp}>{formatDate(match.timestamp)}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 });
 
@@ -268,7 +268,7 @@ export function MatchHistoryScreen() {
             </Text>
           </>
         }
-        renderItem={({ item }) => <MatchRow match={item} />}
+        renderItem={({ item, index }) => <MatchRow match={item} index={index} />}
         ListEmptyComponent={
           <Animated.View entering={FadeIn.duration(280)} style={styles.emptyState}>
             <Text style={styles.emptyIcon}>{'\uD83C\uDFAE'}</Text>
@@ -282,8 +282,9 @@ export function MatchHistoryScreen() {
         }
         ListFooterComponent={
           hasMore ? (
-            <Pressable
-              onPress={loadMore}
+            <PressScale
+              onPress={() => { haptics.tap(); loadMore(); }}
+              scaleTo={0.96}
               style={styles.loadMore}
               accessibilityRole="button"
               accessibilityLabel="Load more matches"
@@ -294,7 +295,7 @@ export function MatchHistoryScreen() {
               >
                 <Text style={styles.loadMoreText}>Load More</Text>
               </LinearGradient>
-            </Pressable>
+            </PressScale>
           ) : pagedMatches.length > 0 ? (
             <Text style={styles.endText}>End of match history</Text>
           ) : null
