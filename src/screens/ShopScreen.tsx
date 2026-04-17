@@ -353,13 +353,14 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
-      <Pressable
+      <PressScale
         onPress={onPress}
-        style={[s.itemCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
+        scaleTo={0.96}
         accessibilityRole="button"
         accessibilityLabel={`${item.name}, ${RARITY_LABELS[item.rarity]}${isEquipped ? ', equipped' : isOwned ? ', owned' : `, ${item.price.toLocaleString()} coins`}`}
         accessibilityState={{ selected: isEquipped, disabled: !isOwned && !canAfford && !isDarkMatter }}
       >
+        <View style={[s.itemCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}>
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.itemPreview}>
           {outfitMeta ? (
@@ -430,7 +431,8 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
             )}
           </>
         )}
-      </Pressable>
+        </View>
+      </PressScale>
     </Animated.View>
   );
 }
@@ -449,13 +451,14 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
-      <Pressable
+      <PressScale
         onPress={onPress}
-        style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}
+        scaleTo={0.96}
         accessibilityRole="button"
         accessibilityLabel={`${pet.name}, ${pet.breed}, ${PET_RARITY_LABELS[pet.rarity]}${isEquipped ? ', equipped' : isOwned ? ', owned' : isEarnOnly ? ', earn only' : `, ${pet.price.toLocaleString()} coins`}`}
         accessibilityState={{ selected: isEquipped }}
       >
+        <View style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}>
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.petPreview}>
           {FEATURES.character3D && pet3D?.glb ? (
@@ -484,7 +487,8 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
             <Text style={s.priceText}>{pet.price.toLocaleString()}</Text>
           </View>
         )}
-      </Pressable>
+        </View>
+      </PressScale>
     </Animated.View>
   );
 }

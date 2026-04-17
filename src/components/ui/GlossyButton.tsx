@@ -1,7 +1,14 @@
 import React, { useCallback } from 'react';
 import { Pressable, Text, View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { fonts, weight } from '../../theme/typography';
 import { borderRadius } from '../../theme/spacing';
 
@@ -45,10 +52,28 @@ export function GlossyButton({
   disabled = false,
   small = false,
 }: GlossyButtonProps) {
+  // Press-scale feedback — shared across all ~40 GlossyButton sites in the
+  // app. Scales to 0.96 on press-in (snappy timing), springs back to 1 on
+  // release. Plays a click sound on release for tactile audio feedback.
+  const scale = useSharedValue(1);
+  const pressAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const onPressIn = useCallback(() => {
+    if (disabled) return;
+    scale.value = withTiming(0.96, { duration: 80 });
+  }, [disabled, scale]);
+  const onPressOut = useCallback(() => {
+    if (disabled) return;
+    scale.value = withSpring(1, { damping: 14, stiffness: 280 });
+  }, [disabled, scale]);
+
   const handlePress = useCallback(() => {
+    if (disabled) return;
     haptics.tap();
+    playSound('click');
     onPress();
-  }, [onPress]);
+  }, [disabled, onPress]);
 
   const colors = GRADIENT_MAP[variant];
   const minH = small ? 40 : 50;
@@ -88,10 +113,12 @@ export function GlossyButton({
     : {};
 
   return (
-    <View {...webClickProps} style={[disabled && { opacity: 0.5 }, style]}>
+    <Animated.View {...webClickProps} style={[disabled && { opacity: 0.5 }, style, pressAnimStyle]}>
       {buttonContent}
       <Pressable
         onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
         disabled={disabled}
         style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
         accessibilityRole="button"
@@ -99,7 +126,7 @@ export function GlossyButton({
         accessibilityHint={subtitle}
         accessibilityState={{ disabled: !!disabled }}
       />
-    </View>
+    </Animated.View>
   );
 }
 

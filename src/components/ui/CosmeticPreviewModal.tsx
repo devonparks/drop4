@@ -164,7 +164,7 @@ export function CosmeticPreviewModal({
   const previewPiecesId = category === 'pieces' ? item.id : equippedPieces;
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(200)} style={s.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
