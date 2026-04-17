@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -103,9 +104,12 @@ export function SettingsScreen({ navigation }: Props) {
         />
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <StaggeredEntry index={0} delay={60}>
         <Text style={styles.title} accessibilityRole="header">SETTINGS</Text>
+        </StaggeredEntry>
 
         {/* Audio */}
+        <StaggeredEntry index={1} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">AUDIO</Text>
         <View style={styles.section}>
           <SettingToggle
@@ -121,6 +125,7 @@ export function SettingsScreen({ navigation }: Props) {
             icon="📳"
           />
         </View>
+        </StaggeredEntry>
 
         {/* Season Stats — only when ranked is enabled */}
         {FEATURES.rankedMode && (
@@ -186,6 +191,7 @@ export function SettingsScreen({ navigation }: Props) {
         )}
 
         {/* Notifications */}
+        <StaggeredEntry index={2} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">NOTIFICATIONS</Text>
         <View style={styles.section}>
           <SettingToggle
@@ -195,8 +201,10 @@ export function SettingsScreen({ navigation }: Props) {
             icon="🔔"
           />
         </View>
+        </StaggeredEntry>
 
         {/* What's New */}
+        <StaggeredEntry index={3} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">WHAT'S NEW IN v1.0.0</Text>
         <View style={styles.section}>
           {[
@@ -214,8 +222,10 @@ export function SettingsScreen({ navigation }: Props) {
             </View>
           ))}
         </View>
+        </StaggeredEntry>
 
         {/* Your Journey */}
+        <StaggeredEntry index={4} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">YOUR JOURNEY</Text>
         <View style={styles.section}>
           <View style={styles.journeyGrid}>
@@ -245,8 +255,10 @@ export function SettingsScreen({ navigation }: Props) {
             </View>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Support & Purchases */}
+        <StaggeredEntry index={5} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">SUPPORT</Text>
         <View style={styles.section}>
           <SettingLink label="Contact Support" icon="💬" onPress={() => {
@@ -265,8 +277,10 @@ export function SettingsScreen({ navigation }: Props) {
             );
           }} />
         </View>
+        </StaggeredEntry>
 
         {/* About */}
+        <StaggeredEntry index={6} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ABOUT</Text>
         <View style={styles.section}>
           <SettingLink label="Rate Drop4" icon="⭐" onPress={() => {
@@ -289,8 +303,10 @@ export function SettingsScreen({ navigation }: Props) {
             navigation.navigate('Legal', { type: 'terms' });
           }} />
         </View>
+        </StaggeredEntry>
 
         {/* Account */}
+        <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ACCOUNT</Text>
         <View style={styles.section}>
           <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
@@ -300,8 +316,10 @@ export function SettingsScreen({ navigation }: Props) {
             <Text style={styles.playerIdValue}>{playerName || 'Player'}</Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Danger Zone */}
+        <StaggeredEntry index={8} delay={60}>
         <View style={styles.dangerDivider} />
         <Text style={styles.dangerTitle} accessibilityRole="header">DANGER ZONE</Text>
         <View style={styles.dangerSection}>
@@ -385,6 +403,7 @@ export function SettingsScreen({ navigation }: Props) {
             Permanently erases coins, gems, levels, career, ranked stats, and all game data.
           </Text>
         </View>
+        </StaggeredEntry>
 
         {/* Version */}
         <View style={styles.footer}>
