@@ -23,7 +23,6 @@ import {
   getLevelsForCity,
 } from '../data/careerLevels';
 import { useCareerStore } from '../stores/careerStore';
-import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
