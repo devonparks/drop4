@@ -10,6 +10,7 @@ import { usePetStore } from '../../stores/petStore';
 import { useLootBoxStore } from '../../stores/lootBoxStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
+import { ConfettiOverlay } from '../effects/ConfettiOverlay';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -133,6 +134,16 @@ export function DailyRewardPopup() {
 
   if (!visible || !reward) return null;
 
+  // Premium reward day = the player is actually unlocking content (outfit,
+  // pet, title, emote) or a loot box, not just coins/gems. These days get
+  // a bigger icon, brighter glow, confetti, and a "RARE REWARD" kicker.
+  const isPremiumReward =
+    reward.type === 'outfit' ||
+    reward.type === 'pet' ||
+    reward.type === 'title' ||
+    reward.type === 'emote' ||
+    reward.type === 'lootbox';
+
   return (
     <Modal transparent visible={visible} animationType="none">
       <View
@@ -140,22 +151,31 @@ export function DailyRewardPopup() {
         accessibilityViewIsModal
         accessibilityLiveRegion="polite"
       >
+        {/* Confetti on premium reward days (outfit/pet/title/emote/lootbox) */}
+        {isPremiumReward && <ConfettiOverlay visible />}
         <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
           <LinearGradient
-            colors={['rgba(255,209,102,0.15)', 'rgba(255,140,0,0.05)', 'transparent']}
+            colors={isPremiumReward
+              ? ['rgba(255,180,40,0.28)', 'rgba(255,100,0,0.1)', 'transparent']
+              : ['rgba(255,209,102,0.15)', 'rgba(255,140,0,0.05)', 'transparent']}
             style={styles.glow}
           />
+          {isPremiumReward && (
+            <Text style={styles.kickerPremium}>{'\u2728 RARE REWARD \u2728'}</Text>
+          )}
           <Text style={styles.title} accessibilityRole="header">DAILY REWARD</Text>
           <Text style={styles.streak}>Day {(currentStreak % 7) + 1} of 7</Text>
 
-          {/* Golden glow + sparkles around reward icon */}
-          <View style={styles.iconWrap}>
+          {/* Golden glow + sparkles around reward icon — bigger on premium days */}
+          <View style={[styles.iconWrap, isPremiumReward && styles.iconWrapPremium]}>
             <LinearGradient
-              colors={['rgba(255,200,50,0.35)', 'rgba(255,160,0,0.12)', 'transparent']}
+              colors={isPremiumReward
+                ? ['rgba(255,210,60,0.55)', 'rgba(255,160,0,0.25)', 'transparent']
+                : ['rgba(255,200,50,0.35)', 'rgba(255,160,0,0.12)', 'transparent']}
               style={styles.iconGlow}
             />
             <View style={styles.iconGlowRing} />
-            <Text style={styles.icon} accessibilityElementsHidden importantForAccessibility="no">{reward.icon}</Text>
+            <Text style={[styles.icon, isPremiumReward && styles.iconPremium]} accessibilityElementsHidden importantForAccessibility="no">{reward.icon}</Text>
             {/* Sparkle particles */}
             <RewardSparkle angle={0} delay={0} radius={48} />
             <RewardSparkle angle={60} delay={300} radius={52} />
@@ -165,7 +185,7 @@ export function DailyRewardPopup() {
             <RewardSparkle angle={300} delay={750} radius={52} />
           </View>
 
-          <Text style={styles.rewardName}>{reward.name}</Text>
+          <Text style={[styles.rewardName, isPremiumReward && styles.rewardNamePremium]}>{reward.name}</Text>
           <View style={styles.streakDots}>
             {[1,2,3,4,5,6,7].map(d => {
               const currentDay = (currentStreak % 7) + 1;
@@ -214,19 +234,32 @@ const styles = StyleSheet.create({
     width: 110, height: 110, alignItems: 'center', justifyContent: 'center',
     marginBottom: 8, position: 'relative',
   },
+  iconWrapPremium: {
+    width: 140, height: 140,
+  },
   iconGlow: {
-    ...StyleSheet.absoluteFillObject, borderRadius: 55,
+    ...StyleSheet.absoluteFillObject, borderRadius: 70,
   },
   iconGlowRing: {
-    ...StyleSheet.absoluteFillObject, borderRadius: 55,
+    ...StyleSheet.absoluteFillObject, borderRadius: 70,
     borderWidth: 1.5, borderColor: 'rgba(255,200,50,0.2)',
   },
   icon: { fontSize: 56, zIndex: 2 },
+  iconPremium: { fontSize: 76 },
+  kickerPremium: {
+    fontFamily: fonts.body, fontWeight: weight.black, fontSize: 11,
+    color: '#ffd966', letterSpacing: 2.5,
+    marginBottom: 2,
+  },
   rewardName: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 22, color: '#ffffff',
     marginBottom: 18, letterSpacing: 0.5,
     textShadowColor: 'rgba(255,255,255,0.15)', textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
+  },
+  rewardNamePremium: {
+    fontSize: 26, color: '#ffd966',
+    textShadowColor: 'rgba(255,180,40,0.7)', textShadowRadius: 14,
   },
   streakDots: { flexDirection: 'row', gap: 8, marginBottom: 22 },
   dot: {

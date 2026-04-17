@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
+import { StaggeredEntry } from '../animations';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
@@ -300,8 +301,10 @@ export function EmotePickerModal({ visible, onClose, onEmotePress, onChatSend, i
                 )}
                 {/* Universal emotes — available to every character */}
                 <View style={styles.emoteGrid}>
-                  {ALL_EMOTES.map(emote => (
-                    <EmoteCard key={emote.id} emote={emote} onPress={handleEmote} />
+                  {ALL_EMOTES.map((emote, idx) => (
+                    <StaggeredEntry key={emote.id} index={idx} delay={28}>
+                      <EmoteCard emote={emote} onPress={handleEmote} />
+                    </StaggeredEntry>
                   ))}
                 </View>
               </>

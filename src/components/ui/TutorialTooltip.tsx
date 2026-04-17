@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
+import { PressScale } from '../animations';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import type { TutorialTip } from '../../data/tutorials';
@@ -109,15 +110,17 @@ export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProp
           <Text style={styles.title}>{tip.title}</Text>
           <Text style={styles.message}>{tip.message}</Text>
 
-          <Pressable
+          <PressScale
             onPress={handleDismiss}
-            style={styles.gotItBtn}
+            scaleTo={0.94}
             accessibilityRole="button"
             accessibilityLabel={`Dismiss tip: ${tip.title}`}
             accessibilityHint="Marks this tutorial tip as seen"
           >
-            <Text style={styles.gotItText}>GOT IT</Text>
-          </Pressable>
+            <View style={styles.gotItBtn}>
+              <Text style={styles.gotItText}>GOT IT</Text>
+            </View>
+          </PressScale>
         </View>
 
         {/* Arrow pointing towards content (for top/bottom) */}
