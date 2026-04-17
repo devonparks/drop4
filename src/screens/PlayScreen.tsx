@@ -58,8 +58,6 @@ export function PlayScreen({ navigation }: Props) {
     };
     const easyWR = calcWinRate('easy');
     const mediumWR = calcWinRate('medium');
-    const hardWR = calcWinRate('hard');
-
     // Check from hardest to easiest for upgrade suggestions
     if (mediumWR !== null && mediumWR > 70) {
       return { text: 'Try Hard mode!', emoji: '\uD83D\uDD25', color: colors.pieceRed || '#e74c3c' };
