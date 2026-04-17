@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 
-export type DailyRewardType = 'coins' | 'gems' | 'lootbox' | 'outfit' | 'pet' | 'emote' | 'title';
+type DailyRewardType = 'coins' | 'gems' | 'lootbox' | 'outfit' | 'pet' | 'emote' | 'title';
 
 export interface DailyReward {
   day: number;
