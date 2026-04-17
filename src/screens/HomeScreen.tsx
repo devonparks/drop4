@@ -20,7 +20,6 @@ import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useCareerStore } from '../stores/careerStore';
-import { useRankedStore } from '../stores/rankedStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { COIN_REWARDS } from '../engine/constants';
@@ -144,9 +143,6 @@ export function HomeScreen() {
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return lastSpinDate !== today;
   })();
-  const currentSeason = useRankedStore(s => s.currentSeason);
-  const rankedTier = useRankedStore(s => s.tier);
-  const seasonTier = useSeasonStore(s => s.currentTier);
   const seasonMaxTier = useSeasonStore(s => s.maxTier);
   const seasonRewards = useSeasonStore(s => s.rewards);
   const seasonXp = useSeasonStore(s => s.xp);
