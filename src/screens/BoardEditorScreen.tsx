@@ -36,6 +36,7 @@ export function BoardEditorScreen({ navigation }: Props) {
 
   const handleCellPress = (col: number, row: number) => {
     haptics.tap();
+    playSound('click');
     placePiece(col, row);
   };
 
@@ -84,7 +85,7 @@ export function BoardEditorScreen({ navigation }: Props) {
             return (
             <Pressable
               key={piece}
-              onPress={() => { haptics.tap(); setCurrentPiece(piece); }}
+              onPress={() => { haptics.tap(); playSound('click'); setCurrentPiece(piece); }}
               style={[styles.pieceBtn, currentPiece === piece && styles.pieceBtnActive]}
               accessibilityRole="radio"
               accessibilityLabel={`${pieceName} piece`}
@@ -177,7 +178,7 @@ export function BoardEditorScreen({ navigation }: Props) {
               {myBoards.map(board => (
                 <Pressable
                   key={board.id}
-                  onPress={() => { haptics.tap(); loadBoard(board); }}
+                  onPress={() => { haptics.tap(); playSound('click'); loadBoard(board); }}
                   style={styles.boardCard}
                   accessibilityRole="button"
                   accessibilityLabel={`Load board ${board.name}, ${board.cols} by ${board.rows}`}
