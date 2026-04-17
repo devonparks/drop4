@@ -744,13 +744,6 @@ const styles = StyleSheet.create({
     borderRadius: 12, overflow: 'hidden', width: 100,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  outfitHintRow: {
-    flexDirection: 'row', gap: 3, marginBottom: 4, height: 6,
-  },
-  outfitHintSwatch: {
-    flex: 1, borderRadius: 2,
-    borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.1)',
-  },
   outfitCardActive: {
     borderColor: 'rgba(255,140,0,0.6)',
   },
