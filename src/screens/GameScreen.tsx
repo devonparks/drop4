@@ -85,11 +85,9 @@ export function GameScreen({ navigation }: Props) {
   const recordMove = useReplayStore(s => s.recordMove);
   const saveReplay = useReplayStore(s => s.saveReplay);
   const recordRanked = useRankedStore(s => s.recordRankedResult);
-  const elo = useRankedStore(s => s.elo);
   const resetScores = useGameStore(s => s.resetScores);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
-  const preGameEloRef = useRef(useRankedStore.getState().elo);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
   const [freeHintsRemaining, setFreeHintsRemaining] = useState(3);
@@ -119,7 +117,6 @@ export function GameScreen({ navigation }: Props) {
 
   // Emote Picker Modal
   const [emotePickerOpen, setEmotePickerOpen] = useState(false);
-  const [emotePickerTab, setEmotePickerTab] = useState<'emotes' | 'chat'>('emotes');
 
   // Tutorial
   const hasSeenGameTip = useTutorialStore(s => s.hasSeenTip);
@@ -221,18 +218,12 @@ export function GameScreen({ navigation }: Props) {
   const onlineMatchId = params.onlineMatchId;
   const myPlayerNum = params.onlinePlayerNum;
 
-  // Matchmaking overlay for wager/stage games
-  const [showMatchmaking, setShowMatchmaking] = useState(() => !!params.wagerCourt);
   const wagerCourt = params.wagerCourt;
 
   // Emote display — player and opponent/AI
   const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const aiEmoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Rematch state (online matches)
-  const [rematchState, setRematchState] = useState<'idle' | 'requested' | 'opponent-requested'>('idle');
-  const [rematchNewMatchId, setRematchNewMatchId] = useState<string | null>(null);
 
   // Chess clock for ranked mode
   const isRankedMode = !!params.rankedMode;
@@ -282,21 +273,6 @@ export function GameScreen({ navigation }: Props) {
       if (chessClockRef.current) clearInterval(chessClockRef.current);
     };
   }, [isRankedMode, status, activeClockPlayer]);
-
-  // Navigate to new rematch game when both accept
-  useEffect(() => {
-    if (!rematchNewMatchId || !myPlayerNum) return;
-
-    // In the new match, colors are swapped: old player1 becomes player2 and vice versa
-    const newPlayerNum: 1 | 2 = myPlayerNum === 1 ? 2 : 1;
-    resetScores();
-    newGame('medium', false);
-    navigation.replace('Game', {
-      onlineMatchId: rematchNewMatchId,
-      onlinePlayerNum: newPlayerNum,
-      onlineOpponentName: p2Name,
-    } as any);
-  }, [rematchNewMatchId]);
 
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
@@ -1299,7 +1275,7 @@ export function GameScreen({ navigation }: Props) {
         <EmotePickerModal
           visible={emotePickerOpen}
           onClose={() => setEmotePickerOpen(false)}
-          initialTab={emotePickerTab}
+          initialTab="emotes"
           onEmotePress={(id) => {
             // Show player's emote locally
             setMyEmote({ emoteId: id, key: Date.now() });
