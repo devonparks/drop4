@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -144,8 +144,6 @@ export function CustomGameScreen({ navigation }: Props) {
   const [opponent, setOpponent] = useState('ai_medium');
 
   // ── Match Code ──
-  const [matchCode, setMatchCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
 
   // Parse current board dimensions for validation
   const [parsedCols, parsedRows] = boardSize.split('x').map(Number);
@@ -174,19 +172,9 @@ export function CustomGameScreen({ navigation }: Props) {
   };
 
   // Generate a random 6-char match code
-  const handleCreateMatch = () => {
-    haptics.tap();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
-    }
-    setGeneratedCode(code);
-  };
-
   const startCustomGame = () => {
     haptics.tap();
-    const isAi = !['local', 'online'].includes(opponent);
+    const isAi = opponent !== 'local';
     const difficulty = opponent === 'ai_easy' ? 'easy'
       : opponent === 'ai_hard' ? 'hard'
       : opponent === 'ai_impossible' ? 'hard'
@@ -390,7 +378,6 @@ export function CustomGameScreen({ navigation }: Props) {
                 { label: 'Hard AI', value: 'ai_hard' },
                 { label: 'Impossible', value: 'ai_impossible' },
                 { label: 'Local', value: 'local' },
-                { label: 'Online', value: 'online' },
               ]}
               onChange={setOpponent}
             />
@@ -416,70 +403,6 @@ export function CustomGameScreen({ navigation }: Props) {
           </SectionCard>
           </StaggeredEntry>
 
-          {/* ══ MATCH CODE (for online mode) ══ */}
-          {opponent === 'online' && (
-            <StaggeredEntry index={4} delay={60}>
-            <SectionCard title="MATCH CODE" icon="🔑">
-              <View style={styles.matchCodeSection}>
-                {/* Create Match */}
-                <Pressable
-                  onPress={handleCreateMatch}
-                  style={styles.createMatchBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Create match code"
-                  accessibilityHint="Generates a 6-character code to share with a friend"
-                >
-                  <LinearGradient
-                    colors={['rgba(255,140,0,0.2)', 'rgba(255,140,0,0.08)']}
-                    style={styles.createMatchGradient}
-                  >
-                    <Text style={styles.createMatchIcon}>📤</Text>
-                    <Text style={styles.createMatchText}>CREATE MATCH</Text>
-                  </LinearGradient>
-                </Pressable>
-
-                {generatedCode !== '' && (
-                  <View style={styles.generatedCodeBox}>
-                    <Text style={styles.generatedCodeLabel}>YOUR MATCH CODE</Text>
-                    <Text style={styles.generatedCode}>{generatedCode}</Text>
-                    <Text style={styles.generatedCodeHint}>Share this code with your opponent</Text>
-                  </View>
-                )}
-
-                {/* Divider */}
-                <View style={styles.matchDivider}>
-                  <View style={styles.matchDividerLine} />
-                  <Text style={styles.matchDividerText}>OR</Text>
-                  <View style={styles.matchDividerLine} />
-                </View>
-
-                {/* Join Match */}
-                <View style={styles.joinMatchRow}>
-                  <TextInput
-                    style={styles.codeInput}
-                    placeholder="ENTER CODE"
-                    placeholderTextColor="rgba(255,255,255,0.2)"
-                    value={matchCode}
-                    onChangeText={(text) => setMatchCode(text.toUpperCase().slice(0, 6))}
-                    maxLength={6}
-                    autoCapitalize="characters"
-                    accessibilityLabel="Match code"
-                    accessibilityHint="Enter the 6-character code your friend shared to join their match"
-                  />
-                  <Pressable
-                    onPress={() => { haptics.tap(); }}
-                    style={[styles.joinMatchBtn, matchCode.length < 6 && styles.joinMatchBtnDisabled]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Join match with entered code"
-                    accessibilityState={{ disabled: matchCode.length < 6 }}
-                  >
-                    <Text style={styles.joinMatchBtnText}>JOIN</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </SectionCard>
-            </StaggeredEntry>
-          )}
 
           {/* Bottom spacer */}
           <View style={{ height: 100 }} />
@@ -696,127 +619,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     lineHeight: 16,
-  },
-
-  // ── Match Code Section ──
-  matchCodeSection: {
-    gap: 10,
-  },
-  createMatchBtn: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  createMatchGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-  },
-  createMatchIcon: {
-    fontSize: 16,
-  },
-  createMatchText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 13,
-    color: colors.orange,
-    letterSpacing: 2,
-  },
-  generatedCodeBox: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,140,0,0.08)',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.2)',
-  },
-  generatedCodeLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 9,
-    color: colors.textMuted,
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  generatedCode: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 36,
-    color: colors.orange,
-    letterSpacing: 8,
-    textShadowColor: 'rgba(255,140,0,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
-  },
-  generatedCodeHint: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 6,
-  },
-  matchDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 4,
-  },
-  matchDividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  matchDividerText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: colors.textMuted,
-    letterSpacing: 2,
-  },
-  joinMatchRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  codeInput: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: '#ffffff',
-    letterSpacing: 6,
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
-  } as any,
-  joinMatchBtn: {
-    backgroundColor: 'rgba(26,188,156,0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.teal,
-  },
-  joinMatchBtnDisabled: {
-    opacity: 0.4,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  joinMatchBtnText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-    color: colors.teal,
-    letterSpacing: 2,
   },
 
   // ── Start Wrap ──
