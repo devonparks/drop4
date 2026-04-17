@@ -9,6 +9,7 @@ import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
+import { PressScale, PulseGlow } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -129,19 +130,23 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
           </View>
         )}
         {canClaimFree && (
-          <Pressable
-            onPress={handleClaimFree}
-            style={styles.claimBtn}
-            accessibilityRole="button"
-            accessibilityLabel={`Claim free tier ${reward.tier} reward: ${reward.freeReward?.name ?? ''}`}
-          >
-            <LinearGradient
-              colors={[colors.greenLight, colors.green, colors.greenDark]}
-              style={styles.claimGradient}
+          <PulseGlow color="#27ae3d" size={32} active>
+            <PressScale
+              onPress={handleClaimFree}
+              scaleTo={0.93}
+              accessibilityRole="button"
+              accessibilityLabel={`Claim free tier ${reward.tier} reward: ${reward.freeReward?.name ?? ''}`}
             >
-              <Text style={styles.claimText}>CLAIM</Text>
-            </LinearGradient>
-          </Pressable>
+              <View style={styles.claimBtn}>
+                <LinearGradient
+                  colors={[colors.greenLight, colors.green, colors.greenDark]}
+                  style={styles.claimGradient}
+                >
+                  <Text style={styles.claimText}>CLAIM</Text>
+                </LinearGradient>
+              </View>
+            </PressScale>
+          </PulseGlow>
         )}
       </View>
 
@@ -170,19 +175,23 @@ function RewardTierCard({ reward, currentTier, hasPremium }: {
           </View>
         )}
         {canClaimPremium && (
-          <Pressable
-            onPress={handleClaimPremium}
-            style={styles.claimBtn}
-            accessibilityRole="button"
-            accessibilityLabel={`Claim premium tier ${reward.tier} reward: ${reward.premiumReward?.name ?? ''}`}
-          >
-            <LinearGradient
-              colors={[colors.goldLight, colors.gold, colors.goldDark]}
-              style={styles.claimGradient}
+          <PulseGlow color="#f1c40f" size={32} active>
+            <PressScale
+              onPress={handleClaimPremium}
+              scaleTo={0.93}
+              accessibilityRole="button"
+              accessibilityLabel={`Claim premium tier ${reward.tier} reward: ${reward.premiumReward?.name ?? ''}`}
             >
-              <Text style={[styles.claimText, { color: '#1a1a00' }]}>CLAIM</Text>
-            </LinearGradient>
-          </Pressable>
+              <View style={styles.claimBtn}>
+                <LinearGradient
+                  colors={[colors.goldLight, colors.gold, colors.goldDark]}
+                  style={styles.claimGradient}
+                >
+                  <Text style={[styles.claimText, { color: '#1a1a00' }]}>CLAIM</Text>
+                </LinearGradient>
+              </View>
+            </PressScale>
+          </PulseGlow>
         )}
       </View>
     </View>
