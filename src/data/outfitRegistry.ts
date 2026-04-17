@@ -204,12 +204,3 @@ export const PACKS: PackMeta[] = [
   { species: 'skeleton', pack: 'fantasy_skeletons', label: 'Fantasy Skeletons', outfitIds: ['skeleton_fantasy_skeletons_01', 'skeleton_fantasy_skeletons_02', 'skeleton_fantasy_skeletons_03', 'skeleton_fantasy_skeletons_04', 'skeleton_fantasy_skeletons_05', 'skeleton_fantasy_skeletons_06', 'skeleton_fantasy_skeletons_07', 'skeleton_fantasy_skeletons_08', 'skeleton_fantasy_skeletons_09', 'skeleton_fantasy_skeletons_10', 'skeleton_fantasy_skeletons_11', 'skeleton_fantasy_skeletons_12'] },
   { species: 'zombie', pack: 'apocalypse_zombies', label: 'Apocalypse Zombies', outfitIds: ['zombie_apocalypse_zombies_01', 'zombie_apocalypse_zombies_02', 'zombie_apocalypse_zombies_03', 'zombie_apocalypse_zombies_04', 'zombie_apocalypse_zombies_05'] },
 ];
-
-export function outfitsForPack(species: Species, pack: string): OutfitMeta[] {
-  const p = PACKS.find((x) => x.species === species && x.pack === pack);
-  return p ? p.outfitIds.map((id) => OUTFITS[id]) : [];
-}
-
-export function outfitsForSpecies(species: Species): OutfitMeta[] {
-  return OUTFIT_IDS.map((id) => OUTFITS[id]).filter((o) => o.species === species);
-}

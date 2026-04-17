@@ -53,7 +53,3 @@ export const STARTER_PET_ID: PetId = 'dog_labrador';
 export function getPet(id: PetId): PetMeta {
   return PETS[id];
 }
-
-export function petsByRarity(rarity: PetRarity): PetMeta[] {
-  return PET_IDS.map((id) => PETS[id]).filter((p) => p.rarity === rarity);
-}
