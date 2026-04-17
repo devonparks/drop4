@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { StaggeredEntry } from '../components/animations';
+import { StaggeredEntry, PressScale } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useTutorialStore } from '../stores/tutorialStore';
@@ -171,13 +171,14 @@ export function LearnScreen({ navigation }: Props) {
             const isMastered = hasViewedLesson(lesson.id);
             return (
               <StaggeredEntry key={lesson.id} index={i}>
-              <Pressable
+              <PressScale
                 onPress={() => { haptics.tap(); setSelected(lesson); }}
-                style={styles.lessonCard}
+                scaleTo={0.97}
                 accessibilityRole="button"
                 accessibilityLabel={`${lesson.title} lesson, ${lesson.difficulty}${isMastered ? ', mastered' : ''}`}
                 accessibilityHint="Opens lesson details and practice option"
               >
+              <View style={styles.lessonCard}>
                 <LinearGradient
                   colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
                   style={styles.lessonGradient}
@@ -208,7 +209,8 @@ export function LearnScreen({ navigation }: Props) {
                     )}
                   </View>
                 </LinearGradient>
-              </Pressable>
+              </View>
+              </PressScale>
               </StaggeredEntry>
             );
           })}

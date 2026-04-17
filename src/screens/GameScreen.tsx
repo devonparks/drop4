@@ -213,10 +213,6 @@ export function GameScreen({ navigation }: Props) {
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // [MP-KILL v1] wagerCourt was an MP-only concept; hardcoded so
-  // remaining ternary expressions compile without touching every call site.
-  const wagerCourt: any = undefined;
-
   // Emote display — player and opponent/AI
   const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);

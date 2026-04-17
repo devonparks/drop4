@@ -99,7 +99,6 @@ export function MatchupScreen({ navigation }: Props) {
   // Board/match info
   const connectCount = params.connectCount || 4;
   const timerSeconds = params.timerSeconds;
-  const wagerAmount = params.wagerAmount;
 
   // ═══════════════════════════════════
   // Animation: VS glow pulse
@@ -174,11 +173,6 @@ export function MatchupScreen({ navigation }: Props) {
       // Forward opponent info so GameScreen can render correct 3D NPC
       opponentName,
       difficulty,
-      wagerCourt: params.wagerAmount ? {
-        name: courtName,
-        entryFee: params.wagerAmount,
-        winnerGets: Math.floor(params.wagerAmount * 2 * 0.9), // 10% rake
-      } : undefined,
     });
   }, [navigation, params, courtName, resetScores]);
 
@@ -280,16 +274,13 @@ export function MatchupScreen({ navigation }: Props) {
                 </Animated.View>
 
                 {/* Match details below VS — only show non-standard rules */}
-                {(connectCount !== 4 || (timerSeconds != null && timerSeconds > 0) || (wagerAmount != null && wagerAmount > 0)) && (
+                {(connectCount !== 4 || (timerSeconds != null && timerSeconds > 0)) && (
                   <Animated.View entering={FadeInUp.delay(600).duration(400)} style={styles.matchInfo}>
                     {connectCount !== 4 && (
                       <Text style={styles.matchRule}>Connect {connectCount}</Text>
                     )}
                     {timerSeconds != null && timerSeconds > 0 && (
                       <Text style={styles.matchDetail}>{timerSeconds}s per turn</Text>
-                    )}
-                    {wagerAmount != null && wagerAmount > 0 && (
-                      <Text style={styles.matchWager}>{wagerAmount} coins at stake</Text>
                     )}
                   </Animated.View>
                 )}
