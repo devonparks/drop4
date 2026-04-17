@@ -213,13 +213,9 @@ export function GameScreen({ navigation }: Props) {
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // [MP-KILL v1] Online multiplayer and wager courts are gone — these
-  // constants stay as `false`/`null` so existing ternary expressions
-  // compile correctly. TypeScript narrows too aggressively without the
-  // `as any` cast on wagerCourt; it's truthiness-checked everywhere.
-  const isOnlineMatch: boolean = false;
-  const onlineMatchId: string | null = null;
-  const myPlayerNum: 1 | 2 | undefined = undefined;
+  // [MP-KILL v1] Online multiplayer and wager courts are gone.
+  // isOnlineMatch / onlineMatchId / myPlayerNum stripped (commit TBD).
+  // wagerCourt stays — still referenced in mode/ranked ternaries.
   const wagerCourt: any = undefined;
 
   // Emote display — player and opponent/AI
@@ -418,9 +414,7 @@ export function GameScreen({ navigation }: Props) {
   }, [difficulty]);
 
   // AI move logic — fixed: no dependency on isAiThinking
-  // Skip AI entirely for online matches (opponent is a real player)
   useEffect(() => {
-    if (isOnlineMatch) return;
     if (!isVsAi || currentPlayer !== 2 || status !== 'playing') return;
     if (aiTimerRef.current) return;
 
@@ -450,7 +444,7 @@ export function GameScreen({ navigation }: Props) {
         aiTimerRef.current = null;
       }
     };
-  }, [currentPlayer, status, isVsAi, isOnlineMatch]);
+  }, [currentPlayer, status, isVsAi]);
 
   // Track streak before game ends (streak resets to 0 in gameStore on loss)
   useEffect(() => {
@@ -487,8 +481,8 @@ export function GameScreen({ navigation }: Props) {
         haptics.levelUp();
       }
       setDailyStreakMultiplier(dailyMultiplier);
-      const matchMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
-      const matchOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      const matchMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const matchOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'win', opponent: matchOpponent, difficulty, moves: moveCount, coinsEarned: totalReward, mode: matchMode });
       // Update challenges
       updateChallenge('win_3', 1);
@@ -643,8 +637,8 @@ export function GameScreen({ navigation }: Props) {
       if (preStreakRef.current >= 3) {
         setStreakBrokenAt(preStreakRef.current);
       }
-      const lossMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
-      const lossOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      const lossMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const lossOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
       updateChallenge('play_10', 1);
@@ -706,8 +700,8 @@ export function GameScreen({ navigation }: Props) {
       const drawMultiplier = getStreakMultiplier();
       const drawReward = Math.round(10 * drawMultiplier);
       addCoins(drawReward);
-      const drawMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : isOnlineMatch ? 'online' : !isVsAi ? 'local' : 'ai';
-      const drawOpponent = isOnlineMatch ? (params.onlineOpponentName || 'Online') : isVsAi ? `${difficulty} Bot` : localNames.player2;
+      const drawMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const drawOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
       updateChallenge('play_10', 1);
@@ -798,7 +792,7 @@ export function GameScreen({ navigation }: Props) {
     showLastMove(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, isOnlineMatch, onlineMatchId, myPlayerNum]);
+  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
 
   const handleShareScore = async () => {
     const isWin = status === 'won' && winner === 1;
@@ -806,7 +800,7 @@ export function GameScreen({ navigation }: Props) {
     const resultLine = isWin ? 'VICTORY' : isLoss ? 'DEFEAT' : 'DRAW';
     const opponentLabel = isVsAi
       ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot`
-      : isOnlineMatch ? (params.onlineOpponentName || 'Online') : 'Local';
+      : 'Local';
     const resultEmoji = isWin ? '\u{1F3C6}' : isLoss ? '\u{1F61E}' : '\u{1F91D}';
     const speedTag = moveCount <= 7 ? ' | \u26A1 Lightning Win' : moveCount <= 12 ? ' | \u{1F525} Quick Win' : '';
     const coinsLine = isWin ? `\n\u{1FA99} +${totalCoinsEarned || Math.round(COIN_REWARDS[difficulty] * dailyStreakMultiplier)} coins earned` : '';
@@ -907,21 +901,16 @@ export function GameScreen({ navigation }: Props) {
 
   // Local player names
   const localNames = params.localPlayerNames || { player1: 'Player 1', player2: 'Player 2' };
-  const p1Name = isOnlineMatch ? 'You' : isVsAi ? 'You' : localNames.player1;
-  const p2Name = isOnlineMatch
-    ? (params.onlineOpponentName || 'Opponent')
-    : isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
+  const p1Name = isVsAi ? 'You' : localNames.player1;
+  const p2Name = isVsAi ? `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Bot` : localNames.player2;
 
   // Turn / status text
-  const isMyTurn = isOnlineMatch ? currentPlayer === myPlayerNum : currentPlayer === 1;
+  const isMyTurn = currentPlayer === 1;
   const turnText = status === 'playing'
     ? (isAiThinking ? 'Thinking...'
-      : isOnlineMatch ? (isMyTurn ? 'Your Turn' : 'Waiting...')
       : (currentPlayer === 1 ? (p1Name === 'You' ? 'Your Turn' : `${p1Name}'s Turn`) : `${p2Name}'s Turn`))
     : status === 'won'
-    ? (isOnlineMatch
-      ? (winner === myPlayerNum ? (celebrationText || 'You Win!') : `${p2Name} Wins!`)
-      : (winner === 1 ? (p1Name === 'You' ? (celebrationText || 'You Win!') : `${p1Name} Wins!`) : `${p2Name} Wins!`))
+    ? (winner === 1 ? (p1Name === 'You' ? (celebrationText || 'You Win!') : `${p1Name} Wins!`) : `${p2Name} Wins!`)
     : 'Draw!';
 
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
@@ -985,7 +974,7 @@ export function GameScreen({ navigation }: Props) {
 
   // Trigger AI emote reaction for local vs AI games
   const triggerAiEmoteReaction = (playerEmoteId: string) => {
-    if (!isVsAi || isOnlineMatch) return;
+    if (!isVsAi) return;
 
     // Clear any pending AI reaction
     if (aiEmoteTimerRef.current) {
@@ -1187,7 +1176,7 @@ export function GameScreen({ navigation }: Props) {
         <RNAnimated.View style={{ transform: [{ translateX: shakeAnim }] }}>
           <GameBoard
             onColumnPress={handleColumnPress}
-            disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1) || (isOnlineMatch && currentPlayer !== myPlayerNum)}
+            disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1)}
             currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
           />
         </RNAnimated.View>
@@ -1196,8 +1185,8 @@ export function GameScreen({ navigation }: Props) {
 
         {/* Bottom controls */}
         <View style={styles.controls}>
-          {/* Hint button — hidden in online matches; 3 free per game, then 10 coins each */}
-          {!isOnlineMatch && (() => {
+          {/* Hint button — 3 free per game, then 10 coins each */}
+          {(() => {
             const coins = useShopStore.getState().coins;
             const canAffordHint = freeHintsRemaining > 0 || coins >= 10;
             const hintLabel = freeHintsRemaining > 0
@@ -1240,8 +1229,8 @@ export function GameScreen({ navigation }: Props) {
             <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
           </View>
 
-          {/* Undo button — only available on Easy difficulty, hidden in online/ranked matches */}
-          {!isOnlineMatch && !isRankedMode && difficulty === 'easy' && (
+          {/* Undo button — only available on Easy difficulty, hidden in ranked matches */}
+          {!isRankedMode && difficulty === 'easy' && (
             <Pressable
               onPress={() => {
                 if (undoMove()) {
@@ -1264,10 +1253,10 @@ export function GameScreen({ navigation }: Props) {
             onPress={handleBack}
             style={styles.controlBtn}
             accessibilityRole="button"
-            accessibilityLabel={isOnlineMatch ? 'Resign match' : 'Quit game'}
+            accessibilityLabel="Quit game"
           >
             <Text style={styles.controlIcon}>🏳️</Text>
-            <Text style={styles.resignLabel}>{isOnlineMatch ? 'Resign' : 'Quit'}</Text>
+            <Text style={styles.resignLabel}>Quit</Text>
           </Pressable>
         </View>
 
@@ -1353,7 +1342,7 @@ export function GameScreen({ navigation }: Props) {
             key={myChatBubble.key}
             text={myChatBubble.text}
             senderName={p1Name}
-            side={isOnlineMatch && myPlayerNum === 2 ? 'right' : 'left'}
+            side="left"
             visible
             onDone={() => setMyChatBubble(null)}
           />
@@ -1365,7 +1354,7 @@ export function GameScreen({ navigation }: Props) {
             key={opponentChatBubble.key}
             text={opponentChatBubble.text}
             senderName={opponentChatBubble.senderName}
-            side={isOnlineMatch && myPlayerNum === 2 ? 'left' : 'right'}
+            side="right"
             visible
             onDone={() => setOpponentChatBubble(null)}
           />
@@ -1376,7 +1365,7 @@ export function GameScreen({ navigation }: Props) {
           <FloatingEmote
             key={myEmote.key}
             emoteId={myEmote.emoteId}
-            side={isOnlineMatch && myPlayerNum === 2 ? 'right' : 'left'}
+            side="left"
             onDone={() => setMyEmote(null)}
           />
         )}
@@ -1386,7 +1375,7 @@ export function GameScreen({ navigation }: Props) {
           <FloatingEmote
             key={opponentEmote.key}
             emoteId={opponentEmote.emoteId}
-            side={isOnlineMatch && myPlayerNum === 2 ? 'left' : 'right'}
+            side="right"
             onDone={() => setOpponentEmote(null)}
           />
         )}
