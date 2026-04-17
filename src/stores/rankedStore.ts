@@ -45,39 +45,6 @@ export const RANKED_TIERS: RankedTierInfo[] = [
 /** Number of placement matches before regular MMR kicks in */
 export const PLACEMENT_MATCH_COUNT = 10;
 
-// ═══ UNDERDOG ODDS ═══
-export function calculateOdds(playerElo: number, opponentElo: number): {
-  playerOdds: string;
-  opponentOdds: string;
-  coinMultiplier: number;
-  rankMultiplier: number;
-} {
-  const gap = opponentElo - playerElo;
-  const absGap = Math.abs(gap);
-
-  if (gap > 0) {
-    // Player is underdog
-    const odds = Math.round(100 + absGap * 0.5);
-    return {
-      playerOdds: `+${odds}`,
-      opponentOdds: `-${Math.round(100 + absGap * 0.3)}`,
-      coinMultiplier: 1 + absGap / 400,
-      rankMultiplier: 1 + absGap / 300,
-    };
-  } else if (gap < 0) {
-    // Player is favorite
-    const odds = Math.round(100 + absGap * 0.3);
-    return {
-      playerOdds: `-${odds}`,
-      opponentOdds: `+${Math.round(100 + absGap * 0.5)}`,
-      coinMultiplier: Math.max(0.5, 1 - absGap / 800),
-      rankMultiplier: Math.max(0.5, 1 - absGap / 600),
-    };
-  }
-
-  return { playerOdds: 'EVEN', opponentOdds: 'EVEN', coinMultiplier: 1, rankMultiplier: 1 };
-}
-
 // ═══ HELPER — get tier from raw ELO ═══
 function eloToTier(elo: number): RankedTier {
   for (let i = RANKED_TIERS.length - 1; i >= 0; i--) {
