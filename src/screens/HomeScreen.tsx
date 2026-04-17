@@ -24,7 +24,7 @@ import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
-import { PressScale, BreathingView, SlideReveal } from '../components/animations';
+import { PressScale, BreathingView, SlideReveal, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -346,6 +346,7 @@ export function HomeScreen() {
         </View>
 
         {/* ═══ DROP4 LOGO ═══ */}
+        <StaggeredEntry index={0}>
         <View style={styles.logoArea}>
           <Image
             source={require('../assets/images/drop4_logo.png')}
@@ -353,8 +354,10 @@ export function HomeScreen() {
             resizeMode="contain"
           />
         </View>
+        </StaggeredEntry>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
+        <StaggeredEntry index={1}>
         <View style={styles.lobbyArea}>
           {/* Emotes button (left) — opens unified picker on Emotes tab */}
           <View
@@ -479,8 +482,10 @@ export function HomeScreen() {
             <Text style={styles.sideBtnLabel} pointerEvents="none">Idles</Text>
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* CUSTOMIZE button — lives in normal flow so it can't be covered */}
+        <StaggeredEntry index={2}>
         <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10 }}>
             <Pressable
               onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
@@ -493,6 +498,7 @@ export function HomeScreen() {
               <Text style={styles.customizeBtnText}>CUSTOMIZE</Text>
             </Pressable>
         </View>
+        </StaggeredEntry>
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
