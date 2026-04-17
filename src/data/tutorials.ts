@@ -22,9 +22,6 @@ export const TUTORIAL_TIPS: TutorialTip[] = [
   // Shop
   { id: 'shop_collections', screen: 'Shop', title: 'Collections', message: 'Filter by collection to find themed sets like Neon Pack or Mythic Collection.', position: 'top', showOnce: true },
 
-  // Gold Court
-  { id: 'stage_rake', screen: 'Stage', title: 'House Rake', message: 'Each court takes a 10% rake. The rest goes to the winner!', position: 'top', showOnce: true },
-
 ];
 
 /** Get tips for a specific screen */

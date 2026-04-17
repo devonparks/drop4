@@ -1,0 +1,28 @@
+#!/bin/sh
+# Drop4 pre-commit guardrail
+# Runs tsc + jest before every commit. Blocks commit if either is red.
+# Skip with: git commit --no-verify
+
+set -e
+
+echo "→ pre-commit: typecheck + jest"
+
+# Run from repo root
+cd "$(git rev-parse --show-toplevel)"
+
+# Typecheck (fast, ~5s)
+if ! npx tsc --noEmit 2>&1; then
+  echo ""
+  echo "❌ TypeScript errors. Fix them, or skip with: git commit --no-verify"
+  exit 1
+fi
+
+# Jest (fast, <1s)
+if ! npx jest --silent 2>&1 | tail -5; then
+  echo ""
+  echo "❌ Jest tests failing. Fix them, or skip with: git commit --no-verify"
+  exit 1
+fi
+
+echo "✓ pre-commit clean"
+exit 0

@@ -87,7 +87,7 @@ Commit message format: `polish: <scope> — <description>`
 Include the trailer:
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
-Push with: `git push origin main`.
+Push with: `git push origin polish-loop`. Do NOT push to main — main is protected for manual review merges.
 
 HARD RULES (will break the build if violated):
 - GLB files under src/assets/models/ ARE gitignored but `require('../assets/models/...')` calls ARE VALID. NEVER remove them.
@@ -111,10 +111,22 @@ while true; do
   ITER=$((ITER + 1))
   log "${C_GREEN}── Iteration #$ITER ──${C_OFF}"
 
-  # Always start fresh from remote
-  log "Pulling latest..."
-  if ! git pull --rebase origin main >> "$LOG" 2>&1; then
-    log "${C_YELLOW}Pull failed — aborting any rebase and skipping iteration.${C_OFF}"
+  # Always start fresh. Switch to polish-loop branch, rebase on main so
+  # we pick up any manual changes the human devs shipped.
+  log "Syncing polish-loop branch with main..."
+  git fetch origin main polish-loop >> "$LOG" 2>&1 || true
+  # Create the branch if it doesn't exist locally
+  if ! git show-ref --verify --quiet refs/heads/polish-loop; then
+    git checkout -b polish-loop origin/polish-loop 2>/dev/null || \
+      git checkout -b polish-loop origin/main
+  else
+    git checkout polish-loop >> "$LOG" 2>&1
+  fi
+  if ! git pull --rebase origin polish-loop >> "$LOG" 2>&1; then
+    git rebase --abort 2>/dev/null || true
+  fi
+  if ! git rebase origin/main >> "$LOG" 2>&1; then
+    log "${C_YELLOW}Rebase on main failed — aborting and skipping iteration.${C_OFF}"
     git rebase --abort 2>/dev/null || true
     sleep 30
     continue

@@ -213,12 +213,14 @@ export function GameScreen({ navigation }: Props) {
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Online multiplayer
-  const isOnlineMatch = !!params.onlineMatchId;
-  const onlineMatchId = params.onlineMatchId;
-  const myPlayerNum = params.onlinePlayerNum;
-
-  const wagerCourt = params.wagerCourt;
+  // [MP-KILL v1] Online multiplayer and wager courts are gone — these
+  // constants stay as `false`/`null` so existing ternary expressions
+  // compile correctly. TypeScript narrows too aggressively without the
+  // `as any` cast on wagerCourt; it's truthiness-checked everywhere.
+  const isOnlineMatch: boolean = false;
+  const onlineMatchId: string | null = null;
+  const myPlayerNum: 1 | 2 | undefined = undefined;
+  const wagerCourt: any = undefined;
 
   // Emote display — player and opponent/AI
   const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);

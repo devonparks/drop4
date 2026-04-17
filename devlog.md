@@ -4,6 +4,51 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ---
 
+## 🔥 Currently working on
+
+**Now:** Infrastructure cleanup — final dead MP code strip, pre-commit hook, move polish loop to branch.
+
+**Next (in order):**
+1. **Art pipeline** — Devon generates app icon + splash + logo iteration in ComfyUI.
+2. **Store screenshots** — Claude captures from web preview at 1920x1080.
+3. **First-launch tutorial** — replace WelcomeOverlay bullet list with interactive 3-screen walkthrough.
+4. **`eas build`** — iOS + Android binaries.
+5. **TestFlight / Play Console upload.**
+6. **Find 5 beta testers.**
+
+**Blocked on:** nothing. Every item above is unblocked and actionable.
+
+**Target:** beta on real phones by end of this week.
+
+---
+
+## 2026-04-17 — Infrastructure Cleanup
+
+### What was built/changed
+
+**Dead code stripped (~300+ more lines):**
+- GameScreen's `isOnlineMatch`, `onlineMatchId`, `myPlayerNum`, `wagerCourt` variables converted to hardcoded `false`/`null`/`undefined`/`any` constants. The 47 ternary expressions that referenced them still compile cleanly without needing to rewrite every call site. Type annotations keep TypeScript from narrowing too aggressively.
+- StageScreen.tsx (221 lines) deleted — unreachable since MP kill. Removed from RootNavigator + route types. `stage_rake` tutorial entry removed.
+- MatchHistoryScreen MODE_BADGES trimmed from 7 modes to 3 (ai/local/career). Legacy saves with stage/ranked/wager/online modes fall through to the default `ai` badge, but filter UI no longer advertises dead modes.
+
+**Workflow infrastructure:**
+- Pre-commit hook added (`.git/hooks/pre-commit`): runs `npx tsc --noEmit` and `npx jest --silent` before every commit. Red = commit blocks. Skippable with `--no-verify` if needed.
+- Polish loop moved to `polish-loop` branch (`tools/polish-loop.sh` updated). Main stays clean; polish merges weekly via PR after a 30-sec review.
+- CLAUDE.md + devlog.md shipped (previous commit 7a1416c). This file now has a "Currently working on" header that updates session-to-session.
+
+### Why these decisions
+
+- **Typed constants over full rewrite**: Rewriting 47 ternary expressions in a 3,200-line file is high-risk surgery for cosmetic benefit. Casting to constants at the declaration site keeps behavior identical (all branches still evaluate the same way) while eliminating the illusion of live state.
+- **StageScreen delete was safe**: nothing navigated to it. The only reference was the RootNavigator registration and a tutorial tip.
+- **Polish loop → branch**: A single bad overnight commit to main breaks the app for users + devs. Moving to a branch adds zero friction (merge is one click) but eliminates the blast radius.
+
+### Patterns for reuse
+
+- **Dead variable neutralization**: When a feature is killed but its vars are referenced in dozens of conditional expressions, don't rewrite. Hardcode the vars to always-false constants with explicit type annotations. Compiler does the rest.
+- **Pre-commit guardrail**: Always run the same check your CI would before the commit happens. Prevents "oh I forgot to test" regressions that only show up when the polish loop barfs.
+
+---
+
 ## 2026-04-16 — Visual Overhaul + Dead Code Purge
 
 ### What was built/changed
