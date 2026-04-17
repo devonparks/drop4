@@ -107,7 +107,7 @@ export function PlayScreen({ navigation }: Props) {
 
         <View style={styles.mainContent}>
           {/* Screen heading */}
-          <Text style={styles.screenHeading}>QUICK PLAY</Text>
+          <Text style={styles.screenHeading} accessibilityRole="header">QUICK PLAY</Text>
 
           {/* Compact stats line */}
           <Text style={styles.statsLine}>

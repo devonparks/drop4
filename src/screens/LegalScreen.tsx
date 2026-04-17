@@ -288,13 +288,13 @@ export function LegalScreen({ navigation, route }: Props) {
         onBackPress={() => navigation.goBack()}
       />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>{doc.title}</Text>
+        <Text style={styles.title} accessibilityRole="header">{doc.title}</Text>
         <Text style={styles.subtitle}>{doc.subtitle}</Text>
 
         {doc.sections.map((section, i) => (
           <StaggeredEntry key={i} index={i} delay={70}>
             <View style={styles.section}>
-              <Text style={styles.heading}>{section.heading}</Text>
+              <Text style={styles.heading} accessibilityRole="header">{section.heading}</Text>
               <Text style={styles.body}>{fillPlaceholders(section.body)}</Text>
             </View>
           </StaggeredEntry>
