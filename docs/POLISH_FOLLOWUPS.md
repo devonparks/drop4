@@ -68,5 +68,6 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Logo auto-cropped to content, EmotePickerModal3D + EmoteShowcase dead code removed from lobby (commits 8559959, 999d2e5)
 - Awards tab: 15-milestone collection ladder with progress bars (commit 13cb24f)
 - ErrorBoundary: web reload + wired Go Home handler (commit 4738f80)
+- Deleted dead IdlePicker.tsx — 365 lines, replaced by AnimationPicker (commit 70385e0)
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->
