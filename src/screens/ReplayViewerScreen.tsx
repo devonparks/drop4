@@ -68,7 +68,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
 
   return (
     <Pressable
-      onPress={onWatch}
+      onPress={() => { haptics.tap(); playSound('click'); onWatch(); }}
       style={rStyles.replayCard}
       accessibilityRole="button"
       accessibilityLabel={`Watch replay vs ${replay.opponent}, ${resultLabels[replay.result]}, ${replay.totalMoves} moves`}
@@ -84,7 +84,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
       </View>
       <View style={rStyles.replayRight}>
         <Pressable
-          onPress={onToggleStar}
+          onPress={() => { haptics.select(); onToggleStar(); }}
           accessibilityRole="button"
           accessibilityLabel={replay.starred ? 'Unstar replay' : 'Star replay'}
           accessibilityState={{ selected: replay.starred }}
@@ -92,7 +92,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
           <Text style={rStyles.starIcon}>{replay.starred ? '⭐' : '☆'}</Text>
         </Pressable>
         <Pressable
-          onPress={onDelete}
+          onPress={() => { haptics.error(); onDelete(); }}
           accessibilityRole="button"
           accessibilityLabel="Delete replay"
         >
@@ -188,7 +188,7 @@ export function ReplayViewerScreen() {
         <View style={rStyles.container}>
           <View style={rStyles.watchHeader}>
             <Pressable
-              onPress={() => { setWatching(null); setIsPlaying(false); }}
+              onPress={() => { haptics.tap(); setWatching(null); setIsPlaying(false); }}
               style={rStyles.backBtn}
               accessibilityRole="button"
               accessibilityLabel="Back to replay list"
