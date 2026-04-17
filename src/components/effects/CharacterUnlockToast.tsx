@@ -4,11 +4,9 @@ import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRosterStore } from '../../stores/rosterStore';
 import { getCharacter } from '../../data/characterRoster';
-import { AnimatedCharacter } from '../ui/AnimatedCharacter';
 import { CharacterSnapshot } from '../3d/CharacterSnapshot';
 import { getRosterCustomization } from '../../data/npcCustomizations';
 import { useCharacterStore } from '../../stores/characterStore';
-import { FEATURES } from '../../config/features';
 import { playSound } from '../../services/audio';
 import { haptics } from '../../services/haptics';
 import { fonts, weight } from '../../theme/typography';
@@ -84,9 +82,7 @@ export function CharacterUnlockToast() {
             style={styles.toast}
           >
             <View style={styles.previewWrap}>
-              {FEATURES.character3D
-                ? <UnlockPreview3D characterId={character.id} />
-                : <AnimatedCharacter characterId={character.id} size={64} />}
+              <UnlockPreview3D characterId={character.id} />
             </View>
             <View style={styles.textCol}>
               <Text style={styles.eyebrow}>NEW CHARACTER UNLOCKED</Text>
