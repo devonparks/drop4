@@ -20,11 +20,3 @@ export const borderRadius = {
   xxl: 24,
   round: 999,
 };
-
-// Standard button heights matching concept art
-export const buttonHeight = {
-  small: 44,
-  medium: 56,
-  large: 64,
-  hero: 72, // Main menu buttons
-};
