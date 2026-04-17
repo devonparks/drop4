@@ -1591,7 +1591,7 @@ export function GameScreen({ navigation }: Props) {
 
               {/* Top: Mode label */}
               <View style={styles.goModeRow}>
-                <Text style={styles.goModeText}>
+                <Text style={styles.goModeText} accessibilityRole="header">
                   {isRankedMode ? 'RANKED' : wagerCourt ? wagerCourt.name?.toUpperCase() : isSeriesMode ? `BEST OF ${totalGames} — GAME ${seriesGame}` : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
                 </Text>
               </View>
@@ -1722,7 +1722,7 @@ export function GameScreen({ navigation }: Props) {
               {/* New Personal Best indicator */}
               {status === 'won' && winner === 1 && personalBest !== null && moveCount < personalBest && (
                 <View style={styles.goPersonalBest}>
-                  <Text style={styles.goPersonalBestText}>NEW PERSONAL BEST!</Text>
+                  <Text style={styles.goPersonalBestText} accessibilityRole="header">NEW PERSONAL BEST!</Text>
                   <Text style={styles.goPersonalBestSub}>{moveCount} moves (prev: {personalBest})</Text>
                 </View>
               )}
@@ -1768,7 +1768,7 @@ export function GameScreen({ navigation }: Props) {
                 <View style={styles.goFirstWinDay}>
                   <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
                   <View style={styles.goFirstWinDayTextWrap}>
-                    <Text style={styles.goFirstWinDayTitle}>FIRST WIN OF THE DAY!</Text>
+                    <Text style={styles.goFirstWinDayTitle} accessibilityRole="header">FIRST WIN OF THE DAY!</Text>
                     <Text style={styles.goFirstWinDaySub}>2x XP earned this game</Text>
                   </View>
                   <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
@@ -1920,7 +1920,7 @@ export function GameScreen({ navigation }: Props) {
                 <View style={styles.goComebackBanner}>
                   <Text style={styles.goComebackIcon}>💪</Text>
                   <View style={styles.goComebackTextWrap}>
-                    <Text style={styles.goComebackTitle}>COMEBACK BONUS</Text>
+                    <Text style={styles.goComebackTitle} accessibilityRole="header">COMEBACK BONUS</Text>
                     <Text style={styles.goComebackSub}>+{comebackCoins} coins — don't give up!</Text>
                   </View>
                 </View>
@@ -1996,7 +1996,7 @@ export function GameScreen({ navigation }: Props) {
                   <>
                     {/* Series complete banner */}
                     <View style={styles.seriesCompleteRow}>
-                      <Text style={styles.seriesCompleteTitle}>SERIES COMPLETE</Text>
+                      <Text style={styles.seriesCompleteTitle} accessibilityRole="header">SERIES COMPLETE</Text>
                       <Text style={[
                         styles.seriesCompleteResult,
                         { color: scores.player1 >= seriesWinsNeeded ? colors.coinGold : scores.player2 >= seriesWinsNeeded ? '#e74c3c' : colors.teal },
