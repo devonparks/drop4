@@ -546,7 +546,7 @@ function SkinTab({ currentColor, onSelect, onPickCustom }: {
 
 // ══ Hair Tab ════════════════════════════════════════════════════
 
-function HairTab({ currentColor, unlocked, coins, onFreeSelect, onPremiumPurchase, onPickCustom }: {
+function HairTab({ currentColor, unlocked, coins: _coins, onFreeSelect, onPremiumPurchase, onPickCustom }: {
   currentColor: string;
   unlocked: string[];
   coins: number;

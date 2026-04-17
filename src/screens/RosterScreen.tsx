@@ -81,7 +81,7 @@ function getCardTier(rating: number, isBoss: boolean, isDarkLord: boolean): Card
  * For the equipped character we use the player's own customization. For
  * other roster characters we pull a predefined 3D look from npcCustomizations.
  */
-function RosterCardPreview({ characterId, size, isEquipped }: {
+function RosterCardPreview({ characterId, size, isEquipped: _isEquipped }: {
   characterId: string; size: number; isEquipped: boolean;
 }) {
   const playerCust = useCharacterStore((s) => s.customization);

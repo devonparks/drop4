@@ -695,7 +695,7 @@ export function GameScreen({ navigation }: Props) {
     }
   }, [status, winner]);
 
-  const showLastMove = useCallback((col: number) => {
+  const showLastMove = useCallback((_col: number) => {
     lastMoveFade.setValue(1);
     RNAnimated.timing(lastMoveFade, { toValue: 0, duration: 1000, useNativeDriver: true }).start();
   }, []);

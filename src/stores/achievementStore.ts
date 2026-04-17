@@ -118,7 +118,7 @@ function checkCondition(condition: AchievementCondition, stats: GameStats): bool
   }
 }
 
-export const useAchievementStore = create<AchievementState>((set, get) => ({
+export const useAchievementStore = create<AchievementState>((set, _get) => ({
   achievements: ACHIEVEMENT_DEFS.map(a => ({ ...a, unlocked: false })),
 
   checkAndUnlock: (stats) => {
