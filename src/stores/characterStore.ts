@@ -60,7 +60,7 @@ export const PREMIUM_HAIR_COLORS: { id: string; hex: string; name: string; price
 ];
 
 // Outfit colorway packs (each pack applies a preset color scheme to the outfit)
-export interface OutfitColorPack {
+interface OutfitColorPack {
   id: string;
   name: string;
   price: number;
@@ -113,7 +113,7 @@ export const PREMIUM_OUTFIT_PACKS: OutfitColorPack[] = [
 
 // ── Default customization ──────────────────────────────────────
 
-export const DEFAULT_CUSTOMIZATION: CharacterCustomization = {
+const DEFAULT_CUSTOMIZATION: CharacterCustomization = {
   outfitId: 'modern_civilians_01',
   bodyType: 30,   // slightly masculine
   bodySize: 50,   // neutral
