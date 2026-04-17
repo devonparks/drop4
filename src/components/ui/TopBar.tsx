@@ -100,9 +100,9 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} color={colors.coinGold} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
-        <CurrencyPill emoji="💎" value={formatNum(gems)} color={colors.gemGreen} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
-        <CurrencyPill emoji="🔴" value={level.toString()} color={colors.red} label={`Level ${level}`} />
+        <CurrencyPill emoji="🪙" value={formatNum(coins)} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
+        <CurrencyPill emoji="💎" value={formatNum(gems)} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
+        <CurrencyPill emoji="🔴" value={level.toString()} label={`Level ${level}`} />
       </LinearGradient>
 
       {/* Right: Profile avatar + rank */}
@@ -129,8 +129,8 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, color, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
-  emoji: string; value: string; color: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
+function CurrencyPill({ emoji, value, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
+  emoji: string; value: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
 }) {
   const inner = (
     <>
