@@ -81,8 +81,6 @@ function StageSparkles() {
   );
 }
 
-// Pressable wrapper with scale-down feedback for menu buttons
-// PressScaleView — now uses the shared PressScale component from animations library
 function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null }) {
   const cust = useCharacterStore((s) => s.customization);
   const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
@@ -108,14 +106,6 @@ function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null })
       animationGlb={animGlb}
       animationLoop={!isEmote}
     />
-  );
-}
-
-function PressScaleView({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
-  return (
-    <PressScale onPress={onPress}>
-      {children}
-    </PressScale>
   );
 }
 
@@ -355,8 +345,7 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* ═══ DROP4 LOGO — layered title card ═══ */}
-        {/* ═══ DROP4 LOGO — PNG asset ═══ */}
+        {/* ═══ DROP4 LOGO ═══ */}
         <View style={styles.logoArea}>
           <Image
             source={require('../assets/images/drop4_logo.png')}
@@ -508,7 +497,7 @@ export function HomeScreen() {
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
           <SlideReveal from="bottom" delay={0}>
-            <PressScaleView onPress={() => navigateTo('Play')}>
+            <PressScale onPress={() => navigateTo('Play')}>
               <GlossyButton
                 label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
                 subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
@@ -518,10 +507,10 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('Play')}
               />
-            </PressScaleView>
+            </PressScale>
           </SlideReveal>
           <SlideReveal from="bottom" delay={80}>
-            <PressScaleView onPress={() => navigateTo('CareerMap')}>
+            <PressScale onPress={() => navigateTo('CareerMap')}>
               <GlossyButton
                 label="CAREER"
                 subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : 'Take the City · 3 launch cities'}
@@ -531,11 +520,11 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('CareerMap')}
               />
-            </PressScaleView>
+            </PressScale>
           </SlideReveal>
           {/* Local play — pass and play, available in v1 */}
           <SlideReveal from="bottom" delay={160}>
-            <PressScaleView onPress={() => navigateTo('LocalPlay')}>
+            <PressScale onPress={() => navigateTo('LocalPlay')}>
               <GlossyButton
                 label="LOCAL PLAY"
                 subtitle="Pass & play on one device"
@@ -545,7 +534,7 @@ export function HomeScreen() {
                 iconRight="›"
                 onPress={() => navigateTo('LocalPlay')}
               />
-            </PressScaleView>
+            </PressScale>
           </SlideReveal>
         </View>
 
@@ -597,7 +586,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Logo — layered title card
   logoArea: {
     alignItems: 'center',
     height: 56,
