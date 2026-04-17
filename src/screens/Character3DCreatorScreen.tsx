@@ -132,7 +132,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
       <StaggeredEntry index={0} delay={60}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
           style={styles.backBtn}
           accessibilityLabel="Go back"
           accessibilityRole="button"
