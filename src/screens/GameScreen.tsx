@@ -194,7 +194,7 @@ export function GameScreen({ navigation }: Props) {
 
   // Game count milestone celebration
   const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
-  // Quick Chat (Tier 3) — now handled by EmotePickerModal
+  // Quick Chat bubbles (shown above the board when player/opponent sends a chat message)
   const [myChatBubble, setMyChatBubble] = useState<{ text: string; key: number } | null>(null);
   const [opponentChatBubble, setOpponentChatBubble] = useState<{ text: string; senderName: string; key: number } | null>(null);
 
@@ -1597,7 +1597,6 @@ export function GameScreen({ navigation }: Props) {
 
               {/* ---- Action Buttons ---- */}
               <View style={styles.goButtons}>
-                {/* [MP-KILL] Online rematch UI removed — 57 lines of dead buttons */}
                 {isSeriesMode && seriesOver ? (
                   <>
                     {/* Series complete banner */}
