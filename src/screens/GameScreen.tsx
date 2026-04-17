@@ -30,7 +30,6 @@ import { useCareerStore } from '../stores/careerStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
-import { useRankedStore } from '../stores/rankedStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomGameOverQuote } from '../data/tips';
@@ -84,7 +83,6 @@ export function GameScreen({ navigation }: Props) {
   const startRecording = useReplayStore(s => s.startRecording);
   const recordMove = useReplayStore(s => s.recordMove);
   const saveReplay = useReplayStore(s => s.saveReplay);
-  const recordRanked = useRankedStore(s => s.recordRankedResult);
   const resetScores = useGameStore(s => s.resetScores);
   const customSettings = useGameStore(s => s.customSettings);
   const hasAwardedRef = useRef(false);
@@ -1558,9 +1556,6 @@ export function GameScreen({ navigation }: Props) {
                   );
                 })()}
               </View>
-
-
-              {/* [MP-KILL] EloChangeAnimation removed — ranked/wager killed for v1 */}
 
               {/* Double Coins — UI-only ad concept */}
               {status === 'won' && winner === 1 && !doubleCoinsUsed && (
