@@ -267,7 +267,6 @@ export function CharacterCreatorScreen({ navigation }: Props) {
             {/* Character */}
             <AnimatedCharacter
               size={340}
-              pose={selectedPose}
               emote={previewEmote}
               onEmoteComplete={() => { clearPreviewEmote(); setPlayingEmoteId(null); }}
             />

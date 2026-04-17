@@ -240,7 +240,6 @@ type AnimState = 'idle' | 'idle_variant' | 'emote';
 interface AnimatedCharacterProps {
   size?: number;
   emote?: EmoteId | string | null;     // accepts signature emote ids too
-  pose?: PoseId;
   selectedIdle?: IdleVariantId | null;
   onEmoteComplete?: () => void;
   style?: any;
@@ -255,7 +254,6 @@ interface AnimatedCharacterProps {
 export function AnimatedCharacter({
   size = 300,
   emote = null,
-  pose = 'default',
   selectedIdle = null,
   onEmoteComplete,
   style,
