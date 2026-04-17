@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Animated as RNAnimated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
+import { StaggeredEntry } from '../components/animations';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
@@ -367,12 +368,12 @@ export function LootBoxScreen() {
       <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <View style={st.container}>
         {/* Header */}
-        <Animated.View entering={FadeInUp.springify()} style={st.headerWrap}>
+        <StaggeredEntry index={0} delay={60} style={st.headerWrap}>
           <LinearGradient colors={['#8e44ad', '#9b59b6']} style={st.headerBanner}>
             <Text style={st.title} accessibilityRole="header">LOOT BOXES</Text>
             <Text style={st.subtitle}>Open boxes to win cosmetics and coins</Text>
           </LinearGradient>
-        </Animated.View>
+        </StaggeredEntry>
 
         <ScrollView contentContainerStyle={st.boxList} showsVerticalScrollIndicator={false}>
           {LOOT_BOXES.map((box, index) => {
@@ -392,7 +393,7 @@ export function LootBoxScreen() {
           })}
 
           {/* Drop rates transparency */}
-          <Animated.View entering={FadeInUp.delay(400).springify()}>
+          <StaggeredEntry index={1} delay={60}>
             <View style={st.ratesSection}>
               <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']} style={st.ratesGradient}>
                 <Text style={st.ratesTitle} accessibilityRole="header">DROP RATES</Text>
@@ -413,7 +414,7 @@ export function LootBoxScreen() {
                 <Text style={st.ratesNote}>Better boxes have higher epic & legendary chances</Text>
               </LinearGradient>
             </View>
-          </Animated.View>
+          </StaggeredEntry>
         </ScrollView>
       </View>
     </ScreenBackground>
