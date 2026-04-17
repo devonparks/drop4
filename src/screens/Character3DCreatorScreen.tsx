@@ -138,7 +138,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
         >
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>CUSTOMIZE</Text>
+        <Text style={styles.title} accessibilityRole="header">CUSTOMIZE</Text>
         <View style={styles.coinBadge}>
           <Text style={styles.coinEmoji}>🪙</Text>
           <Text style={styles.coinValue}>{coins.toLocaleString()}</Text>
@@ -311,7 +311,7 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>OUTFITS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">OUTFITS</Text>
       <Text style={styles.sectionSub}>{filteredOutfits.length} of {OUTFIT_IDS.length} outfits</Text>
 
       {/* Species chips — locked species show a padlock and refuse selection */}
@@ -455,7 +455,7 @@ function BodyTab({ bodyType, bodySize, muscle, onBodyType, onBodySize, onMuscle 
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>QUICK PRESETS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">QUICK PRESETS</Text>
       <Text style={styles.sectionSub}>One-tap body types</Text>
       <View style={styles.presetsGrid}>
         {BODY_PRESETS.map((p) => (
@@ -468,7 +468,7 @@ function BodyTab({ bodyType, bodySize, muscle, onBodyType, onBodySize, onMuscle 
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>FINE-TUNE</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">FINE-TUNE</Text>
       <Text style={styles.sectionSub}>Custom sliders</Text>
 
       <SliderRow
@@ -548,7 +548,7 @@ function SkinTab({ currentColor, onSelect, onPickCustom }: {
 }) {
   return (
     <View>
-      <Text style={styles.sectionTitle}>SKIN TONE</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">SKIN TONE</Text>
       <Text style={styles.sectionSub}>All colors free — pick anything</Text>
       <View style={styles.colorGrid}>
         {SKIN_TONES.map((hex) => (
@@ -590,7 +590,7 @@ function HairTab({ currentColor, unlocked, coins, onFreeSelect, onPremiumPurchas
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>NATURAL COLORS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">NATURAL COLORS</Text>
       <Text style={styles.sectionSub}>Free</Text>
       <View style={styles.colorGrid}>
         {FREE_HAIR_COLORS.map((hex) => (
@@ -602,7 +602,7 @@ function HairTab({ currentColor, unlocked, coins, onFreeSelect, onPremiumPurchas
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>PREMIUM COLORS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">PREMIUM COLORS</Text>
       <Text style={styles.sectionSub}>Unlock with coins</Text>
       <View style={styles.colorGrid}>
         {PREMIUM_HAIR_COLORS.map((c) => {
@@ -624,7 +624,7 @@ function HairTab({ currentColor, unlocked, coins, onFreeSelect, onPremiumPurchas
         })}
       </View>
 
-      <Text style={styles.sectionTitle}>CUSTOM COLOR</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">CUSTOM COLOR</Text>
       <Text style={styles.sectionSub}>{isCustomColor ? 'Currently using a custom color' : 'Pick any color with the full HSL picker'}</Text>
       <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
         <PressScale onPress={() => { haptics.tap(); onPickCustom(); }}>
@@ -658,7 +658,7 @@ function ColorsTab({ unlockedPacks, coins, onApplyPack }: {
 }) {
   return (
     <View>
-      <Text style={styles.sectionTitle}>FREE COLORWAYS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">FREE COLORWAYS</Text>
       <Text style={styles.sectionSub}>Apply to current outfit</Text>
       <View style={styles.packGrid}>
         {FREE_OUTFIT_PACKS.map((pack) => (
@@ -666,7 +666,7 @@ function ColorsTab({ unlockedPacks, coins, onApplyPack }: {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>PREMIUM PACKS</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">PREMIUM PACKS</Text>
       <Text style={styles.sectionSub}>Themed color bundles</Text>
       <View style={styles.packGrid}>
         {PREMIUM_OUTFIT_PACKS.map((pack) => {
