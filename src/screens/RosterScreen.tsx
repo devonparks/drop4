@@ -12,7 +12,7 @@ import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -323,14 +323,15 @@ export function RosterScreen({ navigation }: Props) {
                 </Text>
               </View>
               <View style={styles.grid}>
-                {section.data.map((character) => (
+                {section.data.map((character, i) => (
+                  <StaggeredEntry key={character.id} index={i} delay={60}>
                   <CharacterCard
-                    key={character.id}
                     character={character}
                     isUnlocked={unlockedCharacterIds.includes(character.id)}
                     isEquipped={character.id === equippedCharacterId}
                     onEquip={() => handleEquip(character.id)}
                   />
+                  </StaggeredEntry>
                 ))}
               </View>
             </View>
