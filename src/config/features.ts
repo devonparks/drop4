@@ -36,7 +36,5 @@ export const FEATURES = {
   replayViewer: false,        // Saved replays
 
   // ── v1.5+ (requires new implementation, not just flag flip) ──
-  onlineMultiplayer: false,
   rankedMode: false,
-  leaderboards: false,
 } as const;
