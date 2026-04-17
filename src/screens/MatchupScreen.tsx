@@ -73,7 +73,6 @@ export function MatchupScreen({ navigation }: Props) {
   const playerLevel = useShopStore(s => s.level);
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
-  const equippedPet = useShopStore(s => s.equippedPet);
   const resetScores = useGameStore(s => s.resetScores);
 
   // State
@@ -85,16 +84,6 @@ export function MatchupScreen({ navigation }: Props) {
   const opponentName = params.opponentName || botPersona.name;
   const opponentLevel = params.opponentLevel ?? botPersona.level;
   const opponentTitle = params.opponentTitle || botPersona.title;
-
-  // Fake opponent stats — generated from difficulty for immersion
-  const opponentStats = (() => {
-    const favMoves = ['Center', 'Edge', 'Corners', 'Spread', 'Mirror'];
-    const seed = (opponentName.charCodeAt(0) + opponentLevel) % favMoves.length;
-    const baseWR = difficulty === 'easy' ? 42 : difficulty === 'hard' ? 81 : 65;
-    const wr = baseWR + (opponentLevel % 10);
-    const gamesPlayed = difficulty === 'easy' ? 30 + opponentLevel * 3 : difficulty === 'hard' ? 200 + opponentLevel * 8 : 80 + opponentLevel * 5;
-    return { winRate: Math.min(wr, 95), favMove: favMoves[seed], gamesPlayed };
-  })();
 
   // Court/venue name
   const courtName = params.courtName
@@ -600,33 +589,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  oppStatsWrap: {
-    marginTop: 6,
-    alignItems: 'center',
-    gap: 2,
-    backgroundColor: 'rgba(80,140,255,0.08)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(80,140,255,0.15)',
-  },
-  oppStatText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 9,
-    color: 'rgba(160,200,255,0.7)',
-    letterSpacing: 0.3,
-  },
-  petNameText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 10,
-    color: 'rgba(255,200,130,0.8)',
-    letterSpacing: 0.5,
-    marginTop: 1,
-  },
-
   // Silhouette placeholder
   silhouette: {
     width: 120,
