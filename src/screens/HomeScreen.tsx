@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { AnimatedCharacter, useEmoteTrigger, EMOTE_CATEGORIES, EmoteId, IdleVariantId } from '../components/ui/AnimatedCharacter';
 import { Character3D } from '../components/3d/Character3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
@@ -25,7 +24,6 @@ import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
-import { FEATURES } from '../config/features';
 import { PressScale, BreathingView, SlideReveal } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -126,7 +124,6 @@ export function HomeScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const equippedIdle = useShopStore(s => s.equippedIdle);
   const equippedPet = useShopStore(s => s.equippedPet);
   const winStreak = useGameStore(s => s.winStreak);
   const careerCompletedCount = useCareerStore(s => Object.values(s.progress).filter(p => p.completed).length);
@@ -140,7 +137,6 @@ export function HomeScreen() {
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
   const clearLevelUp = useShopStore(s => s.clearLevelUp);
-  const { emote, triggerEmote, clearEmote } = useEmoteTrigger();
   const matches = useMatchHistoryStore(s => s.matches);
 
   // ═══ Play Counts for menu buttons ═══
@@ -226,9 +222,6 @@ export function HomeScreen() {
   }, [justLeveledUp]);
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
-  // Subscribed so taps on the character resolve the current preference.
-  const selectedHomeEmote = useShopStore((s) => s.selectedHomeEmote);
-  const homeEmoteRandomMode = useShopStore((s) => s.homeEmoteRandomMode);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -297,7 +290,7 @@ export function HomeScreen() {
 
     const interval = setInterval(() => {
       // Only show if tutorial dismissed, no emote playing, and less than 3 times
-      if (tutorialDismissedRef.current && !emote && !showTutorial && tapHintCountRef.current < 3) {
+      if (tutorialDismissedRef.current && !showTutorial && tapHintCountRef.current < 3) {
         tapHintCountRef.current += 1;
         setShowTapHint(true);
         // Fade in
@@ -312,38 +305,25 @@ export function HomeScreen() {
       }
     }, 10000);
     return () => { clearInterval(interval); clearTimeout(safetyTimeout); };
-  }, [emote]);
+  }, []);
 
-  // All non-idle emotes for random mode tap
-  const allEmoteIds: EmoteId[] = EMOTE_CATEGORIES.flatMap(c => c.emotes);
   const handleCharacterTap = () => {
     haptics.tap();
     // Hide tooltip immediately on tap
     setShowTapHint(false);
     tapHintOpacity.setValue(0);
 
-    // 3D path: tapping the character plays a random owned emote directly.
+    // Tapping the character plays a random owned emote directly.
     // The Emotes/Idles side buttons open the full AnimationPicker for browsing.
-    if (FEATURES.character3D) {
-      const ownedEmoteIds = useShopStore.getState().ownedEmotes;
-      const pool = HUMAN_EMOTES.filter(
-        (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
-      );
-      if (pool.length > 0) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
-        haptics.win();
-        playSound('click');
-        setActive3DEmote(pick.id);
-      }
-      return;
-    }
-
-    // 2D path: play the equipped/random sprite emote on the AnimatedCharacter.
-    if (homeEmoteRandomMode || !selectedHomeEmote) {
-      const randomEmote = allEmoteIds[Math.floor(Math.random() * allEmoteIds.length)];
-      triggerEmote(randomEmote);
-    } else {
-      triggerEmote(selectedHomeEmote as EmoteId);
+    const ownedEmoteIds = useShopStore.getState().ownedEmotes;
+    const pool = HUMAN_EMOTES.filter(
+      (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
+    );
+    if (pool.length > 0) {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      haptics.win();
+      playSound('click');
+      setActive3DEmote(pick.id);
     }
   };
 
@@ -439,7 +419,6 @@ export function HomeScreen() {
                 }).start();
               }}
               onLongPress={() => {
-                if (!FEATURES.character3D) return;
                 // Long-press: play a random OWNED emote instantly (no modal).
                 const ownedEmoteIds = useShopStore.getState().ownedEmotes;
                 const pool = HUMAN_EMOTES.filter(
@@ -459,16 +438,7 @@ export function HomeScreen() {
                 </Animated.View>
               )}
               <Animated.View style={{ transform: [{ scale: characterPressScale }] }}>
-              {FEATURES.character3D ? (
-                <Character3DWrapper activeEmoteId={active3DEmote} />
-              ) : (
-                <AnimatedCharacter
-                  size={320}
-                  emote={emote}
-                  selectedIdle={equippedIdle as IdleVariantId | null}
-                  onEmoteComplete={clearEmote}
-                />
-              )}
+              <Character3DWrapper activeEmoteId={active3DEmote} />
               </Animated.View>
             </Pressable>
             </BreathingView>
@@ -481,7 +451,7 @@ export function HomeScreen() {
                 accessibilityHint="Double-tap to interact with your pet"
               >
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                  <PetDisplay petId={equippedPet} size={80} isIdle={!emote} />
+                  <PetDisplay petId={equippedPet} size={80} isIdle />
                 </Animated.View>
                 {showPetHeart && (
                   <Animated.Text
@@ -522,8 +492,7 @@ export function HomeScreen() {
         </View>
 
         {/* CUSTOMIZE button — lives in normal flow so it can't be covered */}
-        {FEATURES.character3D && (
-          <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10 }}>
+        <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10 }}>
             <Pressable
               onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
               accessibilityRole="button"
@@ -534,8 +503,7 @@ export function HomeScreen() {
               <Text style={{ fontSize: 14 }}>✨</Text>
               <Text style={styles.customizeBtnText}>CUSTOMIZE</Text>
             </Pressable>
-          </View>
-        )}
+        </View>
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
