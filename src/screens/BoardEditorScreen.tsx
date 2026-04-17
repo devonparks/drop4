@@ -8,6 +8,7 @@ import { useBoardEditorStore } from '../stores/boardEditorStore';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Cell } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -47,6 +48,8 @@ export function BoardEditorScreen({ navigation }: Props) {
   };
 
   const handlePlayBoard = () => {
+    haptics.tap();
+    playSound('whoosh');
     resetScores();
     // Start a game with the current editor board as preset
     newGame('medium', true, {
