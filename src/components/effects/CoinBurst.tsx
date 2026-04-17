@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { View, Text, StyleSheet, Animated } from 'react-native';
 
 interface CoinParticleProps {
   delay: number;
