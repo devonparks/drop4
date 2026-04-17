@@ -15,6 +15,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { ALL_CAREER_LEVELS, CHAPTERS, getChallengeTypeLabel, CareerLevel } from '../data/careerLevels';
 import { colors } from '../theme/colors';
+import { PressScale } from '../components/animations';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -361,7 +362,7 @@ export function CareerScreen({ navigation }: Props) {
             const isUnlocked = ch.id === 1 || completedCount >= ch.unlockLevel - 1;
 
             return (
-              <Pressable
+              <PressScale
                 key={ch.id}
                 onPress={() => {
                   if (isUnlocked) {
@@ -374,26 +375,29 @@ export function CareerScreen({ navigation }: Props) {
                     }
                   }
                 }}
-                style={[styles.chapterTab, isActive && styles.chapterTabActive, !isUnlocked && { opacity: 0.4 }]}
+                disabled={!isUnlocked}
+                scaleTo={0.95}
                 accessibilityRole="tab"
                 accessibilityLabel={`Chapter ${ch.id}: ${ch.name}, ${chapterStars} of ${ch.levels.length * 3} stars`}
                 accessibilityState={{ selected: isActive, disabled: !isUnlocked }}
               >
-                <View style={styles.chapterNameRow}>
-                  <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
-                    Ch.{ch.id}
+                <View style={[styles.chapterTab, isActive && styles.chapterTabActive, !isUnlocked && { opacity: 0.4 }]}>
+                  <View style={styles.chapterNameRow}>
+                    <Text style={[styles.chapterName, isActive && styles.chapterNameActive]}>
+                      Ch.{ch.id}
+                    </Text>
+                    {chapterCompletion[ch.id]?.complete && (
+                      <Text style={styles.chapterCheck}>✅</Text>
+                    )}
+                  </View>
+                  <Text style={[styles.chapterSubtitle, isActive && { color: colors.orange }]}>
+                    {ch.name}
                   </Text>
-                  {chapterCompletion[ch.id]?.complete && (
-                    <Text style={styles.chapterCheck}>✅</Text>
+                  {isUnlocked && (
+                    <Text style={styles.chapterStars}>⭐{chapterStars}/{ch.levels.length * 3}</Text>
                   )}
                 </View>
-                <Text style={[styles.chapterSubtitle, isActive && { color: colors.orange }]}>
-                  {ch.name}
-                </Text>
-                {isUnlocked && (
-                  <Text style={styles.chapterStars}>⭐{chapterStars}/{ch.levels.length * 3}</Text>
-                )}
-              </Pressable>
+              </PressScale>
             );
           })}
         </View>
@@ -403,7 +407,7 @@ export function CareerScreen({ navigation }: Props) {
           {/* Quick Resume button */}
           {nextUncompletedLevel && (
             <>
-              <Pressable
+              <PressScale
                 onPress={() => {
                   haptics.tap();
                   playSound('click');
@@ -414,20 +418,22 @@ export function CareerScreen({ navigation }: Props) {
                   }
                   handlePlayLevel(nextUncompletedLevel);
                 }}
-                style={styles.continueCard}
+                scaleTo={0.97}
                 accessibilityRole="button"
                 accessibilityLabel={`Continue: Level ${nextUncompletedLevel.id}, ${nextUncompletedLevel.name}`}
                 accessibilityHint="Resume career progress at the next unfinished level"
               >
-                <View style={styles.continueLeft}>
-                  <Text style={styles.continueArrow}>▶</Text>
-                  <View>
-                    <Text style={styles.continueLabel}>CONTINUE</Text>
-                    <Text style={styles.continueSub}>Level {nextUncompletedLevel.id} — {nextUncompletedLevel.name}</Text>
+                <View style={styles.continueCard}>
+                  <View style={styles.continueLeft}>
+                    <Text style={styles.continueArrow}>▶</Text>
+                    <View>
+                      <Text style={styles.continueLabel}>CONTINUE</Text>
+                      <Text style={styles.continueSub}>Level {nextUncompletedLevel.id} — {nextUncompletedLevel.name}</Text>
+                    </View>
                   </View>
+                  <Text style={styles.continueChevron}>›</Text>
                 </View>
-                <Text style={styles.continueChevron}>›</Text>
-              </Pressable>
+              </PressScale>
               {/* Next Unlock hint */}
               {nextRewardHint && (
                 <View style={styles.nextRewardHint}>
