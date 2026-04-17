@@ -13,7 +13,7 @@ export const LOADING_TIPS: string[] = [
   'Daily Challenges refresh every day — complete all 3 for a bonus reward.',
   'Check your Loot Boxes in your Profile — you might have rewards waiting!',
   'Customize your character and show off your style to opponents.',
-  'Stage Mode lets you wager coins for higher stakes matches.',
+  'Collect outfits, pets, and board skins to build your ultimate style.',
   'Your win streak earns bonus coins — keep it going!',
   'Try Custom Game to play Connect 3, 5, or 6 on different board sizes.',
   'The Board Editor lets you create custom puzzle boards to share.',
