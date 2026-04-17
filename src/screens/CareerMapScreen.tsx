@@ -107,7 +107,7 @@ export function CareerMapScreen({ navigation }: Props) {
       {/* Hero */}
       <View style={styles.hero}>
         <Text style={styles.heroEyebrow}>CAREER MODE</Text>
-        <Text style={styles.heroTitle}>TAKE THE CITY</Text>
+        <Text style={styles.heroTitle} accessibilityRole="header">TAKE THE CITY</Text>
         <View style={styles.heroStats}>
           <Text style={styles.heroStat}>
             {completedIds.size}
@@ -170,7 +170,7 @@ export function CareerMapScreen({ navigation }: Props) {
                   style={styles.zoneGradient}
                 >
                   {/* City name */}
-                  <Text style={[styles.zoneName, { color: unlocked ? city.themeColor : 'rgba(255,255,255,0.35)' }]}>
+                  <Text style={[styles.zoneName, { color: unlocked ? city.themeColor : 'rgba(255,255,255,0.35)' }]} accessibilityRole="header">
                     {city.nickname.toUpperCase()}
                   </Text>
                   <Text style={styles.zoneCity}>
@@ -251,7 +251,7 @@ export function CareerMapScreen({ navigation }: Props) {
             style={styles.comingSoonGradient}
           >
             <Text style={styles.comingSoonEmoji}>🔮</Text>
-            <Text style={styles.comingSoonTitle}>MORE CITIES COMING</Text>
+            <Text style={styles.comingSoonTitle} accessibilityRole="header">MORE CITIES COMING</Text>
             <Text style={styles.comingSoonSub}>
               Chicago · Detroit · Oakland · Compton · Miami · ???
             </Text>
