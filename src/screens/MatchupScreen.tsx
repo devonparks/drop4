@@ -671,14 +671,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
   },
-  matchWager: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: colors.coinGold,
-    marginTop: 2,
-  },
-
   // ── Bottom area ──
   bottomArea: {
     paddingHorizontal: 40,
