@@ -194,8 +194,7 @@ const BASE_IDLE_SHEET_CONFIG: SheetConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// LEGACY EMOTE FRAMES — kept as fallback exports for other
-// components (EmoteShowcase, CharacterCreator, etc.)
+// LEGACY EMOTE FRAMES — 2D sprite fallback (internal only)
 // ═══════════════════════════════════════════════════════════
 
 const EMOTE_FRAMES: Record<EmoteId, ImageSourcePropType[]> = {
@@ -515,11 +514,6 @@ export function useEmoteTrigger() {
   return { emote, triggerEmote, clearEmote };
 }
 
-// ═══════════════════════════════════════════════════════════
-// EXPORTS — Legacy frame arrays kept for other components
-// ═══════════════════════════════════════════════════════════
-
-export { POSE_IMAGES, IDLE_VARIANTS, IDLE_VARIANT_IDS, EMOTE_FRAMES, SPRITE_SHEETS };
 
 const styles = StyleSheet.create({
   container: {
