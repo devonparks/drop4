@@ -47,7 +47,7 @@ const DOCS: Record<DocType, Doc> = {
         heading: 'What we collect',
         body:
           'Drop4 collects the minimum data needed to run the game and save your progress:\n\n' +
-          '• A random anonymous Firebase user ID created on first launch.\n' +
+          '• A random anonymous device ID generated on first launch (stored locally).\n' +
           '• Your gameplay stats (wins, losses, level, coins, match history).\n' +
           '• Your cosmetic choices (equipped board, pieces, emotes, character).\n' +
           '• Basic device info provided by the operating system (model, OS version, language).\n\n' +
@@ -75,17 +75,16 @@ const DOCS: Record<DocType, Doc> = {
       {
         heading: 'Third-party services',
         body:
-          '• Firebase (Google) — anonymous authentication + data storage. Their privacy policy: https://policies.google.com/privacy\n' +
           '• Expo (EAS) — app framework and build pipeline. Their privacy policy: https://expo.dev/privacy\n' +
           '• Apple / Google app stores — handle in-app purchases, app ratings, and crash reports you opt into sharing with developers via OS-level settings. We receive no personally identifying info from app store purchases beyond the receipt needed to unlock your content.',
       },
       {
         heading: 'Account deletion',
         body:
-          'Drop4 creates an anonymous Firebase account on first launch. To delete all local and remote data:\n\n' +
-          '1. Open Drop4 → Settings → Reset All Progress. This wipes local AsyncStorage, ends the Firebase anonymous session, and marks the remote record for deletion.\n' +
-          '2. Alternatively, email {{SUPPORT_EMAIL}} with "DELETE ACCOUNT" in the subject line and we will remove your Firebase record within 30 days.\n\n' +
-          'Because accounts are anonymous, we can only identify your specific record if you provide the user ID shown in Settings → About (tap the build number five times to reveal it).',
+          'All your data is stored locally on your device using AsyncStorage. To delete everything:\n\n' +
+          '1. Open Drop4 → Settings → Reset All Progress. This wipes all local data including stats, cosmetics, coins, and preferences.\n' +
+          '2. Alternatively, uninstall the app — all data is removed with it.\n\n' +
+          'If you have questions, email {{SUPPORT_EMAIL}} with "DELETE DATA" in the subject line.',
       },
       {
         heading: 'Your rights',
