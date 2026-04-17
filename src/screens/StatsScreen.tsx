@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
+import { StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
@@ -194,182 +195,198 @@ export function StatsScreen({ navigation }: Props) {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header with player level badge */}
-        <View style={styles.screenHeaderRow}>
-          <Text style={styles.screenHeader} accessibilityRole="header">YOUR STATS</Text>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelBadgeText}>LVL {level}</Text>
+        <StaggeredEntry index={0} delay={60}>
+          <View style={styles.screenHeaderRow}>
+            <Text style={styles.screenHeader} accessibilityRole="header">YOUR STATS</Text>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelBadgeText}>LVL {level}</Text>
+            </View>
           </View>
-        </View>
+        </StaggeredEntry>
 
         {/* ---------- 1. Overview Cards ---------- */}
-        <SectionTitle title="OVERVIEW" />
-        <View style={styles.grid}>
-          <OverviewCard icon="🎮" label="Total Games" value={stats.totalGames} />
-          <OverviewCard icon="🏆" label="Win Rate" value={`${stats.winRate}%`} color={colors.green} />
-          <OverviewCard icon="🪙" label="Lifetime Earnings" value={Math.max(lifetimeCoinsEarned, stats.totalCoinsEarned).toLocaleString()} color={colors.coinGold} />
-          <OverviewCard icon="⏱" label="Time Played" value={hoursPlayed} color={colors.teal} />
-        </View>
+        <StaggeredEntry index={1} delay={60}>
+          <SectionTitle title="OVERVIEW" />
+          <View style={styles.grid}>
+            <OverviewCard icon="🎮" label="Total Games" value={stats.totalGames} />
+            <OverviewCard icon="🏆" label="Win Rate" value={`${stats.winRate}%`} color={colors.green} />
+            <OverviewCard icon="🪙" label="Lifetime Earnings" value={Math.max(lifetimeCoinsEarned, stats.totalCoinsEarned).toLocaleString()} color={colors.coinGold} />
+            <OverviewCard icon="⏱" label="Time Played" value={hoursPlayed} color={colors.teal} />
+          </View>
+        </StaggeredEntry>
 
         {/* ---------- 2. Win/Loss Breakdown ---------- */}
-        <SectionTitle title="WIN / LOSS BREAKDOWN" />
-        <View style={styles.card}>
-          {/* Colored bar */}
-          {stats.totalGames > 0 && (
-            <View style={styles.wlBar}>
-              <View style={[styles.wlSegment, {
-                flex: stats.wins || 0.01,
-                backgroundColor: colors.green,
-                borderTopLeftRadius: 6, borderBottomLeftRadius: 6,
-              }]} />
-              <View style={[styles.wlSegment, {
-                flex: stats.draws || 0.01,
-                backgroundColor: colors.textSecondary,
-              }]} />
-              <View style={[styles.wlSegment, {
-                flex: stats.losses || 0.01,
-                backgroundColor: colors.pieceRed,
-                borderTopRightRadius: 6, borderBottomRightRadius: 6,
-              }]} />
-            </View>
-          )}
-          <View style={styles.wlLabels}>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.green }]} />
-              <Text style={styles.wlText}>Wins {stats.wins}</Text>
-            </View>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.textSecondary }]} />
-              <Text style={styles.wlText}>Draws {stats.draws}</Text>
-            </View>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.pieceRed }]} />
-              <Text style={styles.wlText}>Losses {stats.losses}</Text>
+        <StaggeredEntry index={2} delay={60}>
+          <SectionTitle title="WIN / LOSS BREAKDOWN" />
+          <View style={styles.card}>
+            {/* Colored bar */}
+            {stats.totalGames > 0 && (
+              <View style={styles.wlBar}>
+                <View style={[styles.wlSegment, {
+                  flex: stats.wins || 0.01,
+                  backgroundColor: colors.green,
+                  borderTopLeftRadius: 6, borderBottomLeftRadius: 6,
+                }]} />
+                <View style={[styles.wlSegment, {
+                  flex: stats.draws || 0.01,
+                  backgroundColor: colors.textSecondary,
+                }]} />
+                <View style={[styles.wlSegment, {
+                  flex: stats.losses || 0.01,
+                  backgroundColor: colors.pieceRed,
+                  borderTopRightRadius: 6, borderBottomRightRadius: 6,
+                }]} />
+              </View>
+            )}
+            <View style={styles.wlLabels}>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.green }]} />
+                <Text style={styles.wlText}>Wins {stats.wins}</Text>
+              </View>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.textSecondary }]} />
+                <Text style={styles.wlText}>Draws {stats.draws}</Text>
+              </View>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.pieceRed }]} />
+                <Text style={styles.wlText}>Losses {stats.losses}</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </StaggeredEntry>
 
         {/* ---------- 3. Difficulty Breakdown ---------- */}
-        <SectionTitle title="DIFFICULTY BREAKDOWN" />
-        <View style={styles.card}>
-          <ProgressBar label="Easy" value={easyWins} max={Math.max(totalDiffWins, 1)} color={colors.green} />
-          <ProgressBar label="Medium" value={mediumWins} max={Math.max(totalDiffWins, 1)} color={colors.orange} />
-          <ProgressBar label="Hard" value={hardWins} max={Math.max(totalDiffWins, 1)} color={colors.pieceRed} />
-        </View>
+        <StaggeredEntry index={3} delay={60}>
+          <SectionTitle title="DIFFICULTY BREAKDOWN" />
+          <View style={styles.card}>
+            <ProgressBar label="Easy" value={easyWins} max={Math.max(totalDiffWins, 1)} color={colors.green} />
+            <ProgressBar label="Medium" value={mediumWins} max={Math.max(totalDiffWins, 1)} color={colors.orange} />
+            <ProgressBar label="Hard" value={hardWins} max={Math.max(totalDiffWins, 1)} color={colors.pieceRed} />
+          </View>
+        </StaggeredEntry>
 
         {/* ---------- 4. Mode Breakdown ---------- */}
-        <SectionTitle title="MODE BREAKDOWN" />
-        <View style={styles.card}>
-          <View style={styles.modeRow}>
-            <ModeItem label="vs AI" count={aiGames} icon="🤖" />
-            <ModeItem label="Local" count={localGames} icon="👥" />
+        <StaggeredEntry index={4} delay={60}>
+          <SectionTitle title="MODE BREAKDOWN" />
+          <View style={styles.card}>
+            <View style={styles.modeRow}>
+              <ModeItem label="vs AI" count={aiGames} icon="🤖" />
+              <ModeItem label="Local" count={localGames} icon="👥" />
+            </View>
           </View>
-        </View>
+        </StaggeredEntry>
 
         {/* ---------- 5. Streaks ---------- */}
-        <SectionTitle title="STREAKS" />
-        <View style={styles.grid}>
-          <OverviewCard
-            icon="🔥"
-            label="Current"
-            value={winStreak > 0 ? winStreak : 0}
-            color={winStreak > 0 ? colors.orange : '#ffffff'}
-          />
-          <OverviewCard icon="⭐" label="Best" value={bestStreak} color={colors.coinGold} />
-          <OverviewCard icon="📉" label="Worst Loss" value={longestLoseStreak} color={colors.pieceRed} />
-        </View>
+        <StaggeredEntry index={5} delay={60}>
+          <SectionTitle title="STREAKS" />
+          <View style={styles.grid}>
+            <OverviewCard
+              icon="🔥"
+              label="Current"
+              value={winStreak > 0 ? winStreak : 0}
+              color={winStreak > 0 ? colors.orange : '#ffffff'}
+            />
+            <OverviewCard icon="⭐" label="Best" value={bestStreak} color={colors.coinGold} />
+            <OverviewCard icon="📉" label="Worst Loss" value={longestLoseStreak} color={colors.pieceRed} />
+          </View>
+        </StaggeredEntry>
 
         {/* ---------- 5b. Best Performance ---------- */}
-        <SectionTitle title="BEST PERFORMANCE" />
-        <View style={styles.bestPerfCard}>
-          <LinearGradient
-            colors={['rgba(255,215,0,0.12)', 'rgba(155,89,182,0.08)', 'rgba(255,140,0,0.06)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.bestPerfGradient}
-          >
-            <View style={styles.bestPerfRow}>
-              <View style={styles.bestPerfItem}>
-                <Text style={styles.bestPerfIcon}>{'\u26A1'}</Text>
-                <Text style={styles.bestPerfValue}>
-                  {fastestWin ?? '--'}
-                </Text>
-                <Text style={styles.bestPerfLabel}>Fastest Win</Text>
-                <Text style={styles.bestPerfSub}>(fewest moves)</Text>
+        <StaggeredEntry index={6} delay={60}>
+          <SectionTitle title="BEST PERFORMANCE" />
+          <View style={styles.bestPerfCard}>
+            <LinearGradient
+              colors={['rgba(255,215,0,0.12)', 'rgba(155,89,182,0.08)', 'rgba(255,140,0,0.06)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.bestPerfGradient}
+            >
+              <View style={styles.bestPerfRow}>
+                <View style={styles.bestPerfItem}>
+                  <Text style={styles.bestPerfIcon}>{'\u26A1'}</Text>
+                  <Text style={styles.bestPerfValue}>
+                    {fastestWin ?? '--'}
+                  </Text>
+                  <Text style={styles.bestPerfLabel}>Fastest Win</Text>
+                  <Text style={styles.bestPerfSub}>(fewest moves)</Text>
+                </View>
+                <View style={styles.bestPerfDivider} />
+                <View style={styles.bestPerfItem}>
+                  <Text style={styles.bestPerfIcon}>{'\uD83D\uDD25'}</Text>
+                  <Text style={[styles.bestPerfValue, { color: colors.orange }]}>{bestStreak}</Text>
+                  <Text style={styles.bestPerfLabel}>Longest Streak</Text>
+                  <Text style={styles.bestPerfSub}>consecutive wins</Text>
+                </View>
+                <View style={styles.bestPerfDivider} />
+                <View style={styles.bestPerfItem}>
+                  <Text style={styles.bestPerfIcon}>{'\uD83E\uDE99'}</Text>
+                  <Text style={[styles.bestPerfValue, { color: colors.coinGold }]}>
+                    {mostCoins ?? '--'}
+                  </Text>
+                  <Text style={styles.bestPerfLabel}>Most Coins</Text>
+                  <Text style={styles.bestPerfSub}>in one game</Text>
+                </View>
               </View>
-              <View style={styles.bestPerfDivider} />
-              <View style={styles.bestPerfItem}>
-                <Text style={styles.bestPerfIcon}>{'\uD83D\uDD25'}</Text>
-                <Text style={[styles.bestPerfValue, { color: colors.orange }]}>{bestStreak}</Text>
-                <Text style={styles.bestPerfLabel}>Longest Streak</Text>
-                <Text style={styles.bestPerfSub}>consecutive wins</Text>
-              </View>
-              <View style={styles.bestPerfDivider} />
-              <View style={styles.bestPerfItem}>
-                <Text style={styles.bestPerfIcon}>{'\uD83E\uDE99'}</Text>
-                <Text style={[styles.bestPerfValue, { color: colors.coinGold }]}>
-                  {mostCoins ?? '--'}
-                </Text>
-                <Text style={styles.bestPerfLabel}>Most Coins</Text>
-                <Text style={styles.bestPerfSub}>in one game</Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
+            </LinearGradient>
+          </View>
+        </StaggeredEntry>
 
         {/* ---------- 6. Recent Form ---------- */}
-        <SectionTitle title="RECENT FORM" />
-        <View style={styles.card}>
-          {recentForm.length === 0 ? (
-            <Animated.Text entering={FadeIn.duration(280)} style={styles.emptyText}>No recent games</Animated.Text>
-          ) : (
-            <View style={styles.formRow}>
-              {recentForm.map((m, i) => (
-                <Animated.View
-                  key={m.id}
-                  entering={FadeIn.delay(i * 45).duration(260)}
-                  style={[
-                    styles.formDot,
-                    {
-                      backgroundColor:
-                        m.result === 'win' ? colors.green
-                          : m.result === 'loss' ? colors.pieceRed
-                            : colors.textSecondary,
-                    },
-                    m.result === 'win' && {
-                      shadowColor: colors.green,
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.6,
-                      shadowRadius: 6,
-                      elevation: 4,
-                    },
-                  ]}
-                />
-              ))}
-              {/* Pad remaining slots with empty dots */}
-              {Array.from({ length: Math.max(0, 10 - recentForm.length) }).map((_, i) => (
-                <View key={`empty-${i}`} style={[styles.formDot, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
-              ))}
-            </View>
-          )}
-          <View style={styles.formLegend}>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.green }]} />
-              <Text style={styles.legendText}>Win</Text>
-            </View>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.pieceRed }]} />
-              <Text style={styles.legendText}>Loss</Text>
-            </View>
-            <View style={styles.wlItem}>
-              <View style={[styles.wlDot, { backgroundColor: colors.textSecondary }]} />
-              <Text style={styles.legendText}>Draw</Text>
+        <StaggeredEntry index={7} delay={60}>
+          <SectionTitle title="RECENT FORM" />
+          <View style={styles.card}>
+            {recentForm.length === 0 ? (
+              <Animated.Text entering={FadeIn.duration(280)} style={styles.emptyText}>No recent games</Animated.Text>
+            ) : (
+              <View style={styles.formRow}>
+                {recentForm.map((m, i) => (
+                  <Animated.View
+                    key={m.id}
+                    entering={FadeIn.delay(i * 45).duration(260)}
+                    style={[
+                      styles.formDot,
+                      {
+                        backgroundColor:
+                          m.result === 'win' ? colors.green
+                            : m.result === 'loss' ? colors.pieceRed
+                              : colors.textSecondary,
+                      },
+                      m.result === 'win' && {
+                        shadowColor: colors.green,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.6,
+                        shadowRadius: 6,
+                        elevation: 4,
+                      },
+                    ]}
+                  />
+                ))}
+                {/* Pad remaining slots with empty dots */}
+                {Array.from({ length: Math.max(0, 10 - recentForm.length) }).map((_, i) => (
+                  <View key={`empty-${i}`} style={[styles.formDot, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
+                ))}
+              </View>
+            )}
+            <View style={styles.formLegend}>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.green }]} />
+                <Text style={styles.legendText}>Win</Text>
+              </View>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.pieceRed }]} />
+                <Text style={styles.legendText}>Loss</Text>
+              </View>
+              <View style={styles.wlItem}>
+                <View style={[styles.wlDot, { backgroundColor: colors.textSecondary }]} />
+                <Text style={styles.legendText}>Draw</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </StaggeredEntry>
 
         {/* ---------- 7. ELO History ---------- */}
         {rankedGames > 0 && (
-          <>
+          <StaggeredEntry index={8} delay={60}>
             <SectionTitle title="RANKED / ELO" />
             <View style={styles.card}>
               <View style={styles.eloHeader}>
@@ -407,37 +424,41 @@ export function StatsScreen({ navigation }: Props) {
                 </View>
               )}
             </View>
-          </>
+          </StaggeredEntry>
         )}
 
         {/* ---------- Equipped Loadout ---------- */}
-        <SectionTitle title="EQUIPPED LOADOUT" />
-        <View style={styles.card}>
-          <View style={styles.loadoutRow}>
-            <Text style={styles.loadoutIcon}>🎨</Text>
-            <Text style={styles.loadoutLabel}>Board</Text>
-            <Text style={styles.loadoutValue}>{boardName}</Text>
-          </View>
-          <View style={[styles.loadoutRow, !petName && { borderBottomWidth: 0 }]}>
-            <Text style={styles.loadoutIcon}>🔵</Text>
-            <Text style={styles.loadoutLabel}>Pieces</Text>
-            <Text style={styles.loadoutValue}>{piecesName}</Text>
-          </View>
-          {petName && (
-            <View style={[styles.loadoutRow, { borderBottomWidth: 0 }]}>
-              <Text style={styles.loadoutIcon}>🐕</Text>
-              <Text style={styles.loadoutLabel}>Pet</Text>
-              <Text style={styles.loadoutValue}>{petName}</Text>
+        <StaggeredEntry index={8} delay={60}>
+          <SectionTitle title="EQUIPPED LOADOUT" />
+          <View style={styles.card}>
+            <View style={styles.loadoutRow}>
+              <Text style={styles.loadoutIcon}>🎨</Text>
+              <Text style={styles.loadoutLabel}>Board</Text>
+              <Text style={styles.loadoutValue}>{boardName}</Text>
             </View>
-          )}
-        </View>
+            <View style={[styles.loadoutRow, !petName && { borderBottomWidth: 0 }]}>
+              <Text style={styles.loadoutIcon}>🔵</Text>
+              <Text style={styles.loadoutLabel}>Pieces</Text>
+              <Text style={styles.loadoutValue}>{piecesName}</Text>
+            </View>
+            {petName && (
+              <View style={[styles.loadoutRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.loadoutIcon}>🐕</Text>
+                <Text style={styles.loadoutLabel}>Pet</Text>
+                <Text style={styles.loadoutValue}>{petName}</Text>
+              </View>
+            )}
+          </View>
+        </StaggeredEntry>
 
         {/* ---------- Career ---------- */}
-        <SectionTitle title="CAREER" />
-        <View style={styles.grid}>
-          <OverviewCard icon="✅" label="Completed" value={completedCount} color={colors.green} />
-          <OverviewCard icon="⭐" label="Total Stars" value={totalStars} color={colors.coinGold} />
-        </View>
+        <StaggeredEntry index={9} delay={60}>
+          <SectionTitle title="CAREER" />
+          <View style={styles.grid}>
+            <OverviewCard icon="✅" label="Completed" value={completedCount} color={colors.green} />
+            <OverviewCard icon="⭐" label="Total Stars" value={totalStars} color={colors.coinGold} />
+          </View>
+        </StaggeredEntry>
       </ScrollView>
     </ScreenBackground>
   );
