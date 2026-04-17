@@ -10,7 +10,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -237,12 +237,15 @@ export function CustomGameScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
         >
           {/* ══ HEADER ══ */}
+          <StaggeredEntry index={0} delay={60}>
           <View style={styles.header}>
             <Text style={styles.title} accessibilityRole="header">PRIVATE MATCH</Text>
             <Text style={styles.subtitle}>Your rules, your way</Text>
           </View>
+          </StaggeredEntry>
 
           {/* ══ GAME RULES ══ */}
+          <StaggeredEntry index={1} delay={60}>
           <SectionCard title="GAME RULES" icon="🎮">
             <SettingRow
               label="Board Size"
@@ -332,8 +335,10 @@ export function CustomGameScreen({ navigation }: Props) {
               onChange={(val) => setGameSpeed(val as 'normal' | 'fast' | 'instant')}
             />
           </SectionCard>
+          </StaggeredEntry>
 
           {/* ══ MODIFIERS ══ */}
+          <StaggeredEntry index={2} delay={60}>
           <SectionCard title={`MODIFIERS${activeModCount > 0 ? ` (${activeModCount} active)` : ''}`} icon="⚡">
             <ModifierToggle
               icon="🔄"
@@ -371,8 +376,10 @@ export function CustomGameScreen({ navigation }: Props) {
               onChange={setSniperMode}
             />
           </SectionCard>
+          </StaggeredEntry>
 
           {/* ══ OPPONENT ══ */}
+          <StaggeredEntry index={3} delay={60}>
           <SectionCard title="OPPONENT" icon="👤">
             <SettingRow
               label="Mode"
@@ -407,9 +414,11 @@ export function CustomGameScreen({ navigation }: Props) {
               </Text>
             </View>
           </SectionCard>
+          </StaggeredEntry>
 
           {/* ══ MATCH CODE (for online mode) ══ */}
           {opponent === 'online' && (
+            <StaggeredEntry index={4} delay={60}>
             <SectionCard title="MATCH CODE" icon="🔑">
               <View style={styles.matchCodeSection}>
                 {/* Create Match */}
@@ -469,6 +478,7 @@ export function CustomGameScreen({ navigation }: Props) {
                 </View>
               </View>
             </SectionCard>
+            </StaggeredEntry>
           )}
 
           {/* Bottom spacer */}
