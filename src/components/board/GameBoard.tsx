@@ -210,14 +210,13 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
 
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
-  const moveCount = useGameStore(s => s.moveCount);
 
   // Track which pieces are "new" for drop animation.
   // Uses board-snapshot comparison so it works for both local drops and
   // online match board syncs from Firestore.
   const knownPieces = useRef(new Set<string>());
   const newPieceKeys = useRef(new Set<string>());
-  const [animTick, setAnimTick] = React.useState(0);
+  const [, setAnimTick] = React.useState(0);
 
   React.useEffect(() => {
     let hasNew = false;
