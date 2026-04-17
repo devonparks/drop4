@@ -16,10 +16,8 @@ import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore'
 import { useChallengeStore } from '../stores/challengeStore';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
-import { RankProgressCard } from '../components/ui/RankProgressCard';
 import { haptics } from '../services/haptics';
 import { Shimmer, PressScale, StaggeredEntry } from '../components/animations';
-import { FEATURES } from '../config/features';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -65,7 +63,6 @@ export function ProfileScreen() {
   const achievements = useAchievementStore(s => s.achievements);
   const elo = useRankedStore(s => s.elo);
   const tier = useRankedStore(s => s.tier);
-  const seasonHistory = useRankedStore(s => s.seasonHistory);
 
   // Daily goals data
   const challenges = useChallengeStore(s => s.challenges);
@@ -197,20 +194,6 @@ export function ProfileScreen() {
             return (
               <View style={[styles.playerTitleBadge, { borderColor: `${titleColor}40` }]}>
                 <Text style={[styles.playerTitleText, { color: titleColor }]}>{displayTitle}</Text>
-              </View>
-            );
-          })()}
-
-          {/* Prominent ranked tier badge — only when ranked is enabled */}
-          {FEATURES.rankedMode && (() => {
-            const tierInfo = RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
-            return (
-              <View style={[styles.rankBadgeRow, { borderColor: `${tierInfo.color}40` }]}>
-                <Text style={styles.rankBadgeIcon}>{tierInfo.icon}</Text>
-                <Text style={[styles.rankBadgeName, { color: tierInfo.color }]}>
-                  {formatRank(elo)}
-                </Text>
-                <Text style={styles.rankBadgeElo}>{elo} ELO</Text>
               </View>
             );
           })()}
@@ -441,16 +424,6 @@ export function ProfileScreen() {
         })()}
         </StaggeredEntry>
 
-        {/* Ranked Progress — only when ranked is enabled */}
-        {FEATURES.rankedMode && (
-          <>
-            <Text style={styles.sectionTitle} accessibilityRole="header">RANKED PROGRESS</Text>
-            <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-              <RankProgressCard />
-            </View>
-          </>
-        )}
-
         {/* Streaks */}
         <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">STREAKS</Text>
@@ -460,22 +433,6 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* Season History — only when ranked is enabled */}
-        {FEATURES.rankedMode && seasonHistory.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle} accessibilityRole="header">SEASON HISTORY</Text>
-            <View style={styles.statsGrid}>
-              {seasonHistory.map((s, i) => (
-                <StatCard
-                  key={i}
-                  label={`S${s.season}`}
-                  value={`${s.elo} ELO`}
-                  color={RANKED_TIERS.find(t => t.id === s.tier)?.color || '#fff'}
-                />
-              ))}
-            </View>
-          </>
-        )}
 
         {/* Quick links — compact row */}
         <View style={styles.quickActions}>
@@ -573,29 +530,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 1,
     textTransform: 'uppercase' as const,
-  },
-  rankBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    marginTop: 6,
-    borderWidth: 1,
-  },
-  rankBadgeIcon: { fontSize: 20 },
-  rankBadgeName: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 16,
-  },
-  rankBadgeElo: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   levelSection: {
     width: '100%',
