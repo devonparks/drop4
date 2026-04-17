@@ -7,11 +7,9 @@
 // Each roster entry is one character. Universal emotes are available to every
 // character; signature emotes are exclusive to one character (Mixamo imports).
 //
-// Sprite sheets live at:
-//   src/assets/images/characters/rosters/{characterId}/sheet_*.png
-// AnimatedCharacter loads them by characterId. If a character has no sheets on
-// disk yet, AnimatedCharacter falls back to the default player sprites so the
-// game keeps working as we render the roster in Unity over time.
+// 3D models (GLB) are loaded via Character3D using the player's outfit
+// customization from characterStore. The roster defines identity and
+// personality; visual appearance is driven by the outfit/skin system.
 
 import { ALL_CAREER_LEVELS } from './careerLevels';
 
@@ -41,10 +39,8 @@ export interface RosterCharacter {
 }
 
 // ─── Default starter character ─────────────────────────────────────────────
-// This is what every new player gets on day one. Its sprite sheets are the
-// existing `assets/images/characters/spritesheets/sheet_*.png` files that
-// AnimatedCharacter already ships with — we don't need to re-render anything
-// for it.
+// This is what every new player gets on day one. Uses the default 3D outfit
+// (modern_civilians_01) via Character3D.
 export const DEFAULT_CHARACTER_ID: RosterCharacterId = 'default_player';
 
 // ─── Base/Starter characters — available from day one, never locked ───────
