@@ -12,7 +12,6 @@ import { FEATURES } from '../config/features';
 import { useRosterStore } from '../stores/rosterStore';
 import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
-import { useCareerStore } from '../stores/careerStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { colors } from '../theme/colors';
@@ -257,7 +256,6 @@ export function RosterScreen({ navigation }: Props) {
   const equippedCharacterId = useRosterStore((s) => s.equippedCharacterId);
   const unlockedCharacterIds = useRosterStore((s) => s.unlockedCharacterIds);
   const equipCharacter = useRosterStore((s) => s.equipCharacter);
-  const careerProgress = useCareerStore((s) => s.progress);
   const coins = useShopStore((s) => s.coins);
   const gems = useShopStore((s) => s.gems);
   const level = useShopStore((s) => s.level);
