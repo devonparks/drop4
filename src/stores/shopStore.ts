@@ -348,13 +348,13 @@ export const useShopStore = create<ShopState>((set, get) => ({
 }));
 
 // ── Coin Milestone Helper ──
-export interface CoinMilestone {
+interface CoinMilestone {
   coins: number;
   title: string;
   icon: string;
 }
 
-export const COIN_MILESTONES: CoinMilestone[] = [
+const COIN_MILESTONES: CoinMilestone[] = [
   { coins: 1_000, title: 'Saver', icon: '\uD83D\uDCB0' },
   { coins: 5_000, title: 'Banker', icon: '\uD83C\uDFE6' },
   { coins: 10_000, title: 'Rich', icon: '\uD83D\uDCB5' },

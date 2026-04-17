@@ -35,7 +35,7 @@ interface AchievementState {
   loadFromStorage: () => Promise<void>;
 }
 
-export interface GameStats {
+interface GameStats {
   totalWins: number;
   currentStreak: number;
   bestStreak: number;
