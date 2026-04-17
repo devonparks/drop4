@@ -107,7 +107,9 @@ export function ReplayViewerScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const { replays, toggleStar, deleteReplay } = useReplayStore();
+  const replays = useReplayStore(s => s.replays);
+  const toggleStar = useReplayStore(s => s.toggleStar);
+  const deleteReplay = useReplayStore(s => s.deleteReplay);
   const [watching, setWatching] = useState<Replay | null>(null);
   const [board, setBoard] = useState<Cell[][]>([]);
   const [moveIndex, setMoveIndex] = useState(0);
@@ -192,7 +194,7 @@ export function ReplayViewerScreen() {
             >
               <Text style={rStyles.backText}>{'<'}</Text>
             </Pressable>
-            <Text style={rStyles.watchTitle}>REPLAY</Text>
+            <Text style={rStyles.watchTitle} accessibilityRole="header">REPLAY</Text>
             <Text style={rStyles.watchInfo}>
               vs {watching.opponent} • {watching.result.toUpperCase()}
             </Text>
@@ -258,7 +260,7 @@ export function ReplayViewerScreen() {
     <ScreenBackground>
       <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <View style={rStyles.container}>
-        <Text style={rStyles.title}>REPLAYS</Text>
+        <Text style={rStyles.title} accessibilityRole="header">REPLAYS</Text>
         <Text style={rStyles.subtitle}>{replays.length} saved</Text>
 
         {replays.length === 0 ? (
