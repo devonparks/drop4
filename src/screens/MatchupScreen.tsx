@@ -88,9 +88,7 @@ export function MatchupScreen({ navigation }: Props) {
   const modeBadge = (() => {
     switch (params.mode) {
       case 'casual': return 'CASUAL';
-      case 'ranked': return 'RANKED';
       case 'career': return `CAREER CH.${params.careerChapter || 1}`;
-      case 'wager': return 'WAGER MATCH';
       case 'local': return 'LOCAL';
       default: return 'CASUAL';
     }
@@ -164,8 +162,6 @@ export function MatchupScreen({ navigation }: Props) {
     resetScores();
     // Navigate to Game with all match params
     navigation.replace('Game', {
-      rankedMode: params.mode === 'ranked',
-      rankedClockSeconds: params.mode === 'ranked' ? 180 : undefined,
       careerLevelId: params.careerLevelId,
       careerLevelReward: params.careerLevelReward,
       presetBoard: params.presetBoard,
@@ -215,7 +211,6 @@ export function MatchupScreen({ navigation }: Props) {
           )}
           <View style={[
             styles.modeBadge,
-            params.mode === 'ranked' && styles.modeBadgeRanked,
             isBossMatch && styles.modeBadgeBoss,
           ]}>
             <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
@@ -451,10 +446,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,140,0,0.3)',
-  },
-  modeBadgeRanked: {
-    backgroundColor: 'rgba(155,89,182,0.15)',
-    borderColor: 'rgba(155,89,182,0.3)',
   },
   modeBadgeText: {
     fontFamily: fonts.body,
