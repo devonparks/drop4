@@ -189,7 +189,7 @@ function buildCareerRoster(): RosterCharacter[] {
   });
 }
 
-export const CAREER_ROSTER: RosterCharacter[] = buildCareerRoster();
+const CAREER_ROSTER: RosterCharacter[] = buildCareerRoster();
 // Full roster: 5 starters (always unlocked) + 36 career unlockables = 41 total.
 export const ROSTER: RosterCharacter[] = [...STARTER_CHARACTERS, ...CAREER_ROSTER];
 
@@ -202,7 +202,7 @@ export const ROSTER_BY_ID: Record<RosterCharacterId, RosterCharacter> = ROSTER.r
   {} as Record<RosterCharacterId, RosterCharacter>,
 );
 
-export const ROSTER_BY_CAREER_LEVEL: Record<number, RosterCharacter> = CAREER_ROSTER.reduce(
+const ROSTER_BY_CAREER_LEVEL: Record<number, RosterCharacter> = CAREER_ROSTER.reduce(
   (acc, c) => {
     if (c.unlockedAtCareerLevel != null) acc[c.unlockedAtCareerLevel] = c;
     return acc;
