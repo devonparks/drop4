@@ -78,7 +78,6 @@ export function StatsScreen({ navigation }: Props) {
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
-  const scores = useGameStore(s => s.scores);
   const winStreak = useGameStore(s => s.winStreak);
   const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
@@ -111,8 +110,6 @@ export function StatsScreen({ navigation }: Props) {
     // Mode breakdown
     const aiGames = matches.filter(m => m.mode === 'ai').length;
     const localGames = matches.filter(m => m.mode === 'local').length;
-    const wagerGames = matches.filter(m => m.mode === 'wager').length;
-
     // Time estimate
     const avgMoves = matches.length > 0
       ? matches.reduce((sum, m) => sum + (m.moves || 20), 0) / matches.length
@@ -144,7 +141,7 @@ export function StatsScreen({ navigation }: Props) {
     return {
       totalGames, wins, losses, draws, winRate, totalCoinsEarned,
       easyWins, mediumWins, hardWins, totalDiffWins,
-      aiGames, localGames, wagerGames,
+      aiGames, localGames,
       hoursPlayed,
       longestLoseStreak,
       fastestWin, mostCoins,
@@ -179,7 +176,7 @@ export function StatsScreen({ navigation }: Props) {
 
   const {
     easyWins, mediumWins, hardWins, totalDiffWins,
-    aiGames, localGames, wagerGames,
+    aiGames, localGames,
     hoursPlayed,
     longestLoseStreak,
     fastestWin, mostCoins,
@@ -265,8 +262,6 @@ export function StatsScreen({ navigation }: Props) {
           <View style={styles.modeRow}>
             <ModeItem label="vs AI" count={aiGames} icon="🤖" />
             <ModeItem label="Local" count={localGames} icon="👥" />
-            <ModeItem label="Wager" count={wagerGames} icon="💰" />
-            <ModeItem label="Ranked" count={rankedGames} icon="🏅" />
           </View>
         </View>
 
