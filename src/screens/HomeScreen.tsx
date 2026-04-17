@@ -267,7 +267,6 @@ export function HomeScreen() {
     }
   }, [justLeveledUp]);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
-  const [emoteSelectorOpen, setEmoteSelectorOpen] = useState(false);
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
   // Subscribed so taps on the character resolve the current preference.
@@ -430,37 +429,40 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* ═══ DROP4 LOGO — single text + decorative flare ═══ */}
-        {/* Wrapped in a horizontal row so the decorative side flares sit
-            beside the text instead of trying to overlap it. */}
+        {/* ═══ DROP4 LOGO — layered title card ═══ */}
         <View style={styles.logoArea}>
-          {/* Soft orange halo behind everything */}
+          {/* Glow backdrop — wide elliptical orange haze */}
           <View style={styles.logoGlowHalo} pointerEvents="none" />
 
-          {/* Side flare lines — thin gradients that fade out from the text */}
+          {/* Horizontal accent lines */}
           <View style={styles.logoFlareRow} pointerEvents="none">
             <LinearGradient
-              colors={['transparent', 'rgba(255,140,0,0.55)', 'rgba(255,140,0,0.85)']}
+              colors={['transparent', 'rgba(255,160,40,0.5)']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.logoFlareLeft}
             />
             <View style={styles.logoFlareSpacer} />
             <LinearGradient
-              colors={['rgba(255,140,0,0.85)', 'rgba(255,140,0,0.55)', 'transparent']}
+              colors={['rgba(255,160,40,0.5)', 'transparent']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.logoFlareRight}
             />
           </View>
 
-          {/* The logo itself */}
-          <Text style={styles.logoMain}>
-            DROP<Text style={styles.logo4}>4</Text>
-          </Text>
+          {/* Title text — "DROP" in white with hard shadow, "4" oversized orange */}
+          <View style={styles.logoTextRow}>
+            <Text style={styles.logoDrop}>DROP</Text>
+            <View style={styles.logo4Wrap}>
+              {/* Orange glow ring behind the "4" */}
+              <View style={styles.logo4Ring} pointerEvents="none" />
+              <Text style={styles.logo4}>4</Text>
+            </View>
+          </View>
 
-          {/* Small triangle tick above the "4" for a scoreboard vibe */}
-          <View style={styles.logoTick} pointerEvents="none" />
+          {/* Subtitle tagline */}
+          <Text style={styles.logoTagline}>CONNECT TO WIN</Text>
         </View>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
@@ -564,14 +566,14 @@ export function HomeScreen() {
                 accessibilityHint="Opens the character creator to change outfit, hair, body, and colors"
                 style={{
                   position: 'absolute',
-                  bottom: -10,
+                  bottom: 4,
                   alignSelf: 'center',
-                  backgroundColor: 'rgba(255,140,0,0.18)',
+                  backgroundColor: 'rgba(255,140,0,0.22)',
                   borderWidth: 1.5,
-                  borderColor: 'rgba(255,140,0,0.5)',
+                  borderColor: 'rgba(255,140,0,0.6)',
                   borderRadius: 20,
-                  paddingHorizontal: 18,
-                  paddingVertical: 7,
+                  paddingHorizontal: 20,
+                  paddingVertical: 8,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 6,
@@ -787,13 +789,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#ffffff',
   },
-  // Logo
+  // Logo — layered title card
   logoArea: {
     alignItems: 'center',
-    height: 60,
+    height: 72,
     justifyContent: 'center',
-    marginTop: 2,
-    marginBottom: 4,
+    marginTop: 0,
+    marginBottom: 2,
     zIndex: 20,
     position: 'relative',
   },
@@ -801,70 +803,83 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     top: '50%',
-    width: 300,
-    height: 56,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,140,0,0.2)',
-    marginLeft: -150,
-    marginTop: -28,
-    transform: [{ scaleY: 0.75 }],
+    width: 320,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,140,0,0.14)',
+    marginLeft: -160,
+    marginTop: -32,
+    transform: [{ scaleY: 0.7 }],
   },
-  // Decorative horizontal flares flanking the text
   logoFlareRow: {
     position: 'absolute',
     left: 0,
     right: 0,
-    top: '50%',
-    height: 3,
-    marginTop: -1.5,
+    top: '42%',
+    height: 2,
     flexDirection: 'row',
     alignItems: 'center',
   },
   logoFlareLeft: {
     flex: 1,
-    height: 2,
+    height: 1.5,
     borderRadius: 1,
   },
   logoFlareSpacer: {
-    width: 200,   // reserved empty space where the text sits
+    width: 220,
   },
   logoFlareRight: {
     flex: 1,
-    height: 2,
+    height: 1.5,
     borderRadius: 1,
   },
-  // Main logo text — bright white DROP with an orange 4
-  logoMain: {
+  logoTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0,
+  },
+  logoDrop: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 42,
+    fontSize: 40,
     color: '#ffffff',
-    textShadowColor: 'rgba(120,180,255,0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
-    letterSpacing: 4,
+    letterSpacing: 6,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
+  },
+  logo4Wrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -2,
+  },
+  logo4Ring: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,140,0,0.4)',
+    backgroundColor: 'rgba(255,140,0,0.08)',
   },
   logo4: {
-    color: '#ff9a1a',
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
     fontSize: 52,
-    textShadowColor: 'rgba(255,140,0,0.95)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
+    color: '#ff9a1a',
+    textShadowColor: 'rgba(255,100,0,0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 18,
+    includeFontPadding: false,
   },
-  // Small orange triangle accent above the "4"
-  logoTick: {
-    position: 'absolute',
-    top: 2,
-    right: '29%',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderTopWidth: 7,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#ff9a1a',
-    opacity: 0.85,
+  logoTagline: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,200,120,0.55)',
+    letterSpacing: 4,
+    marginTop: -4,
   },
   comingSoonBadge: {
     position: 'absolute',
@@ -927,13 +942,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 0,
   },
-  logoTagline: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 13,
-    color: 'rgba(200,220,255,0.5)',
-    letterSpacing: 3,
-  },
   homeTitleBadge: {
     marginTop: 4,
     paddingHorizontal: 12,
@@ -985,28 +993,29 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   sideBtnCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
-    shadowColor: 'rgba(255,140,0,0.4)',
+    borderColor: 'rgba(255,160,40,0.45)',
+    backgroundColor: 'rgba(255,140,0,0.1)',
+    shadowColor: 'rgba(255,140,0,0.5)',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sideBtnEmoji: {
-    fontSize: 26,
+    fontSize: 28,
   },
   sideBtnLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.5,
+    fontSize: 11,
+    color: 'rgba(255,200,120,0.75)',
+    letterSpacing: 0.8,
   },
   characterStage: {
     flex: 1,

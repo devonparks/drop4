@@ -198,11 +198,10 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           {[
             { icon: '🎭', text: '30 emotes + Fortnite-style emote wheel in lobby' },
-            { icon: '🏟', text: 'Party Lobby — invite friends with room codes' },
             { icon: '🎮', text: '36 career levels with boss battles & puzzle modes' },
-            { icon: '🎨', text: '56+ skins: Dark Matter, Holographic, Galaxy & more' },
+            { icon: '🎨', text: '152 outfits across 12 packs + 16 pets' },
             { icon: '🎰', text: 'Daily FREE SPIN wheel with coin & gem rewards' },
-            { icon: '🏆', text: 'Ranked mode with ELO, tiers & seasonal resets' },
+            { icon: '🏆', text: '15 collection milestones with unique title rewards' },
             { icon: '⭐', text: 'Season Pass with 50 tiers of exclusive rewards' },
             { icon: '🎁', text: 'Loot boxes, challenges & achievement system' },
           ].map((item, i) => (
