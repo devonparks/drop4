@@ -8,7 +8,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { useMatchHistoryStore, MatchRecord } from '../stores/matchHistoryStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -208,10 +208,13 @@ export function MatchHistoryScreen() {
         ListHeaderComponent={
           <>
             {/* Header */}
+            <StaggeredEntry index={0} delay={60}>
             <Text style={styles.title} accessibilityRole="header">MATCH HISTORY</Text>
             <Text style={styles.subtitle}>{allMatches.length} total games played</Text>
+            </StaggeredEntry>
 
             {/* Summary stats row */}
+            <StaggeredEntry index={1} delay={60}>
             <View style={styles.statsRow}>
               <View style={styles.statPill}>
                 <Text style={[styles.statNum, { color: colors.green }]}>{stats.wins}</Text>
@@ -234,8 +237,10 @@ export function MatchHistoryScreen() {
                 <Text style={styles.statLabel}>Coins</Text>
               </View>
             </View>
+            </StaggeredEntry>
 
             {/* Filters */}
+            <StaggeredEntry index={2} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">FILTER</Text>
             <View style={styles.chipRow}>
               {FILTER_OPTIONS.map(opt => (
@@ -248,8 +253,10 @@ export function MatchHistoryScreen() {
                 />
               ))}
             </View>
+            </StaggeredEntry>
 
             {/* Sort */}
+            <StaggeredEntry index={3} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">SORT BY</Text>
             <View style={styles.chipRow}>
               {SORT_OPTIONS.map(opt => (
@@ -261,11 +268,14 @@ export function MatchHistoryScreen() {
                 />
               ))}
             </View>
+            </StaggeredEntry>
 
             {/* Results count */}
+            <StaggeredEntry index={4} delay={60}>
             <Text style={styles.resultsCount}>
               Showing {pagedMatches.length} of {filteredAndSorted.length} matches
             </Text>
+            </StaggeredEntry>
           </>
         }
         renderItem={({ item, index }) => <MatchRow match={item} index={index} />}
