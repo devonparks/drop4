@@ -215,15 +215,17 @@ export function ProfileScreen() {
           })()}
 
           {/* Share Profile button */}
-          <Pressable
-            onPress={handleShareProfile}
-            style={({ pressed }) => [styles.shareProfileBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Share profile"
-            accessibilityHint="Share your player card with stats and rank"
-          >
-            <Text style={styles.shareProfileText}>{'\uD83D\uDCE4'} SHARE PROFILE</Text>
-          </Pressable>
+          <PressScale scaleTo={0.95}>
+            <Pressable
+              onPress={handleShareProfile}
+              style={styles.shareProfileBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Share profile"
+              accessibilityHint="Share your player card with stats and rank"
+            >
+              <Text style={styles.shareProfileText}>{'\uD83D\uDCE4'} SHARE PROFILE</Text>
+            </Pressable>
+          </PressScale>
 
           {/* Level bar — chunky with XP inside */}
           <View style={styles.levelSection}>
@@ -414,15 +416,17 @@ export function ProfileScreen() {
                   style={[styles.achProgressBarFill, { width: `${Math.max(pct, 4)}%` as any }]}
                 />
               </View>
-              <Pressable
-                onPress={() => navigateTo('Challenges')}
-                style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
-                accessibilityRole="button"
-                accessibilityLabel="View all achievements"
-                accessibilityHint="Open the challenges screen with the full achievement list"
-              >
-                <Text style={{ fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: colors.orange, letterSpacing: 1 }}>VIEW ALL →</Text>
-              </Pressable>
+              <PressScale scaleTo={0.95}>
+                <Pressable
+                  onPress={() => navigateTo('Challenges')}
+                  style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
+                  accessibilityRole="button"
+                  accessibilityLabel="View all achievements"
+                  accessibilityHint="Open the challenges screen with the full achievement list"
+                >
+                  <Text style={{ fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: colors.orange, letterSpacing: 1 }}>VIEW ALL →</Text>
+                </Pressable>
+              </PressScale>
             </View>
           );
         })()}
@@ -472,14 +476,16 @@ export function ProfileScreen() {
           <>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]} accessibilityRole="header">RECENT MATCHES</Text>
-              <Pressable
-                onPress={() => { haptics.tap(); navigateTo('MatchHistory'); }}
-                accessibilityRole="button"
-                accessibilityLabel="View all matches"
-                accessibilityHint="Open the full match history"
-              >
-                <Text style={styles.viewAllLink}>View All →</Text>
-              </Pressable>
+              <PressScale scaleTo={0.95}>
+                <Pressable
+                  onPress={() => { haptics.tap(); navigateTo('MatchHistory'); }}
+                  accessibilityRole="button"
+                  accessibilityLabel="View all matches"
+                  accessibilityHint="Open the full match history"
+                >
+                  <Text style={styles.viewAllLink}>View All →</Text>
+                </Pressable>
+              </PressScale>
             </View>
 
             {/* Form guide — last 10 results as colored dots */}
