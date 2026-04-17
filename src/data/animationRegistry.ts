@@ -36,7 +36,7 @@ export const HUMAN_IDLES: AnimationMeta[] = [
 ];
 
 // ── Humans: Idle one-shots ──
-export const HUMAN_IDLE_ACTIONS: AnimationMeta[] = [
+const HUMAN_IDLE_ACTIONS: AnimationMeta[] = [
   { id: 'idle_bored_foot_tap',   name: 'Foot Tap',    glb: require('../assets/models/animations/idles/idle_bored_foot_tap.glb'),   loop: false, category: 'idle' },
   { id: 'idle_bored_swing_arms', name: 'Swing Arms',  glb: require('../assets/models/animations/idles/idle_bored_swing_arms.glb'), loop: false, category: 'idle' },
   { id: 'idle_bored_slump',      name: 'Slump',       glb: require('../assets/models/animations/idles/idle_bored_slump.glb'),      loop: false, category: 'idle' },
@@ -76,7 +76,7 @@ export const DOG_IDLES: AnimationMeta[] = [
 ];
 
 // ── Dogs: Actions ──
-export const DOG_ACTIONS: AnimationMeta[] = [
+const DOG_ACTIONS: AnimationMeta[] = [
   { id: 'dog_bark',         name: 'Bark',      glb: require('../assets/models/animations/dog/dog_bark.glb'),         loop: false, category: 'dog_action' },
   { id: 'dog_beg',          name: 'Beg',       glb: require('../assets/models/animations/dog/dog_beg.glb'),          loop: false, category: 'dog_action' },
   { id: 'dog_howl',         name: 'Howl',      glb: require('../assets/models/animations/dog/dog_howl.glb'),         loop: false, category: 'dog_action' },
@@ -92,19 +92,18 @@ export const DOG_ACTIONS: AnimationMeta[] = [
   { id: 'dog_sit_yawn',     name: 'Yawn',      glb: require('../assets/models/animations/dog/dog_sit_yawn.glb'),     loop: false, category: 'dog_action' },
 ];
 
-export const ALL_HUMAN_ANIMATIONS: AnimationMeta[] = [
+const ALL_HUMAN_ANIMATIONS: AnimationMeta[] = [
   ...HUMAN_IDLES,
   ...HUMAN_IDLE_ACTIONS,
   ...HUMAN_EMOTES,
 ];
 
-export const ALL_DOG_ANIMATIONS: AnimationMeta[] = [
+const ALL_DOG_ANIMATIONS: AnimationMeta[] = [
   ...DOG_IDLES,
   ...DOG_ACTIONS,
 ];
 
 export const DEFAULT_HUMAN_IDLE: AnimationMeta | null = HUMAN_IDLES[0] ?? null;
-export const DEFAULT_DOG_IDLE: AnimationMeta | null = DOG_IDLES[0] ?? null;
 
 export function findAnimation(id: AnimationId): AnimationMeta | null {
   return (
