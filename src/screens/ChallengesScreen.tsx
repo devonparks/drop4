@@ -269,7 +269,11 @@ export function ChallengesScreen() {
 
   // Weekly progress — wins this week + career completions
   const matches = useMatchHistoryStore(s => s.matches);
-  const careerCompletedCount = useCareerStore(s => s.getCompletedCount());
+  const careerProgress = useCareerStore(s => s.progress);
+  const careerCompletedCount = useMemo(
+    () => Object.values(careerProgress).filter(p => p.completed).length,
+    [careerProgress],
+  );
 
   const weeklyWins = useMemo(() => {
     const weekStart = new Date();
