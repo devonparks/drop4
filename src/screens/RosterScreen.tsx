@@ -4,11 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
-import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
 import { CharacterSnapshot } from '../components/3d/CharacterSnapshot';
 import { getRosterCustomization } from '../data/npcCustomizations';
 import { useCharacterStore } from '../stores/characterStore';
-import { FEATURES } from '../config/features';
 import { useRosterStore } from '../stores/rosterStore';
 import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
@@ -86,15 +84,6 @@ function RosterCardPreview({ characterId, size, isEquipped }: {
   characterId: string; size: number; isEquipped: boolean;
 }) {
   const playerCust = useCharacterStore((s) => s.customization);
-  if (!FEATURES.character3D) {
-    return (
-      <AnimatedCharacter
-        characterId={characterId}
-        size={size}
-        selectedIdle={isEquipped ? null : 'foottap'}
-      />
-    );
-  }
   const custom = getRosterCustomization(characterId);
   // Default (player) character uses the live customization so it reflects edits
   return (
