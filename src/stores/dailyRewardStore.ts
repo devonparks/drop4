@@ -44,23 +44,6 @@ const DAILY_REWARDS: Omit<DailyReward, 'claimed'>[] = [
   { day: 7, type: 'outfit',  amount: 1,    icon: '👑', name: 'Rare Outfit', unlockId: 'human_fantasy_knights_03' },
 ];
 
-/** Milestone rewards on top of the 7-day cycle */
-interface StreakMilestone {
-  atStreakDays: number;
-  type: DailyRewardType;
-  amount: number;
-  icon: string;
-  name: string;
-  description: string;
-  unlockId?: string;
-}
-
-const STREAK_MILESTONES: StreakMilestone[] = [
-  { atStreakDays: 14, type: 'pet',   amount: 1, icon: '🐺', name: 'Wolf Pet',       description: '14-day streak legend', unlockId: 'dog_wolf' },
-  { atStreakDays: 30, type: 'title', amount: 1, icon: '🏆', name: 'Devoted',        description: '30 days loyal',         unlockId: 'devoted' },
-  { atStreakDays: 60, type: 'pet',   amount: 1, icon: '👹', name: 'Hellhound',      description: '60-day iron will',      unlockId: 'dog_hellhound' },
-  { atStreakDays: 100, type: 'outfit', amount: 1, icon: '🛸', name: 'Cyber Hound Crew', description: '100 days — whole squad', unlockId: 'human_sci_fi_soldiers_10' },
-];
 
 function getTodayString(): string {
   // Use local date to avoid UTC timezone issues (e.g. claiming at 11pm local = next day in UTC)
@@ -126,23 +109,6 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
   },
 }));
 
-/**
- * Returns any milestone reward the player has earned but not seen yet.
- * Compares current streak against STREAK_MILESTONES and returns the first
- * unclaimed one. Callers persist a "milestonesClaimed" set to prevent
- * double-granting.
- */
-function getPendingMilestone(
-  claimedMilestoneDays: number[] = [],
-): StreakMilestone | null {
-  const streak = useDailyRewardStore.getState().currentStreak;
-  for (const m of STREAK_MILESTONES) {
-    if (streak >= m.atStreakDays && !claimedMilestoneDays.includes(m.atStreakDays)) {
-      return m;
-    }
-  }
-  return null;
-}
 
 /**
  * Returns a coin multiplier based on the daily login streak.
