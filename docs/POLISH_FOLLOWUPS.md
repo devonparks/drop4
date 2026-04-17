@@ -59,5 +59,14 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - ProfileScreen portrait upgraded to live 3D character (commit c74c94f)
 - Deleted dead friends + emote wheel/bar code, 1,103 lines (commit cc58c09)
 - LegalScreen privacy + terms ready for app store review — account deletion, analytics disclosure, push notifications, GDPR/CCPA, governing law (commit f14b12d)
+- Home Screen visual overhaul — logo PNG swap, CUSTOMIZE button out of absolute positioning, Emotes/Idles buttons upgraded, dead MP removed from Settings What's New (commit f477757, 700d559)
+- Character Creator T-pose fix — DEFAULT_HUMAN_IDLE fallback (commit 3cad509)
+- Shop "Elven·Elven" filter labels fixed (commit 19f2e73)
+- GameScreen MP code stripped — 202 lines of dead online match code (commit df49f2a)
+- Deleted matchmaking.ts + emotes.ts + firebase.ts + EloChangeAnimation — ~1,100 lines (commits 0c037bf, 61d02ac, 79b2b2b)
+- Emote/Idle picker: AnimationPicker uses 3D character, character tap plays emote directly instead of opening wheel (commit 296600c)
+- Logo auto-cropped to content, EmotePickerModal3D + EmoteShowcase dead code removed from lobby (commits 8559959, 999d2e5)
+- Awards tab: 15-milestone collection ladder with progress bars (commit 13cb24f)
+- ErrorBoundary: web reload + wired Go Home handler (commit 4738f80)
 
 <!-- The polish loop moves items here with a commit SHA when shipped -->
