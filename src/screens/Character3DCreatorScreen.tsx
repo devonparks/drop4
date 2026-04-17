@@ -14,7 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Character3D } from '../components/3d/Character3D';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { HSLColorPicker } from '../components/ui/HSLColorPicker';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { FilterChip } from '../components/ui/FilterChip';
 import {
   useCharacterStore,
@@ -129,6 +129,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
   return (
     <ScreenBackground>
       {/* Header */}
+      <StaggeredEntry index={0} delay={60}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable
           onPress={() => navigation.goBack()}
@@ -145,8 +146,10 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           <Text style={styles.coinValue}>{coins.toLocaleString()}</Text>
         </View>
       </View>
+      </StaggeredEntry>
 
       {/* 3D Preview */}
+      <StaggeredEntry index={1} delay={60}>
       <View style={styles.previewArea}>
         <Character3D
           width={300}
@@ -165,8 +168,10 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           animationLoop={!previewEmoteId}
         />
       </View>
+      </StaggeredEntry>
 
       {/* Tab bar */}
+      <StaggeredEntry index={2} delay={60}>
       <View style={styles.tabRow} accessibilityRole="tablist">
         {TABS.map((t) => (
           <PressScale
@@ -183,8 +188,10 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           </PressScale>
         ))}
       </View>
+      </StaggeredEntry>
 
       {/* Content */}
+      <StaggeredEntry index={3} delay={60}>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner} showsVerticalScrollIndicator={false}>
         {activeTab === 'outfit' && (
           <OutfitTab currentId={cust.outfitId} onSelect={setOutfit} />
@@ -218,6 +225,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
         {activeTab === 'pets' && <PetsTab />}
         {activeTab === 'emotes' && <EmotesTab onPlay={setPreviewEmoteId} />}
       </ScrollView>
+      </StaggeredEntry>
 
       {/* HSL Color Picker Modal */}
       <HSLColorPicker
