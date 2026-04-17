@@ -29,7 +29,7 @@ import { OUTFITS, OUTFIT_IDS, PACKS, type Species } from '../data/outfitRegistry
 import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { PETS, PET_IDS, type PetId } from '../data/petRegistry';
 import { usePetStore } from '../stores/petStore';
-import { HUMAN_EMOTES } from '../data/animationRegistry';
+import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -160,7 +160,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
           mode="creator"
           cameraDistance={3.5}
           cameraHeight={1.0}
-          animationGlb={previewEmoteId ? previewEmote?.glb : undefined}
+          animationGlb={previewEmoteId ? previewEmote?.glb : DEFAULT_HUMAN_IDLE?.glb}
           animationLoop={!previewEmoteId}
         />
       </View>
