@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   Animated,
-  Dimensions,
   Modal,
   ViewStyle,
 } from 'react-native';
@@ -44,7 +43,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CareerCity'>;
 //   • Tap node → OpponentCard modal with details and PLAY button
 // ─────────────────────────────────────────────────────────────────────────
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NODE_SIZE = 72;
 const BOSS_NODE_SIZE = 92;
 const NODE_ROW_HEIGHT = 170;  // vertical space per node step
