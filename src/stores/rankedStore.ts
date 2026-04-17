@@ -54,7 +54,7 @@ function eloToTier(elo: number): RankedTier {
 }
 
 /** Get division within a tier (3 = lowest, 1 = highest). Master+ always returns 1. */
-export function getDivision(elo: number): number {
+function getDivision(elo: number): number {
   const tierInfo = RANKED_TIERS.find(t => t.id === eloToTier(elo))!;
   if (tierInfo.divisions === 1) return 1;
 
@@ -70,7 +70,7 @@ export function getDivision(elo: number): number {
 }
 
 /** Get progress (0-100) within the current division, not just the tier */
-export function getDivisionProgress(elo: number): number {
+function getDivisionProgress(elo: number): number {
   const tierInfo = RANKED_TIERS.find(t => t.id === eloToTier(elo))!;
   const tierIdx = RANKED_TIERS.indexOf(tierInfo);
   const nextTier = RANKED_TIERS[tierIdx + 1];
