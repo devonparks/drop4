@@ -45,7 +45,7 @@ const DAILY_REWARDS: Omit<DailyReward, 'claimed'>[] = [
 ];
 
 /** Milestone rewards on top of the 7-day cycle */
-export interface StreakMilestone {
+interface StreakMilestone {
   atStreakDays: number;
   type: DailyRewardType;
   amount: number;
@@ -55,7 +55,7 @@ export interface StreakMilestone {
   unlockId?: string;
 }
 
-export const STREAK_MILESTONES: StreakMilestone[] = [
+const STREAK_MILESTONES: StreakMilestone[] = [
   { atStreakDays: 14, type: 'pet',   amount: 1, icon: '🐺', name: 'Wolf Pet',       description: '14-day streak legend', unlockId: 'dog_wolf' },
   { atStreakDays: 30, type: 'title', amount: 1, icon: '🏆', name: 'Devoted',        description: '30 days loyal',         unlockId: 'devoted' },
   { atStreakDays: 60, type: 'pet',   amount: 1, icon: '👹', name: 'Hellhound',      description: '60-day iron will',      unlockId: 'dog_hellhound' },
@@ -132,7 +132,7 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
  * unclaimed one. Callers persist a "milestonesClaimed" set to prevent
  * double-granting.
  */
-export function getPendingMilestone(
+function getPendingMilestone(
   claimedMilestoneDays: number[] = [],
 ): StreakMilestone | null {
   const streak = useDailyRewardStore.getState().currentStreak;
