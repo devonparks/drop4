@@ -19,7 +19,7 @@ type RankedTier =
   | 'champion'
   | 'darkmatter';
 
-export interface RankedTierInfo {
+interface RankedTierInfo {
   id: RankedTier;
   name: string;
   icon: string;
