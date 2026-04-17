@@ -10,7 +10,7 @@ import { Character3D } from '../components/3d/Character3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
 import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
-import { EmotePickerModal3D } from '../components/ui/EmotePickerModal3D';
+// EmotePickerModal3D removed from lobby — wheel is for in-game only
 import { EmoteShowcase } from '../components/ui/EmoteShowcase';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
@@ -233,7 +233,7 @@ export function HomeScreen() {
   // 3D emote playback on the home character. When set, feeds animationGlb to
   // Character3DWrapper. Auto-clears after 3s so the character returns to idle.
   const [active3DEmote, setActive3DEmote] = useState<string | null>(null);
-  const [emotePicker3DOpen, setEmotePicker3DOpen] = useState(false);
+  // emotePicker3DOpen removed — character tap now plays emotes directly
   useEffect(() => {
     if (!active3DEmote) return;
     const t = setTimeout(() => setActive3DEmote(null), 3000);
@@ -588,12 +588,8 @@ export function HomeScreen() {
           onClose={() => setSpinWheelOpen(false)}
         />
 
-        {/* 3D Emote Picker — opens on character tap when FEATURES.character3D is on */}
-        <EmotePickerModal3D
-          visible={emotePicker3DOpen}
-          onClose={() => setEmotePicker3DOpen(false)}
-          onPlay={(id) => setActive3DEmote(id)}
-        />
+        {/* EmotePickerModal3D removed from lobby — character tap now plays
+            emotes directly. The wheel is for in-game (GameScreen) only. */}
 
         {/* First-launch welcome modal — auto-shows once for new users */}
         <WelcomeOverlay />
@@ -690,14 +686,16 @@ const styles = StyleSheet.create({
   // Logo — layered title card
   logoArea: {
     alignItems: 'center',
-    height: 64,
+    height: 56,
     justifyContent: 'center',
     marginTop: 0,
-    marginBottom: 0,
+    marginBottom: 2,
   },
   logoImage: {
-    width: 240,
-    height: 64,
+    width: 280,
+    height: 130,
+    marginTop: -30,
+    marginBottom: -40,
   },
   customizeBtn: {
     backgroundColor: 'rgba(255,140,0,0.22)',
