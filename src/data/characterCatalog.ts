@@ -49,29 +49,6 @@ export const CHARACTER_ITEMS: CharacterItem[] = [
   { id: 'shoes_platforms', name: 'Platforms', category: 'shoes', gender: 'female', rarity: 'legendary', unlock: { type: 'career', level: 12 }, icon: '👠' },
 ];
 
-// Helper to check if an unlock condition is met
-export function isConditionMet(condition: UnlockCondition, stats: {
-  wins: number;
-  level: number;
-  streak: number;
-  coins: number;
-  gamesPlayed: number;
-  hardWins: number;
-  careerLevel: number;
-}): boolean {
-  switch (condition.type) {
-    case 'default': return true;
-    case 'wins': return stats.wins >= condition.count;
-    case 'level': return stats.level >= condition.level;
-    case 'streak': return stats.streak >= condition.count;
-    case 'coins': return stats.coins >= condition.price;
-    case 'games': return stats.gamesPlayed >= condition.count;
-    case 'hard_wins': return stats.hardWins >= condition.count;
-    case 'career': return stats.careerLevel >= condition.level;
-    default: return false;
-  }
-}
-
 // Get human-readable unlock description
 export function getUnlockDescription(condition: UnlockCondition): string {
   switch (condition.type) {

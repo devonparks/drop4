@@ -24,11 +24,6 @@ export const TUTORIAL_TIPS: TutorialTip[] = [
 
 ];
 
-/** Get tips for a specific screen */
-export function getTipsForScreen(screen: string): TutorialTip[] {
-  return TUTORIAL_TIPS.filter(t => t.screen === screen);
-}
-
 /** Get a single tip by ID */
 export function getTipById(id: string): TutorialTip | undefined {
   return TUTORIAL_TIPS.find(t => t.id === id);
