@@ -8,6 +8,7 @@ import { useBoardEditorStore } from '../stores/boardEditorStore';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Cell } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
+import { StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -67,10 +68,13 @@ export function BoardEditorScreen({ navigation }: Props) {
           showBack onBackPress={() => navigation.goBack()}
         />
 
-        <Text style={styles.title} accessibilityRole="header">BOARD EDITOR</Text>
-        <Text style={styles.subtitle}>Create custom puzzle boards</Text>
+        <StaggeredEntry index={0} delay={60}>
+          <Text style={styles.title} accessibilityRole="header">BOARD EDITOR</Text>
+          <Text style={styles.subtitle}>Create custom puzzle boards</Text>
+        </StaggeredEntry>
 
         {/* Piece selector */}
+        <StaggeredEntry index={1} delay={60}>
         <View style={styles.pieceSelector}>
           {([1, 2, 0] as Cell[]).map(piece => {
             const pieceName = piece === 1 ? 'Red' : piece === 2 ? 'Yellow' : 'Erase';
@@ -95,8 +99,10 @@ export function BoardEditorScreen({ navigation }: Props) {
             );
           })}
         </View>
+        </StaggeredEntry>
 
         {/* Board grid */}
+        <StaggeredEntry index={2} delay={60}>
         <View style={styles.boardWrap}>
           <View style={[styles.boardGrid, { width: CELL_SIZE * editorCols + 8 }]}>
             {Array.from({ length: editorRows }).map((_, row) => (
@@ -127,13 +133,16 @@ export function BoardEditorScreen({ navigation }: Props) {
             ))}
           </View>
         </View>
+        </StaggeredEntry>
 
         {/* Action buttons */}
+        <StaggeredEntry index={3} delay={60}>
         <View style={styles.actions}>
           <GlossyButton label="CLEAR" variant="navy" small onPress={() => { haptics.tap(); clearBoard(); }} />
           <GlossyButton label="SAVE" variant="green" small onPress={() => setShowSave(true)} />
           <GlossyButton label="PLAY" variant="orange" small onPress={handlePlayBoard} />
         </View>
+        </StaggeredEntry>
 
         {/* Save dialog */}
         {showSave && (
@@ -158,6 +167,7 @@ export function BoardEditorScreen({ navigation }: Props) {
 
         {/* My boards list */}
         {myBoards.length > 0 && (
+          <StaggeredEntry index={4} delay={60}>
           <View style={styles.myBoardsSection}>
             <Text style={styles.myBoardsTitle} accessibilityRole="header">MY BOARDS ({myBoards.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.myBoardsScroll}>
@@ -175,6 +185,7 @@ export function BoardEditorScreen({ navigation }: Props) {
               ))}
             </ScrollView>
           </View>
+          </StaggeredEntry>
         )}
       </View>
     </ScreenBackground>
