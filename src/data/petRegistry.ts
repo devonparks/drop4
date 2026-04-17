@@ -49,7 +49,3 @@ export const PETS: Record<PetId, PetMeta> = {
 export const PET_IDS: PetId[] = Object.keys(PETS) as PetId[];
 
 export const STARTER_PET_ID: PetId = 'dog_labrador';
-
-export function getPet(id: PetId): PetMeta {
-  return PETS[id];
-}

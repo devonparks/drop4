@@ -142,23 +142,3 @@ export function useGLB(source: number | string | null): {
 export async function preloadGLBs(sources: (number | string)[]): Promise<void> {
   await Promise.all(sources.map(loadGLB));
 }
-
-/**
- * Clear the GLB cache (useful for memory pressure).
- */
-export function clearGLBCache(): void {
-  // Dispose Three.js resources
-  glbCache.forEach((gltf: any) => {
-    gltf.scene?.traverse((child: any) => {
-      if (child instanceof THREE.Mesh) {
-        child.geometry?.dispose();
-        if (Array.isArray(child.material)) {
-          child.material.forEach((m: any) => m.dispose());
-        } else {
-          (child.material as any)?.dispose();
-        }
-      }
-    });
-  });
-  glbCache.clear();
-}
