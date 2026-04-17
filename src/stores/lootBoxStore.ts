@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 import { useShopStore } from './shopStore';
 
-export type LootBoxRarity = 'common' | 'rare' | 'epic' | 'legendary';
+type LootBoxRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 export interface LootBoxItem {
   id: string;
