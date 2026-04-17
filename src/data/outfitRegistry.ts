@@ -10,7 +10,7 @@
  *   Pack      = pack slug (e.g. "modern_civilians")
  */
 
-export type OutfitId = string;
+type OutfitId = string;
 export type Species = 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie';
 
 export interface OutfitMeta {
@@ -180,7 +180,7 @@ export const OUTFITS: Record<OutfitId, OutfitMeta> = {
 
 export const OUTFIT_IDS: OutfitId[] = Object.keys(OUTFITS);
 
-export interface PackMeta {
+interface PackMeta {
   species: Species;
   pack: string;
   label: string;

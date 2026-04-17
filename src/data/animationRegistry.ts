@@ -9,7 +9,7 @@
  *   2) npm run convert-fbx animations   (FBX → GLB via FBX2glTF)
  */
 
-export type AnimationId = string;
+type AnimationId = string;
 
 export interface AnimationMeta {
   id: AnimationId;

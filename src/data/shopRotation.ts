@@ -19,7 +19,7 @@
 import { OUTFIT_SHOP_ITEMS, PET_SHOP_ITEMS, EMOTE_SHOP_ITEMS } from './cosmeticsShopCatalog';
 import type { ShopItem } from './shopCatalog';
 
-export interface FeaturedDeal {
+interface FeaturedDeal {
   item: ShopItem;
   originalPrice: number;
   discountedPrice: number;

@@ -12,7 +12,7 @@
 
 import { PACKS } from './outfitRegistry';
 
-export type MilestoneRewardType = 'title' | 'emote' | 'coins' | 'hair_color';
+type MilestoneRewardType = 'title' | 'emote' | 'coins' | 'hair_color';
 
 export interface CollectionMilestone {
   id: string;
