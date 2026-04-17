@@ -308,7 +308,7 @@ export function RosterScreen({ navigation }: Props) {
           colors={['rgba(155,89,182,0.18)', 'rgba(155,89,182,0.04)']}
           style={styles.headerCard}
         >
-          <Text style={styles.headerEyebrow}>YOUR COLLECTION</Text>
+          <Text style={styles.headerEyebrow} accessibilityRole="header">YOUR COLLECTION</Text>
           <Text style={styles.headerCount}>
             {unlockedCount}<Text style={styles.headerCountTotal}> / {totalCount}</Text>
           </Text>
@@ -325,7 +325,7 @@ export function RosterScreen({ navigation }: Props) {
           return (
             <View key={section.title} style={styles.section}>
               <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
+                <Text style={styles.sectionTitle} accessibilityRole="header">{section.title}</Text>
                 <Text style={styles.sectionCount}>
                   {sectionUnlocked}/{section.data.length}
                 </Text>
@@ -596,12 +596,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     fontWeight: weight.bold,
-  },
-  signatureLineMuted: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.25)',
-    textAlign: 'center',
-    marginTop: 6,
   },
 });
