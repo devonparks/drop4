@@ -33,7 +33,6 @@ import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
 import { useRankedStore } from '../stores/rankedStore';
-// MP imports removed — matchmaking/emotes services killed for v1 (commit 00d9891)
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomGameOverQuote } from '../data/tips';
@@ -285,9 +284,6 @@ export function GameScreen({ navigation }: Props) {
       if (chessClockRef.current) clearInterval(chessClockRef.current);
     };
   }, [isRankedMode, status, activeClockPlayer]);
-
-  // [MP-KILL] Online match listeners removed — listenToMatch, listenForEmotes,
-  // listenForRematch were all gated on isOnlineMatch (always false post v1).
 
   // Navigate to new rematch game when both accept
   useEffect(() => {
@@ -816,9 +812,6 @@ export function GameScreen({ navigation }: Props) {
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
 
-    // Online match: only allow moves on our turn, send to Firestore
-    // [MP-KILL] Online makeMove branch removed
-
     if (isVsAi && currentPlayer !== 1) return;
     // Center-first challenge: first move in center column
     if (moveCount === 0 && col === Math.floor((customSettings?.cols ?? 7) / 2)) {
@@ -880,7 +873,6 @@ export function GameScreen({ navigation }: Props) {
   };
 
   const handleBack = () => {
-    // [MP-KILL] Online resign branch removed
     // Quit penalty for ranked / wager games
     if ((isRankedMode || wagerCourt) && status === 'playing') {
       Alert.alert(

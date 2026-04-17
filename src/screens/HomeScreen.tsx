@@ -10,8 +10,6 @@ import { Character3D } from '../components/3d/Character3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
 import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
-// EmotePickerModal3D removed from lobby — wheel is for in-game only
-// EmoteShowcase removed — showcaseOpen was never set to true
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
@@ -221,7 +219,6 @@ export function HomeScreen() {
       });
     }
   }, [justLeveledUp]);
-  // showcaseOpen removed — EmoteShowcase was never opened
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
   // Subscribed so taps on the character resolve the current preference.
@@ -233,7 +230,6 @@ export function HomeScreen() {
   // 3D emote playback on the home character. When set, feeds animationGlb to
   // Character3DWrapper. Auto-clears after 3s so the character returns to idle.
   const [active3DEmote, setActive3DEmote] = useState<string | null>(null);
-  // emotePicker3DOpen removed — character tap now plays emotes directly
   useEffect(() => {
     if (!active3DEmote) return;
     const t = setTimeout(() => setActive3DEmote(null), 3000);
@@ -566,8 +562,6 @@ export function HomeScreen() {
           onClose={() => setAnimPickerOpen(false)}
           initialTab={animPickerTab}
         />
-
-        {/* EmoteShowcase removed — was dead code, never triggered */}
 
         {/* Daily Spin Wheel */}
         <DailySpinWheel
