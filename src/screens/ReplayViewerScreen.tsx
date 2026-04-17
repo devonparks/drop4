@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { StaggeredEntry } from '../components/animations/StaggeredEntry';
 import { TopBar } from '../components/ui/TopBar';
 import { useReplayStore, Replay, ReplayMove } from '../stores/replayStore';
 import { useShopStore } from '../stores/shopStore';
@@ -261,16 +262,19 @@ export function ReplayViewerScreen() {
     <ScreenBackground>
       <TopBar coins={coins} gems={gems} level={level} showBack onBackPress={() => navigation.goBack()} />
       <View style={rStyles.container}>
-        <Text style={rStyles.title} accessibilityRole="header">REPLAYS</Text>
-        <Text style={rStyles.subtitle}>{replays.length} saved</Text>
+        <StaggeredEntry index={0} delay={60}>
+          <Text style={rStyles.title} accessibilityRole="header">REPLAYS</Text>
+          <Text style={rStyles.subtitle}>{replays.length} saved</Text>
+        </StaggeredEntry>
 
         {replays.length === 0 ? (
-          <Animated.View entering={FadeIn.duration(280)} style={rStyles.emptyState}>
+          <StaggeredEntry index={1} delay={60} style={rStyles.emptyState}>
             <Text style={rStyles.emptyIcon}>🎬</Text>
             <Text style={rStyles.emptyText}>No replays yet</Text>
             <Text style={rStyles.emptySubtext}>Play some games and they'll appear here</Text>
-          </Animated.View>
+          </StaggeredEntry>
         ) : (
+          <StaggeredEntry index={1} delay={60}>
           <ScrollView contentContainerStyle={rStyles.replayList} showsVerticalScrollIndicator={false}>
             {replays.map(replay => (
               <ReplayCard
@@ -282,6 +286,7 @@ export function ReplayViewerScreen() {
               />
             ))}
           </ScrollView>
+          </StaggeredEntry>
         )}
       </View>
     </ScreenBackground>
