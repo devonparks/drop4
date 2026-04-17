@@ -1241,8 +1241,6 @@ export function GameScreen({ navigation }: Props) {
           />
         )}
 
-        {/* Matchmaking overlay removed with multiplayer kill for v1 */}
-
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
 

@@ -27,7 +27,7 @@ interface BoardEditorState {
 
   // Saved boards
   myBoards: CustomBoard[];
-  communityBoards: CustomBoard[]; // Will be from Firebase later
+  communityBoards: CustomBoard[];
 
   // Actions
   initEditor: (rows?: number, cols?: number) => void;

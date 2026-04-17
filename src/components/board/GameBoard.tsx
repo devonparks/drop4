@@ -213,7 +213,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
 
   // Track which pieces are "new" for drop animation.
   // Uses board-snapshot comparison so it works for both local drops and
-  // online match board syncs from Firestore.
+  // undo/redo replays.
   const knownPieces = useRef(new Set<string>());
   const newPieceKeys = useRef(new Set<string>());
   const [, setAnimTick] = React.useState(0);
