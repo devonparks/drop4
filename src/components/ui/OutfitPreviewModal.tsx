@@ -58,7 +58,7 @@ export function OutfitPreviewModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}

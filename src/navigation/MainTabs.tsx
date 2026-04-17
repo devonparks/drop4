@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
@@ -15,8 +20,23 @@ import { fonts, weight } from '../theme/typography';
 const Tab = createBottomTabNavigator();
 
 function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: string; focused: boolean; badgeCount?: number }) {
+  // Scale-pop on focus change. Bounces up then settles so the tap feels
+  // like the button is answering the user. ~300ms total feel.
+  const scale = useSharedValue(focused ? 1.06 : 1);
+  useEffect(() => {
+    if (focused) {
+      scale.value = 1.18;
+      scale.value = withSpring(1.06, { damping: 8, stiffness: 180 });
+    } else {
+      scale.value = withSpring(1, { damping: 12, stiffness: 220 });
+    }
+  }, [focused, scale]);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
-    <View style={styles.tabItem}>
+    <Animated.View style={[styles.tabItem, animStyle]}>
       <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.activeIndicator} />}
@@ -25,7 +45,7 @@ function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: st
           <Text style={styles.badgeText}>{badgeCount}</Text>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
