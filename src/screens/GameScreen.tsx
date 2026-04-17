@@ -15,7 +15,6 @@ import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { getNpcCustomization } from '../data/npcCustomizations';
 import { PetDisplay } from '../components/ui/PetDisplay';
-import { EmotePickerModal } from '../components/ui/EmotePickerModal';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
 import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
@@ -109,9 +108,6 @@ export function GameScreen({ navigation }: Props) {
 
   // Last move indicator
   const lastMoveFade = useRef(new RNAnimated.Value(0)).current;
-
-  // Emote Picker Modal
-  const [emotePickerOpen, setEmotePickerOpen] = useState(false);
 
   // Tutorial
   const hasSeenGameTip = useTutorialStore(s => s.hasSeenTip);
@@ -1122,52 +1118,6 @@ export function GameScreen({ navigation }: Props) {
             <Text style={styles.resignLabel}>Quit</Text>
           </Pressable>
         </View>
-
-        {/* Emote/Chat pills removed — use the emote wheel button (bottom-right) or MORE for full picker */}
-
-        {/* Full-screen emote/chat picker modal */}
-        <EmotePickerModal
-          visible={emotePickerOpen}
-          onClose={() => setEmotePickerOpen(false)}
-          initialTab="emotes"
-          onEmotePress={(id) => {
-            // Show player's emote locally
-            setMyEmote({ emoteId: id, key: Date.now() });
-            // Local/AI game: trigger AI reaction
-            triggerAiEmoteReaction(id);
-          }}
-          onChatSend={(msg: any) => {
-            setMyChatBubble({ text: msg.text, key: Date.now() });
-            if (isVsAi) {
-              // AI chat reaction for local games — respond with a contextual chat bubble
-              const aiChatDelay = 1000 + Math.random() * 1000;
-              setTimeout(() => {
-                if (Math.random() < 0.5) return; // 50% chance of no reaction
-                const AI_CHAT_RESPONSES: Record<string, string[]> = {
-                  gl: ['Good luck!', 'Have fun!'],
-                  hf: ['Have fun!', 'Good luck!'],
-                  nm: ['Thanks!', 'Well played!'],
-                  wp: ['Thanks!', 'Good game!'],
-                  ez: ['Bring it on!', 'Hmm...'],
-                  bm: ['Bring it on!', 'Good luck!'],
-                  uh: ['Hmm...', 'Oops!'],
-                  wow: ['Thanks!', 'Wow!'],
-                  oops: ['That was close!', 'Hmm...'],
-                  close: ['That was close!', 'Wow!'],
-                  think: ['Hmm...', 'Wait what?!'],
-                  what: ['Hmm...', 'Oops!'],
-                  gg: ['Good game!', 'Thanks!'],
-                  rematch: ['Bring it on!', 'Good luck!'],
-                  thanks: ['Good luck!', 'Have fun!'],
-                  bye: ['See ya!', 'Good game!'],
-                };
-                const options = AI_CHAT_RESPONSES[msg.id] || ['Good game!', 'Hmm...'];
-                const aiText = options[Math.floor(Math.random() * options.length)];
-                setOpponentChatBubble({ text: aiText, senderName: p2Name, key: Date.now() });
-              }, aiChatDelay);
-            }
-          }}
-        />
 
         {/* Round EMOTE button — opens Fortnite-style wheel */}
         <Pressable
