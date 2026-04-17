@@ -40,7 +40,7 @@ type CareerChallengeType =
   | 'speed'           // Very fast timer (5 seconds or less)
   | 'tournament';     // Beat multiple opponents in a row
 
-export interface CareerReward {
+interface CareerReward {
   type: 'coins' | 'board' | 'pieces' | 'emote' | 'title' | 'pet';
   id?: string;
   name: string;
