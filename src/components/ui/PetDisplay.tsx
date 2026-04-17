@@ -4,8 +4,6 @@ import { getPetById } from '../../data/pets';
 import { PETS as PETS_3D } from '../../data/petRegistry';
 import { DOG_IDLES } from '../../data/animationRegistry';
 import { Pet3D } from '../3d/Pet3D';
-import { FEATURES } from '../../config/features';
-
 // ═══════════════════════════════════════════════════════════
 // PET DISPLAY — Shows equipped dog pet next to the character
 // Positioned bottom-right of the character stage area.
@@ -24,10 +22,10 @@ interface PetDisplayProps {
 }
 
 export function PetDisplay({ petId, size = 80, isIdle = true, style }: PetDisplayProps) {
-  // When the 3D pipeline is live AND the petId is a 3D dog breed, render Pet3D
-  // with its sit/stand idle instead of the 2D sprite.
+  // When the petId is a 3D dog breed, render Pet3D with its sit/stand idle
+  // instead of the 2D sprite.
   const petMeta3D = petId ? (PETS_3D as any)[petId] : null;
-  if (FEATURES.character3D && petMeta3D?.glb) {
+  if (petMeta3D?.glb) {
     const anim = (isIdle ? DOG_IDLES[1] : DOG_IDLES[0]) ?? DOG_IDLES[0];
     return (
       <View style={[{ width: size, height: size }, style]}>
