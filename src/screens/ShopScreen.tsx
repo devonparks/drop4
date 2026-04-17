@@ -33,7 +33,6 @@ import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { PETS as PETS_3D } from '../data/petRegistry';
 import { DOG_IDLES } from '../data/animationRegistry';
 import { Pet3D } from '../components/3d/Pet3D';
-import { FEATURES } from '../config/features';
 import { useCareerStore } from '../stores/careerStore';
 import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
 import { colors } from '../theme/colors';
@@ -461,7 +460,7 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
         <View style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}>
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.petPreview}>
-          {FEATURES.character3D && pet3D?.glb ? (
+          {pet3D?.glb ? (
             <Pet3D
               width={90} height={90}
               petGlb={pet3D.glb}
