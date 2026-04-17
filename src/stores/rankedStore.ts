@@ -119,11 +119,6 @@ interface RankedState {
   // Streak tracking
   currentStreak: number; // positive = win streak, negative = lose streak
 
-  // Chess clock state (for ranked games)
-  player1TimeBank: number;
-  player2TimeBank: number;
-  activeClockPlayer: 1 | 2 | null;
-
   // Actions
   recordRankedResult: (won: boolean, eloGain?: number) => void;
   getTier: () => RankedTierInfo;
@@ -131,9 +126,6 @@ interface RankedState {
   getProgress: () => number;
   getFormattedRank: () => string;
   getStreakMultiplier: () => number;
-  startChessClock: (totalSeconds: number) => void;
-  switchClock: (toPlayer: 1 | 2) => void;
-  tickClock: () => { expired: boolean; player: 1 | 2 | null };
   resetSeason: () => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -156,11 +148,6 @@ export const useRankedStore = create<RankedState>((set, get) => ({
 
   // Streaks
   currentStreak: 0,
-
-  // Chess clock
-  player1TimeBank: 180,
-  player2TimeBank: 180,
-  activeClockPlayer: null,
 
   recordRankedResult: (won, eloGain) => {
     const state = get();
@@ -251,30 +238,6 @@ export const useRankedStore = create<RankedState>((set, get) => ({
     if (streak >= 5) return 2;
     if (streak >= 3) return 1.5;
     return 1;
-  },
-
-  // ═══ Chess clock for ranked mode ═══
-  startChessClock: (totalSeconds) => set({
-    player1TimeBank: totalSeconds,
-    player2TimeBank: totalSeconds,
-    activeClockPlayer: 1,
-  }),
-
-  switchClock: (toPlayer) => set({ activeClockPlayer: toPlayer }),
-
-  tickClock: () => {
-    const { activeClockPlayer, player1TimeBank, player2TimeBank } = get();
-    if (!activeClockPlayer) return { expired: false, player: null };
-
-    if (activeClockPlayer === 1) {
-      const newTime = player1TimeBank - 1;
-      set({ player1TimeBank: Math.max(0, newTime) });
-      return { expired: newTime <= 0, player: 1 };
-    } else {
-      const newTime = player2TimeBank - 1;
-      set({ player2TimeBank: Math.max(0, newTime) });
-      return { expired: newTime <= 0, player: 2 };
-    }
   },
 
   resetSeason: () => {
