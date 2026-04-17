@@ -20,9 +20,7 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { CharacterAvatar } from '../components/ui/CharacterAvatar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
-import { FEATURES } from '../config/features';
 import { getNpcCustomization } from '../data/npcCustomizations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
@@ -106,13 +104,6 @@ export function MatchupScreen({ navigation }: Props) {
   const boardSize = params.boardSize || '7x6';
   const timerSeconds = params.timerSeconds;
   const wagerAmount = params.wagerAmount;
-
-  // Bot avatar variant
-  const botVariant = params.difficulty === 'easy'
-    ? 'bot_easy'
-    : params.difficulty === 'hard'
-    ? 'bot_hard'
-    : 'bot_medium';
 
   // ═══════════════════════════════════
   // Animation: VS glow pulse
@@ -254,9 +245,7 @@ export function MatchupScreen({ navigation }: Props) {
                 colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)', 'transparent']}
                 style={styles.characterGlow}
               >
-                {FEATURES.character3D
-                  ? <Character3DPortrait width={180} height={220} showFloor={false} />
-                  : <CharacterAvatar size="xlarge" variant="player" />}
+                <Character3DPortrait width={180} height={220} showFloor={false} />
               </LinearGradient>
             </View>
 
@@ -323,12 +312,10 @@ export function MatchupScreen({ navigation }: Props) {
                   colors={['rgba(80,140,255,0.15)', 'rgba(80,140,255,0.03)', 'transparent']}
                   style={styles.characterGlow}
                 >
-                  {FEATURES.character3D
-                    ? <Character3DPortrait
-                        width={180} height={220} showFloor={false}
-                        customization={getNpcCustomization(opponentName || params.difficulty)}
-                      />
-                    : <CharacterAvatar size="xlarge" variant={botVariant as any} />}
+                  <Character3DPortrait
+                      width={180} height={220} showFloor={false}
+                      customization={getNpcCustomization(opponentName || params.difficulty)}
+                    />
                 </LinearGradient>
               </View>
 
