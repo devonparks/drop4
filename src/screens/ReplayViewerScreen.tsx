@@ -216,6 +216,7 @@ export function ReplayViewerScreen() {
           <View style={rStyles.controls}>
             <Pressable
               onPress={() => {
+                haptics.tap();
                 const emptyBoard: Cell[][] = Array.from({ length: watching.boardCols }, () =>
                   Array(watching.boardRows).fill(0)
                 );
@@ -232,7 +233,7 @@ export function ReplayViewerScreen() {
             </Pressable>
 
             <Pressable
-              onPress={stepForward}
+              onPress={() => { haptics.tap(); stepForward(); }}
               style={rStyles.controlBtn}
               accessibilityRole="button"
               accessibilityLabel="Step forward one move"
@@ -241,7 +242,7 @@ export function ReplayViewerScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => setIsPlaying(!isPlaying)}
+              onPress={() => { haptics.tap(); setIsPlaying(!isPlaying); }}
               style={[rStyles.controlBtn, rStyles.playBtn]}
               accessibilityRole="button"
               accessibilityLabel={isPlaying ? 'Pause replay' : 'Play replay'}
