@@ -39,7 +39,7 @@ const sounds: Record<string, Audio.Sound | null> = {
 let isInitialized = false;
 let isMuted = false;
 
-export async function initAudio() {
+async function initAudio() {
   if (isInitialized) return;
   try {
     await Audio.setAudioModeAsync({
