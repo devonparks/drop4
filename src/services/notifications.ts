@@ -160,12 +160,3 @@ export async function scheduleDailyReminders(): Promise<void> {
   });
 }
 
-/** Kill switch — useful for a Settings toggle. */
-export async function cancelAllNotifications(): Promise<void> {
-  if (Platform.OS === 'web') return;
-  try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-  } catch {
-    /* best-effort */
-  }
-}

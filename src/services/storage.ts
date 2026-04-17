@@ -21,18 +21,3 @@ export async function loadState<T>(key: string): Promise<T | null> {
   }
 }
 
-export async function clearState(key: string): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(STORAGE_PREFIX + key);
-  } catch (e) {
-    // Fail silently
-  }
-}
-
-// Save all critical stores
-export async function saveAllStores(stores: Record<string, any>): Promise<void> {
-  const promises = Object.entries(stores).map(([key, state]) =>
-    saveState(key, state)
-  );
-  await Promise.all(promises);
-}
