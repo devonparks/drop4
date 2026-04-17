@@ -125,7 +125,7 @@ export function GameScreen({ navigation }: Props) {
   const hasSeenGameTip = useTutorialStore(s => s.hasSeenTip);
   const gameTip = getTipById('game_hint')!;
   const [showGameTutorial, setShowGameTutorial] = useState(false);
-  const [coinTooltipVisible, setCoinTooltipVisible] = useState(false);
+
   const [shareCopied, setShareCopied] = useState(false);
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
@@ -2034,30 +2034,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginTop: 28,
   },
-  moveCountText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: 'rgba(200,220,255,0.4)',
-    textAlign: 'center',
-    letterSpacing: 1,
-    marginBottom: 2,
-  },
-  quickStatsBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    paddingVertical: 2,
-    marginBottom: 2,
-  },
-  quickStatText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 0.5,
-  },
   firstGameBanner: {
     alignSelf: 'center',
     backgroundColor: 'rgba(46,204,113,0.12)',
@@ -2271,21 +2247,6 @@ const styles = StyleSheet.create({
     color: '#1a1200',
     letterSpacing: 0.8,
   },
-  lastMoveIndicator: {
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255,140,0,0.15)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    marginBottom: 2,
-  },
-  lastMoveText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 10,
-    color: 'rgba(255,180,80,0.8)',
-    letterSpacing: 0.3,
-  },
   moveCounter: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -2297,68 +2258,6 @@ const styles = StyleSheet.create({
     color: 'rgba(168,178,212,0.6)',
     letterSpacing: 1,
     textTransform: 'uppercase',
-  },
-  // Emote row — compact pills + MORE + chat
-  emoteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  quickEmotePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1.5,
-  },
-  quickEmoteEmoji: {
-    fontSize: 16,
-  },
-  quickEmoteLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 10,
-    letterSpacing: 0.3,
-  },
-  moreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,140,0,0.25)',
-  },
-  moreBtnText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    color: colors.orange,
-    letterSpacing: 1,
-  },
-  moreBtnArrow: {
-    fontSize: 8,
-    color: colors.orange,
-  },
-  chatToggleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatToggleIcon: {
-    fontSize: 16,
   },
   // Round EMOTE wheel trigger button
   emoteWheelTrigger: {
@@ -2674,37 +2573,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,215,0,0.15)',
     minWidth: 64,
   },
-  coinTooltip: {
-    position: 'absolute',
-    top: -32,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(10,14,39,0.95)',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-    zIndex: 10,
-  },
-  coinTooltipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: colors.orange,
-  },
-  coinTooltipArrow: {
-    position: 'absolute',
-    bottom: -5,
-    alignSelf: 'center',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderTopWidth: 5,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: 'rgba(255,140,0,0.3)',
-  },
   goRewardIcon: {
     fontSize: 16,
     marginBottom: 2,
@@ -2744,10 +2612,6 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 14,
     color: colors.coinGold,
-  },
-  goEloWrap: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
   },
   // Double Coins button
   doubleCoinsBtn: {
@@ -2929,23 +2793,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12,
     color: 'rgba(255,255,255,0.2)',
-  },
-  goRematchBanner: {
-    backgroundColor: 'rgba(255,140,0,0.12)',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.25)',
-    alignItems: 'center',
-  },
-  goRematchBannerText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 13,
-    color: colors.orange,
-    textAlign: 'center',
   },
   goComebackBanner: {
     flexDirection: 'row',
