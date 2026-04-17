@@ -158,17 +158,6 @@ export function getNpcCustomization(key: string | null | undefined): CharacterCu
   // bot_* prefix without difficulty suffix
   return BOT_MEDIUM;
 }
-
-const NPC_CUSTOMIZATIONS = {
-  bot_easy:     BOT_EASY,
-  bot_medium:   BOT_MEDIUM,
-  bot_hard:     BOT_HARD,
-  bot_legend:   BOT_LEGEND,
-  boss_ch1:     BOSS_KING_KYLE,
-  boss_ch2:     BOSS_CHAPTER_2,
-  boss_ch3:     BOSS_CHAPTER_3,
-};
-
 // ── Playable roster characters (bones, pixel, luna, tank) ────────
 // These are characters the player CAN unlock and equip as alternate avatars.
 // Each needs a distinctive 3D look matching their theme.
