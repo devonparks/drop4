@@ -7,7 +7,6 @@ import Animated, {
   withSequence,
   withDelay,
   withTiming,
-  FadeIn,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGameStore, ROWS, COLS } from '../../stores/gameStore';

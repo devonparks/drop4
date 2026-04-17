@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { StaggeredEntry } from '../components/animations/StaggeredEntry';
