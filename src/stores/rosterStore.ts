@@ -3,8 +3,8 @@
 // src/data/characterRoster.ts; this store only holds player state.
 //
 // Cross-game intent: this store's persisted shape is what every AMG ecosystem
-// game (Drop4, Chess, TTT, etc.) reads from Firebase. Keep it minimal and
-// portable — strings only.
+// game (Drop4, Chess, TTT, etc.) will share via cloud sync. Keep it minimal
+// and portable — strings only.
 
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
