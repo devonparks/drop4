@@ -445,7 +445,7 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   const rarityColor = PET_RARITY_COLORS[pet.rarity];
   const isEarnOnly = pet.price === 0;
 
-  // Map the 2D pet ID to a 3D registry entry when available (same ID scheme)
+  // Look up the 3D pet registry entry for this shop pet (same ID scheme)
   const pet3D = (PETS_3D as any)[pet.id];
 
   return (
@@ -679,9 +679,8 @@ export function ShopScreen() {
                    activeTab === 'effects' ? DROP_EFFECTS :
                    activeTab === 'wins' ? WIN_ANIMATIONS :
                    activeTab === 'accessories' ? BOARD_ACCESSORIES :
-                   // Emotes tab now blends legacy 2D emotes with new 3D Mixamo
-                   // clips. IDs are namespace-disjoint (`dab` vs `emote_dab`)
-                   // so they coexist without collision.
+                   // Emotes tab blends shop emotes with 3D Mixamo clips.
+                   // IDs are namespace-disjoint (`dab` vs `emote_dab`).
                    activeTab === 'emotes' ? [...EMOTES, ...EMOTE_SHOP_ITEMS] :
                    activeTab === 'outfits' ? OUTFIT_SHOP_ITEMS : [];
 
