@@ -12,6 +12,7 @@ import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { PressScale } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -108,9 +109,10 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
   const tierStyle = TIER_STYLES[tier];
 
   return (
-    <Pressable
+    <PressScale
       onPress={isUnlocked ? onEquip : undefined}
       disabled={!isUnlocked}
+      scaleTo={0.96}
       accessibilityRole="button"
       accessibilityLabel={
         isUnlocked
@@ -119,6 +121,8 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
       }
       accessibilityState={{ disabled: !isUnlocked, selected: isEquipped }}
       accessibilityHint={isUnlocked && !isEquipped ? 'Double tap to equip' : undefined}
+    >
+    <View
       style={[
         styles.card,
         {
@@ -232,7 +236,8 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
           </Text>
         </View>
       )}
-    </Pressable>
+    </View>
+    </PressScale>
   );
 }
 
