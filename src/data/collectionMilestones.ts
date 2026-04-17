@@ -39,7 +39,7 @@ export interface CollectionMilestone {
   };
 }
 
-export const COLLECTION_MILESTONES: CollectionMilestone[] = [
+const COLLECTION_MILESTONES: CollectionMilestone[] = [
   // Pack completionists
   {
     id: 'civilian_complete',

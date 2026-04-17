@@ -12,7 +12,7 @@ export type PetId =
   | 'dog_hellhound' | 'dog_husky' | 'dog_labrador' | 'dog_pointer'
   | 'dog_ridgeback' | 'dog_robot' | 'dog_scifi' | 'dog_shiba' | 'dog_wolf';
 
-export type PetRarity = 'common' | 'rare' | 'epic' | 'legendary';
+type PetRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 export interface PetMeta {
   id: PetId;

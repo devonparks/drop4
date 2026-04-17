@@ -28,7 +28,7 @@ export interface CareerLevel {
   starThresholds?: { three: number; two: number };
 }
 
-export type CareerChallengeType =
+type CareerChallengeType =
   | 'standard'        // Normal 6x7 Connect 4
   | 'connect3'        // Connect 3 on small board
   | 'connect5'        // Connect 5 on big board
