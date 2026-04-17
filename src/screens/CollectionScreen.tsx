@@ -15,6 +15,7 @@ import {
 } from '../data/characterRoster';
 import { AnimatedCharacter } from '../components/ui/AnimatedCharacter';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
+import { getRosterCustomization } from '../data/npcCustomizations';
 import { FEATURES } from '../config/features';
 import { haptics } from '../services/haptics';
 import { PressScale, StaggeredEntry } from '../components/animations';
@@ -160,7 +161,9 @@ function CharCard({ char, equipped, unlocked, onEquip }: {
           style={styles.charCardInner}
         >
           {unlocked ? (
-            <AnimatedCharacter characterId={char.id} size={65} />
+            FEATURES.character3D
+              ? <Character3DPortrait width={65} height={80} customization={getRosterCustomization(char.id) ?? undefined} showFloor={false} />
+              : <AnimatedCharacter characterId={char.id} size={65} />
           ) : (
             <Text style={{ fontSize: 26, opacity: 0.6 }}>🔒</Text>
           )}
