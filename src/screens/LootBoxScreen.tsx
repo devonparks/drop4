@@ -11,6 +11,7 @@ import { LootChest, LootChestTier } from '../components/ui/LootChest';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
+import { PressScale } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -254,9 +255,10 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
             {/* Action */}
             <View style={st.boxActionArea}>
               {count > 0 ? (
-                <Pressable
+                <PressScale
                   onPress={onOpen}
                   disabled={isOpening}
+                  scaleTo={0.93}
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${box.name}`}
                   accessibilityState={{ disabled: isOpening }}
@@ -264,11 +266,12 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
                   <LinearGradient colors={['#27ae3d', '#1e8a30']} style={st.openBtnGradient}>
                     <Text style={st.openBtnText}>OPEN</Text>
                   </LinearGradient>
-                </Pressable>
+                </PressScale>
               ) : box.cost > 0 ? (
-                <Pressable
+                <PressScale
                   onPress={onBuy}
                   disabled={playerCoins < box.cost}
+                  scaleTo={0.93}
                   style={{ opacity: playerCoins < box.cost ? 0.5 : 1 }}
                   accessibilityRole="button"
                   accessibilityLabel={`Buy ${box.name} for ${box.cost} coins`}
@@ -280,7 +283,7 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
                   >
                     <Text style={[st.openBtnText, { color: '#1a1a00' }]}>{'\u{1FA99}'} {box.cost.toLocaleString()}</Text>
                   </LinearGradient>
-                </Pressable>
+                </PressScale>
               ) : (
                 <View style={st.emptyWrap}>
                   <Text style={st.emptyText}>Empty</Text>

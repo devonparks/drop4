@@ -8,6 +8,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { useMatchHistoryStore, MatchRecord } from '../stores/matchHistoryStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { PressScale } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -34,8 +35,9 @@ function FilterChip({ label, active, color, onPress }: {
   label: string; active: boolean; color: string; onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressScale
       onPress={() => { haptics.select(); onPress(); }}
+      scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={`Filter by ${label}`}
       accessibilityState={{ selected: active }}
@@ -43,7 +45,7 @@ function FilterChip({ label, active, color, onPress }: {
       <View style={[styles.chip, active && { backgroundColor: color + '30', borderColor: color + '60' }]}>
         <Text style={[styles.chipText, active && { color }]}>{label}</Text>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -51,8 +53,9 @@ function SortChip({ label, active, onPress }: {
   label: string; active: boolean; onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressScale
       onPress={() => { haptics.select(); onPress(); }}
+      scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={`Sort by ${label}`}
       accessibilityState={{ selected: active }}
@@ -60,7 +63,7 @@ function SortChip({ label, active, onPress }: {
       <View style={[styles.chip, active && { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' }]}>
         <Text style={[styles.chipText, active && { color: colors.orange }]}>{label}</Text>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 

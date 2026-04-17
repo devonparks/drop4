@@ -213,64 +213,14 @@ export function GameScreen({ navigation }: Props) {
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // [MP-KILL v1] Online multiplayer and wager courts are gone.
-  // isOnlineMatch / onlineMatchId / myPlayerNum stripped (commit TBD).
-  // wagerCourt stays — still referenced in mode/ranked ternaries.
+  // [MP-KILL v1] wagerCourt was an MP-only concept; hardcoded so
+  // remaining ternary expressions compile without touching every call site.
   const wagerCourt: any = undefined;
 
   // Emote display — player and opponent/AI
   const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const aiEmoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Chess clock for ranked mode
-  const isRankedMode = !!params.rankedMode;
-  const p1TimeBank = useRankedStore(s => s.player1TimeBank);
-  const p2TimeBank = useRankedStore(s => s.player2TimeBank);
-  const activeClockPlayer = useRankedStore(s => s.activeClockPlayer);
-  const startChessClock = useRankedStore(s => s.startChessClock);
-  const switchClock = useRankedStore(s => s.switchClock);
-  const tickClock = useRankedStore(s => s.tickClock);
-  const chessClockRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Initialize chess clock for ranked games
-  useEffect(() => {
-    if (isRankedMode && status === 'playing' && moveCount === 0) {
-      const clockTime = params.rankedClockSeconds || 180;
-      startChessClock(clockTime);
-    }
-  }, [isRankedMode, status]);
-
-  // Switch clock on player change
-  useEffect(() => {
-    if (isRankedMode && status === 'playing' && activeClockPlayer !== null) {
-      switchClock(currentPlayer as 1 | 2);
-    }
-  }, [currentPlayer, isRankedMode, status]);
-
-  // Tick chess clock every second
-  useEffect(() => {
-    if (chessClockRef.current) clearInterval(chessClockRef.current);
-    if (!isRankedMode || status !== 'playing' || activeClockPlayer === null) return;
-
-    chessClockRef.current = setInterval(() => {
-      const result = tickClock();
-      if (result.expired && result.player) {
-        // Time expired — player loses
-        if (chessClockRef.current) clearInterval(chessClockRef.current);
-        haptics.error(); playSound('error');
-        playSound('lose');
-        // Force game over — the player who ran out of time loses
-        const loser = result.player;
-        const winnerPlayer = loser === 1 ? 2 : 1;
-        useGameStore.setState({ status: 'won', winner: winnerPlayer });
-      }
-    }, 1000);
-
-    return () => {
-      if (chessClockRef.current) clearInterval(chessClockRef.current);
-    };
-  }, [isRankedMode, status, activeClockPlayer]);
 
   // Start recording replay when game begins + apply preset board
   useEffect(() => {
@@ -481,7 +431,7 @@ export function GameScreen({ navigation }: Props) {
         haptics.levelUp();
       }
       setDailyStreakMultiplier(dailyMultiplier);
-      const matchMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const matchMode = params.careerLevelId ? 'career' : !isVsAi ? 'local' : 'ai';
       const matchOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'win', opponent: matchOpponent, difficulty, moves: moveCount, coinsEarned: totalReward, mode: matchMode });
       // Update challenges
@@ -533,13 +483,6 @@ export function GameScreen({ navigation }: Props) {
         // Grant bonus reward (e.g. pet from boss levels)
         const levelData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
         if (levelData?.bonusReward) grantReward(levelData.bonusReward as any);
-      }
-      // Wager court winnings + ranked ELO update
-      if (wagerCourt) {
-        if (wagerCourt.winnerGets > 0) addCoins(wagerCourt.winnerGets);
-        recordRanked(true);
-      } else if (isRankedMode) {
-        recordRanked(true); // Ranked mode win — ELO goes up
       }
       // Check achievements
       const matchHistory = useMatchHistoryStore.getState();
@@ -605,7 +548,6 @@ export function GameScreen({ navigation }: Props) {
       }
       // Compute total coins for CoinBurst intensity
       let coinTotal = totalReward;
-      if (wagerCourt && wagerCourt.winnerGets > 0) coinTotal += wagerCourt.winnerGets;
       if (currentStreak === 3) coinTotal += 50;
       else if (currentStreak === 5) coinTotal += 200;
       else if (currentStreak === 10) coinTotal += 1000;
@@ -637,7 +579,7 @@ export function GameScreen({ navigation }: Props) {
       if (preStreakRef.current >= 3) {
         setStreakBrokenAt(preStreakRef.current);
       }
-      const lossMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const lossMode = params.careerLevelId ? 'career' : !isVsAi ? 'local' : 'ai';
       const lossOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
@@ -653,10 +595,6 @@ export function GameScreen({ navigation }: Props) {
         setSeasonTierUp(postTierLoss);
         playSound('level_up');
         haptics.levelUp();
-      }
-      // Wager lost — coins already deducted; ranked ELO down
-      if (wagerCourt || isRankedMode) {
-        recordRanked(false);
       }
       // Check achievements — game count / pets / cosmetics can unlock on any game
       const lossHistory = useMatchHistoryStore.getState();
@@ -700,7 +638,7 @@ export function GameScreen({ navigation }: Props) {
       const drawMultiplier = getStreakMultiplier();
       const drawReward = Math.round(10 * drawMultiplier);
       addCoins(drawReward);
-      const drawMode = params.careerLevelId ? 'career' : isRankedMode ? 'ranked' : wagerCourt ? 'wager' : !isVsAi ? 'local' : 'ai';
+      const drawMode = params.careerLevelId ? 'career' : !isVsAi ? 'local' : 'ai';
       const drawOpponent = isVsAi ? `${difficulty} Bot` : localNames.player2;
       addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
@@ -843,34 +781,6 @@ export function GameScreen({ navigation }: Props) {
   };
 
   const handleBack = () => {
-    // Quit penalty for ranked / wager games
-    if ((isRankedMode || wagerCourt) && status === 'playing') {
-      Alert.alert(
-        'Quit Ranked Match?',
-        'Quitting a ranked match counts as a loss! You\'ll lose ELO.',
-        [
-          { text: 'Keep Playing', style: 'cancel' },
-          {
-            text: 'Quit & Forfeit',
-            style: 'destructive',
-            onPress: () => {
-              recordRanked(false);
-              addMatch({
-                result: 'loss',
-                opponent: isVsAi ? `${difficulty} Bot` : (params.onlineOpponentName || 'Ranked Player'),
-                difficulty,
-                moves: moveCount,
-                coinsEarned: 0,
-                mode: wagerCourt ? 'wager' : 'ranked',
-              });
-              navigation.goBack();
-            },
-          },
-        ]
-      );
-      return;
-    }
-
     // Default mid-match confirm for Quick Play / Career / Local Play.
     // Without this, tapping the X button or Quit button silently abandons
     // the match with zero feedback, which players (and App Store reviewers)
@@ -1001,13 +911,6 @@ export function GameScreen({ navigation }: Props) {
     };
   }, []);
 
-  // Format time for chess clock display
-  const formatClockTime = (seconds: number): string => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
   return (
     <ScreenBackground>
       <View style={styles.container}>
@@ -1021,28 +924,6 @@ export function GameScreen({ navigation }: Props) {
         >
           <Text style={styles.backButtonText}>✕</Text>
         </Pressable>
-
-        {/* Chess Clock (ranked mode only) */}
-        {isRankedMode && status === 'playing' && (
-          <View style={styles.chessClockRow}>
-            <View style={[styles.clockBox, activeClockPlayer === 1 && styles.clockBoxActive, p1TimeBank <= 30 && styles.clockBoxDanger]}>
-              <Text style={[styles.clockTime, activeClockPlayer === 1 && styles.clockTimeActive, p1TimeBank <= 10 && { color: colors.red }]}>
-                {formatClockTime(p1TimeBank)}
-              </Text>
-              <Text style={styles.clockLabel}>YOU</Text>
-            </View>
-            <View style={styles.clockCenter}>
-              <Text style={styles.clockVs}>⏱</Text>
-              <Text style={styles.clockModeLabel}>RANKED</Text>
-            </View>
-            <View style={[styles.clockBox, activeClockPlayer === 2 && styles.clockBoxActive, p2TimeBank <= 30 && styles.clockBoxDanger]}>
-              <Text style={[styles.clockTime, activeClockPlayer === 2 && styles.clockTimeActive, p2TimeBank <= 10 && { color: colors.red }]}>
-                {formatClockTime(p2TimeBank)}
-              </Text>
-              <Text style={styles.clockLabel}>OPP</Text>
-            </View>
-          </View>
-        )}
 
         {/* HUD Row */}
         <View style={styles.hudRow}>
@@ -1077,7 +958,7 @@ export function GameScreen({ navigation }: Props) {
               <Text style={styles.boardSizeLabel}>{customSettings.cols}x{customSettings.rows} Board</Text>
             )}
             {/* Timer bar (casual mode turn timer) */}
-            {!isRankedMode && (customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
+            {(customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
               <View style={styles.timerWrap}>
                 <View style={styles.timerBar}>
                   <View style={[styles.timerFill, {
@@ -1229,8 +1110,8 @@ export function GameScreen({ navigation }: Props) {
             <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
           </View>
 
-          {/* Undo button — only available on Easy difficulty, hidden in ranked matches */}
-          {!isRankedMode && difficulty === 'easy' && (
+          {/* Undo button — only available on Easy difficulty */}
+          {difficulty === 'easy' && (
             <Pressable
               onPress={() => {
                 if (undoMove()) {
@@ -1424,7 +1305,7 @@ export function GameScreen({ navigation }: Props) {
               {/* Top: Mode label */}
               <View style={styles.goModeRow}>
                 <Text style={styles.goModeText} accessibilityRole="header">
-                  {isRankedMode ? 'RANKED' : wagerCourt ? wagerCourt.name?.toUpperCase() : isSeriesMode ? `BEST OF ${totalGames} — GAME ${seriesGame}` : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
+                  {isSeriesMode ? `BEST OF ${totalGames} — GAME ${seriesGame}` : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
                 </Text>
               </View>
 
@@ -1682,15 +1563,6 @@ export function GameScreen({ navigation }: Props) {
                 })()}
               </View>
 
-              {/* Wager display */}
-              {wagerCourt && wagerCourt.winnerGets > 0 && status === 'won' && winner === 1 && (
-                <Shimmer color="rgba(255,215,0,0.3)" duration={2500}>
-                  <View style={styles.goWagerRow}>
-                    <Text style={styles.goWagerIcon}>🪙🪙🪙</Text>
-                    <Text style={styles.goWagerText}>+{wagerCourt.winnerGets} Wager Won!</Text>
-                  </View>
-                </Shimmer>
-              )}
 
               {/* [MP-KILL] EloChangeAnimation removed — ranked/wager killed for v1 */}
 
