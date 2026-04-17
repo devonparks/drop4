@@ -9,7 +9,6 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
-import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
 interface ChatBubbleProps {
