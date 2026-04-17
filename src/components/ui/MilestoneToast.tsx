@@ -98,6 +98,7 @@ export function MilestoneToast() {
     if (active || queue.length === 0) return;
     setActive(queue[0]);
     setQueue((q) => q.slice(1));
+    playSound('achievement');
   }, [active, queue]);
 
   // Continuous glow pulse while a milestone is visible. Drives shadow radius,

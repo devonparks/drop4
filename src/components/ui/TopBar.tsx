@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { Character3DPortrait } from '../3d/Character3DPortrait';
 import { useRankedStore, RANKED_TIERS, formatRank } from '../../stores/rankedStore';
 
@@ -69,7 +70,7 @@ export function TopBar({
       <View style={styles.leftSlot}>
         {showBack ? (
           <Pressable
-            onPress={() => { haptics.tap(); onBackPress?.(); }}
+            onPress={() => { haptics.tap(); playSound('back'); onBackPress?.(); }}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >

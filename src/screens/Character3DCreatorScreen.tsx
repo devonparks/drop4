@@ -105,7 +105,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
       haptics.win();
       playSound('coin');
     } else {
-      haptics.error();
+      haptics.error(); playSound('error');
     }
   };
 
@@ -121,7 +121,7 @@ export function Character3DCreatorScreen({ navigation }: Props) {
       haptics.win();
       playSound('coin');
     } else {
-      haptics.error();
+      haptics.error(); playSound('error');
     }
   };
 
@@ -300,7 +300,7 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
       playSound('purchase');
       return;
     }
-    if (coins < price) { haptics.error(); return; }
+    if (coins < price) { haptics.error(); playSound('error'); return; }
     if (spendCoins(price)) {
       unlockOutfit(id);
       onSelect(id as OutfitId);
@@ -322,7 +322,7 @@ function OutfitTab({ currentId, onSelect }: { currentId: OutfitId; onSelect: (id
             <PressScale
               key={sp.id}
               onPress={() => {
-                if (isLocked) { haptics.error(); return; }
+                if (isLocked) { haptics.error(); playSound('error'); return; }
                 haptics.tap();
                 setSpecies(sp.id);
                 setPackFilter('all');
@@ -966,7 +966,7 @@ function PetsTab() {
       return;
     }
     if (coins < pet.price) {
-      haptics.error();
+      haptics.error(); playSound('error');
       return;
     }
     const result = purchasePet(id, coins);
@@ -1029,7 +1029,7 @@ function EmotesTab({ onPlay }: { onPlay: (id: string) => void }) {
       return;
     }
     if (coins < price) {
-      haptics.error();
+      haptics.error(); playSound('error');
       return;
     }
     purchaseEmote(id, price);

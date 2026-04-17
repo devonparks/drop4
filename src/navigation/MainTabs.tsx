@@ -7,6 +7,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChallengesScreen } from '../screens/ChallengesScreen';
 import { CollectionScreen } from '../screens/CollectionScreen';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { useChallengeStore } from '../stores/challengeStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -57,6 +58,7 @@ export function MainTabs() {
       screenListeners={{
         tabPress: () => {
           haptics.tap();
+          playSound('tab_switch');
         },
       }}
     >

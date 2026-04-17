@@ -563,7 +563,7 @@ export function ShopScreen() {
       equipItem(equipKey, previewItem.id);
       setPreviewItem(null);
     } else {
-      haptics.error();
+      haptics.error(); playSound('error');
     }
   };
 
@@ -600,7 +600,7 @@ export function ShopScreen() {
   };
 
   const handleEmotePress = (item: ShopItem) => {
-    if (item.rarity === 'darkmatter') { haptics.error(); return; }
+    if (item.rarity === 'darkmatter') { haptics.error(); playSound('error'); return; }
     const isEquipped = equippedEmotes.includes(item.id);
     const isOwned = ownedEmotes.includes(item.id) || item.price === 0;
 
@@ -630,7 +630,7 @@ export function ShopScreen() {
       playSound('coin');
       equipEmote(item.id);
     } else {
-      haptics.error();
+      haptics.error(); playSound('error');
     }
   };
 
@@ -649,14 +649,14 @@ export function ShopScreen() {
     } else if (pet.price > 0) {
       const success = purchasePet(pet.id, pet.price);
       if (success) { haptics.win(); playSound('coin'); equipPet(pet.id); }
-      else { haptics.error(); }
+      else { haptics.error(); playSound('error'); }
     }
   };
 
   const handleDailyCollect = () => {
     const collected = collectDailyShopCoins();
     if (collected) { haptics.win(); playSound('coin'); }
-    else { haptics.error(); }
+    else { haptics.error(); playSound('error'); }
   };
 
   const tabs: { key: ShopTab; label: string; icon: string }[] = [
@@ -781,7 +781,7 @@ export function ShopScreen() {
                       <Pressable
                         key={sp.id}
                         onPress={() => {
-                          if (isLocked) { haptics.error(); return; }
+                          if (isLocked) { haptics.error(); playSound('error'); return; }
                           setOutfitSpecies(sp.id as any);
                           setCollectionFilter('All');
                           haptics.tap();

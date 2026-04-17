@@ -316,7 +316,7 @@ export function LootBoxScreen() {
       haptics.win();
       playSound('coin');
     } else {
-      haptics.error();
+      haptics.error(); playSound('error');
     }
   };
 
