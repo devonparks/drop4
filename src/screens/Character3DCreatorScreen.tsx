@@ -244,22 +244,6 @@ export function Character3DCreatorScreen({ navigation }: Props) {
 
 // ══ Outfit Tab ══════════════════════════════════════════════════
 
-// Per-outfit color hints (matches Modern Civilians visual variations)
-const OUTFIT_HINTS: Record<string, [string, string, string]> = {
-  modern_civilians_01: ['#3a4a5e', '#4a5a75', '#2a2a30'], // navy hoodie + jeans
-  modern_civilians_02: ['#7a3838', '#3a3a40', '#1a1a20'], // red tee + black
-  modern_civilians_03: ['#e8e0d0', '#3a3a40', '#1a1a20'], // white tank + black
-  modern_civilians_04: ['#5e4830', '#3a4a5e', '#2a2a30'], // brown varsity + navy
-  modern_civilians_05: ['#1a3a5e', '#1a1a20', '#1a1a20'], // blue puffer
-  modern_civilians_06: ['#e84393', '#3a3a40', '#3a3a40'], // pink crop + dark
-  modern_civilians_07: ['#3a8a3a', '#2a2a30', '#2a2a30'], // green graphic
-  modern_civilians_08: ['#f4f4f8', '#2a4a8a', '#1a1a20'], // white button-up + jeans
-  modern_civilians_09: ['#5e3a8a', '#3a3a40', '#1a1a20'], // purple sweat
-  modern_civilians_10: ['#1a1a1a', '#3a3a40', '#0a0a0a'], // black leather
-  modern_civilians_11: ['#a83a3a', '#3a3a40', '#5e3a3a'], // red flannel
-  modern_civilians_12: ['#3a4a5e', '#3a4a5e', '#2a2a30'], // long sleeve navy
-};
-
 const SPECIES_CHIPS: { id: 'all' | Species; label: string; icon: string }[] = [
   { id: 'all',      label: 'All',      icon: '\u{1F465}' },
   { id: 'human',    label: 'Human',    icon: '\u{1F464}' },
@@ -593,7 +577,6 @@ function HairTab({ currentColor, unlocked, coins, onFreeSelect, onPremiumPurchas
         {PREMIUM_HAIR_COLORS.map((c) => {
           const isUnlocked = unlocked.includes(c.id);
           const isEquipped = currentColor === c.hex;
-          const canAfford = coins >= c.price;
           return (
             <PressScale key={c.id} onPress={() => onPremiumPurchase(c.id, c.hex, c.price)}>
               <View style={[styles.premiumColorSwatch, { backgroundColor: c.hex }, isEquipped && styles.colorSwatchActive]}>
