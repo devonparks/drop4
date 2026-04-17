@@ -763,6 +763,8 @@ export function GameScreen({ navigation }: Props) {
   };
 
   const handleBack = () => {
+    haptics.tap();
+    playSound('click');
     // Default mid-match confirm for Quick Play / Career / Local Play.
     // Without this, tapping the X button or Quit button silently abandons
     // the match with zero feedback, which players (and App Store reviewers)
