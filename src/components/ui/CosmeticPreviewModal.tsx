@@ -9,6 +9,7 @@ import { useShopStore } from '../../stores/shopStore';
 import { AnimatedRarityBg } from '../effects/AnimatedRarityBg';
 import { PressScale, Shimmer } from '../animations';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -168,7 +169,7 @@ export function CosmeticPreviewModal({
       <Animated.View entering={FadeIn.duration(200)} style={s.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
-          onPress={onClose}
+          onPress={() => { haptics.tap(); playSound('close'); onClose(); }}
           accessibilityRole="button"
           accessibilityLabel="Close preview"
         />
@@ -223,7 +224,7 @@ export function CosmeticPreviewModal({
               </View>
             ) : isOwned ? (
               <PressScale
-                onPress={() => { haptics.win(); onEquip(); }}
+                onPress={() => { haptics.win(); playSound('purchase'); onEquip(); }}
                 accessibilityLabel={`Equip ${item.name}`}
                 accessibilityHint="Sets this cosmetic as active"
               >
@@ -237,7 +238,7 @@ export function CosmeticPreviewModal({
               </View>
             ) : (
               <PressScale
-                onPress={() => { haptics.win(); onBuy(); }}
+                onPress={() => { haptics.win(); playSound('purchase'); onBuy(); }}
                 disabled={!canAfford}
                 accessibilityLabel={
                   canAfford
