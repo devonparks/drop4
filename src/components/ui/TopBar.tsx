@@ -132,55 +132,56 @@ export function TopBar({
 function CurrencyPill({ emoji, value, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
   emoji: string; value: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
 }) {
-  const inner = (
-    <>
+  // IMPORTANT: on web RN's Pressable renders as <button>. The main tap area
+  // and the "+" badge used to be nested Pressables → nested <button> in the
+  // DOM, which React flags as a hydration error and which causes unreliable
+  // "+" clicks in some browsers. The pill is now a plain View with two
+  // sibling Pressables (tap area + "+"), so each button stays flat.
+  const tapArea = (
+    <Pressable
+      onPress={onPress ? () => { haptics.tap(); onPress(); } : undefined}
+      style={styles.pillInner}
+      accessibilityLabel={label}
+      accessibilityRole={onPress ? 'button' : 'text'}
+    >
       <Text style={styles.pillEmoji}>{emoji}</Text>
       {animatedTextColor ? (
         <Animated.Text style={[styles.pillValue, { color: animatedTextColor }]}>{value}</Animated.Text>
       ) : (
         <Text style={styles.pillValue}>{value}</Text>
       )}
-      {onPlusPress && (
-        <Pressable
-          onPress={() => { haptics.tap(); onPlusPress(); }}
-          accessibilityLabel={plusLabel}
-          accessibilityRole="button"
-        >
-          <LinearGradient
-            colors={['#34c94d', '#27ae3d', '#1e8a30']}
-            style={styles.plusBtn}
-          >
-            <Text style={styles.plusText}>+</Text>
-          </LinearGradient>
-        </Pressable>
-      )}
-    </>
+    </Pressable>
   );
+
+  const plus = onPlusPress ? (
+    <Pressable
+      onPress={() => { haptics.tap(); onPlusPress(); }}
+      accessibilityLabel={plusLabel}
+      accessibilityRole="button"
+    >
+      <LinearGradient
+        colors={['#34c94d', '#27ae3d', '#1e8a30']}
+        style={styles.plusBtn}
+      >
+        <Text style={styles.plusText}>+</Text>
+      </LinearGradient>
+    </Pressable>
+  ) : null;
 
   if (scaleAnim) {
     return (
       <Animated.View style={[styles.pill, { transform: [{ scale: scaleAnim }] }]}>
-        <Pressable
-          onPress={() => { haptics.tap(); onPress?.(); }}
-          style={styles.pillInner}
-          accessibilityLabel={label}
-          accessibilityRole={onPress ? 'button' : 'text'}
-        >
-          {inner}
-        </Pressable>
+        {tapArea}
+        {plus}
       </Animated.View>
     );
   }
 
   return (
-    <Pressable
-      onPress={() => { haptics.tap(); onPress?.(); }}
-      style={styles.pill}
-      accessibilityLabel={label}
-      accessibilityRole={onPress ? 'button' : 'text'}
-    >
-      {inner}
-    </Pressable>
+    <View style={styles.pill}>
+      {tapArea}
+      {plus}
+    </View>
   );
 }
 
