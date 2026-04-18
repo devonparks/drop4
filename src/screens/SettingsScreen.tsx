@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView, Platform } from 'react-native';
+import { ReactNativeLegal } from 'react-native-legal';
 import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -229,6 +230,19 @@ export function SettingsScreen({ navigation }: Props) {
             haptics.tap();
             navigation.navigate('Legal', { type: 'terms' });
           }} />
+          {/* Third-party license acknowledgements — required by App Store for
+              apps that bundle OSS dependencies. Uses react-native-legal's
+              native license list view. No-op on web (native module only). */}
+          {Platform.OS !== 'web' && (
+            <SettingLink label="Open Source Licenses" icon="📜" onPress={() => {
+              haptics.tap();
+              try {
+                ReactNativeLegal.launchLicenseListScreen('Open Source Licenses');
+              } catch (e) {
+                Alert.alert('Licenses', 'Unavailable in this build. Rebuild the app after `expo prebuild` to enable.');
+              }
+            }} />
+          )}
         </View>
         </StaggeredEntry>
 

@@ -25,7 +25,14 @@
       "\\.(glb|gltf|png|jpg|jpeg|gif|webp|svg|mp3|wav|ttf|otf)$": "<rootDir>/jest.asset-mock.js"
     },
     "transform": {
-      "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { "presets": ["babel-preset-expo"] }]
+      "^.+\\.(js|jsx|ts|tsx)$": [
+        "babel-jest",
+        {
+          "presets": [
+            "babel-preset-expo"
+          ]
+        }
+      ]
     },
     "testPathIgnorePatterns": [
       "/node_modules/",
@@ -60,6 +67,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-legal": "^1.6.2",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

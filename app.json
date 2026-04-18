@@ -45,7 +45,8 @@
           }
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "react-native-legal"
     ],
     "extra": {
       "eas": {
