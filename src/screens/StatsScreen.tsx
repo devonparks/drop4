@@ -9,7 +9,7 @@ import { StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
-import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore';
+
 import { useCareerStore } from '../stores/careerStore';
 import { BOARD_THEMES, PIECE_THEMES } from '../data/shopCatalog';
 import { PETS } from '../data/pets';
@@ -82,13 +82,7 @@ export function StatsScreen({ navigation }: Props) {
   const winStreak = useGameStore(s => s.winStreak);
   const bestStreak = useGameStore(s => s.bestStreak);
   const matches = useMatchHistoryStore(s => s.matches);
-  const elo = useRankedStore(s => s.elo);
-  const tier = useRankedStore(s => s.tier);
-  const rankedGames = useRankedStore(s => s.rankedGames);
-  const rankedWins = useRankedStore(s => s.rankedWins);
-  const rankedLosses = useRankedStore(s => s.rankedLosses);
-  const seasonHighElo = useRankedStore(s => s.seasonHighElo);
-  const seasonHistory = useRankedStore(s => s.seasonHistory);
+
   const careerProgress = useCareerStore(s => s.progress);
   const equippedBoard = useShopStore(s => s.equipped.board);
   const equippedPieces = useShopStore(s => s.equipped.pieces);
@@ -149,10 +143,6 @@ export function StatsScreen({ navigation }: Props) {
       recentForm,
     };
   }, [matches]);
-
-  const tierInfo = useMemo(() => {
-    return RANKED_TIERS.find(t => t.id === tier) || RANKED_TIERS[0];
-  }, [tier]);
 
   const completedCount = useMemo(() => {
     return Object.values(careerProgress).filter(p => p.completed).length;
@@ -383,49 +373,6 @@ export function StatsScreen({ navigation }: Props) {
             </View>
           </View>
         </StaggeredEntry>
-
-        {/* ---------- 7. ELO History ---------- */}
-        {rankedGames > 0 && (
-          <StaggeredEntry index={8} delay={60}>
-            <SectionTitle title="RANKED / ELO" />
-            <View style={styles.card}>
-              <View style={styles.eloHeader}>
-                <Text style={styles.eloIcon}>{tierInfo.icon}</Text>
-                <View>
-                  <Text style={[styles.eloTierName, { color: tierInfo.color }]}>{formatRank(elo)}</Text>
-                  <Text style={styles.eloValue}>{elo} ELO</Text>
-                </View>
-                <View style={styles.eloStats}>
-                  <Text style={[styles.eloStatNum, { color: colors.green }]}>{rankedWins}W</Text>
-                  <Text style={styles.eloStatSep}>/</Text>
-                  <Text style={[styles.eloStatNum, { color: colors.pieceRed }]}>{rankedLosses}L</Text>
-                </View>
-              </View>
-              {seasonHighElo > 0 && (
-                <View style={styles.eloMetaRow}>
-                  <Text style={styles.eloMetaLabel}>Season High</Text>
-                  <Text style={[styles.eloMetaValue, { color: colors.coinGold }]}>{seasonHighElo}</Text>
-                </View>
-              )}
-              {seasonHistory.length > 0 && (
-                <View style={{ marginTop: 8 }}>
-                  <Text style={styles.eloHistoryLabel}>Past Seasons</Text>
-                  {seasonHistory.slice(-5).reverse().map((s, i) => {
-                    const tier = RANKED_TIERS.find(t => t.id === s.tier) || RANKED_TIERS[0];
-                    return (
-                      <View key={i} style={styles.eloHistoryRow}>
-                        <Text style={styles.eloHistorySeason}>Season {s.season + 1}</Text>
-                        <Text style={{ fontSize: 14 }}>{tier.icon}</Text>
-                        <Text style={[styles.eloHistoryElo, { color: tier.color }]}>{s.elo}</Text>
-                        <Text style={styles.eloHistoryRecord}>{s.wins}W / {s.losses}L</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          </StaggeredEntry>
-        )}
 
         {/* ---------- Equipped Loadout ---------- */}
         <StaggeredEntry index={8} delay={60}>
@@ -687,99 +634,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingVertical: 8,
-  },
-
-  /* ELO / Ranked */
-  eloHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  eloIcon: {
-    fontSize: 32,
-  },
-  eloTierName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 16,
-  },
-  eloValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  eloStats: {
-    flexDirection: 'row',
-    marginLeft: 'auto',
-    alignItems: 'center',
-    gap: 2,
-  },
-  eloStatNum: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-  },
-  eloStatSep: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  eloMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  eloMetaLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  eloMetaValue: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-  },
-  eloHistoryLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 1,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  eloHistoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  eloHistorySeason: {
-    fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    fontSize: 12,
-    color: colors.textSecondary,
-    width: 70,
-  },
-  eloHistoryElo: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-  },
-  eloHistoryRecord: {
-    fontFamily: fonts.body,
-    fontWeight: weight.regular,
-    fontSize: 11,
-    color: colors.textMuted,
-    marginLeft: 'auto',
   },
 
   /* Equipped Loadout */
