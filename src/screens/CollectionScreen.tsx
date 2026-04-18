@@ -8,6 +8,7 @@ import { useRosterStore } from '../stores/rosterStore';
 import { useCharacterStore } from '../stores/characterStore';
 import { usePetStore } from '../stores/petStore';
 import { useMilestoneStore } from '../stores/milestoneStore';
+import { useLootBoxStore } from '../stores/lootBoxStore';
 import { getMilestoneProgressList, type MilestoneProgress } from '../data/collectionMilestones';
 import {
   ROSTER,
@@ -73,7 +74,7 @@ export function CollectionScreen() {
         showsVerticalScrollIndicator={false}
       >
         {activeTab === 'characters' && <CharactersTab />}
-        {activeTab === 'loot' && <PlaceholderTab icon="📦" title="LOOT BOXES" desc="Win games to earn loot boxes. Open them for coins, board skins, and rare cosmetics." tip="Win 3 games → earn a Bronze Box" />}
+        {activeTab === 'loot' && <LootTab />}
         {activeTab === 'awards' && <AwardsTab />}
       </ScrollView>
     </ScreenBackground>
@@ -325,6 +326,96 @@ function PlaceholderTab({ icon, title, desc, tip }: { icon: string; title: strin
   );
 }
 
+// ─── Loot tab ────────────────────────────────────────────────────────
+// Was a dead-air placeholder that occupied ~60% of the screen. Now
+// previews the three tiers so the player SEES what's coming before
+// they've earned any.
+const LOOT_TIERS = [
+  {
+    id: 'bronze_box',
+    name: 'Bronze Box',
+    icon: '📦',
+    gradient: ['#c07532', '#8a4a14'] as [string, string],
+    glow: '#c07532',
+    unlockHint: 'Earn by winning 3 games in a row',
+    contents: 'Coins · common boards · common pieces',
+  },
+  {
+    id: 'silver_box',
+    name: 'Silver Box',
+    icon: '🎁',
+    gradient: ['#cbd0dd', '#6a6e7a'] as [string, string],
+    glow: '#cbd0dd',
+    unlockHint: 'Earn by winning 5 Medium matches',
+    contents: 'Coins · gems · uncommon + rare drops',
+  },
+  {
+    id: 'gold_box',
+    name: 'Gold Box',
+    icon: '✨',
+    gradient: ['#ffd54f', '#c89030'] as [string, string],
+    glow: '#ffd54f',
+    unlockHint: 'Beat career bosses or 10-win streak',
+    contents: 'Big gems · epic boards · legendary shot',
+  },
+];
+
+function LootTab() {
+  const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
+  const ownedByTier = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const b of ownedBoxes) m[b.boxId] = b.count;
+    return m;
+  }, [ownedBoxes]);
+  const totalOwned = ownedBoxes.reduce((sum, b) => sum + b.count, 0);
+
+  return (
+    <Animated.View entering={FadeIn.duration(280)}>
+      <View style={styles.lootHeader}>
+        <Text style={{ fontSize: 40, marginBottom: 6 }}>📦</Text>
+        <Text style={styles.placeholderTitle}>LOOT BOXES</Text>
+        <Text style={styles.placeholderDesc}>
+          {totalOwned > 0
+            ? `You have ${totalOwned} unopened box${totalOwned === 1 ? '' : 'es'}. Tap to open.`
+            : 'Win games to earn boxes. Each tier drops better rewards.'}
+        </Text>
+      </View>
+
+      <View style={styles.lootTierGrid}>
+        {LOOT_TIERS.map((tier, i) => {
+          const owned = ownedByTier[tier.id] ?? 0;
+          return (
+            <StaggeredEntry key={tier.id} index={i}>
+              <View
+                style={[
+                  styles.lootTierCard,
+                  { borderColor: tier.glow, shadowColor: tier.glow },
+                ]}
+              >
+                <LinearGradient
+                  colors={[tier.gradient[0] + '33', tier.gradient[1] + '11', 'transparent']}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.lootTierTop}>
+                  <Text style={styles.lootTierIcon}>{tier.icon}</Text>
+                  <Text style={[styles.lootTierName, { color: tier.glow }]}>{tier.name}</Text>
+                  {owned > 0 && (
+                    <View style={[styles.lootTierCountPill, { backgroundColor: tier.glow }]}>
+                      <Text style={styles.lootTierCount}>×{owned}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.lootTierContents}>{tier.contents}</Text>
+                <Text style={styles.lootTierUnlock}>{tier.unlockHint}</Text>
+              </View>
+            </StaggeredEntry>
+          );
+        })}
+      </View>
+    </Animated.View>
+  );
+}
+
 // ─── Styles ──────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   header: { alignItems: 'center', paddingBottom: 6 },
@@ -366,6 +457,43 @@ const styles = StyleSheet.create({
   placeholderDesc: { fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8, paddingHorizontal: 30, lineHeight: 18 },
   placeholderTip: { marginTop: 16, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'rgba(255,140,0,0.1)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.25)' },
   placeholderTipText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.orange },
+
+  // Loot tab styles
+  lootHeader: { alignItems: 'center', marginTop: 14, marginBottom: 14 },
+  lootTierGrid: { gap: 10, marginTop: 4 },
+  lootTierCard: {
+    backgroundColor: 'rgba(10,14,32,0.85)',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 14,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  lootTierTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  lootTierIcon: { fontSize: 28 },
+  lootTierName: {
+    fontFamily: fonts.heading, fontWeight: weight.black,
+    fontSize: 15, letterSpacing: 1, flex: 1,
+  },
+  lootTierCountPill: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
+  },
+  lootTierCount: {
+    fontFamily: fonts.body, fontWeight: weight.black,
+    fontSize: 11, color: '#0a0e27',
+  },
+  lootTierContents: {
+    fontFamily: fonts.body, fontWeight: weight.semibold,
+    fontSize: 11, color: 'rgba(255,255,255,0.78)',
+    marginTop: 6,
+  },
+  lootTierUnlock: {
+    fontFamily: fonts.body, fontSize: 10,
+    color: colors.textMuted, marginTop: 4, fontStyle: 'italic',
+  },
 });
 
 const awardStyles = StyleSheet.create({
