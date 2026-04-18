@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
@@ -8,9 +8,14 @@ import { fonts, weight } from '../../theme/typography';
 import type { EmoteId } from './AnimatedCharacter';
 import { EMOTE_EMOJI, EMOTE_NAME } from './EmoteShowcase';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const WHEEL_RADIUS = 110;
 const SLOT_SIZE = 70;
+// Hub is a fixed-size container centered inside the modal. All slots are
+// positioned relative to the hub's center, so the wheel ALWAYS renders at
+// the middle of the modal — regardless of `Dimensions.get('window')`.
+// This fixes the off-screen bug on web where RN Modals portal outside the
+// PhoneFrame and the window dimensions don't match the visible viewport.
+const HUB_SIZE = (WHEEL_RADIUS + SLOT_SIZE / 2 + 20) * 2;
 
 // Slot angles in degrees: top, top-right, bottom-right, bottom, bottom-left, top-left
 const SLOT_ANGLES_DEG = [90, 30, -30, -90, -150, 150];
@@ -82,6 +87,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
         accessibilityHint="Tap outside the wheel to dismiss"
       >
         <View style={styles.wheelArea}>
+          <View style={styles.hub}>
           {/* Center glow + label */}
           <View style={styles.centerGlow}>
             <Text style={styles.centerText}>EMOTES</Text>
@@ -122,8 +128,8 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
                 style={[
                   styles.slot,
                   {
-                    left: SCREEN_WIDTH / 2 + x - SLOT_SIZE / 2,
-                    top: SCREEN_HEIGHT / 2 + y - SLOT_SIZE / 2 - 20,
+                    left: HUB_SIZE / 2 + x - SLOT_SIZE / 2,
+                    top: HUB_SIZE / 2 + y - SLOT_SIZE / 2,
                   },
                   isHovered && !isEmpty && styles.slotHovered,
                   isEmpty && styles.slotEmpty,
@@ -171,8 +177,8 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
                 style={[
                   styles.slotIndex,
                   {
-                    left: SCREEN_WIDTH / 2 + x - 8,
-                    top: SCREEN_HEIGHT / 2 + y - 8 - 20,
+                    left: HUB_SIZE / 2 + x - 8,
+                    top: HUB_SIZE / 2 + y - 8,
                   },
                 ]}
               >
@@ -180,6 +186,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
               </Text>
             );
           })}
+          </View>
         </View>
       </Pressable>
     </Modal>
@@ -193,14 +200,20 @@ const styles = StyleSheet.create({
   },
   wheelArea: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hub: {
+    width: HUB_SIZE,
+    height: HUB_SIZE,
     position: 'relative',
   },
 
   // Center
   centerGlow: {
     position: 'absolute',
-    left: SCREEN_WIDTH / 2 - 40,
-    top: SCREEN_HEIGHT / 2 - 40 - 20,
+    left: HUB_SIZE / 2 - 40,
+    top: HUB_SIZE / 2 - 40,
     width: 80,
     height: 80,
     borderRadius: 40,
