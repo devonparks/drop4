@@ -84,7 +84,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
       </View>
       <View style={rStyles.replayRight}>
         <Pressable
-          onPress={() => { haptics.select(); onToggleStar(); }}
+          onPress={() => { haptics.select(); playSound('click'); onToggleStar(); }}
           accessibilityRole="button"
           accessibilityLabel={replay.starred ? 'Unstar replay' : 'Star replay'}
           accessibilityState={{ selected: replay.starred }}
@@ -92,7 +92,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
           <Text style={rStyles.starIcon}>{replay.starred ? '⭐' : '☆'}</Text>
         </Pressable>
         <Pressable
-          onPress={() => { haptics.error(); onDelete(); }}
+          onPress={() => { haptics.error(); playSound('click'); onDelete(); }}
           accessibilityRole="button"
           accessibilityLabel="Delete replay"
         >
@@ -188,7 +188,7 @@ export function ReplayViewerScreen() {
         <View style={rStyles.container}>
           <View style={rStyles.watchHeader}>
             <Pressable
-              onPress={() => { haptics.tap(); setWatching(null); setIsPlaying(false); }}
+              onPress={() => { haptics.tap(); playSound('click'); setWatching(null); setIsPlaying(false); }}
               style={rStyles.backBtn}
               accessibilityRole="button"
               accessibilityLabel="Back to replay list"
@@ -218,6 +218,7 @@ export function ReplayViewerScreen() {
             <Pressable
               onPress={() => {
                 haptics.tap();
+                playSound('click');
                 const emptyBoard: Cell[][] = Array.from({ length: watching.boardCols }, () =>
                   Array(watching.boardRows).fill(0)
                 );
@@ -234,7 +235,7 @@ export function ReplayViewerScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => { haptics.tap(); stepForward(); }}
+              onPress={() => { haptics.tap(); playSound('click'); stepForward(); }}
               style={rStyles.controlBtn}
               accessibilityRole="button"
               accessibilityLabel="Step forward one move"
@@ -243,7 +244,7 @@ export function ReplayViewerScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => { haptics.tap(); setIsPlaying(!isPlaying); }}
+              onPress={() => { haptics.tap(); playSound('click'); setIsPlaying(!isPlaying); }}
               style={[rStyles.controlBtn, rStyles.playBtn]}
               accessibilityRole="button"
               accessibilityLabel={isPlaying ? 'Pause replay' : 'Play replay'}
