@@ -76,7 +76,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
       {/* Dark overlay — tap to close */}
       <Pressable
         style={styles.overlay}
-        onPress={onClose}
+        onPress={() => { haptics.tap(); playSound('click'); onClose(); }}
         accessibilityRole="button"
         accessibilityLabel="Close emote wheel"
         accessibilityHint="Tap outside the wheel to dismiss"
