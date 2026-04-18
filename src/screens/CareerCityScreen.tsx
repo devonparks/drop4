@@ -740,7 +740,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
         style={styles.modalBackdrop}
-        onPress={onClose}
+        onPress={() => { haptics.tap(); playSound('click'); onClose(); }}
         accessibilityRole="button"
         accessibilityLabel="Dismiss"
       >
@@ -783,7 +783,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             <PressScale>
             <Pressable
               style={styles.modalPlayBtn}
-              onPress={() => onPlay(level)}
+              onPress={() => { haptics.tap(); playSound('whoosh'); onPlay(level); }}
               accessibilityRole="button"
               accessibilityLabel={`Play match against ${level.opponent}`}
             >
@@ -798,7 +798,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
 
             <Pressable
               style={styles.modalCloseBtn}
-              onPress={onClose}
+              onPress={() => { haptics.tap(); playSound('click'); onClose(); }}
               accessibilityRole="button"
               accessibilityLabel="Cancel"
             >
