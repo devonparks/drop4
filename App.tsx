@@ -33,6 +33,7 @@ import { useCharacterStore } from './src/stores/characterStore';
 import { usePetStore } from './src/stores/petStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { MilestoneToast } from './src/components/ui/MilestoneToast';
+import { CityCompletionCeremony } from './src/components/ui/CityCompletionCeremony';
 import { CharacterUnlockToast } from './src/components/effects/CharacterUnlockToast';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 // WelcomeOverlay is rendered in HomeScreen (first-launch only, AsyncStorage-gated)
@@ -160,6 +161,7 @@ export default function App() {
         <DailyRewardPopup />
         <MilestoneToast />
         <CharacterUnlockToast />
+        <CityCompletionCeremony />
       </NavigationContainer>
     </GestureHandlerRootView>
     </PhoneFrame>

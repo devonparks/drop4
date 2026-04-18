@@ -15,6 +15,13 @@ interface CareerState {
   currentChapter: number;
   // Species unlocked by defeating chapter bosses. 'human' is always unlocked.
   unlockedSpecies: string[];
+  // Set when the player beats a chapter boss. CityCompletionCeremony watches
+  // this and shows the "CITY CLEARED" reveal. Cleared by acknowledgeCityComplete.
+  cityCompletePending: null | {
+    bossLevelId: number;
+    chapter: number;
+    speciesUnlocked: string[];
+  };
 
   // Actions
   completeLevel: (levelId: number, stars: number, moves: number) => void;
@@ -23,6 +30,7 @@ interface CareerState {
   getTotalStars: () => number;
   getCompletedCount: () => number;
   isSpeciesUnlocked: (species: string) => boolean;
+  acknowledgeCityComplete: () => void;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -40,6 +48,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
   progress: {},
   currentChapter: 1,
   unlockedSpecies: ['human'],
+  cityCompletePending: null,
 
   completeLevel: (levelId, stars, moves) => {
     const current = get().progress[levelId];
@@ -83,8 +92,27 @@ export const useCareerStore = create<CareerState>((set, get) => ({
           unlockedSpecies: Array.from(new Set([...state.unlockedSpecies, ...newSpecies])),
         }));
       }
+
+      // Trigger the city-completion ceremony for chapter bosses. The reveal
+      // is the Candy-Crush-style big moment — players should feel like they
+      // CLEARED this city, not just "earned some coins on level 12."
+      try {
+        const { ALL_CAREER_LEVELS } = require('../data/careerLevels');
+        const level = ALL_CAREER_LEVELS.find((l: any) => l.id === levelId);
+        if (level?.isBoss) {
+          set({
+            cityCompletePending: {
+              bossLevelId: levelId,
+              chapter: level.chapter,
+              speciesUnlocked: newSpecies ?? [],
+            },
+          });
+        }
+      } catch (e) { /* level data not available, skip ceremony */ }
     }
   },
+
+  acknowledgeCityComplete: () => set({ cityCompletePending: null }),
 
   getStars: (levelId) => get().progress[levelId]?.stars || 0,
 
