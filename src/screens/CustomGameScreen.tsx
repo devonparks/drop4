@@ -8,6 +8,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { fonts, weight } from '../theme/typography';
@@ -38,7 +39,7 @@ function SettingRow({ label, icon, value, options, onChange }: {
         {options.map(opt => (
           <PressScale
             key={opt.value}
-            onPress={() => { haptics.tap(); onChange(opt.value); }}
+            onPress={() => { haptics.tap(); playSound('click'); onChange(opt.value); }}
             scaleTo={0.94}
             accessibilityRole="button"
             accessibilityLabel={`Set ${label} to ${opt.label}`}
@@ -69,7 +70,7 @@ function ModifierToggle({ icon, name, description, value, onChange }: {
 }) {
   return (
     <Pressable
-      onPress={() => { haptics.tap(); onChange(!value); }}
+      onPress={() => { haptics.tap(); playSound('click'); onChange(!value); }}
       style={[styles.modifierRow, value && styles.modifierRowActive]}
       accessibilityRole="switch"
       accessibilityLabel={`${name} modifier. ${description}`}
@@ -82,7 +83,7 @@ function ModifierToggle({ icon, name, description, value, onChange }: {
       </View>
       <Switch
         value={value}
-        onValueChange={(val) => { haptics.tap(); onChange(val); }}
+        onValueChange={(val) => { haptics.tap(); playSound('click'); onChange(val); }}
         trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(255,140,0,0.4)' }}
         thumbColor={value ? colors.orange : 'rgba(255,255,255,0.4)'}
         ios_backgroundColor="rgba(255,255,255,0.1)"
@@ -173,6 +174,7 @@ export function CustomGameScreen({ navigation }: Props) {
   // Generate a random 6-char match code
   const startCustomGame = () => {
     haptics.tap();
+    playSound('click');
     const isAi = opponent !== 'local';
     const difficulty = opponent === 'ai_easy' ? 'easy'
       : opponent === 'ai_hard' ? 'hard'
