@@ -45,6 +45,9 @@ export type MatchupParams = {
   careerChapter?: number;
   presetBoard?: number[][];
   localPlayerNames?: { player1: string; player2: string };
+  // Phase 2 career additions:
+  movesLimit?: number;       // win in ≤ N moves or lose (moves_limit levels)
+  rewardMultiplier?: number; // jeopardy levels pay 3× coins
 };
 
 export type GameParams = {
@@ -60,6 +63,9 @@ export type GameParams = {
   gameSpeed?: 'normal' | 'fast' | 'instant';
   // Series mode: wins needed to win the series (1 = no series, 2 = bo3, 3 = bo5, 4 = bo7)
   seriesWinsNeeded?: number;
+  // Phase 2 career additions — forwarded from MatchupScreen.
+  movesLimit?: number;
+  rewardMultiplier?: number;
 };
 
 export type RootStackParamList = {

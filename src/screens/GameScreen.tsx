@@ -251,6 +251,19 @@ export function GameScreen({ navigation }: Props) {
     };
   }, [currentPlayer, status, moveCount]);
 
+  // Moves-limit check (Phase 2 career "moves_limit" levels). The player has
+  // at most N of their own moves to connect — if we hit that cap while still
+  // playing, the match ends as a loss. Counting ceil(moveCount / 2) gives
+  // "player's turn number" because player always goes first on these levels.
+  useEffect(() => {
+    const limit = params.movesLimit;
+    if (!limit || status !== 'playing') return;
+    const playerMoves = Math.ceil(moveCount / 2);
+    if (playerMoves > limit) {
+      useGameStore.setState({ status: 'won', winner: 2 });
+    }
+  }, [moveCount, status, params.movesLimit]);
+
   // Hint pulse animation — pulsing opacity when hint is shown
   useEffect(() => {
     if (hintCol !== null) {
@@ -402,7 +415,13 @@ export function GameScreen({ navigation }: Props) {
       const reward = COIN_REWARDS[difficulty];
       const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
       const dailyMultiplier = getStreakMultiplier();
-      const totalReward = Math.round((reward + streakBonus) * dailyMultiplier);
+      // Jeopardy levels pay N× coins — this is the carrot for the higher
+      // difficulty / connect count. The multiplier only applies to the BASE
+      // win reward; streak bonuses and achievement drops stay at 1×.
+      const jeopardyMultiplier = params.rewardMultiplier && params.rewardMultiplier >= 2
+        ? params.rewardMultiplier
+        : 1;
+      const totalReward = Math.round((reward + streakBonus) * dailyMultiplier * jeopardyMultiplier);
       addCoins(totalReward);
       // First Win of the Day — 2x XP if no wins yet today
       const todayStart = new Date();
@@ -945,6 +964,24 @@ export function GameScreen({ navigation }: Props) {
             {/* Board size indicator for non-standard boards */}
             {customSettings && (customSettings.rows !== 6 || customSettings.cols !== 7) && (
               <Text style={styles.boardSizeLabel}>{customSettings.cols}x{customSettings.rows} Board</Text>
+            )}
+            {/* Moves-limit indicator (Phase 2 career levels). Turns red when
+                the player is on their last 3 moves — gives them a panic cue. */}
+            {params.movesLimit && status === 'playing' && (() => {
+              const used = Math.ceil(moveCount / 2);
+              const remaining = Math.max(0, params.movesLimit - used);
+              return (
+                <Text style={[
+                  styles.movesLimitLabel,
+                  remaining <= 3 && styles.movesLimitLabelWarn,
+                ]}>
+                  {remaining} move{remaining === 1 ? '' : 's'} left
+                </Text>
+              );
+            })()}
+            {/* Jeopardy reward multiplier indicator */}
+            {params.rewardMultiplier && params.rewardMultiplier >= 2 && status === 'playing' && (
+              <Text style={styles.jeopardyLabel}>💰 {params.rewardMultiplier}× JACKPOT</Text>
             )}
             {/* Timer bar (casual mode turn timer) */}
             {(customSettings?.timerSeconds || 0) > 0 && status === 'playing' && (
@@ -1804,6 +1841,28 @@ const styles = StyleSheet.create({
     color: colors.orange,
     marginTop: 1,
     letterSpacing: 0.5,
+  },
+  movesLimitLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 11,
+    color: '#81c784',
+    marginTop: 2,
+    letterSpacing: 0.8,
+  },
+  movesLimitLabelWarn: {
+    color: '#ff4081',
+  },
+  jeopardyLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 11,
+    color: '#ffd54f',
+    marginTop: 2,
+    letterSpacing: 1.2,
+    textShadowColor: 'rgba(255,213,79,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
   timerWrap: {
     flexDirection: 'row',

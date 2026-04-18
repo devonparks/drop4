@@ -299,6 +299,9 @@ export function CareerCityScreen({ navigation, route }: Props) {
               : undefined,
             timerSeconds: lvl.settings.timerSeconds,
             presetBoard: lvl.settings.presetBoard as any,
+            // Phase 2: jeopardy 3× rewards + moves-limit target levels.
+            movesLimit: lvl.settings.movesLimit,
+            rewardMultiplier: lvl.settings.rewardMultiplier,
           });
         }}
       />
@@ -683,7 +686,12 @@ function OpponentNode({
             puzzle, or big-board level apart from a normal match at a glance.
             Boss already has rays/crown treatment so skip the chip there. */}
         {!isLocked && !level.isBoss && (() => {
+          // Phase 2 types (jeopardy, moves_limit) take priority — they're
+          // the most distinct experiences, so the chip should name them
+          // even if the level also happens to be a big board or timed.
           const icon =
+            level.type === 'jeopardy' || level.settings.rewardMultiplier ? '💰' :
+            level.type === 'moves_limit' || level.settings.movesLimit ? '🎯' :
             level.type === 'speed' || (level.settings.timerSeconds && level.settings.timerSeconds <= 5) ? '⚡' :
             level.type === 'timed' || level.settings.timerSeconds ? '⏱️' :
             level.type === 'puzzle' || level.settings.presetBoard ? '🧩' :
@@ -694,9 +702,10 @@ function OpponentNode({
             (level.settings.rows && level.settings.cols && (level.settings.rows > 7 || level.settings.cols > 8)) ? '📏' :
             null;
           if (!icon) return null;
+          const isPhase2 = level.type === 'jeopardy' || level.type === 'moves_limit';
           return (
-            <View style={styles.nodeTypeChip} pointerEvents="none">
-              <Text style={styles.nodeTypeChipText}>{icon}</Text>
+            <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2]} pointerEvents="none">
+              <Text style={[styles.nodeTypeChipText, isPhase2 && styles.nodeTypeChipTextPhase2]}>{icon}</Text>
             </View>
           );
         })()}
@@ -746,6 +755,12 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
   const rating = CAREER_RATINGS[level.id];
 
   const modifierPills: string[] = [];
+  if (level.settings.rewardMultiplier && level.settings.rewardMultiplier >= 2) {
+    modifierPills.push(`💰 ${level.settings.rewardMultiplier}× Coins`);
+  }
+  if (level.settings.movesLimit) {
+    modifierPills.push(`🎯 ${level.settings.movesLimit} Move Limit`);
+  }
   if (level.settings.connectCount && level.settings.connectCount !== 4) {
     modifierPills.push(`Connect ${level.settings.connectCount}`);
   }
@@ -1052,6 +1067,18 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 11,
     color: '#ffcc50',
+  },
+  // Phase 2 chips (jeopardy / moves_limit) get a brighter gold ring so they
+  // pop in the city view — these are the highest-stakes matches in the chapter.
+  nodeTypeChipPhase2: {
+    borderColor: '#ffd54f',
+    backgroundColor: 'rgba(40,20,0,0.95)',
+    shadowColor: '#ffd54f',
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+  },
+  nodeTypeChipTextPhase2: {
+    color: '#ffd54f',
   },
   nodeName: {
     marginTop: 10,

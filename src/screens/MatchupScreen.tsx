@@ -113,6 +113,15 @@ export function MatchupScreen({ navigation }: Props) {
   const levelBadge = (() => {
     if (params.mode !== 'career') return null;
     if (isBossMatchEarly) return null; // already shown as 'BOSS BATTLE'
+    // Phase 2 types take precedence — jeopardy + moves-limit are the most
+    // differentiated experiences; they should win the badge slot even if
+    // the level also has a timer or non-standard connect count.
+    if (params.rewardMultiplier && params.rewardMultiplier >= 2) {
+      return { label: `💰 JEOPARDY · ${params.rewardMultiplier}× COINS`, color: '#ffd54f' };
+    }
+    if (params.movesLimit) {
+      return { label: `🎯 WIN IN ${params.movesLimit} MOVES`, color: '#81c784' };
+    }
     if (timerSeconds && timerSeconds <= 5) return { label: `⚡ BLITZ · ${timerSeconds}s/TURN`, color: '#ff4081' };
     if (timerSeconds) return { label: `⏱️ TIMED · ${timerSeconds}s/TURN`, color: '#ff8c42' };
     if (connectCount && connectCount !== 4) return { label: `🎯 CONNECT ${connectCount}`, color: '#4dd0e1' };
@@ -192,6 +201,9 @@ export function MatchupScreen({ navigation }: Props) {
       // Forward opponent info so GameScreen can render correct 3D NPC
       opponentName,
       difficulty,
+      // Phase 2 career parameters
+      movesLimit: params.movesLimit,
+      rewardMultiplier: params.rewardMultiplier,
     });
   }, [navigation, params, courtName, resetScores]);
 

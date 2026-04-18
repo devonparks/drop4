@@ -23,6 +23,9 @@ export interface CareerLevel {
     timerSeconds?: number;
     playerGoesFirst?: boolean;
     presetBoard?: (0 | 1 | 2)[][]; // null = empty board
+    // Phase 2 additions:
+    movesLimit?: number;          // must win in ≤ N moves or lose (Candy Crush target levels)
+    rewardMultiplier?: number;    // jeopardy levels pay 3× coins
   };
   // Star thresholds — moves to earn 3 or 2 stars (1 star for any win)
   starThresholds?: { three: number; two: number };
@@ -38,7 +41,9 @@ type CareerChallengeType =
   | 'puzzle'          // Preset board, find the winning move
   | 'boss'            // Boss battle — harder AI, unique theme
   | 'speed'           // Very fast timer (5 seconds or less)
-  | 'tournament';     // Beat multiple opponents in a row
+  | 'tournament'      // Beat multiple opponents in a row
+  | 'jeopardy'        // High stakes — 3× reward, tougher opponent
+  | 'moves_limit';    // Win in N moves or you lose
 
 interface CareerReward {
   type: 'coins' | 'board' | 'pieces' | 'emote' | 'title' | 'pet';
@@ -61,6 +66,8 @@ export function getChallengeTypeLabel(type: CareerChallengeType): string {
     case 'boss': return 'Boss Battle';
     case 'speed': return 'Speed';
     case 'tournament': return 'Tournament';
+    case 'jeopardy': return 'Jeopardy';
+    case 'moves_limit': return 'Moves Limit';
     default: return 'Standard';
   }
 }
@@ -177,11 +184,11 @@ const CHAPTER_1: CareerLevel[] = [
   },
   {
     id: 11,
-    name: 'The Gauntlet',
+    name: 'Double Jeopardy',
     opponent: 'Iron Ivan',
-    opponentPersonality: 'Five in a row? Good luck.',
-    chapter: 1, type: 'connect5', difficulty: 'medium', isBoss: false,
-    settings: { rows: 7, cols: 8, connectCount: 5 },
+    opponentPersonality: 'Five in a row, triple the bag. Everything on the line.',
+    chapter: 1, type: 'jeopardy', difficulty: 'medium', isBoss: false,
+    settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 },
     reward: { type: 'pieces', id: 'chrome', name: 'Chrome Pieces', icon: '🔘' },
     starThresholds: { three: 10, two: 16 },
   },
@@ -329,13 +336,13 @@ const CHAPTER_2: CareerLevel[] = [
   },
   {
     id: 23,
-    name: 'Endurance',
+    name: 'Twenty Moves',
     opponent: 'Marathon Mel',
-    opponentPersonality: 'Long game, short fuse.',
-    chapter: 2, type: 'timed', difficulty: 'hard', isBoss: false,
-    settings: { rows: 8, cols: 9, timerSeconds: 30 },
+    opponentPersonality: "Twenty moves to win. That's it. No more, no less.",
+    chapter: 2, type: 'moves_limit', difficulty: 'hard', isBoss: false,
+    settings: { rows: 7, cols: 8, movesLimit: 20 },
     reward: { type: 'pieces', id: 'fire_ice', name: 'Fire & Ice Pieces', icon: '🔥' },
-    starThresholds: { three: 10, two: 16 },
+    starThresholds: { three: 12, two: 16 },
   },
   {
     id: 24,
@@ -474,11 +481,11 @@ const CHAPTER_3: CareerLevel[] = [
   },
   {
     id: 34,
-    name: 'The Impossible',
+    name: 'Final Jeopardy',
     opponent: 'Ghost Greg',
-    opponentPersonality: 'Connect 5 on a standard board. Can you even do it?',
-    chapter: 3, type: 'connect5', difficulty: 'hard', isBoss: false,
-    settings: { rows: 6, cols: 7, connectCount: 5 },
+    opponentPersonality: 'Connect 5 on a standard board. Triple the bag. All or nothing.',
+    chapter: 3, type: 'jeopardy', difficulty: 'hard', isBoss: false,
+    settings: { rows: 6, cols: 7, connectCount: 5, rewardMultiplier: 3 },
     reward: { type: 'coins', name: '1500 Coins', amount: 1500, icon: '🪙' },
     starThresholds: { three: 10, two: 16 },
   },
