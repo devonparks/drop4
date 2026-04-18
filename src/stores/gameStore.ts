@@ -255,7 +255,7 @@ useGameStore.subscribe((state) => {
 });
 
 // Export board constants for use elsewhere
-export { ROWS, COLS, getLowestEmptyRow, createEmptyBoard };
+export { ROWS, COLS, getLowestEmptyRow };
 
 // ── Dev/test hook ────────────────────────────────────────────────────
 // Exposes the store to window so the playtest bot can access board state

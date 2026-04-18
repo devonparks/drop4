@@ -44,7 +44,7 @@ function getCacheKey(source: number | string): string {
  * Load a GLB model imperatively.
  * Returns cached result if already loaded.
  */
-export async function loadGLB(source: number | string): Promise<GLTF> {
+async function loadGLB(source: number | string): Promise<GLTF> {
   const key = getCacheKey(source);
 
   // Return cached

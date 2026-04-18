@@ -28,7 +28,7 @@ const BOARD_WIDTH = CELL_SIZE * COLS + CELL_GAP * (COLS - 1) + BOARD_PADDING * 2
 const BOARD_HEIGHT = CELL_SIZE * ROWS + CELL_GAP * (ROWS - 1) + BOARD_PADDING * 2;
 const PIECE_SIZE = CELL_SIZE - 6;
 
-export { BOARD_WIDTH, BOARD_HEIGHT, CELL_SIZE };
+export { BOARD_WIDTH, CELL_SIZE };
 
 // Individual animated piece
 function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {

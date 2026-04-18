@@ -33,7 +33,7 @@ Notifications.setNotificationHandler({
  * Request notification permission. Safe to call on every launch —
  * iOS shows the dialog only once.
  */
-export async function requestNotificationPermission(): Promise<boolean> {
+async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
     const { status: existing } = await Notifications.getPermissionsAsync();
