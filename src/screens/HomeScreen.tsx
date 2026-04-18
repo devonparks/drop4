@@ -597,19 +597,25 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // Bottom tab bar is ~72px tall and sits over the scroll content. Without
+    // reserving space here, the third mode button (LOCAL PLAY) renders behind
+    // it on shorter viewports — which is the "I can't even see Local Play"
+    // bug. Reserve 8px of breathing room above the tab bar on top of the
+    // tab bar's own height so the last button has a clear gap.
+    paddingBottom: Platform.OS === 'ios' ? 88 : 80,
   },
   logoArea: {
     alignItems: 'center',
-    height: 56,
+    height: 68,
     justifyContent: 'center',
     marginTop: 0,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   logoImage: {
-    width: 280,
-    height: 130,
-    marginTop: -30,
-    marginBottom: -40,
+    width: 240,
+    height: 110,
+    marginTop: -22,
+    marginBottom: -24,
   },
   customizeBtn: {
     backgroundColor: 'rgba(255,140,0,0.22)',
@@ -642,7 +648,14 @@ const styles = StyleSheet.create({
   },
   // Character lobby
   lobbyArea: {
-    flex: 1,
+    // Used to be `flex: 1` — which grew the character stage to eat all
+    // remaining vertical space, pushing the LOCAL PLAY card below the tab
+    // bar on shorter viewports. Now we allow shrink + define a hard ceiling
+    // so the three mode buttons are guaranteed visible at the bottom.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 260,
+    maxHeight: 340,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -736,6 +749,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 6,
     paddingBottom: 8,
+    // Never shrink — mode buttons must be fully visible. If space is tight,
+    // the character stage above compresses instead (lobbyArea flexShrink=1).
+    flexShrink: 0,
   },
   // "Tap me!" tooltip
   tapHintBubble: {
