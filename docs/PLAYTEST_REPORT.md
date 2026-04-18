@@ -6,9 +6,59 @@
 
 ---
 
+## Summary
+
+**Overall grade: B.** Playable, polished in a lot of places, but has a few ship-blocking bugs on web and one system (career) that needs an overhaul before beta. Home screen, win screen, profile, challenges, and awards feel A-/A. Shop and customization are B+ content-dense but held back by thumbnail blindness. Career mode is C+ — 36 levels, same mechanic, and the framing ("boss battle" on level 1) makes the progression feel flat.
+
+### Top ship blockers (fix before beta)
+
+1. ✅ Emote wheel off-screen on web → **FIXED** (commit `4ba6178`)
+2. ✅ Daily spin wheel unreachable → **FIXED** (commit `efe51c3`)
+3. ✅ Career matchup labels every opponent BOSS BATTLE → **FIXED** (commit `efe51c3`)
+4. ✅ TopBar nested `<button>` hydration errors → **FIXED** (commit `adc3b89`)
+5. First-launch modal stacking (DailyReward + Welcome) — still open
+6. Shop outfit cards use pack icons, not outfit-specific previews — still open
+7. Win reward display shows +35 but balance grew by +85 — still open
+
+### System grades
+
+| System | Grade | Notes |
+|---|---|---|
+| First-launch / onboarding | C+ | DailyReward + Welcome stack. Tutorial tooltips are fine but the bullet-list welcome feels 2018. |
+| Home screen | A- | Logo, character stage, emote/idle/customize/spin buttons all read clearly. Clean. |
+| Quick Play match flow | A | Great matchup screen, tight game feel, excellent win screen. |
+| Career mode | C+ | Progression is just "rating goes up." No variety per level. BOSS BATTLE framing on level 1 broke immersion (fixed, but the mode still needs mechanical variety — see `CAREER_OVERHAUL.md`). |
+| Shop | B+ | Dense catalog, tier colors + "X games to go" countdowns are great. Kneecapped by outfit cards showing the same pack icon. |
+| Collection / Characters | A- | Hero portrait + grid + sub-tabs (Characters / Loot / Awards) is polished. Loot tab empty state is sparse. |
+| Collection / Awards | A | Milestones, progress bars, title rewards — this is the gamification layer done right. |
+| Profile | A- | OVR badge + portrait frame + daily goals card + coin goal. NBA 2K vibes. Clean. |
+| Challenges | A- | Daily + weekly split, progress bars, reward pills, bag meter. |
+| Customize | B+ | Turntable 3D preview is great. 152 outfits across packs. Same thumbnail issue as shop. |
+| Settings | A- | Audio/haptic/notif toggles, What's New list, Privacy/ToS, account, Reset Progress, version footer. Solid. |
+| Daily reward | A | Escalating 7-day cycle, premium day treatment (confetti, bigger icon). |
+| Daily spin | A (now that it's reachable) | Basketball-Stars-style wheel, rarity tiers, time-to-next-spin countdown. |
+
+### Shipped this session
+
+- `4ba6178` — FortniteEmoteWheel centered in modal (no more off-screen on web)
+- `efe51c3` — Daily spin now accessible via a SPIN pill on home; career matchup uses city nickname instead of defaulting to BOSS BATTLE; initial playtest report committed
+- `adc3b89` — TopBar CurrencyPill no longer nests `<button>` inside `<button>`
+
+### Backlog (found but not shipped)
+
+- First-launch modal stacking: DailyReward + Welcome both auto-open, order is wrong
+- Shop / customizer outfit thumbnails: every card in a pack shares the same pack icon
+- Win-screen coin delta doesn't match actual currency growth
+- Quick Play tip references "Custom Game" but there's no visible entry point for it
+- Loot tab empty state is 50% dead space
+- Outfit names truncated to "Elven Warriors..." everywhere — no short/display name pattern
+- DailySpinWheel still uses `Dimensions.get('window')` for sizing — may have the same off-screen issue on tablets / iPad web
+
+---
+
 ## Live Findings Log
 
-_(Appended in order as issues surface. Curated summary + grades at bottom once the run is complete.)_
+_(Appended in order as issues surfaced during the playtest.)_
 
 ### [MEDIUM] Career matchup screen labels every opponent "BOSS BATTLE"
 - **Repro:** Career → The Rec → Rookie Ron → PLAY MATCH → Matchup screen has big red "CAREER: BOSS BATTLE" header, BOSS BATTLE pill, and a red/pink intimidating gradient.
