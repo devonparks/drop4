@@ -151,6 +151,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   const handleSpin = () => {
     if (spinning || !canSpin) return;
     haptics.tap();
+    playSound('click');
     setSpinning(true);
     setShowResult(false);
     setResultSegment(null);
@@ -192,6 +193,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
       return;
     }
     haptics.tap();
+    playSound('click');
     setSpinning(true);
     setShowResult(false);
     setResultSegment(null);
@@ -460,7 +462,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
                   </Pressable>
                   <Pressable
                     style={st.goldenBtn}
-                    onPress={() => haptics.tap()}
+                    onPress={() => { haptics.tap(); playSound('click'); }}
                     accessibilityRole="button"
                     accessibilityLabel="Golden spin for 0.99 dollars"
                   >
