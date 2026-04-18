@@ -196,12 +196,25 @@ const CHAPTER_1: CareerLevel[] = [
     id: 12,
     name: 'BOSS: The Rookie King',
     opponent: 'King Kyle',
-    opponentPersonality: 'Beat the king to advance!',
+    opponentPersonality: 'He gets a head start. Two in a row. Block fast.',
     chapter: 1, type: 'boss', difficulty: 'medium', isBoss: true,
-    settings: {},
+    // Boss seed — Kyle starts with a 2-piece beachhead at center. Player
+    // has to decide: block (col 2 or col 5) or race? Gives the fight a
+    // tactical opening instead of a vanilla empty-board match. Chapter 1
+    // boss shouldn't be brutal — one blocking move and it's a fair fight.
+    settings: {
+      presetBoard: [
+        [0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0],
+        [0,0,0,2,2,0,0],
+      ],
+    },
     reward: { type: 'board', id: 'neon_glow', name: 'Neon Glow Board', icon: '✨' },
     bonusReward: { type: 'pet', id: 'dalmatian', name: 'Dalmatian Pet', icon: '🐕' },
-    starThresholds: { three: 7, two: 12 },
+    starThresholds: { three: 8, two: 13 },
   },
 ];
 
@@ -348,12 +361,26 @@ const CHAPTER_2: CareerLevel[] = [
     id: 24,
     name: 'BOSS: The Strategist',
     opponent: 'Grandmaster Grace',
-    opponentPersonality: "She's 3 moves ahead of you.",
+    opponentPersonality: "Opening book in place. 15s a turn. She's 3 moves ahead.",
     chapter: 2, type: 'boss', difficulty: 'hard', isBoss: true,
-    settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 15 },
+    // Boss seed — Grace opens with a mirrored knight-fork pattern. Timer
+    // forces you to respond without thinking. Connect 5 means you can't
+    // stumble into a win.
+    settings: {
+      rows: 7, cols: 8, connectCount: 5, timerSeconds: 15,
+      presetBoard: [
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,1,2,0,0,0],
+        [0,0,0,2,1,0,0,0],
+        [0,0,2,1,1,2,0,0],
+      ],
+    },
     reward: { type: 'board', id: 'galaxy', name: 'Galaxy Board', icon: '🌌' },
     bonusReward: { type: 'pet', id: 'wolf', name: 'Wolf Pet', icon: '🐺' },
-    starThresholds: { three: 9, two: 15 },
+    starThresholds: { three: 10, two: 16 },
   },
 ];
 
@@ -512,11 +539,32 @@ const CHAPTER_3: CareerLevel[] = [
     id: 36,
     name: 'BOSS: DARK MATTER',
     opponent: 'The Dark Lord',
-    opponentPersonality: 'The ultimate test.',
+    opponentPersonality: 'Four dark pieces already on the board. You go second. 10-second clock. Survive.',
     chapter: 3, type: 'boss', difficulty: 'hard', isBoss: true,
-    settings: { rows: 9, cols: 9, connectCount: 5, timerSeconds: 10, playerGoesFirst: false },
+    // Boss seed — "The Warden" pattern. Four Dark Lord pieces already
+    // threaten a connect-5 diagonal. You go second under a 10s clock.
+    // Has to be threaded with precise blocks while building your own win.
+    settings: {
+      rows: 9, cols: 9, connectCount: 5, timerSeconds: 10, playerGoesFirst: false,
+      // "The Warden" pattern: seed a pyramid of Dark pieces stacked from
+      // the bottom row upward, threatening multiple connect-5 lines.
+      // Gravity-legal (no floating pieces). Bottom row has 4 Dark pieces
+      // (not 5, so no instant win — but one more drop in col 2 or col 7
+      // wins). Forces immediate block while building under a 10s clock.
+      presetBoard: [
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,2,0,0,0,0],
+        [0,0,0,0,2,2,0,0,0],
+        [0,0,0,2,2,2,2,0,0],
+      ],
+    },
     reward: { type: 'board', id: 'dark_matter', name: 'Dark Matter Board', icon: '🌑' },
-    starThresholds: { three: 10, two: 16 },
+    starThresholds: { three: 12, two: 18 },
   },
 ];
 
