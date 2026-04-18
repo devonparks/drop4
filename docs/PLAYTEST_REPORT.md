@@ -16,9 +16,13 @@
 2. ✅ Daily spin wheel unreachable → **FIXED** (commit `efe51c3`)
 3. ✅ Career matchup labels every opponent BOSS BATTLE → **FIXED** (commit `efe51c3`)
 4. ✅ TopBar nested `<button>` hydration errors → **FIXED** (commit `adc3b89`)
-5. First-launch modal stacking (DailyReward + Welcome) — still open
-6. Shop outfit cards use pack icons, not outfit-specific previews — still open
-7. Win reward display shows +35 but balance grew by +85 — still open
+5. ✅ First-launch modal stacking (DailyReward + Welcome) → **FIXED** (commit `6d69c99`)
+6. ✅ Shop outfit cards use pack icons, not outfit-specific previews → **FIXED** via per-index color tint (commit `3a5284d`)
+7. ✅ Win reward display shows +35 but balance grew by +85 → **FIXED** via true balance-delta (commit `6d69c99`)
+
+### Career Phase 1 (MVP) — shipped this session
+- ✅ `d819a45` — MatchupScreen shows a level-type badge (BLITZ / TIMED / CONNECT N / PUZZLE / big board) so players know what kind of match they're in before tapping READY
+- ✅ `d819a45` — CareerCityScreen opponent nodes show a small type-chip (⚡ / ⏱️ / 🧩 / digit / ↩ / 📏) so the path through a city shows variety at a glance
 
 ### System grades
 
