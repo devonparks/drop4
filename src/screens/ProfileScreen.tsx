@@ -466,7 +466,7 @@ export function ProfileScreen() {
                     key={i}
                     style={[
                       styles.formDot,
-                      { backgroundColor: m.result === 'win' ? colors.green : m.result === 'loss' ? (colors.pieceRed || '#e74c3c') : '#3498db' },
+                      { backgroundColor: m.result === 'win' ? colors.green : m.result === 'loss' ? colors.pieceRed : '#3498db' },
                     ]}
                   />
                 ))}

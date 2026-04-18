@@ -1591,7 +1591,7 @@ export function GameScreen({ navigation }: Props) {
                       <View style={styles.goDiffSwitchRow}>
                         {(['easy', 'medium', 'hard'] as const).map((d) => {
                           const isActive = d === difficulty;
-                          const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : (colors.pieceRed || '#e74c3c');
+                          const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : colors.pieceRed;
                           return (
                             <PressScale key={d} scaleTo={0.92}>
                               <Pressable
