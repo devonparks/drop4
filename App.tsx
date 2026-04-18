@@ -34,6 +34,7 @@ import { usePetStore } from './src/stores/petStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { MilestoneToast } from './src/components/ui/MilestoneToast';
 import { CityCompletionCeremony } from './src/components/ui/CityCompletionCeremony';
+import { WelcomeBackPopup } from './src/components/ui/WelcomeBackPopup';
 import { CharacterUnlockToast } from './src/components/effects/CharacterUnlockToast';
 import { ErrorBoundary } from './src/components/ui/ErrorBoundary';
 // WelcomeOverlay is rendered in HomeScreen (first-launch only, AsyncStorage-gated)
@@ -158,6 +159,11 @@ export default function App() {
         }}
       >
         <RootNavigator />
+        {/* WelcomeBack renders first in the popup stack so returning players
+            see the welcome-back reward before their daily reward popup.
+            DailyRewardPopup gates on WelcomeOverlay; WelcomeBack gates on
+            the same flag + a 3+ day absence window, so they don't collide. */}
+        <WelcomeBackPopup />
         <DailyRewardPopup />
         <MilestoneToast />
         <CharacterUnlockToast />
