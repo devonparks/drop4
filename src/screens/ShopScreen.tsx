@@ -336,6 +336,18 @@ const PACK_ICON: Record<string, string> = {
   sci_fi_soldiers: '\u{1F52B}',        // pistol
 };
 
+// Deterministic hue from an outfit id. Used to tint each outfit card a
+// different color so Elven Warriors 01/02/03 look distinct without needing
+// pre-rendered thumbnails. Returns 0–359 (HSL hue degrees).
+function outfitIdHue(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % 360;
+}
+
+
 function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }: {
   item: ShopItem; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number; playerCoins: number;
 }) {
@@ -365,20 +377,41 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
           {outfitMeta ? (
             // Outfit preview: rarity-tinted backdrop with a pack emoji +
             // large number overlay. 3D preview happens in the tap modal.
-            <View style={{ width: 108, height: 64, borderRadius: 6, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: rarityColor + '22' }}>
-              <LinearGradient
-                colors={[rarityColor + '44', '#0a0e27', '#060914']}
-                style={StyleSheet.absoluteFill}
-              />
-              <Text style={{ fontSize: 30, zIndex: 1 }}>{PACK_ICON[outfitMeta.pack] ?? '\u{1F455}'}</Text>
-              <Text style={{
-                position: 'absolute', top: 4, right: 6, zIndex: 2,
-                fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 10,
-                color: rarityColor, letterSpacing: 0.5, opacity: 0.9,
-              }}>
-                {String(outfitMeta.index).padStart(2, '0')}
-              </Text>
-            </View>
+            // Variant tint: every outfit id hashes to a unique HSL hue so
+            // that Elven Warriors 01/02/03 etc. don't all look identical.
+            // Without this tint the shop felt like "here are 6 copies of
+            // the same card" even though each is a distinct outfit.
+            (() => {
+              // Each index in a pack gets a distinct hue spread around the
+              // wheel (360 / 8 = 45°). Combined with the id hash for variety
+              // between packs. This way Elven Warriors 01/02/03 look clearly
+              // different, not "3 copies of the same card."
+              const packBase = outfitIdHue(outfitMeta.pack);
+              const variantHue = (packBase + (outfitMeta.index - 1) * 45) % 360;
+              const variantStrong = `hsl(${variantHue}, 70%, 42%)`;
+              const variantSoft = `hsl(${variantHue}, 60%, 22%)`;
+              return (
+                <View style={{ width: 108, height: 64, borderRadius: 6, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                  <LinearGradient
+                    colors={[variantStrong, variantSoft, '#060914']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <Text style={{ fontSize: 30, zIndex: 1 }}>{PACK_ICON[outfitMeta.pack] ?? '\u{1F455}'}</Text>
+                  {/* Rarity corner chip (top-left) to keep tier legible */}
+                  <View style={{ position: 'absolute', top: 3, left: 3, zIndex: 2, width: 7, height: 7, borderRadius: 4, backgroundColor: rarityColor }} />
+                  <Text style={{
+                    position: 'absolute', top: 4, right: 6, zIndex: 2,
+                    fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 10,
+                    color: '#ffffff', letterSpacing: 0.5, opacity: 0.95,
+                    textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+                  }}>
+                    {String(outfitMeta.index).padStart(2, '0')}
+                  </Text>
+                </View>
+              );
+            })()
           ) : item.preview.p1Color && item.preview.p2Color ? (
             <View style={s.piecePreviewBackdrop}>
               {isPremium ? (
