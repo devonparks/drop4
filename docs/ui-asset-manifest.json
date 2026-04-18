@@ -1,0 +1,105 @@
+{
+  "_description": "Drop4 UI asset manifest. Each entry generates one PNG via Nano Banana (Gemini 2.5 Flash Image). Run: node tools/gen-art.mjs [--only=<group>] [--force] [--dry-run]",
+  "_style_lockup": "Every prompt should include the shared style lockup so the full UI pack reads as one game. If you tweak this, regenerate with --force so nothing drifts.",
+  "_style_lockup_text": "Premium mobile game UI asset for 'Drop4', a stylized Connect-4 game. Dark navy background, neon orange and warm gold accents, subtle purple highlights, glossy plastic + metal material mix. Flat but dimensional, no text, clean edges, slight inner glow, drop shadow. Mobile game polish like Basketball Stars or Candy Crush Saga. No clutter, no borders, centered subject. Render as a transparent PNG.",
+  "items": [
+    {
+      "group": "tab-icons",
+      "id": "tab-home",
+      "filename": "tab-home.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a small glossy house with a warm glowing window, facing camera straight on. Dark navy + orange accents, neon rim light, slight gold reflection. Centered, transparent background, no text. Mobile game polish like Basketball Stars or Candy Crush."
+    },
+    {
+      "group": "tab-icons",
+      "id": "tab-challenges",
+      "filename": "tab-challenges.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a bullseye target with a dart stuck dead-center. Glossy orange and navy, neon rim light, gold glint on the dart tip. Centered, transparent background, no text. Mobile game polish."
+    },
+    {
+      "group": "tab-icons",
+      "id": "tab-collection",
+      "filename": "tab-collection.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a backpack with a glowing gem poking out the top. Glossy orange + navy, neon rim, gold zippers. Centered, transparent background, no text."
+    },
+    {
+      "group": "tab-icons",
+      "id": "tab-profile",
+      "filename": "tab-profile.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a stylized bust silhouette inside a glowing circular frame, like a character portrait plaque. Glossy navy + orange, gold ring accent. Centered, transparent background, no text."
+    },
+    {
+      "group": "tab-icons",
+      "id": "tab-shop",
+      "filename": "tab-shop.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy shopping bag with a small star hanging off it. Orange handles, navy body, gold star. Centered, transparent background, no text."
+    },
+    {
+      "group": "mode-cards",
+      "id": "mode-play",
+      "filename": "mode-play-bg.png",
+      "size": "1200x300",
+      "prompt": "Wide mobile game button background: dynamic orange-to-deep-orange gradient with a faint Connect-4 board pattern in the distance, warm glow, diagonal light streaks. No text, edges fade to transparent. Premium mobile game feel like Basketball Stars."
+    },
+    {
+      "group": "mode-cards",
+      "id": "mode-career",
+      "filename": "mode-career-bg.png",
+      "size": "1200x300",
+      "prompt": "Wide mobile game button background: deep purple-to-violet gradient with faint city skyline silhouette, trophy glint, subtle spotlight beams. No text, edges fade to transparent. Premium mobile game feel."
+    },
+    {
+      "group": "mode-cards",
+      "id": "mode-local",
+      "filename": "mode-local-bg.png",
+      "size": "1200x300",
+      "prompt": "Wide mobile game button background: teal-to-cyan gradient with two stylized controllers facing each other, warm glow between them, faint dotted connection line. No text, edges fade to transparent. Premium mobile game feel."
+    },
+    {
+      "group": "backgrounds",
+      "id": "bg-home",
+      "filename": "bg-home.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: a stylized arena stage floor with concentric orange glow rings, dark navy depth above, subtle purple nebula dots, warm spotlight from below. No characters, no text, just the environment. Premium polish, Candy Crush Saga meets Basketball Stars."
+    },
+    {
+      "group": "backgrounds",
+      "id": "bg-shop",
+      "filename": "bg-shop.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: a stylized marketplace stall interior, wood-and-neon shelving in soft focus, warm lanterns, subtle gold dust particles. Dark navy top fading to warm bottom. No characters, no text, just the environment."
+    },
+    {
+      "group": "backgrounds",
+      "id": "bg-career",
+      "filename": "bg-career.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: stylized city skyline at sunset (Brooklyn-coded), orange-purple sky, silhouetted buildings, warm windows glowing, dusky clouds. No characters, no text."
+    },
+    {
+      "group": "backgrounds",
+      "id": "bg-profile",
+      "filename": "bg-profile.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: stylized hall-of-fame wall with soft spotlight, gold filigree accents, navy velvet texture, faint trophy silhouettes in depth. No characters, no text."
+    },
+    {
+      "group": "frames",
+      "id": "frame-shop-card",
+      "filename": "frame-shop-card.png",
+      "size": "600x800",
+      "prompt": "Mobile game item card frame: 9-slice compatible, dark navy interior, glossy metallic border, subtle corner rivets, neon orange inner rim line. No text, transparent center, edges define the frame. Premium polish."
+    },
+    {
+      "group": "frames",
+      "id": "frame-portrait-gold",
+      "filename": "frame-portrait-gold.png",
+      "size": "800x800",
+      "prompt": "Mobile game portrait frame: ornate gold circular ring, sports-card-style bevel and engraved detail, slight wear, inner shadow. No content in center (transparent), edges define the frame. Like an NBA 2K MyPlayer portrait ring."
+    }
+  ]
+}
