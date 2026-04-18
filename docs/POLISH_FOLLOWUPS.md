@@ -16,9 +16,9 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 
 ## Open — retention polish
 
-- Streak-recovery mechanic — one "freeze" per week so a single missed day doesn't reset progress
-- Milestone screen in Profile showing progress toward each milestone (bars, percentages)
-- Welcome-back bonus if player returns after 3+ days away (coins + free outfit of choice)
+<!-- Streak-recovery shipped as streak freeze (commit 7ae43f0) — 1 charge/week auto-applies on missed day -->
+<!-- Welcome-back bonus shipped (commit 863e8af) — 500 coins + 1 gem on 3+ day return -->
+- Milestone screen in Profile showing progress toward each milestone (bars, percentages) — partially covered by Collection > Awards, could expand
 - Notification to claim daily spin if they opened the app but forgot (1h after last open)
 
 ## Open — code quality
@@ -35,6 +35,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 
 ## Open — beta prep
 
+<!-- Interactive first-launch walkthrough shipped (commit c12142d) — 4-page carousel replaces bullet list -->
 - App Store / Google Play screenshots — use web preview at 1920×1080 bucket
 <!-- LegalScreen privacy + terms content shipped (commit f14b12d). Still needs a lawyer review pass + the {{SUPPORT_EMAIL}} / {{COMPANY_ADDRESS}} constants updated with final values before submission. -->
 - App icon final export (1024×1024, no alpha for iOS)
@@ -73,6 +74,15 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Awards tab: 15-milestone collection ladder with progress bars (commit 13cb24f)
 - ErrorBoundary: web reload + wired Go Home handler (commit 4738f80)
 - Deleted dead IdlePicker.tsx — 365 lines, replaced by AnimationPicker (commit 70385e0)
+
+### 2026-04-17 autonomous Phase 2 session
+- Career jeopardy levels — 3× coin multiplier, tougher opponents, dedicated badge + chip (commit d64c8d3)
+- Career moves-limit levels — Candy-Crush target style with HUD move counter (commit d64c8d3)
+- Chapter boss seed boards — each of levels 12/24/36 gets a signature opening position (commit 293d51a)
+- CityCompletionCeremony — 'CITY CLEARED' reveal modal fires on chapter boss wins (commit 96849a7)
+- Streak freeze — 1 auto-save charge per week, surfaced in Profile + DailyRewardPopup (commit 7ae43f0)
+- Welcome-back bonus — 500 coins + 1 gem modal for 3+ day returns (commit 863e8af)
+- Interactive 4-page welcome walkthrough — replaces bullet-list welcome (commit c12142d)
 
 ### 2026-04-17 session
 - Audio overhaul: 13 → 24 sounds (Kenney Interface Sounds pack) + 20 silent `haptics.error()` sites wired up + fixed 5 silent `playSound('purchase')` callers (commit 2733f48)

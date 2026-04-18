@@ -6,19 +6,52 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Devon is resting. Claude continues code-based polish on main until Devon wakes up. Art-pipeline / beta-submit work is blocked on Devon.
+**Now:** Devon is DoorDashing; Claude shipped Phase 2 career overhaul + retention pass autonomously. Tree clean on main, pre-commit gate passing on every commit.
 
 **Next (in order):**
 1. **Art generation (Devon)** — app icon + splash + logo iteration in ComfyUI. Prompts ready in docs/COMFYUI_PROMPT_PACK.md.
 2. **Store screenshots** — Claude captures from web preview at 1920x1080 when Devon picks a visual direction.
-3. **First-launch tutorial** — replace WelcomeOverlay bullet list with interactive 3-screen walkthrough.
-4. **`eas build`** — iOS + Android binaries.
-5. **TestFlight / Play Console upload.**
-6. **Find 5 beta testers.**
+3. **`eas build`** — iOS + Android binaries.
+4. **TestFlight / Play Console upload.**
+5. **Find 5 beta testers.**
 
 **Blocked on:** art assets from Devon. Everything else is ready.
 
 **Target:** beta on real phones by end of this week.
+
+---
+
+## 2026-04-17 (night) — Phase 2 Career Overhaul + Retention Pass (autonomous)
+
+Shipped during Devon's 4-hour DoorDash window. 8 commits, all through pre-commit gate (tsc + jest clean).
+
+### Phase 2 career types
+- `d64c8d3` — **Jeopardy level type** (3× coin reward, tougher opponents). Levels 11 (Iron Ivan, Connect 5) and 34 (Ghost Greg, Connect 5 tiny board) re-themed as Double Jeopardy / Final Jeopardy. New `💰 JEOPARDY · 3× COINS` badge in MatchupScreen + brighter gold chip in CareerCityScreen. GameScreen applies the multiplier to base win coins only (streak + achievement drops stay at 1×).
+- `d64c8d3` — **Moves-limit level type** (Candy-Crush target style, win in N moves or lose). Level 23 Marathon Mel re-themed as "Twenty Moves." GameScreen runs a useEffect that forces a loss when player moves exceed the cap. Live HUD counter shows "X moves left" in green, turns red on the last 3.
+
+### Boss differentiation
+- `293d51a` — **Chapter boss seed boards**. Level 12 King Kyle opens with a 2-piece beachhead player must respond to. Level 24 Grandmaster Grace opens with a symmetric knight-fork pattern under a 15s clock. Level 36 Dark Lord opens with "The Warden" pyramid — 4 Dark pieces on the bottom row threatening multiple Connect-5 lines, under go-second + 10s clock + 9×9 board. All presets gravity-legal.
+
+### City completion ceremony
+- `96849a7` — **"CITY CLEARED" reveal modal** fires after beating each chapter boss. Full-screen city-gradient background, slam-in headline (`CHAPTER 2 · CLEARED` → big "THE BOARDWALK"), 3-star summary, boss line, NEW SPECIES UNLOCKED card with emoji + blurb, confetti, glossy CONTINUE. Mounted at App root alongside DailyRewardPopup. `careerStore.cityCompletePending` gets set in `completeLevel` when a boss is defeated, cleared by `acknowledgeCityComplete`. Fills the biggest "emotional payoff" gap — Brooklyn/Venice/Harlem wins are now marquee moments instead of silent state changes.
+
+### Retention — streak freeze
+- `7ae43f0` — **Streak freeze (Duolingo-style)**. 1 charge per week auto-applies when the player misses a day, saving their streak. dailyRewardStore gains `freezeCharges`, `lastFreezeResetDate`, `freezeUsedOnLastClaim`. Charges refill once per 7 days. UI surfacing: 🧊 row in Profile's Daily Goals so players KNOW the safety net exists, and "🧊 STREAK SAVED · freeze used" banner in DailyRewardPopup when it auto-triggers. Biggest retention hole closed for the DoorDash-shift casual daily player.
+
+### Retention — welcome-back bonus
+- `863e8af` — **Welcome-back drop** for players returning after 3+ days. New WelcomeBackPopup mounted before DailyRewardPopup in the gate stack. Shows "WE MISSED YOU" kicker, days-away count ("5 days" or "2 weeks" if it's been that long), +500 coins and +1 gem reward cards, "Come back tomorrow to start a new streak" pitch, confetti. One-shot per return via `drop4_welcome_back_claimed_at` AsyncStorage key.
+
+### Onboarding — interactive walkthrough
+- `c12142d` — **4-page welcome walkthrough** replacing bullet-list modal. Paged ScrollView with dot pagination + SKIP + NEXT/LET'S GO. Each page has its own gradient and pitch: Welcome → Customize → Career → Daily Rewards. Zoom-in emoji, staggered text fade-in. Uses existing `drop4_welcome_dismissed` flag so gate coupling with DailyRewardPopup / WelcomeBackPopup stays intact.
+
+### What's explicitly NOT done
+- **Power piece system** (Bomb / Rainbow / Heavy). Designed in `docs/CAREER_OVERHAUL.md`, not implemented — Board type extension + connect-detection changes + UI picker felt too risky to ship unattended in the remaining window. Left as post-launch 1.1 work.
+- **Profile detailed milestones screen** — deprioritized; Collection > Awards tab already covers milestone progress well.
+
+### Status
+- ~20 commits total over the last 48 hours (playtest fixes + phase 1 MVP + phase 2 + retention).
+- Pre-commit hook (tsc + jest) green on every commit.
+- Tree clean on main, polish-loop branch deleted.
 
 ---
 
