@@ -56,7 +56,7 @@ Premium Connect 4 mobile game built with React Native + Expo. First game in the 
 
 ## v1 Status (as of April 2026)
 
-- **Multiplayer: KILLED.** All Firebase services (matchmaking, emotes, friends) deleted. GameScreen has some dead `isOnlineMatch` variable references but they're inert (always false). Don't re-add MP code.
+- **Multiplayer: KILLED.** All Firebase services (matchmaking, emotes, friends) deleted. All dead MP variable references have been stripped. Don't re-add MP code.
 - **v1 is single-player only**: AI games (Easy/Medium/Hard), Career Mode (36 levels), Local Play (pass & play).
 - **Retention hooks shipped**: daily spin, streak escalation (14/30/60/100-day milestones), shop rotation (4 daily featured deals), local push notifications, collection milestones (15 with title rewards).
 
