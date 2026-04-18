@@ -51,6 +51,10 @@ interface Character3DProps {
   // fails or the GLB is missing, the character stays in its bind pose.
   animationGlb?: number | string;
   animationLoop?: boolean;
+  // Absolute Y-axis rotation in radians. When provided, OVERRIDES the
+  // auto-turntable so the caller can drive rotation from a drag gesture
+  // or animated value. Pass undefined to keep auto-rotation behavior.
+  rotationY?: number;
 }
 
 // ── Part code mappings ──
@@ -125,11 +129,31 @@ function BreathingRig({ children }: { children: React.ReactNode }) {
 
 // ── Turntable rotation ──
 
-function TurntableRig({ children, enabled }: { children: React.ReactNode; enabled: boolean }) {
+function TurntableRig({
+  children,
+  enabled,
+  overrideY,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+  overrideY?: number;
+}) {
   const ref = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
-    if (ref.current && enabled) {
+    if (!ref.current) return;
+    // Drag-to-rotate path: if the caller is driving rotation (home screen
+    // pan gesture), use that value as the absolute Y rotation. Smooth
+    // lerp toward the target so the character doesn't snap when the
+    // caller jumps from 0 to ±2π.
+    if (overrideY !== undefined) {
+      const target = overrideY;
+      const current = ref.current.rotation.y;
+      ref.current.rotation.y = current + (target - current) * Math.min(delta * 12, 1);
+      return;
+    }
+    // Auto-turntable path (creator mode default)
+    if (enabled) {
       ref.current.rotation.y += delta * 0.2;
     }
   });
@@ -395,6 +419,7 @@ export function Character3D({
   showFloor = true,
   animationGlb,
   animationLoop = true,
+  rotationY,
   onTap, style,
 }: Character3DProps) {
   const [loaded, setLoaded] = useState(false);
@@ -482,7 +507,7 @@ export function Character3D({
             the audit — "I still see some T-poses on certain screens." Now
             Character3D ALWAYS has an AnimationClip, no matter what the
             caller forgets to pass. */}
-        <TurntableRig enabled={shouldRotate}>
+        <TurntableRig enabled={shouldRotate} overrideY={rotationY}>
           <BreathingRig>
             <CharacterModel
               bodyGlb={bodyGlb}

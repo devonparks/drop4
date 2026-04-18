@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, StyleSheet, Pressable, Animated, Platform } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, Image, StyleSheet, Pressable, Animated, Platform, PanResponder } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -81,7 +81,7 @@ function StageSparkles() {
   );
 }
 
-function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null }) {
+function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: string | null; rotationY: number }) {
   const cust = useCharacterStore((s) => s.customization);
   const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
   // When an emote is active, play it once. Otherwise, loop the default idle
@@ -105,6 +105,7 @@ function Character3DWrapper({ activeEmoteId }: { activeEmoteId: string | null })
       muscle={cust.muscle}
       animationGlb={animGlb}
       animationLoop={!isEmote}
+      rotationY={rotationY}
     />
   );
 }
@@ -223,6 +224,30 @@ export function HomeScreen() {
     const t = setTimeout(() => setActive3DEmote(null), 3000);
     return () => clearTimeout(t);
   }, [active3DEmote]);
+
+  // Drag-to-rotate: player can grab the character and swipe left/right to
+  // spin the Y axis. Stays where it's dropped (no snap back). Tap still
+  // triggers an emote because PanResponder only claims the gesture on
+  // horizontal motion beyond a small threshold — vertical taps fall
+  // through to the inner Pressable.
+  const [characterRotationY, setCharacterRotationY] = useState(0);
+  const dragStartRotationRef = useRef(0);
+  const characterPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_evt, g) => Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
+        onPanResponderGrant: () => {
+          dragStartRotationRef.current = characterRotationY;
+        },
+        onPanResponderMove: (_evt, g) => {
+          // ~1° per pixel feels natural. Full screen swipe ≈ one full spin.
+          setCharacterRotationY(dragStartRotationRef.current + g.dx * 0.012);
+        },
+        onPanResponderTerminationRequest: () => false,
+      }),
+    [characterRotationY],
+  );
 
   // FREE SPIN text pulse when spin is available
   const spinPulse = useRef(new Animated.Value(1)).current;
@@ -429,8 +454,11 @@ export function HomeScreen() {
                   <View style={styles.tapHintArrow} />
                 </Animated.View>
               )}
-              <Animated.View style={{ transform: [{ scale: characterPressScale }] }}>
-              <Character3DWrapper activeEmoteId={active3DEmote} />
+              <Animated.View
+                style={{ transform: [{ scale: characterPressScale }] }}
+                {...characterPanResponder.panHandlers}
+              >
+              <Character3DWrapper activeEmoteId={active3DEmote} rotationY={characterRotationY} />
               </Animated.View>
             </Pressable>
             </BreathingView>
