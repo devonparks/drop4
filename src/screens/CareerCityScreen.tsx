@@ -278,6 +278,12 @@ export function CareerCityScreen({ navigation, route }: Props) {
             opponentName: lvl.opponent,
             opponentLevel: CAREER_RATINGS[lvl.id],
             opponentTitle: lvl.opponentPersonality,
+            // Court label: city nickname for normal levels, BOSS BATTLE for bosses.
+            // Without this, MatchupScreen falls back to 'CAREER: BOSS BATTLE' for
+            // every career match and flags every opponent as a boss (wrong).
+            courtName: lvl.isBoss
+              ? `BOSS · ${city.nickname.toUpperCase()}`
+              : city.nickname.toUpperCase(),
             careerLevelId: lvl.id,
             careerLevelReward: lvl.reward
               ? {

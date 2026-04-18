@@ -486,7 +486,7 @@ export function HomeScreen() {
 
         {/* CUSTOMIZE button — lives in normal flow so it can't be covered */}
         <StaggeredEntry index={2}>
-        <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10 }}>
+        <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10, flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
             <Pressable
               onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
               accessibilityRole="button"
@@ -497,6 +497,18 @@ export function HomeScreen() {
               <Text style={{ fontSize: 14 }}>✨</Text>
               <Text style={styles.customizeBtnText}>CUSTOMIZE</Text>
             </Pressable>
+            {spinAvailable && (
+              <Pressable
+                onPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
+                accessibilityRole="button"
+                accessibilityLabel="Open daily spin wheel"
+                accessibilityHint="Free daily spin — coins, gems, loot boxes, or a pet"
+                style={styles.spinBtn}
+              >
+                <Text style={{ fontSize: 14 }}>🎰</Text>
+                <Text style={styles.customizeBtnText}>SPIN</Text>
+              </Pressable>
+            )}
         </View>
         </StaggeredEntry>
 
@@ -605,6 +617,17 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,140,0,0.6)',
     borderRadius: 20,
     paddingHorizontal: 22,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  spinBtn: {
+    backgroundColor: 'rgba(241,196,15,0.22)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(241,196,15,0.7)',
+    borderRadius: 20,
+    paddingHorizontal: 18,
     paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',

@@ -80,9 +80,11 @@ export function MatchupScreen({ navigation }: Props) {
   const opponentLevel = params.opponentLevel ?? botPersona.level;
   const opponentTitle = params.opponentTitle || botPersona.title;
 
-  // Court/venue name
+  // Court/venue name. For career matches the caller is expected to pass a city
+  // nickname (e.g. 'THE REC') or a 'BOSS · CITY' label for boss levels. Default
+  // fallback avoids shouting BOSS BATTLE at the player on level 1.
   const courtName = params.courtName
-    || (params.mode === 'career' ? 'CAREER: BOSS BATTLE' : 'CLASSIC COURT');
+    || (params.mode === 'career' ? 'CAREER MATCH' : 'CLASSIC COURT');
 
   // Mode badge text
   const modeBadge = (() => {
@@ -182,7 +184,10 @@ export function MatchupScreen({ navigation }: Props) {
   // Render
   // ═══════════════════════════════════
   const showVS = phase === 'reveal' || phase === 'ready';
-  const isBossMatch = params.mode === 'career' && courtName.includes('BOSS');
+  // Boss match = career match whose court label explicitly starts with 'BOSS'.
+  // (CareerCityScreen sets this for boss levels only; everything else gets
+  // the city nickname and the normal matchup styling.)
+  const isBossMatch = params.mode === 'career' && courtName.startsWith('BOSS');
 
   return (
     <ScreenBackground>
