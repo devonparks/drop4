@@ -96,6 +96,7 @@ export function DailyRewardPopup() {
   const [visible, setVisible] = useState(false);
   const [reward, setReward] = useState<DailyReward | null>(null);
   const { checkAndShowReward, claimReward, currentStreak } = useDailyRewardStore();
+  const freezeUsedOnLastClaim = useDailyRewardStore(s => s.freezeUsedOnLastClaim);
   const addCoins = useShopStore(s => s.addCoins);
   const addGems = useShopStore(s => s.addGems);
   const { addBox } = useLootBoxStore();
@@ -198,6 +199,11 @@ export function DailyRewardPopup() {
           )}
           <Text style={styles.title} accessibilityRole="header">DAILY REWARD</Text>
           <Text style={styles.streak}>Day {(currentStreak % 7) + 1} of 7</Text>
+          {freezeUsedOnLastClaim && (
+            <View style={styles.freezeBanner} accessibilityLiveRegion="polite">
+              <Text style={styles.freezeBannerText}>🧊 STREAK SAVED · freeze used</Text>
+            </View>
+          )}
 
           {/* Golden glow + sparkles around reward icon — bigger on premium days */}
           <View style={[styles.iconWrap, isPremiumReward && styles.iconWrapPremium]}>
@@ -283,6 +289,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.black, fontSize: 11,
     color: '#ffd966', letterSpacing: 2.5,
     marginBottom: 2,
+  },
+  freezeBanner: {
+    backgroundColor: 'rgba(77,208,225,0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(77,208,225,0.6)',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginTop: 4,
+    marginBottom: 6,
+    shadowColor: '#4dd0e1',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+  },
+  freezeBannerText: {
+    fontFamily: fonts.body, fontWeight: weight.black,
+    fontSize: 11, color: '#4dd0e1', letterSpacing: 1.5,
   },
   rewardName: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 22, color: '#ffffff',

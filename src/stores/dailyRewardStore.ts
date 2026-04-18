@@ -19,6 +19,11 @@ interface DailyRewardState {
   lastClaimDate: string | null; // ISO date string
   longestStreak: number;
   rewards: DailyReward[];
+  // Streak-freeze retention mechanic — Candy-Crush-style "life" that saves
+  // a missed day without breaking the streak. Refills 1 charge per week.
+  freezeCharges: number;
+  lastFreezeResetDate: string | null; // when charges were last refilled
+  freezeUsedOnLastClaim: boolean;     // set to true when a freeze just auto-applied
 
   // Actions
   checkAndShowReward: () => DailyReward | null;
@@ -51,11 +56,21 @@ function getTodayString(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function daysSince(iso: string | null): number {
+  if (!iso) return Infinity;
+  const today = new Date(getTodayString() + 'T00:00:00');
+  const then = new Date(iso + 'T00:00:00');
+  return Math.floor((today.getTime() - then.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
   currentStreak: 0,
   lastClaimDate: null,
   longestStreak: 0,
   rewards: DAILY_REWARDS.map(r => ({ ...r, claimed: false })),
+  freezeCharges: 1,               // start with 1 charge so new users benefit immediately
+  lastFreezeResetDate: null,
+  freezeUsedOnLastClaim: false,
 
   checkAndShowReward: () => {
     const { lastClaimDate, currentStreak } = get();
@@ -68,13 +83,23 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
   },
 
   claimReward: () => {
-    const { lastClaimDate, currentStreak } = get();
+    const { lastClaimDate, currentStreak, freezeCharges, lastFreezeResetDate } = get();
     const today = getTodayString();
 
     if (lastClaimDate === today) return null;
 
     const dayIndex = currentStreak % 7;
     const reward = { ...DAILY_REWARDS[dayIndex], claimed: true };
+
+    // Refill freeze charges weekly. Any time the last refill was 7+ days ago
+    // (or never), bump the player back up to 1 charge. We cap at 1 so they
+    // can't stockpile freezes indefinitely.
+    let charges = freezeCharges;
+    let resetDate = lastFreezeResetDate;
+    if (daysSince(lastFreezeResetDate) >= 7) {
+      charges = 1;
+      resetDate = today;
+    }
 
     // Check if streak is consecutive (yesterday or first time)
     const yesterday = new Date();
@@ -83,11 +108,29 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
     const yesterdayString = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
     const isConsecutive = lastClaimDate === null || lastClaimDate === yesterdayString;
 
-    const newStreak = isConsecutive ? currentStreak + 1 : 1;
+    // Streak-freeze: if we'd normally reset the streak to 1 but the player
+    // has a charge available, auto-apply it — streak survives.
+    let newStreak: number;
+    let usedFreeze = false;
+    if (isConsecutive) {
+      newStreak = currentStreak + 1;
+    } else if (!isConsecutive && charges > 0 && currentStreak > 0) {
+      // Apply freeze — treat as consecutive but don't increment streak
+      // (equivalent to "you missed a day but we bridged it").
+      newStreak = currentStreak + 1;
+      charges -= 1;
+      usedFreeze = true;
+    } else {
+      newStreak = 1;
+    }
+
     set({
       currentStreak: newStreak,
       lastClaimDate: today,
       longestStreak: Math.max(get().longestStreak, newStreak),
+      freezeCharges: charges,
+      lastFreezeResetDate: resetDate,
+      freezeUsedOnLastClaim: usedFreeze,
     });
 
     return reward;
@@ -98,12 +141,17 @@ export const useDailyRewardStore = create<DailyRewardState>((set, get) => ({
       currentStreak: number;
       lastClaimDate: string | null;
       longestStreak?: number;
+      freezeCharges?: number;
+      lastFreezeResetDate?: string | null;
     }>('dailyReward');
     if (saved) {
       set({
         currentStreak: saved.currentStreak || 0,
         lastClaimDate: saved.lastClaimDate || null,
         longestStreak: saved.longestStreak ?? saved.currentStreak ?? 0,
+        freezeCharges: saved.freezeCharges ?? 1,
+        lastFreezeResetDate: saved.lastFreezeResetDate ?? null,
+        freezeUsedOnLastClaim: false, // reset flag on reload
       });
     }
   },
@@ -128,5 +176,7 @@ useDailyRewardStore.subscribe((state) => {
     currentStreak: state.currentStreak,
     lastClaimDate: state.lastClaimDate,
     longestStreak: state.longestStreak,
+    freezeCharges: state.freezeCharges,
+    lastFreezeResetDate: state.lastFreezeResetDate,
   });
 });

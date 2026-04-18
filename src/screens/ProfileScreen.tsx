@@ -68,6 +68,8 @@ export function ProfileScreen() {
   // Daily goals data
   const challenges = useChallengeStore(s => s.challenges);
   const dailyRewardLastClaim = useDailyRewardStore(s => s.lastClaimDate);
+  const freezeCharges = useDailyRewardStore(s => s.freezeCharges);
+  const currentStreak = useDailyRewardStore(s => s.currentStreak);
   const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
 
   // Use lifetime match history for accurate stats (not session scores which reset on local play)
@@ -271,11 +273,23 @@ export function ProfileScreen() {
               {dailyGoals.rewardClaimed ? '✅' : '❌'}
             </Text>
           </View>
-          <View style={[styles.dailyGoalRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.dailyGoalRow}>
             <Text style={styles.dailyGoalIcon}>🎰</Text>
             <Text style={styles.dailyGoalLabel}>Daily spin used</Text>
             <Text style={[styles.dailyGoalCheck, dailyGoals.spinUsed && { color: colors.green }]}>
               {dailyGoals.spinUsed ? '✅' : '❌'}
+            </Text>
+          </View>
+          {/* Streak freeze — retention safety net. Shown to all players so
+              they KNOW they have a free save per week before they miss a day. */}
+          <View style={[styles.dailyGoalRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.dailyGoalIcon}>🧊</Text>
+            <Text style={styles.dailyGoalLabel}>Streak Freeze ready</Text>
+            <Text style={[
+              styles.dailyGoalCheck,
+              freezeCharges > 0 && { color: '#4dd0e1' },
+            ]}>
+              {freezeCharges > 0 ? (currentStreak > 0 ? '🧊 Ready' : '🧊 Stored') : '— Used'}
             </Text>
           </View>
         </View>
