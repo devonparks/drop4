@@ -22,6 +22,7 @@ import { View, StyleSheet, ViewStyle, ActivityIndicator, Text, Animated } from '
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useGLB } from '../../utils/glbLoader';
+import { DEFAULT_HUMAN_IDLE } from '../../data/animationRegistry';
 import { colors as themeColors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -472,7 +473,15 @@ export function Character3D({
           args={['#6080a0', '#1a1820', 0.5]}
         />
 
-        {/* Character + animation rigs */}
+        {/* Character + animation rigs.
+            T-POSE DEFENSE: if no animation was passed in, force the default
+            idle GLB. The old "silent fallback to bind pose" path is exactly
+            what produced T-posed characters on shipping surfaces (matchup
+            screen during a brief loading gap, profile portrait on first
+            render, career city character nodes). Devon flagged this during
+            the audit — "I still see some T-poses on certain screens." Now
+            Character3D ALWAYS has an AnimationClip, no matter what the
+            caller forgets to pass. */}
         <TurntableRig enabled={shouldRotate}>
           <BreathingRig>
             <CharacterModel
@@ -483,7 +492,7 @@ export function Character3D({
               bodyType={bodyType}
               bodySize={bodySize}
               muscle={muscle}
-              animationGlb={animationGlb}
+              animationGlb={animationGlb ?? DEFAULT_HUMAN_IDLE?.glb}
               animationLoop={animationLoop}
               onLoad={() => setLoaded(true)}
             />
