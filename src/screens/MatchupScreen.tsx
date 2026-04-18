@@ -174,6 +174,7 @@ export function MatchupScreen({ navigation }: Props) {
 
   const handleBack = useCallback(() => {
     haptics.tap();
+    playSound('click');
     navigation.goBack();
   }, [navigation]);
 
