@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Modal, Animated as RNAnimated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GlossyButton } from './GlossyButton';
 import { useDailyRewardStore, type DailyReward } from '../../stores/dailyRewardStore';
 import { useShopStore } from '../../stores/shopStore';
@@ -100,12 +101,44 @@ export function DailyRewardPopup() {
   const { addBox } = useLootBoxStore();
 
   useEffect(() => {
-    const available = checkAndShowReward();
-    if (available) {
-      setReward(available);
-      setVisible(true);
-      playSound('modal_in');
-    }
+    // Gate on WelcomeOverlay dismissal. Brand-new users should see the
+    // welcome screen first, THEN the daily reward. Previously both auto-
+    // opened on mount and stacked — player would tap CLAIM, see the
+    // Welcome slide in on top, dismiss Welcome, and find the reward
+    // popup STILL there unclaimed. Now DailyReward waits.
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    const tryShow = async () => {
+      const welcomeDismissed = await AsyncStorage.getItem('drop4_welcome_dismissed');
+      if (cancelled) return;
+      if (welcomeDismissed !== 'true') return false;
+      const available = checkAndShowReward();
+      if (available) {
+        setReward(available);
+        setVisible(true);
+        playSound('modal_in');
+      }
+      return true;
+    };
+
+    tryShow().then((shown) => {
+      if (shown || cancelled) return;
+      // Welcome still showing — poll until dismissed, then show reward.
+      // Polling keeps the coupling loose (no cross-store subscription).
+      pollTimer = setInterval(async () => {
+        const shownNow = await tryShow();
+        if (shownNow && pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }, 600);
+    });
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+    };
   }, []);
 
   const handleClaim = () => {

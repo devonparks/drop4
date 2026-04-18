@@ -393,6 +393,12 @@ export function GameScreen({ navigation }: Props) {
   useEffect(() => {
     if (status === 'won' && winner === 1 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
+      // Snapshot coin balance so we can show the TRUE delta on the win
+      // screen — achievement unlocks, career rewards, and streak milestones
+      // all silently grant extra coins via their own code paths, so summing
+      // our locals (reward + streakBonus × multiplier) undercounts the
+      // actual balance growth. Delta = coins_after - coins_before.
+      const coinsAtWin = useShopStore.getState().coins;
       const reward = COIN_REWARDS[difficulty];
       const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
       const dailyMultiplier = getStreakMultiplier();
@@ -530,12 +536,14 @@ export function GameScreen({ navigation }: Props) {
         addLootBox('gold_box');
         setStreakReward({ coins: 5000, lootBox: 'Gold', milestone: 15 });
       }
-      // Compute total coins for CoinBurst intensity
-      let coinTotal = totalReward;
-      if (currentStreak === 3) coinTotal += 50;
-      else if (currentStreak === 5) coinTotal += 200;
-      else if (currentStreak === 10) coinTotal += 1000;
-      else if (currentStreak === 15) coinTotal += 5000;
+      // Real total coins earned = balance delta since the win handler fired.
+      // This captures: base reward, streak bonus, first-win-of-day 2x,
+      // career-level reward, streak-milestone bonus, AND achievement rewards
+      // (which grant silently inside checkAchievements). Previously we only
+      // summed our locals, so the win screen could say "+35" while the top
+      // bar grew by +85 (First Win achievement + first-day double).
+      const coinsAfter = useShopStore.getState().coins;
+      const coinTotal = Math.max(0, coinsAfter - coinsAtWin);
       setTotalCoinsEarned(coinTotal);
       setShowConfetti(true);
       setShowCoinBurst(true);
