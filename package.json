@@ -21,7 +21,8 @@
       "^react-native$": "<rootDir>/jest.rn-mock.js",
       "^@react-three/fiber/native$": "<rootDir>/jest.r3f-mock.js",
       "^three$": "<rootDir>/jest.three-mock.js",
-      "^three/examples/jsm/loaders/GLTFLoader.js$": "<rootDir>/jest.three-mock.js"
+      "^three/examples/jsm/loaders/GLTFLoader.js$": "<rootDir>/jest.three-mock.js",
+      "\\.(glb|gltf|png|jpg|jpeg|gif|webp|svg|mp3|wav|ttf|otf)$": "<rootDir>/jest.asset-mock.js"
     },
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { "presets": ["babel-preset-expo"] }]
