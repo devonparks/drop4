@@ -6,7 +6,42 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Devon is DoorDashing; Claude shipped Phase 2 career overhaul + retention pass autonomously. Tree clean on main, pre-commit gate passing on every commit.
+**Now:** Visual audit pass complete. Devon complained during the exploration that "LOCAL PLAY isn't visible, the home looks horrible, legacy character code still there, T-poses on certain screens, characters angled weirdly." This session addressed each. Tree clean on main.
+
+---
+
+## 2026-04-18 (evening) — Visual Audit + Legacy Cleanup (autonomous)
+
+Devon's frustration dump distilled into 7 concrete fixes, all shipped through the pre-commit gate.
+
+### Layout
+- `49b72f6` — **LOCAL PLAY visibility fix.** Home container now reserves 80px paddingBottom for the tab bar. `lobbyArea` replaces `flex: 1` with a bounded flexGrow/flexShrink/flexBasis setup so the character stage can compress when space is tight. `menuButtons` gets `flexShrink: 0` as a hard floor — if space is tight, the character compresses, never the mode cards. All three mode cards (PLAY orange, CAREER purple, LOCAL PLAY teal) guaranteed visible on any viewport.
+
+### Legacy cleanup (~2200 lines deleted)
+- `e66eee1` — Deleted `src/screens/CharacterCreatorScreen.tsx` (1838 lines, 2D sprite-era creator, unreachable since the Character3DCreator reroute). Deleted `src/components/ui/SpriteSheetAnimator.tsx` (only consumer was AnimatedCharacter's 2D renderer, also gone). Rewrote `src/components/ui/AnimatedCharacter.tsx` from 436 lines of sprite-sheet rendering to 67 lines of TYPES + EMOTE_CATEGORIES constant — the r3f-era code still needs those exports but doesn't need any of the 2D rendering. Removed `CharacterCreator` from `RootStackParamList` and Stack.Screen list. Character3DCreator is the only creator route now.
+
+### T-pose defense
+- `0eedbaa` — `Character3D` internally falls back to `DEFAULT_HUMAN_IDLE.glb` when caller passes no `animationGlb`. Convention drifted ("ALWAYS pass animationGlb") so enforced at the component level. No more T-posed bind poses during loading gaps on Matchup, Profile portrait, career city, or any future careless caller.
+- `cf6bc89` — Supporting fix: jest was choking on the GLB require added by the T-pose defense. Added a standard asset mock (`jest.asset-mock.js`) that returns `1` for any require of binary/static asset extensions. Tests green again.
+
+### Drag-to-rotate character
+- `8debb45` — `Character3D` gains `rotationY?: number` prop. When provided, `TurntableRig` uses it as the absolute Y rotation target (lerped for smoothness) and disables the auto-turntable. `HomeScreen` wires a `PanResponder` on the character wrapper: horizontal drag ≥ 8px and dx > dy claims the gesture and maps ~0.012 rad/px (full-width screen swipe = 360° spin). Character stays where you drop it. Tap and long-press still trigger emotes because vertical taps fall through the gesture threshold.
+
+### Exploration findings + fixes
+- `6fbefe8` — **Loot tab preview grid.** Was a dead-air placeholder button floating in 60% empty space. Replaced with a 3-tier preview grid (Bronze / Silver / Gold). Each card: tier-colored name, one-line contents summary, unlock hint, owned-count pill. Uses existing `lootBoxStore` state.
+- `6fbefe8` — **Emote label truncation.** `laughpoint` display label was "Point & Laugh" (13 chars) which truncated to "POINT & LAU..." in the 70px wheel slot. Renamed to "Laughing" (8 chars, fits).
+
+### What's still not fixed (ok for v1)
+- Shop category chip row clips at right edge (ScrollView exists, fade gradient is subtle — could add chevron hint later).
+- Career city opponent nodes show OVR numbers, not portraits (intentional silhouette metaphor).
+- AnimationPicker modal renders outside PhoneFrame on web (acceptable for full-screen pickers).
+- Creator turntable sometimes shows rear view (intended — you want to see the outfit from all sides).
+
+See `docs/VISUAL_AUDIT_2026-04-18.md` for the full findings log.
+
+---
+
+## 2026-04-17 (night) — Phase 2 Career Overhaul + Retention Pass (autonomous)
 
 **Next (in order):**
 1. **Art generation (Devon)** — app icon + splash + logo iteration in ComfyUI. Prompts ready in docs/COMFYUI_PROMPT_PACK.md.
