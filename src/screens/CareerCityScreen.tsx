@@ -678,6 +678,28 @@ function OpponentNode({
             ))}
           </View>
         )}
+
+        {/* Level-type chip — small badge so players can tell a timed level,
+            puzzle, or big-board level apart from a normal match at a glance.
+            Boss already has rays/crown treatment so skip the chip there. */}
+        {!isLocked && !level.isBoss && (() => {
+          const icon =
+            level.type === 'speed' || (level.settings.timerSeconds && level.settings.timerSeconds <= 5) ? '⚡' :
+            level.type === 'timed' || level.settings.timerSeconds ? '⏱️' :
+            level.type === 'puzzle' || level.settings.presetBoard ? '🧩' :
+            level.type === 'connect3' ? '3' :
+            level.type === 'connect5' ? '5' :
+            level.type === 'connect6' ? '6' :
+            level.type === 'go_second' ? '↩' :
+            (level.settings.rows && level.settings.cols && (level.settings.rows > 7 || level.settings.cols > 8)) ? '📏' :
+            null;
+          if (!icon) return null;
+          return (
+            <View style={styles.nodeTypeChip} pointerEvents="none">
+              <Text style={styles.nodeTypeChipText}>{icon}</Text>
+            </View>
+          );
+        })()}
       </View>
 
       {/* Name label */}
@@ -1005,6 +1027,31 @@ const styles = StyleSheet.create({
   },
   nodeStar: {
     fontSize: 9,
+  },
+  nodeTypeChip: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(10,14,32,0.95)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,200,80,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    shadowColor: '#ffcc50',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  nodeTypeChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 11,
+    color: '#ffcc50',
   },
   nodeName: {
     marginTop: 10,

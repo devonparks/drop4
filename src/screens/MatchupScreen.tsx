@@ -100,6 +100,27 @@ export function MatchupScreen({ navigation }: Props) {
   const connectCount = params.connectCount || 4;
   const timerSeconds = params.timerSeconds;
 
+  // Hoisted up from further down because the level-type badge below needs
+  // to skip itself when BOSS BATTLE already has a dedicated badge.
+  const isBossMatchEarly = params.mode === 'career' && courtName.startsWith('BOSS');
+
+  // Level-type badge — tells the player what kind of match this is BEFORE
+  // they tap READY. Previously the matchup screen looked identical whether
+  // you were playing a normal level, a 5-second blitz, a Connect 5 on an
+  // 8×9 board, or a pre-set puzzle. Career variety was invisible until
+  // you were already dropping pieces. Derive the badge from the settings
+  // that already propagate through navigation params.
+  const levelBadge = (() => {
+    if (params.mode !== 'career') return null;
+    if (isBossMatchEarly) return null; // already shown as 'BOSS BATTLE'
+    if (timerSeconds && timerSeconds <= 5) return { label: `⚡ BLITZ · ${timerSeconds}s/TURN`, color: '#ff4081' };
+    if (timerSeconds) return { label: `⏱️ TIMED · ${timerSeconds}s/TURN`, color: '#ff8c42' };
+    if (connectCount && connectCount !== 4) return { label: `🎯 CONNECT ${connectCount}`, color: '#4dd0e1' };
+    if (params.presetBoard) return { label: '🧩 PUZZLE START', color: '#ba68c8' };
+    if (params.boardSize && params.boardSize !== '6x7' && params.boardSize !== '7x6') return { label: `📏 ${params.boardSize} BOARD`, color: '#81c784' };
+    return null;
+  })();
+
   // ═══════════════════════════════════
   // Animation: VS glow pulse
   // ═══════════════════════════════════
@@ -221,6 +242,11 @@ export function MatchupScreen({ navigation }: Props) {
           ]}>
             <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
           </View>
+          {levelBadge && (
+            <View style={[styles.levelTypeBadge, { borderColor: levelBadge.color, shadowColor: levelBadge.color }]}>
+              <Text style={[styles.levelTypeBadgeText, { color: levelBadge.color }]}>{levelBadge.label}</Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* ── Main VS area ── */}
@@ -459,6 +485,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.orange,
     letterSpacing: 2,
+  },
+  levelTypeBadge: {
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  levelTypeBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 11,
+    letterSpacing: 1.2,
   },
 
   // ── VS Area (main middle) ──
