@@ -33,7 +33,7 @@ const ROOT = path.resolve(__dirname, '..');
 const MANIFEST_PATH = path.join(ROOT, 'docs', 'ui-asset-manifest.json');
 const OUTPUT_DIR = path.join(ROOT, 'src', 'assets', 'images', 'ui');
 const ENV_LOCAL = path.join(ROOT, '.env.local');
-const MODEL = 'gemini-2.5-flash-image-preview';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-image';
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PRICE_PER_IMAGE = 0.039; // USD, standard
 
@@ -178,8 +178,19 @@ async function main() {
       process.stdout.write(`\r${label}  ✓ ${buf.length.toLocaleString()} bytes\n`);
       ok += 1;
     } catch (err) {
-      process.stdout.write(`\r${label}  ✗ ${err.message}\n`);
+      process.stdout.write(`\r${label}  ✗ ${err.message.slice(0, 120)}\n`);
       fail += 1;
+      // Fail fast on quota exhaustion — no point burning through the
+      // remaining batch, they'll all return the same 429.
+      if (/\b429\b|quota|rate.?limit/i.test(err.message)) {
+        console.log('\nQuota exceeded. Options:');
+        console.log('  (1) Wait for free-tier daily reset (midnight Pacific).');
+        console.log('  (2) Enable billing on your Google Cloud project for pay-as-you-go.');
+        console.log('      https://aistudio.google.com → your project → Billing');
+        console.log('  (3) Try a different model via GEMINI_MODEL env var');
+        console.log('      (e.g. gemini-3.1-flash-image-preview, imagen-4.0-fast-generate-001)');
+        process.exit(3);
+      }
     }
   }
 
