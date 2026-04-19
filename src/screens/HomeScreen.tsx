@@ -16,6 +16,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useCareerStore } from '../stores/careerStore';
+import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { playSound } from '../services/audio';
 import { DailySpinWheel } from '../components/ui/DailySpinWheel';
@@ -124,6 +125,10 @@ export function HomeScreen() {
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return lastSpinDate !== today;
   })();
+  // Count unopened loot boxes across all tiers — drives the home "N boxes
+  // ready" floating chip. When 0, the chip doesn't render.
+  const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
+  const unopenedBoxCount = ownedBoxes.reduce((sum, b) => sum + b.count, 0);
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);
@@ -524,33 +529,46 @@ export function HomeScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* CUSTOMIZE button — lives in normal flow so it can't be covered */}
-        <StaggeredEntry index={2}>
-        <View style={{ alignItems: 'center', marginTop: -4, marginBottom: 8, zIndex: 10, flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-            <Pressable
-              onPress={() => { haptics.tap(); navigateTo('Character3DCreator'); }}
-              accessibilityRole="button"
-              accessibilityLabel="Customize character"
-              accessibilityHint="Opens the character creator to change outfit, hair, body, and colors"
-              style={styles.customizeBtn}
-            >
-              <Text style={{ fontSize: 14 }}>✨</Text>
-              <Text style={styles.customizeBtnText}>CUSTOMIZE</Text>
-            </Pressable>
-            {spinAvailable && (
-              <Pressable
-                onPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
-                accessibilityRole="button"
-                accessibilityLabel="Open daily spin wheel"
-                accessibilityHint="Free daily spin — coins, gems, loot boxes, or a pet"
-                style={styles.spinBtn}
-              >
-                <Text style={{ fontSize: 14 }}>🎰</Text>
-                <Text style={styles.customizeBtnText}>SPIN</Text>
-              </Pressable>
-            )}
-        </View>
-        </StaggeredEntry>
+        {/* CUSTOMIZE moved to the Customize bottom tab — it's a full
+            destination now. SPIN and LOOT boxes render as engagement
+            chips in the same spot the old CUSTOMIZE/SPIN row occupied.
+            Row is 0-height when neither chip is showing so the mode
+            buttons don't shift. */}
+        {(spinAvailable || unopenedBoxCount > 0) && (
+          <StaggeredEntry index={2}>
+            <View style={styles.chipRow}>
+              {unopenedBoxCount > 0 && (
+                <Pressable
+                  onPress={() => { haptics.tap(); navigation.navigate('LootBox' as never); }}
+                  style={styles.lootChip}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${unopenedBoxCount} unopened loot box${unopenedBoxCount === 1 ? '' : 'es'} ready`}
+                  accessibilityHint="Opens the loot box inventory"
+                >
+                  <Image
+                    source={require('../assets/images/ui/loot-gold.png')}
+                    style={styles.lootChipImg}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.lootChipText}>{unopenedBoxCount}</Text>
+                  <Text style={styles.chipCaption}>READY</Text>
+                </Pressable>
+              )}
+              {spinAvailable && (
+                <Pressable
+                  onPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
+                  style={styles.spinChip}
+                  accessibilityRole="button"
+                  accessibilityLabel="Free daily spin ready"
+                  accessibilityHint="Opens the daily spin wheel"
+                >
+                  <Text style={styles.spinChipIcon}>🎰</Text>
+                  <Text style={styles.spinChipText}>FREE SPIN</Text>
+                </Pressable>
+              )}
+            </View>
+          </StaggeredEntry>
+        )}
 
         {/* ═══ MENU BUTTONS ═══ */}
         <View style={styles.menuButtons}>
@@ -632,6 +650,7 @@ export function HomeScreen() {
             <Text style={styles.levelUpSubtitle}>Level {level}</Text>
           </Animated.View>
         )}
+
       </View>
     </ScreenBackground>
   );
@@ -663,6 +682,86 @@ const styles = StyleSheet.create({
     marginTop: -22,
     marginBottom: -24,
   },
+  // Engagement chip row — sits between the character lobby and the mode
+  // buttons, in the same slot the old CUSTOMIZE/SPIN pills occupied.
+  // Only renders when at least one chip has something to show, otherwise
+  // collapses to 0 height so the mode buttons stay put.
+  chipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+    marginTop: -2,
+    marginBottom: 6,
+    zIndex: 10,
+  },
+  lootChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingLeft: 4,
+    paddingRight: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(10,14,32,0.7)',
+    borderWidth: 1.5,
+    borderColor: '#ffd54f',
+    shadowColor: '#ffd54f',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  lootChipImg: {
+    width: 28,
+    height: 28,
+  },
+  lootChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 14,
+    color: '#ffd54f',
+  },
+  chipCaption: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,213,79,0.8)',
+    letterSpacing: 1.2,
+    marginLeft: 3,
+  },
+  spinChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(39,174,61,0.28)',
+    borderWidth: 1.5,
+    borderColor: '#27ae3d',
+    shadowColor: '#34c94d',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  spinChipIcon: {
+    fontSize: 14,
+  },
+  spinChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  // Kept below for any ProfileScreen or shared code still referencing
+  // these class names — they're no longer mounted on the Home lobby.
   customizeBtn: {
     backgroundColor: 'rgba(255,140,0,0.22)',
     borderWidth: 1.5,
