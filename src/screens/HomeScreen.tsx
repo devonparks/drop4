@@ -640,17 +640,15 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Bottom tab bar is ~72px tall and sits over the scroll content. Without
-    // reserving space here, the third mode button (LOCAL PLAY) renders behind
-    // it on shorter viewports — which is the "I can't even see Local Play"
-    // bug. Reserve 8px of breathing room above the tab bar on top of the
-    // tab bar's own height so the last button has a clear gap.
-    // Bottom tab bar is ~72px on Android/web / ~80px iOS with home indicator.
-    // Reserve exactly what's needed — no extra breathing room — so the three
-    // mode cards sit tight to the tab bar like Basketball Stars / Candy Crush,
-    // instead of floating with a dead gap. Devon specifically called out that
+    // React Navigation's Tab.Navigator already reserves space for the tab bar
+    // OUTSIDE the screen content — the bar doesn't overlap. So paddingBottom
+    // here was pure dead space between LOCAL PLAY and the tab bar (Devon's
+    // "buttons too high" complaint). Minimal 4px breathing room is enough to
+    // keep the bottom card from touching the tab-bar top border.
+    // The character stage above compensates — lobbyArea.flexGrow claims the
+    // freed space, which pulls the character + mode buttons visually down.
     // the previous 80/88 values left too much air.
-    paddingBottom: Platform.OS === 'ios' ? 72 : 64,
+    paddingBottom: 4,
   },
   logoArea: {
     alignItems: 'center',
@@ -698,12 +696,16 @@ const styles = StyleSheet.create({
   lobbyArea: {
     // Used to be `flex: 1` — which grew the character stage to eat all
     // remaining vertical space, pushing the LOCAL PLAY card below the tab
-    // bar on shorter viewports. Now we allow shrink + define a hard ceiling
-    // so the three mode buttons are guaranteed visible at the bottom.
+    // bar on shorter viewports. We still allow shrink on very short screens
+    // but maxHeight was too low at 340 — freed padding space couldn't flow
+    // here, so the character + buttons stayed high with a dead gap above the
+    // tab bar. Bumping to 440 lets the lobby absorb extra vertical space,
+    // which pushes the character (pinned flex-end in characterStage) and
+    // the mode-button stack visually down toward the tab bar.
     flexGrow: 1,
     flexShrink: 1,
-    flexBasis: 260,
-    maxHeight: 340,
+    flexBasis: 320,
+    maxHeight: 440,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
