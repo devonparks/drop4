@@ -223,6 +223,130 @@
       "filename": "stage-platform.png",
       "size": "1024x256",
       "prompt": "Premium mobile game stage floor element: a wide glossy circular platform disc seen at a low angle, dark navy top with a neon orange rim light and subtle blue inner glow, slight reflection on the surface, floating in transparent space. Centered, transparent background, no text. Goes under a character on the home lobby."
+    },
+
+    {
+      "group": "home-polish",
+      "id": "home-logo",
+      "filename": "home-logo.png",
+      "size": "1200x512",
+      "prompt": "Premium mobile game wordmark: the word 'DROP4' in chunky 3D block letters, hand-painted game-logo style, warm orange and deep red gradient on the letters with a glossy bevel and subtle gold rim highlight. The '4' is stylized as a Connect-4 game piece slot with a tiny red disc dropping into it. Dark navy outline, slight motion-smear streak behind the letters to suggest energy. Centered, transparent background except the letters and drop shadow. Polished like Basketball Stars or Clash Royale game logos. No additional text or subtitle, no borders."
+    },
+    {
+      "group": "home-polish",
+      "id": "side-btn-emotes",
+      "filename": "side-btn-emotes.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a stylized silhouette of a person mid-dance, one arm up in the air, slight hip pop, glossy orange with gold rim light, navy inner shadow, energetic pose. Centered, transparent background, no text. Chibi-ish proportions, readable at small sizes. Represents an emote or dance-move menu."
+    },
+    {
+      "group": "home-polish",
+      "id": "side-btn-idles",
+      "filename": "side-btn-idles.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a stylized silhouette of a person in a confident standing idle pose, hands on hips, slight lean. Glossy orange with gold rim light, navy inner shadow. Centered, transparent background, no text. Chibi-ish proportions, readable at small sizes. Represents an idle-animation selector."
+    },
+
+    {
+      "group": "rarity",
+      "id": "rarity-common",
+      "filename": "rarity-common.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy silver-gray gradient, soft white rim highlight, subtle drop shadow, clean metallic finish, no text on the chip itself. Centered, transparent background, no text anywhere. Small and readable at 80px wide. Represents 'Common' rarity in a loot/collection system."
+    },
+    {
+      "group": "rarity",
+      "id": "rarity-uncommon",
+      "filename": "rarity-uncommon.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy emerald-green gradient, subtle lime rim highlight, drop shadow, clean finish, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Uncommon' rarity."
+    },
+    {
+      "group": "rarity",
+      "id": "rarity-rare",
+      "filename": "rarity-rare.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy sapphire-blue gradient, subtle cyan rim highlight, drop shadow, clean finish, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Rare' rarity."
+    },
+    {
+      "group": "rarity",
+      "id": "rarity-epic",
+      "filename": "rarity-epic.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy royal-purple to magenta gradient, subtle violet rim highlight, drop shadow, slight inner shimmer, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Epic' rarity."
+    },
+    {
+      "group": "rarity",
+      "id": "rarity-legendary",
+      "filename": "rarity-legendary.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy warm-orange to deep-gold gradient, bright gold rim highlight, strong drop shadow, subtle inner sparkle shimmer, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Legendary' rarity."
+    },
+    {
+      "group": "rarity",
+      "id": "rarity-mythic",
+      "filename": "rarity-mythic.png",
+      "size": "512x256",
+      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy crimson-red to hot-pink gradient with a faint holographic rainbow shimmer across the surface, bright white-hot rim highlight, heavy drop shadow, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Mythic' rarity — the top tier."
+    },
+
+    {
+      "group": "splash",
+      "id": "app-icon",
+      "filename": "app-icon.png",
+      "size": "1024x1024",
+      "prompt": "Premium mobile app icon: a chunky glossy red Connect-4 style disc with a large numeral '4' engraved into its face, warm orange rim light, subtle neon glow, sitting inside a rounded-square icon backdrop that fades from deep navy to warm orange radial glow behind the disc. Centered, fills the square, no text anywhere — the '4' on the disc is the only glyph and must be bold and readable. Designed for iOS/Android home-screen icons at small sizes. Polished like Candy Crush or Basketball Stars app icons."
+    },
+    {
+      "group": "splash",
+      "id": "splash-hero",
+      "filename": "splash-hero.png",
+      "size": "1024x1024",
+      "prompt": "Premium mobile game splash-screen hero: a giant chunky glossy red Connect-4 style disc floating in space, a single numeral '4' engraved on its face, sparks and warm golden light rays radiating outward, subtle Connect-4 board silhouette in the blurred background, navy-to-warm-orange radial backdrop fading to transparent at the edges. Centered, dominant subject. The only glyph anywhere is the '4' on the disc. No other text, no wordmark."
+    },
+
+    {
+      "group": "polish",
+      "id": "locked-opponent",
+      "filename": "locked-opponent.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game locked slot: a dark navy silhouette of a question mark inside a glossy circular portrait frame, faint orange rim light, small padlock icon at the bottom-right corner. Centered, transparent background, no other text. Used for unrevealed career opponents."
+    },
+    {
+      "group": "polish",
+      "id": "featured-banner",
+      "filename": "featured-banner.png",
+      "size": "1200x600",
+      "prompt": "Premium mobile shop featured-deal banner background: a dynamic diagonal gradient from deep purple to warm orange with sparkle dust and subtle lens-flare streaks, faint cascading gold coin silhouettes in the background blur, soft vignette on the edges. No text, no logos, just the atmospheric backdrop ready for a deal card to sit on top. Edges fade toward transparent."
+    },
+    {
+      "group": "polish",
+      "id": "level-up-burst",
+      "filename": "level-up-burst.png",
+      "size": "1024x1024",
+      "prompt": "Premium mobile game level-up VFX hero: a radial sunburst of warm golden light rays exploding from center, confetti particles, soft glowing rings expanding outward, warm orange-to-white gradient core, fades to transparent at the edges. Centered, transparent background, no text. Used as an overlay when the player levels up."
+    },
+
+    {
+      "group": "modes",
+      "id": "mode-play-icon",
+      "filename": "mode-play-icon.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy triangular 'play' arrow symbol pointing right, chunky and beveled, warm orange gradient with bright rim highlight and subtle inner glow. Centered, transparent background, no text. Represents the main play / quick-match mode button."
+    },
+    {
+      "group": "modes",
+      "id": "mode-career-icon",
+      "filename": "mode-career-icon.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy gold trophy cup with a purple neon rim glow behind it, a single star on the cup's face, dark navy handles, subtle gold sparkles. Centered, transparent background, no text. Represents career mode progression."
+    },
+    {
+      "group": "modes",
+      "id": "mode-local-icon",
+      "filename": "mode-local-icon.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: two glossy smartphone silhouettes angled toward each other, slight overlap, warm teal rim light between them, soft glow connecting line. Centered, transparent background, no text. Represents local pass-and-play mode."
     }
   ]
 }

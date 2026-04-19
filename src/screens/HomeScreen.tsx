@@ -374,7 +374,7 @@ export function HomeScreen() {
         <StaggeredEntry index={0}>
         <View style={styles.logoArea}>
           <Image
-            source={require('../assets/images/drop4_logo.png')}
+            source={require('../assets/images/ui/home-logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -400,7 +400,11 @@ export function HomeScreen() {
               style={styles.sideBtnCircle}
               pointerEvents="none"
             >
-              <Text style={styles.sideBtnEmoji}>🕺</Text>
+              <Image
+                source={require('../assets/images/ui/side-btn-emotes.png')}
+                style={styles.sideBtnImg}
+                resizeMode="contain"
+              />
             </LinearGradient>
             <Text style={styles.sideBtnLabel} pointerEvents="none">Emotes</Text>
           </View>
@@ -409,16 +413,10 @@ export function HomeScreen() {
           <View style={styles.characterStage}>
             <View style={styles.stageGlowOuter} />
             <View style={styles.stageGlowInner} />
-            {/* Painted spotlight behind character — warm cone of light from
-                above that catches dust particles in the beam. Layers UNDER
-                the 3D character. */}
-            <View pointerEvents="none" style={styles.stageSpotlightImg}>
-              <Image
-                source={require('../assets/images/ui/stage-spotlight.png')}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="contain"
-              />
-            </View>
+            {/* Painted spotlight was here — removed. At 60% opacity it read
+                as a weird washed-out square behind the character instead of
+                atmosphere. The existing stageGlowOuter/Inner rings already
+                handle the theatrical lighting cue. */}
             <StageSparkles />
 
             <BreathingView intensity={0.015} speed={4000}>
@@ -515,7 +513,11 @@ export function HomeScreen() {
               style={styles.sideBtnCircle}
               pointerEvents="none"
             >
-              <Text style={styles.sideBtnEmoji}>💫</Text>
+              <Image
+                source={require('../assets/images/ui/side-btn-idles.png')}
+                style={styles.sideBtnImg}
+                resizeMode="contain"
+              />
             </LinearGradient>
             <Text style={styles.sideBtnLabel} pointerEvents="none">Idles</Text>
           </View>
@@ -643,7 +645,12 @@ const styles = StyleSheet.create({
     // it on shorter viewports — which is the "I can't even see Local Play"
     // bug. Reserve 8px of breathing room above the tab bar on top of the
     // tab bar's own height so the last button has a clear gap.
-    paddingBottom: Platform.OS === 'ios' ? 88 : 80,
+    // Bottom tab bar is ~72px on Android/web / ~80px iOS with home indicator.
+    // Reserve exactly what's needed — no extra breathing room — so the three
+    // mode cards sit tight to the tab bar like Basketball Stars / Candy Crush,
+    // instead of floating with a dead gap. Devon specifically called out that
+    // the previous 80/88 values left too much air.
+    paddingBottom: Platform.OS === 'ios' ? 72 : 64,
   },
   logoArea: {
     alignItems: 'center',
@@ -724,6 +731,13 @@ const styles = StyleSheet.create({
   sideBtnEmoji: {
     fontSize: 28,
   },
+  // Painted side-button icon (replaces the old 🕺 / 💫 emoji). Sits inside
+  // the glowing circle so keep it tight — the circle is 58px, the icon
+  // reads well at 42px with a little breathing room for the glow.
+  sideBtnImg: {
+    width: 42,
+    height: 42,
+  },
   sideBtnLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
@@ -799,7 +813,8 @@ const styles = StyleSheet.create({
   menuButtons: {
     paddingHorizontal: 20,
     gap: 6,
-    paddingBottom: 8,
+    paddingBottom: 0,  // was 8 — kill the internal pad so the last card
+                        // sits right above the tab bar, no floating gap.
     // Never shrink — mode buttons must be fully visible. If space is tight,
     // the character stage above compresses instead (lobbyArea flexShrink=1).
     flexShrink: 0,

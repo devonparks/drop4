@@ -99,13 +99,25 @@ function CharactersTab() {
 
   return (
     <View>
-      {/* Equipped character hero */}
+      {/* Equipped character hero — previews the ACTIVE roster character.
+          Devon flagged: clicking a new roster card (Bones, Pixel, etc) was
+          equipping it but the hero preview stayed on whatever the player's
+          own outfit was. Fix: look up the roster character's customization
+          via getRosterCustomization and pass it explicitly. Falls back to
+          the player's own character when null (for the default "Rookie"
+          slot which IS the player). */}
       <View style={styles.heroCard}>
         <LinearGradient
           colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)']}
           style={styles.heroGradient}
         >
-          <Character3DPortrait width={160} height={200} showFloor={false} />
+          <Character3DPortrait
+            key={equippedId}
+            width={160}
+            height={200}
+            showFloor={false}
+            customization={getRosterCustomization(equippedId) ?? undefined}
+          />
           <Text style={styles.heroName}>{equipped?.name.toUpperCase() || 'ROOKIE'}</Text>
           <Text style={styles.heroTitle}>{equipped?.title || 'The Newcomer'}</Text>
         </LinearGradient>

@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { ShopItem, RARITY_COLORS, RARITY_LABELS } from '../../data/shopCatalog';
+import { ShopItem, RARITY_COLORS } from '../../data/shopCatalog';
+import { RarityChip, type Rarity } from './RarityChip';
 import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeColors';
 import { PIECE_SKIN_VISUALS, PieceSkinVisuals } from '../../data/pieceSkinColors';
 import { useShopStore } from '../../stores/shopStore';
@@ -155,7 +156,6 @@ export function CosmeticPreviewModal({
   const equippedPieces = useShopStore(st => st.equipped.pieces);
 
   const rarityColor = RARITY_COLORS[item.rarity] || '#fff';
-  const rarityLabel = RARITY_LABELS[item.rarity] || item.rarity;
   const isDarkMatter = item.rarity === 'darkmatter';
   const isEarnOnly = isDarkMatter || (item.price === 0 && item.rarity === 'mythic');
 
@@ -205,9 +205,8 @@ export function CosmeticPreviewModal({
           {/* Item info */}
           <View style={s.infoArea}>
             <Text style={s.itemName}>{item.name}</Text>
-            <View style={[s.rarityBadge, { backgroundColor: `${rarityColor}20`, borderColor: `${rarityColor}40` }]}>
-              <Text style={[s.rarityText, { color: rarityColor }]}>{rarityLabel}</Text>
-            </View>
+            <RarityChip rarity={item.rarity as Rarity} size="md" />
+
             {item.description && (
               <Text style={s.description}>{item.description}</Text>
             )}

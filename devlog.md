@@ -6,7 +6,48 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Full visual overhaul wave shipped. 31 Flux-generated UI assets wired across Drop4 — painted tab icons, currency, shop tabs, screen atmospheres, hero trophy, character spotlight. The app went from emoji-placeholder aesthetic to premium game in one night. Session spend ~$1.00 of Devon's $5 fal.ai budget.
+**Now:** Batch 2 polish wave shipped after Devon's bug-fix pass — new chunky painted DROP4 logo, painted silhouette side buttons, tighter currency + buttons, RarityChip component with 6 painted chip backdrops, new app-icon + splash. 17 more Flux assets generated + 13 Bria-cleaned. Session total spend ~$1.56 of the $5 budget.
+
+---
+
+## 2026-04-19 (late-night) — Home polish + second Flux wave (autonomous)
+
+Devon's feedback after Batch 1: spotlight on character looked bad, mode buttons had a gap to tab bar, Collection hero preview wasn't updating on roster click, currency + buttons formatted wrong. Also: "spend the remaining $4 upgrading the rest of the app, make sure home screen looks good first — that's the first impression."
+
+### Bug fixes
+- **Removed bad spotlight** on home character. The painted `stage-spotlight.png` at 60% opacity was reading as a washed-out square, not atmosphere. The existing `stageGlowOuter/Inner` rings already did the theatrical lighting job. Dropped the Image node, kept the rings.
+- **Mode buttons pulled down**. Container `paddingBottom` dropped from 88/80 → 72/64, `menuButtons.paddingBottom` from 8 → 0. Three mode cards now sit tight against the tab bar.
+- **Collection hero preview fixed**. `Character3DPortrait` in the preview reads from `characterStore` (player's own customization), so clicking a roster character didn't change anything. Passed `customization={getRosterCustomization(equippedId) ?? undefined}` + `key={equippedId}` to force a remount with the selected roster character's loadout.
+- **Currency pill + buttons tightened**. `plusBtn` 24→20, added white rim stroke, single green shadow (was stacking pill + plus shadows). `pillInner` got inner `paddingRight: 2` + `pillValue` `minWidth: 16` so varying-digit values (0, 700, 10k) don't jitter. Pill outer `borderRadius` 20→18.
+
+### Batch 2 art ($0.425 gen + $0.130 bg-removal = $0.555)
+
+- **home-logo.png** — chunky 3D painted DROP4 wordmark, Connect-4 "4" styling with a red disc. Replaces the flat text logo. Wired into `HomeScreen.tsx`.
+- **side-btn-emotes.png / side-btn-idles.png** — painted orange silhouettes (dancer pose / hands-on-hips). Replace the 🕺 / 💫 emoji in the lobby side-buttons. New `sideBtnImg` style (42×42 inside the 58px glow ring).
+- **rarity-common / uncommon / rare / epic / legendary / mythic** — six painted pill backdrops for loot rarity chips.
+- **app-icon.png + splash-hero.png** — full-backdrop versions kept un-bg-removed. Copied into `assets/icon.png` and `assets/splash-icon.png`.
+- **locked-opponent.png** — painted ??? portrait for future career-map use (generated, not yet wired).
+- **featured-banner.png** — shop hero banner backdrop (generated, not yet wired).
+- **level-up-burst.png** — level-up VFX overlay (generated, not yet wired).
+- **mode-play-icon / mode-career-icon / mode-local-icon** — painted mode-button mini-icons (generated, not yet wired — current emoji on GlossyButton still OK).
+
+### New components
+- **`RarityChip.tsx`** — reusable pill showing rarity tier, three sizes (sm/md/lg). Uses the new painted backdrops at `resizeMode="stretch"`. Dark-matter falls back to mythic visually. Wired into `CosmeticPreviewModal` replacing the flat `rarityBadge`.
+
+### Visual verification
+Screenshot confirms home screen now reads as premium — painted logo dominates, side buttons have icon personality, currency pills are tight, mode cards stack right up against the painted tab bar. First impression solved.
+
+### Backlog (generated assets awaiting wiring)
+- `locked-opponent.png` → career unrevealed-opponent portrait
+- `featured-banner.png` → shop deal hero background
+- `level-up-burst.png` → overlay on level-up toast
+- `mode-*-icon.png` → could upgrade the mode-button GlossyButton leading icons
+- Apply `RarityChip` to `LootBoxScreen` reveal + `ShopScreen` grid chips
+
+### Budget
+- Batch 1: $0.78 (17 images generated) + $0.22 (22 bg-removed)
+- Batch 2: $0.425 (17 images) + $0.130 (13 bg-removed) = $0.555
+- **Session total spend: ~$1.56 of $5 budget** — $3.44 remaining for follow-ups.
 
 ---
 
