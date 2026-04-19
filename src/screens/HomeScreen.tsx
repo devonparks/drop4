@@ -352,7 +352,7 @@ export function HomeScreen() {
         <View>
           <TopBar
             coins={coins} gems={gems} level={level}
-            onProfilePress={() => navigation.navigate('MainTabs', { screen: 'Profile' } as any)}
+            onProfilePress={() => navigateTo('Profile')}
             onSettingsPress={() => navigateTo('Settings')}
             onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}
             onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as any)}

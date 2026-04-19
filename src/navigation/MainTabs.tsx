@@ -8,9 +8,8 @@ import Animated, {
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
-import { ChallengesScreen } from '../screens/ChallengesScreen';
-import { CollectionScreen } from '../screens/CollectionScreen';
+import { CustomizeScreen } from '../screens/CustomizeScreen';
+import { MissionsScreen } from '../screens/MissionsScreen';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -21,11 +20,20 @@ const Tab = createBottomTabNavigator();
 
 // Flux-generated tab icon pack — replaces the emoji set. See docs/ART_WORKFLOW.md
 // for how to regenerate. Source prompts in docs/ui-asset-manifest.json.
+//
+// 4-tab structure (BB Stars-style): Home / Customize / Missions / Shop.
+// Profile accessed via the top-right portrait in TopBar. Collection's content
+// migrated: Characters→Customize, Loot→Home chip, Awards→Missions/Milestones.
 const TAB_ICON_SOURCES: Record<string, ImageSourcePropType> = {
   home: require('../assets/images/ui/tab-home.png'),
-  challenges: require('../assets/images/ui/tab-challenges.png'),
-  collection: require('../assets/images/ui/tab-collection.png'),
-  profile: require('../assets/images/ui/tab-profile.png'),
+  // Customize reuses the painted shop-outfits (hanger+shirt) icon — it reads
+  // as "wardrobe" which is what the tab is. Dedicated tab-customize.png can
+  // be painted later if we want to differentiate it from the Shop's Outfits
+  // sub-tab visually.
+  customize: require('../assets/images/ui/shop-outfits.png'),
+  // Missions reuses the painted bullseye-target icon — still reads as
+  // "objectives / goals" for the merged Daily + Milestones content.
+  missions: require('../assets/images/ui/tab-challenges.png'),
   shop: require('../assets/images/ui/tab-shop.png'),
 };
 
@@ -65,20 +73,13 @@ function TabIcon({ iconKey, label, focused, badgeCount }: { iconKey: keyof typeo
   );
 }
 
-function RanksTab() {
-  return <ChallengesScreen />;
-}
-
-function AchievementsTab() {
-  return <ProfileScreen />;
-}
-
-// Reactive tab icon — subscribes to store so badge updates in real-time
-function ChallengesTabIcon({ focused }: { focused: boolean }) {
+// Reactive tab icon — subscribes to store so badge updates in real-time.
+// Used by the Missions tab for the "you have unclaimed rewards" red dot.
+function MissionsTabIcon({ focused }: { focused: boolean }) {
   const claimable = useChallengeStore(s =>
     s.challenges.filter(c => c.progress >= c.target && !c.completed).length
   );
-  return <TabIcon iconKey="challenges" label="Challenges" focused={focused} badgeCount={claimable} />;
+  return <TabIcon iconKey="missions" label="Missions" focused={focused} badgeCount={claimable} />;
 }
 
 export function MainTabs() {
@@ -106,24 +107,17 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Challenges"
-        component={RanksTab}
+        name="Customize"
+        component={CustomizeScreen}
         options={{
-          tabBarIcon: ({ focused }) => <ChallengesTabIcon focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="customize" label="Customize" focused={focused} />,
         }}
       />
       <Tab.Screen
-        name="Collection"
-        component={CollectionScreen}
+        name="Missions"
+        component={MissionsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="collection" label="Collection" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={AchievementsTab}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="profile" label="Profile" focused={focused} />,
+          tabBarIcon: ({ focused }) => <MissionsTabIcon focused={focused} />,
         }}
       />
       <Tab.Screen

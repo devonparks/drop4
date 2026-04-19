@@ -20,7 +20,7 @@ import { LootBoxScreen } from '../screens/LootBoxScreen';
 import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
-import { CollectionScreen } from '../screens/CollectionScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 
 export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
@@ -88,7 +88,10 @@ export type RootStackParamList = {
   LootBox: undefined;
   MatchHistory: undefined;
   Stats: undefined;
-  Collection: undefined;
+  // Profile is now a stack screen (reached via the top-right portrait in
+  // TopBar) rather than a bottom tab — the 4-tab redesign removed Profile
+  // from the tab bar.
+  Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -171,8 +174,8 @@ export function RootNavigator() {
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
-        name="Collection"
-        component={CollectionScreen}
+        name="Profile"
+        component={ProfileScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
