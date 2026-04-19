@@ -1,38 +1,110 @@
-# Drop4 Art Workflow — Nano Banana Autonomous Generation
+# Drop4 Art Workflow — Autonomous Generation
 
-Lets Claude (or Devon) generate UI assets on demand via the Google Gemini 2.5 Flash Image API ("Nano Banana"). Assets live in the repo, wire into components, ship.
+Two backends. Use ComfyUI for bulk work (free, unlimited, local GPU). Fall back to Gemini API when ComfyUI isn't running and you need one-offs.
 
-## One-time setup
+Pick via `ART_BACKEND` env var. Default: `comfyui`.
 
-1. **Get a key.** Go to [aistudio.google.com](https://aistudio.google.com) → "Get API key" → create one in a Google Cloud project. Free tier covers the initial UI pack (~$0.55 total at standard rate).
-2. **Drop it in `.env.local`** at the repo root:
-   ```
-   GOOGLE_API_KEY=AIza...
-   ```
-   (`.env.local` is gitignored; the key never leaves your machine.)
-3. **Confirm it works:**
+---
+
+## Backend 1: ComfyUI (recommended, free, unlimited)
+
+Runs on your RTX 4090. Any checkpoint you have installed. No rate limits. No API costs.
+
+### One-time setup
+
+1. **Start ComfyUI** with the API enabled so the script can connect:
+
    ```bash
-   node tools/gen-art.mjs --dry-run
+   # in your ComfyUI install dir
+   python main.py --listen 127.0.0.1 --port 8188
    ```
-   Should print the plan and estimated cost without hitting the API.
 
-## Generating assets
+   Leave the window open. Don't close it — the script talks to it over HTTP.
+
+2. **Know your checkpoint filename.** The script defaults to `sd_xl_base_1.0.safetensors`. If you have a different SDXL or Flux checkpoint you prefer, set it in `.env.local`:
+
+   ```
+   COMFY_CHECKPOINT=my_flux_model.safetensors
+   ```
+
+   (Filename must match what ComfyUI sees in `models/checkpoints/`.)
+
+3. **Optional tuning** in `.env.local`:
+
+   ```
+   COMFY_URL=http://127.0.0.1:8188          # default
+   COMFY_CHECKPOINT=sd_xl_base_1.0.safetensors
+   COMFY_STEPS=25                           # 20-30 is usually plenty
+   COMFY_CFG=7                              # 6-9 typical for SDXL
+   COMFY_NEGATIVE_PROMPT=text, watermark, signature, logo, ugly, blurry, low quality, distorted, deformed
+   ```
+
+### Running
 
 ```bash
-# Generate only missing assets (skips anything already in src/assets/images/ui/)
+# Generate only missing assets (skips anything in src/assets/images/ui/ already)
 node tools/gen-art.mjs
 
-# Regenerate everything (useful after editing the style_lockup)
+# Regenerate everything
 node tools/gen-art.mjs --force
 
-# Only regenerate one group
+# Only one manifest group
 node tools/gen-art.mjs --only=tab-icons
 
-# See what would run without spending money
+# See what would run, no generation
 node tools/gen-art.mjs --dry-run
 ```
 
-Outputs go to `src/assets/images/ui/<filename>`. Metro bundles them automatically.
+Each image takes ~5-15 seconds on a 4090 depending on steps + resolution. The script waits patiently; expect ~2-3 minutes for the full 14-asset starter pack.
+
+### If it fails to connect
+
+> `Preflight failed: ComfyUI not reachable at http://127.0.0.1:8188`
+
+ComfyUI isn't running, or it's running without the `--listen` flag. Fix: restart ComfyUI with `python main.py --listen`.
+
+---
+
+## Backend 2: Gemini Nano Banana (cloud fallback)
+
+Use when ComfyUI isn't running (not at your desk, DoorDashing, etc).
+
+### Setup
+
+1. Get an API key at [aistudio.google.com](https://aistudio.google.com) → Get API key.
+2. Add to `.env.local`:
+
+   ```
+   GOOGLE_API_KEY=AIza...
+   ```
+
+3. Free tier resets daily. For bulk generation, enable billing on your Google Cloud project (pay-as-you-go ~$0.039/image, $0.55 for the starter pack).
+
+### Running
+
+Force the Gemini backend:
+
+```bash
+ART_BACKEND=gemini node tools/gen-art.mjs
+```
+
+Or set it permanently in `.env.local`:
+
+```
+ART_BACKEND=gemini
+GOOGLE_API_KEY=...
+```
+
+### Models (optional override)
+
+```
+GEMINI_MODEL=gemini-2.5-flash-image        # default, "Nano Banana"
+GEMINI_MODEL=gemini-3.1-flash-image-preview  # newer, try if 2.5 quota hits
+GEMINI_MODEL=gemini-3-pro-image-preview      # "Nano Banana Pro", 4K quality
+GEMINI_MODEL=imagen-4.0-fast-generate-001    # Google Imagen 4, different quota bucket
+```
+
+---
 
 ## Adding new assets
 
@@ -44,43 +116,61 @@ Edit `docs/ui-asset-manifest.json`. Add an entry to `items[]`:
   "id": "btn-primary",
   "filename": "btn-primary.png",
   "size": "800x200",
-  "prompt": "Premium mobile game button background: ..."
+  "prompt": "Premium mobile game button background..."
 }
 ```
 
 Then `node tools/gen-art.mjs --only=buttons`.
 
-**Prompt tips for consistency:**
-- Reference the `_style_lockup_text` at the top of the manifest — the shared visual language (dark navy + neon orange + warm gold).
-- Specify "no text" explicitly (the model sometimes adds phantom logos).
-- Specify "transparent background" or "edges fade to transparent" for icons and frames.
-- Mention reference games: "polish like Basketball Stars or Candy Crush Saga" anchors the quality bar.
-- Keep sizes at 512² for icons, 1200×300 for buttons, 1080×1920 for backgrounds, 600×800 or 800×800 for frames.
+### Prompt tips
+
+- Always include the shared `_style_lockup_text` from the top of the manifest so assets look like one pack.
+- Say "no text" explicitly — models love hallucinating fake logos.
+- Say "transparent background" or "edges fade to transparent" for icons + frames.
+- Reference games: "polish like Basketball Stars or Candy Crush Saga" anchors the quality.
+- Sizes: 512² for icons, 1200×300 for wide buttons, 1080×1920 for backgrounds, 600×800 / 800×800 for frames.
+
+---
 
 ## Autonomous Claude sessions
 
-If you want Claude to generate + wire up assets autonomously during a session:
+When Claude sessions need to generate art:
 
-1. Put the key in `.env.local` before the session starts.
-2. Tell Claude the asset type and where you want it used ("generate 3 new tab icons for Shop, Challenges, Home and wire them into MainTabs").
-3. Claude will add entries to the manifest, run the script, import the resulting PNGs, replace the emoji in the UI, run tsc + jest, and commit.
+1. Devon starts ComfyUI once (`python main.py --listen`).
+2. Tells Claude what to make ("3 new tab icons for Shop / Challenges / Home, wire into MainTabs").
+3. Claude adds entries to `docs/ui-asset-manifest.json`, runs `node tools/gen-art.mjs`, imports the resulting PNGs, replaces emoji in the UI, runs tsc + jest, commits through the pre-commit gate.
 
-## Cost reference
+If ComfyUI isn't running and Claude can't reach you, it falls back to the Gemini API (if `GOOGLE_API_KEY` is set) — assuming free-tier quota is available.
 
-- $0.039 per image at standard rate
-- $0.0195 per image at batch rate (contact Google for batch access)
-- Initial UI pack: 14 images ≈ $0.55
-- Full pack extension (50+ assets): ~$2-3
+---
 
-## When to use this vs ComfyUI
+## Cost quick-reference
 
-- **Use Nano Banana (this workflow)** for bulk UI assets: icons, buttons, frames, backgrounds, ambient textures. The API is always on, results are deterministic per prompt, and you can batch generate 50+ assets in one Claude session.
-- **Use ComfyUI** for hero art: app icon, splash screen, marketing banners, anything that needs LoRAs, inpainting, or fine control over composition. ComfyUI runs on your desktop GPU so it's only available when the machine's on.
-- **Don't use either** for character 3D (that's Unity + GLB export) or audio (Dustyroom / AudioCraft / Freesound).
+| Backend | Cost | Speed | When to use |
+|---|---|---|---|
+| ComfyUI | Free | 5-15s/image | Bulk work, iteration, style exploration |
+| Gemini standard | $0.039/image | 5-10s | ComfyUI down, need one-offs, consistent results |
+| Gemini Nano Banana Pro | ~$0.10/image | 10-20s | Hero assets where quality matters more than cost |
+| Imagen 4 Fast | Similar | 5-8s | Alternative quota bucket if Gemini is capped |
+
+---
 
 ## Troubleshooting
 
-- **"GOOGLE_API_KEY not found"** — check `.env.local` exists at repo root with `GOOGLE_API_KEY=...`
-- **"Gemini API 403"** — key is valid but image generation quota exceeded. Check aistudio.google.com usage.
-- **"Gemini API 400"** — prompt may have triggered a safety filter. Rephrase, avoid copyrighted game names in the prompt text.
-- **Image looks generic or off-style** — edit the prompt to reference `_style_lockup_text` explicitly, rerun with `--force`.
+| Error | Fix |
+|---|---|
+| `GOOGLE_API_KEY missing` | Add to `.env.local` |
+| `ComfyUI not reachable` | Start ComfyUI with `--listen` flag |
+| Gemini `429 quota` | Wait 24h, enable billing, or switch to `ART_BACKEND=comfyui` |
+| Gemini `404 model not found` | Wrong `GEMINI_MODEL`. Defaults should be fine; check `/models` endpoint with your key |
+| ComfyUI `ckpt_name not found` | `COMFY_CHECKPOINT` must match a filename in your ComfyUI `models/checkpoints/` folder |
+| ComfyUI timeout | Check the ComfyUI window for errors — probably out of VRAM or bad checkpoint |
+
+---
+
+## What NOT to use this for
+
+- Character 3D models — that's Unity + GLB export.
+- Audio — that's Dustyroom / AudioCraft / Freesound.
+- Complex multi-layer compositions — use ComfyUI GUI manually for those.
+- Animations — that's Mixamo / Lottie / webgpu-vfx.
