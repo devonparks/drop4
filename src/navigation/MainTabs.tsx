@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image, ImageSourcePropType } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,7 +19,17 @@ import { fonts, weight } from '../theme/typography';
 
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: string; focused: boolean; badgeCount?: number }) {
+// Flux-generated tab icon pack — replaces the emoji set. See docs/ART_WORKFLOW.md
+// for how to regenerate. Source prompts in docs/ui-asset-manifest.json.
+const TAB_ICON_SOURCES: Record<string, ImageSourcePropType> = {
+  home: require('../assets/images/ui/tab-home.png'),
+  challenges: require('../assets/images/ui/tab-challenges.png'),
+  collection: require('../assets/images/ui/tab-collection.png'),
+  profile: require('../assets/images/ui/tab-profile.png'),
+  shop: require('../assets/images/ui/tab-shop.png'),
+};
+
+function TabIcon({ iconKey, label, focused, badgeCount }: { iconKey: keyof typeof TAB_ICON_SOURCES; label: string; focused: boolean; badgeCount?: number }) {
   // Scale-pop on focus change. Bounces up then settles so the tap feels
   // like the button is answering the user. ~300ms total feel.
   const scale = useSharedValue(focused ? 1.06 : 1);
@@ -35,9 +45,15 @@ function TabIcon({ icon, label, focused, badgeCount }: { icon: string; label: st
     transform: [{ scale: scale.value }],
   }));
 
+  const iconSource = TAB_ICON_SOURCES[iconKey];
+
   return (
     <Animated.View style={[styles.tabItem, animStyle]}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+      <Image
+        source={iconSource}
+        style={[styles.tabIconImg, !focused && styles.tabIconImgInactive]}
+        resizeMode="contain"
+      />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.activeIndicator} />}
       {badgeCount !== undefined && badgeCount > 0 && (
@@ -62,7 +78,7 @@ function ChallengesTabIcon({ focused }: { focused: boolean }) {
   const claimable = useChallengeStore(s =>
     s.challenges.filter(c => c.progress >= c.target && !c.completed).length
   );
-  return <TabIcon icon="🎯" label="Challenges" focused={focused} badgeCount={claimable} />;
+  return <TabIcon iconKey="challenges" label="Challenges" focused={focused} badgeCount={claimable} />;
 }
 
 export function MainTabs() {
@@ -86,7 +102,7 @@ export function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="home" label="Home" focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -100,21 +116,21 @@ export function MainTabs() {
         name="Collection"
         component={CollectionScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🎒" label="Collection" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="collection" label="Collection" focused={focused} />,
         }}
       />
       <Tab.Screen
         name="Profile"
         component={AchievementsTab}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="profile" label="Profile" focused={focused} />,
         }}
       />
       <Tab.Screen
         name="Shop"
         component={ShopScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🛍" label="Shop" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="shop" label="Shop" focused={focused} />,
         }}
       />
     </Tab.Navigator>
@@ -144,12 +160,15 @@ const styles = StyleSheet.create({
     position: 'relative',
     minWidth: 50,
   },
-  tabIcon: {
-    fontSize: 20,
-    opacity: 0.4,
+  // Flux-generated PNG tab icons replace the emoji set. Sized smaller than
+  // the emoji (28 vs 20px font) because the painted icons have built-in
+  // padding and read fine at this size.
+  tabIconImg: {
+    width: 30,
+    height: 30,
   },
-  tabIconActive: {
-    opacity: 1,
+  tabIconImgInactive: {
+    opacity: 0.45,
   },
   tabLabel: {
     fontFamily: fonts.body,

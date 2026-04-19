@@ -550,6 +550,7 @@ export function HomeScreen() {
                 small
                 icon="🎮"
                 iconRight="›"
+                bgImage={require('../assets/images/ui/mode-play-bg.png')}
                 onPress={() => navigateTo('Play')}
               />
           </SlideReveal>
@@ -561,6 +562,7 @@ export function HomeScreen() {
                 small
                 icon="🏆"
                 iconRight="›"
+                bgImage={require('../assets/images/ui/mode-career-bg.png')}
                 onPress={() => navigateTo('CareerMap')}
               />
           </SlideReveal>
@@ -573,6 +575,7 @@ export function HomeScreen() {
                 small
                 icon="👥"
                 iconRight="›"
+                bgImage={require('../assets/images/ui/mode-local-bg.png')}
                 onPress={() => navigateTo('LocalPlay')}
               />
           </SlideReveal>

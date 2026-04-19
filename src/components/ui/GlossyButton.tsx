@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Pressable, Text, View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { Pressable, Text, View, StyleSheet, ViewStyle, Platform, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -39,6 +39,10 @@ interface GlossyButtonProps {
   style?: ViewStyle;
   disabled?: boolean;
   small?: boolean;
+  /** Optional painted background (e.g. Flux-generated mode-card art). When
+   *  provided, renders as the base layer with the variant gradient overlaid
+   *  at reduced opacity for text legibility. */
+  bgImage?: any;
 }
 
 export function GlossyButton({
@@ -51,6 +55,7 @@ export function GlossyButton({
   style,
   disabled = false,
   small = false,
+  bgImage,
 }: GlossyButtonProps) {
   // Press-scale feedback — shared across all ~40 GlossyButton sites in the
   // app. Scales to 0.96 on press-in (snappy timing), springs back to 1 on
@@ -85,13 +90,27 @@ export function GlossyButton({
         boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
       } as any : {}),
     }]}>
-      <LinearGradient
-        colors={[colors.top, colors.main, colors.dark]}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.gradient, { minHeight: minH }]}
-      >
+      <View style={[styles.gradient, { minHeight: minH, overflow: 'hidden' }]}>
+        {/* Painted background (Flux-generated). When present, the gradient
+            above drops to a thin vignette overlay for text legibility. */}
+        {bgImage && (
+          <Image
+            source={bgImage}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        )}
+        <LinearGradient
+          colors={
+            bgImage
+              ? [colors.top + 'cc', colors.main + '88', colors.dark + 'cc']
+              : [colors.top, colors.main, colors.dark]
+          }
+          locations={[0, 0.5, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[StyleSheet.absoluteFill]}
+        />
         <View style={styles.content}>
           {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
           <View style={styles.textWrap}>
@@ -100,7 +119,7 @@ export function GlossyButton({
           </View>
           {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
         </View>
-      </LinearGradient>
+      </View>
     </View>
   );
 
