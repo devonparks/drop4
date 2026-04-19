@@ -13,10 +13,10 @@ import { fonts, weight } from '../../theme/typography';
 // ═══════════════════════════════════════════════════════════════════════
 // MilestonesList — lifetime collection milestones
 //
-// Extracted from CollectionScreen's "Awards" sub-tab so MissionsScreen can
-// render the same content under its Milestones sub-tab without duplication.
-// CollectionScreen is on the chopping block (4-tab redesign) but this
-// component lives on.
+// Lifetime collection milestones — summary + sections broken down by
+// Ready-to-Claim / In-Progress / Unlocked / Locked. Originally lived as
+// the Awards sub-tab inside the old CollectionScreen; moved here when
+// the 4-tab redesign collapsed Collection into Customize + Missions.
 //
 // Renders:
 //   - Summary card (X / total milestones claimed)

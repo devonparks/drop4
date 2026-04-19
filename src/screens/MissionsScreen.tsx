@@ -26,8 +26,8 @@ import { fonts, weight } from '../theme/typography';
 //   On "Milestones": owns its own ScreenBackground wrapper and renders
 //     MilestonesList below the switcher.
 //
-// Once we delete CollectionScreen (next commit cluster), this file is
-// where all Missions UX converges.
+// CollectionScreen has been deleted (4-tab redesign) — this file plus
+// CustomizeScreen now cover what Collection used to hold.
 // ═══════════════════════════════════════════════════════════════════════
 
 type MissionsTab = 'daily' | 'milestones';

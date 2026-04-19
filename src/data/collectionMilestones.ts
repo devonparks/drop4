@@ -257,7 +257,7 @@ export interface MilestoneProgress {
 
 /**
  * Compute progress for every milestone in the catalog. Used by the
- * Awards tab in CollectionScreen to show the full ladder so the
+ * Milestones sub-tab in MissionsScreen to show the full ladder so the
  * player can see what they're climbing toward — not just receive a
  * surprise toast when it lands.
  */

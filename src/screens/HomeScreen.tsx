@@ -760,37 +760,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  // Kept below for any ProfileScreen or shared code still referencing
-  // these class names — they're no longer mounted on the Home lobby.
-  customizeBtn: {
-    backgroundColor: 'rgba(255,140,0,0.22)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,140,0,0.6)',
-    borderRadius: 20,
-    paddingHorizontal: 22,
-    paddingVertical: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  spinBtn: {
-    backgroundColor: 'rgba(241,196,15,0.22)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(241,196,15,0.7)',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  customizeBtnText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 13,
-    color: colors.orange,
-    letterSpacing: 1.5,
-  },
   // Character lobby
   lobbyArea: {
     // Used to be `flex: 1` — which grew the character stage to eat all
