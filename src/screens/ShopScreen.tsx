@@ -695,16 +695,19 @@ export function ShopScreen() {
     else { haptics.error(); playSound('error'); }
   };
 
-  const tabs: { key: ShopTab; label: string; icon: string }[] = [
-    { key: 'outfits', label: 'Outfits', icon: '\u{1F455}' },
-    { key: 'boards', label: 'Boards', icon: '\u{1F3AF}' },
-    { key: 'pieces', label: 'Pieces', icon: '\u{1F534}' },
-    { key: 'effects', label: 'Effects', icon: '\u2728' },
-    { key: 'wins', label: 'Wins', icon: '\u{1F3C6}' },
-    { key: 'accessories', label: 'Frames', icon: '\u{1F5BC}' },
-    { key: 'emotes', label: 'Emotes', icon: '\u{1F60E}' },
-    { key: 'pets', label: 'Pets', icon: '\u{1F436}' },
-    { key: 'boxes', label: 'Boxes', icon: '\u{1F381}' },
+  // Painted shop-tab icons (Flux-generated). Replaces the emoji set —
+  // each tab now has a consistent glossy illustrated icon that reads
+  // as premium game art at 32-48px.
+  const tabs: { key: ShopTab; label: string; iconSource: any }[] = [
+    { key: 'outfits', label: 'Outfits', iconSource: require('../assets/images/ui/shop-outfits.png') },
+    { key: 'boards', label: 'Boards', iconSource: require('../assets/images/ui/shop-boards.png') },
+    { key: 'pieces', label: 'Pieces', iconSource: require('../assets/images/ui/shop-pieces.png') },
+    { key: 'effects', label: 'Effects', iconSource: require('../assets/images/ui/shop-effects.png') },
+    { key: 'wins', label: 'Wins', iconSource: require('../assets/images/ui/shop-wins.png') },
+    { key: 'accessories', label: 'Frames', iconSource: require('../assets/images/ui/shop-frames.png') },
+    { key: 'emotes', label: 'Emotes', iconSource: require('../assets/images/ui/shop-emotes.png') },
+    { key: 'pets', label: 'Pets', iconSource: require('../assets/images/ui/shop-pets.png') },
+    { key: 'boxes', label: 'Boxes', iconSource: require('../assets/images/ui/shop-boxes.png') },
   ];
 
   const rawItems = activeTab === 'boards' ? BOARD_THEMES :
@@ -789,7 +792,7 @@ export function ShopScreen() {
                     accessibilityState={{ selected: activeTab === tab.key }}
                   >
                     <View style={[s.tab, activeTab === tab.key && s.tabActive]}>
-                      <Text style={s.tabIcon}>{tab.icon}</Text>
+                      <Image source={tab.iconSource} style={s.tabIconImg} resizeMode="contain" />
                       <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
                     </View>
                   </PressScale>
@@ -1289,6 +1292,7 @@ const s = StyleSheet.create({
   },
   tabActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' },
   tabIcon: { fontSize: 13 },
+  tabIconImg: { width: 22, height: 22 },
   tabLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
   tabLabelActive: { color: colors.orange },
 

@@ -100,6 +100,129 @@
       "filename": "frame-portrait-gold.png",
       "size": "800x800",
       "prompt": "Mobile game portrait frame: ornate gold circular ring, sports-card-style bevel and engraved detail, slight wear, inner shadow. No content in center (transparent), edges define the frame. Like an NBA 2K MyPlayer portrait ring."
+    },
+
+    {
+      "group": "currency",
+      "id": "icon-coin",
+      "filename": "icon-coin.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game coin: a thick golden coin, face-on perspective, glossy bevel, raised central emblem (simple round medallion, no letters), warm gold + soft orange gleam, subtle rim highlight. Centered, transparent background, no text or numerals. Looks like a Candy Crush or Basketball Stars game coin."
+    },
+    {
+      "group": "currency",
+      "id": "icon-gem",
+      "filename": "icon-gem.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game gem: a cut sapphire-blue gemstone, pointed octahedral shape, brilliant facets, deep blue core with bright cyan highlights, faint purple rim, glowing inside. Centered, transparent background, no text. Looks like a premium-currency gem in a polished mobile game."
+    },
+    {
+      "group": "currency",
+      "id": "icon-streak",
+      "filename": "icon-streak.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game flame icon: a stylized glossy red-orange flame with a bright warm-yellow core, single tongue of fire, slight curl at the top, neon rim glow. Centered, transparent background, no text. Represents a streak or fire meter."
+    },
+
+    {
+      "group": "shop-tabs",
+      "id": "shop-outfits",
+      "filename": "shop-outfits.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy t-shirt on a hanger, slightly angled. Warm orange shirt, navy hanger hook, gold rim light. Centered, transparent background, no text. Mobile game polish."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-boards",
+      "filename": "shop-boards.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a Connect-4 style grid board seen at a slight 3/4 angle, dark navy frame, blue circles cut out, one red and one yellow piece dropped in. Glossy plastic. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-pieces",
+      "filename": "shop-pieces.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: two glossy plastic game-piece discs, one red on top-left, one yellow on bottom-right, overlapping slightly, soft shadow. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-effects",
+      "filename": "shop-effects.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a four-pointed sparkle star with rays of light, glowing warm yellow core, purple rim, tiny supporting sparkles. Centered, transparent background, no text. Represents a visual effect or drop effect."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-wins",
+      "filename": "shop-wins.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a chunky gold trophy cup with a starburst behind it, glossy gold, navy handles, tiny red gem set in the base. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-frames",
+      "filename": "shop-frames.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: an ornate square picture frame with a gold rim and navy interior, empty center, slight 3/4 angle, subtle glow inside. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-emotes",
+      "filename": "shop-emotes.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy speech bubble with a smiling face inside, warm orange bubble, navy face, gold rim. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-pets",
+      "filename": "shop-pets.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a stylized dog face, friendly, slightly chubby, glossy fur, big shiny eyes, warm brown-and-cream colors, soft pink tongue peeking out. Centered, transparent background, no text."
+    },
+    {
+      "group": "shop-tabs",
+      "id": "shop-boxes",
+      "filename": "shop-boxes.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy wrapped gift box, warm orange paper, gold ribbon in a neat bow, slight glow escaping from under the lid, 3/4 angle. Centered, transparent background, no text."
+    },
+
+    {
+      "group": "particles",
+      "id": "sparkle",
+      "filename": "particle-sparkle.png",
+      "size": "256x256",
+      "prompt": "Premium mobile game sparkle particle: a simple four-pointed white-to-gold star with bright core and soft halo glow, fading to transparent edges. Centered, transparent background, no text. Tileable VFX sprite for celebration bursts."
+    },
+    {
+      "group": "particles",
+      "id": "coin-burst",
+      "filename": "particle-coin-burst.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game celebration burst: a cluster of small glossy gold coins flying outward from center, golden light rays behind, warm soft glow. Centered, transparent background, no text. Represents a coin-pickup burst moment."
+    },
+    {
+      "group": "particles",
+      "id": "win-trophy",
+      "filename": "particle-win-trophy.png",
+      "size": "768x768",
+      "prompt": "Premium mobile game victory hero element: a large gleaming gold trophy cup with a bright sunburst behind it, purple-to-navy radial backdrop fading to transparent, confetti particles in the air, subtle gold dust. Centered, transparent background except the sunburst, no text. Hero element for the win screen."
+    },
+
+    {
+      "group": "stage",
+      "id": "stage-spotlight",
+      "filename": "stage-spotlight.png",
+      "size": "1024x512",
+      "prompt": "Premium mobile game lighting element: a warm golden spotlight beam cone pointing straight down on a dark navy surface, illuminating a soft circular glow on the floor, subtle dust particles in the beam. Centered composition, rest of frame transparent, no text. Meant to sit behind a character on a home-screen stage."
+    },
+    {
+      "group": "stage",
+      "id": "stage-platform",
+      "filename": "stage-platform.png",
+      "size": "1024x256",
+      "prompt": "Premium mobile game stage floor element: a wide glossy circular platform disc seen at a low angle, dark navy top with a neon orange rim light and subtle blue inner glow, slight reflection on the surface, floating in transparent space. Centered, transparent background, no text. Goes under a character on the home lobby."
     }
   ]
 }

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -100,9 +100,9 @@ export function TopBar({
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill emoji="🪙" value={formatNum(coins)} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
-        <CurrencyPill emoji="💎" value={formatNum(gems)} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
-        <CurrencyPill emoji="🔴" value={level.toString()} label={`Level ${level}`} />
+        <CurrencyPill iconSource={require('../../assets/images/ui/icon-coin.png')} value={formatNum(coins)} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
+        <CurrencyPill iconSource={require('../../assets/images/ui/icon-gem.png')} value={formatNum(gems)} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
+        <CurrencyPill iconSource={require('../../assets/images/ui/icon-streak.png')} value={level.toString()} label={`Level ${level}`} />
       </LinearGradient>
 
       {/* Right: Profile avatar + rank */}
@@ -129,8 +129,8 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ emoji, value, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
-  emoji: string; value: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
+function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
+  iconSource: ImageSourcePropType; value: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
 }) {
   // IMPORTANT: on web RN's Pressable renders as <button>. The main tap area
   // and the "+" badge used to be nested Pressables → nested <button> in the
@@ -144,7 +144,7 @@ function CurrencyPill({ emoji, value, onPress, onPlusPress, animatedTextColor, s
       accessibilityLabel={label}
       accessibilityRole={onPress ? 'button' : 'text'}
     >
-      <Text style={styles.pillEmoji}>{emoji}</Text>
+      <Image source={iconSource} style={styles.pillIcon} resizeMode="contain" />
       {animatedTextColor ? (
         <Animated.Text style={[styles.pillValue, { color: animatedTextColor }]}>{value}</Animated.Text>
       ) : (
@@ -260,8 +260,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
   },
-  pillEmoji: {
-    fontSize: 17,
+  // Flux-generated painted icon — coin / gem / streak flame. Replaces emoji
+  // so currency reads as premium game art rather than system-font glyphs.
+  pillIcon: {
+    width: 22,
+    height: 22,
   },
   pillValue: {
     fontFamily: fonts.body,

@@ -1,11 +1,26 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// Flux-painted screen atmospheres. When a scene prop is passed, the
+// corresponding PNG renders behind the gradient as the primary mood setter
+// — the starfield + vignette dial back so the painted art reads through.
+// One style lockup across every screen so the whole app feels curated.
+const SCENE_IMAGES: Record<string, ImageSourcePropType> = {
+  home: require('../../assets/images/ui/bg-home.png'),
+  shop: require('../../assets/images/ui/bg-shop.png'),
+  career: require('../../assets/images/ui/bg-career.png'),
+  profile: require('../../assets/images/ui/bg-profile.png'),
+};
 
 interface ScreenBackgroundProps {
   children: React.ReactNode;
   style?: ViewStyle;
   variant?: 'default' | 'game' | 'gold';
+  /** Optional painted scene. When set, renders the matching PNG at ~40%
+   *  opacity behind the gradient so each screen has its own atmosphere.
+   *  Accepted values: 'home', 'shop', 'career', 'profile'. */
+  scene?: keyof typeof SCENE_IMAGES;
 }
 
 const VARIANTS = {
@@ -32,8 +47,9 @@ const VARIANTS = {
   },
 };
 
-export function ScreenBackground({ children, style, variant = 'default' }: ScreenBackgroundProps) {
+export function ScreenBackground({ children, style, variant = 'default', scene }: ScreenBackgroundProps) {
   const { colors } = VARIANTS[variant];
+  const sceneImage = scene ? SCENE_IMAGES[scene] : null;
 
   return (
     <LinearGradient
@@ -42,13 +58,25 @@ export function ScreenBackground({ children, style, variant = 'default' }: Scree
       end={{ x: 0.5, y: 1 }}
       style={[styles.container, style]}
     >
+      {/* Painted scene — primary atmosphere when a scene prop is set. */}
+      {sceneImage && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Image
+            source={sceneImage}
+            style={styles.sceneImage}
+            resizeMode="cover"
+          />
+        </View>
+      )}
+
       {/* Subtle radial vignette overlay */}
       <View style={styles.vignette} />
 
-      {/* Star field texture (web only) */}
-      {Platform.OS === 'web' && <View style={styles.starField} />}
-      {Platform.OS === 'web' && <View style={styles.starFieldSmall1} />}
-      {Platform.OS === 'web' && <View style={styles.starFieldSmall2} />}
+      {/* Star field texture (web only). Dialed down when a painted scene
+          is active so the two effects don't fight. */}
+      {Platform.OS === 'web' && !sceneImage && <View style={styles.starField} />}
+      {Platform.OS === 'web' && !sceneImage && <View style={styles.starFieldSmall1} />}
+      {Platform.OS === 'web' && !sceneImage && <View style={styles.starFieldSmall2} />}
 
       {/* Content */}
       <View style={styles.content}>
@@ -62,6 +90,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+  },
+  sceneImage: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.45,
   },
   vignette: {
     ...StyleSheet.absoluteFillObject,
