@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
@@ -167,6 +167,16 @@ export function MilestoneToast() {
           <Text style={styles.kicker}>MILESTONE UNLOCKED</Text>
 
           <View style={styles.heroSlot}>
+            {/* Painted sunburst backdrop — sits behind the hero character/pet
+                at 70% opacity. Flux-generated, gives the milestone moment a
+                theatrical "you did it!" celebration feel. */}
+            <View pointerEvents="none" style={styles.burstBg}>
+              <Image
+                source={require('../../assets/images/ui/level-up-burst.png')}
+                style={styles.burstImg}
+                resizeMode="contain"
+              />
+            </View>
             {showPet ? (
               <Pet3D
                 width={150}
@@ -238,6 +248,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     position: 'relative',
     marginTop: 4, marginBottom: 4,
+  },
+  burstBg: {
+    position: 'absolute',
+    top: -30, left: -30, right: -30, bottom: -30,
+    opacity: 0.7,
+  },
+  burstImg: {
+    width: '100%',
+    height: '100%',
   },
   emojiBadge: {
     position: 'absolute',

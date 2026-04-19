@@ -59,9 +59,12 @@ export function RarityChip({ rarity, size = 'md', width, label, style }: Props) 
         style,
       ]}
     >
+      {/* Using width/height 100% rather than absoluteFill — on RN Web the
+          absoluteFill combo with resizeMode="stretch" was rendering at the
+          intrinsic PNG size (1024x256) rather than the wrap dimensions. */}
       <Image
         source={BG[rarity]}
-        style={StyleSheet.absoluteFill}
+        style={styles.bgImg}
         resizeMode="stretch"
       />
       <Text
@@ -82,13 +85,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
-    // The painted PNG already has a drop shadow, but adding a soft
-    // platform shadow gives a tiny bit of lift on dark backdrops.
-    shadowColor: 'rgba(0,0,0,0.6)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 3,
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 999,
+  },
+  bgImg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   label: {
     fontFamily: fonts.body,

@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { RarityChip, type Rarity } from '../components/ui/RarityChip';
 import { PressScale, Shimmer, StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
@@ -438,7 +439,9 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
           )}
         </View>
         <Text style={s.itemName} numberOfLines={1}>{item.name}</Text>
-        <Text style={[s.rarityLabel, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
+        <View style={s.rarityChipWrap}>
+          <RarityChip rarity={item.rarity as Rarity} size="sm" width={84} />
+        </View>
         {isEquipped ? (
           <View style={s.equippedBadge}><Text style={s.equippedText}>EQUIPPED</Text></View>
         ) : isOwned ? (
@@ -506,7 +509,9 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
         </View>
         <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
         <Text style={s.petBreed} numberOfLines={1}>{pet.breed}</Text>
-        <Text style={[s.rarityLabel, { color: rarityColor }]}>{PET_RARITY_LABELS[pet.rarity]}</Text>
+        <View style={s.rarityChipWrap}>
+          <RarityChip rarity={pet.rarity as Rarity} size="sm" width={84} />
+        </View>
         {isEquipped ? (
           <View style={s.equippedBadge}><Text style={s.equippedText}>EQUIPPED</Text></View>
         ) : isOwned ? (
@@ -938,12 +943,23 @@ export function ShopScreen() {
 
           {/* ═══ 2. DAILY DEALS ═══ */}
           <StaggeredEntry index={2} delay={60}>
-            <SectionHeader
-              title="TODAY'S DEALS"
-              gradientColors={['#ff6a00', '#ff8c00']}
-              rightText={`Refreshes in: ${countdown}`}
-            />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.dealsRow}>
+            <View style={s.dealsSectionWrap}>
+              {/* Painted atmospheric banner — sits behind the whole deals
+                  strip at ~28% opacity so cards pop while the backdrop
+                  adds depth. Generated via fal.ai Flux, bg kept full. */}
+              <View pointerEvents="none" style={s.dealsBannerBg}>
+                <Image
+                  source={require('../assets/images/ui/featured-banner.png')}
+                  style={s.dealsBannerImg}
+                  resizeMode="cover"
+                />
+              </View>
+              <SectionHeader
+                title="TODAY'S DEALS"
+                gradientColors={['#ff6a00', '#ff8c00']}
+                rightText={`Refreshes in: ${countdown}`}
+              />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.dealsRow}>
               <DailyDealCard
                 icon={'\u{1FA99}'}
                 title="Free Coins"
@@ -994,6 +1010,7 @@ export function ShopScreen() {
                 });
               })()}
             </ScrollView>
+            </View>
           </StaggeredEntry>
 
           {/* ═══ 2. LOOT BAGS ═══ */}
@@ -1316,6 +1333,32 @@ const s = StyleSheet.create({
   rarityLabel: {
     fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 9, textAlign: 'center',
     textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2,
+  },
+  // Centering wrap for the painted RarityChip inside the 108px item card.
+  // The chip itself has no outer spacing, so we center it + give it breathing
+  // room above the price row.
+  rarityChipWrap: {
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  // Daily deals backdrop — the painted featured-banner sits behind the whole
+  // section header + horizontal cards strip, adding atmospheric depth without
+  // competing with the cards themselves. pointerEvents none so interactions
+  // pass through to the deal cards.
+  dealsSectionWrap: {
+    position: 'relative',
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  dealsBannerBg: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.28,
+  },
+  dealsBannerImg: {
+    width: '100%',
+    height: '100%',
   },
   priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4 },
   priceEmoji: { fontSize: 12 },

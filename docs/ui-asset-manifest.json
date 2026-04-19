@@ -251,43 +251,43 @@
       "group": "rarity",
       "id": "rarity-common",
       "filename": "rarity-common.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy silver-gray gradient, soft white rim highlight, subtle drop shadow, clean metallic finish, no text on the chip itself. Centered, transparent background, no text anywhere. Small and readable at 80px wide. Represents 'Common' rarity in a loot/collection system."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Silver-gray metallic gradient filling the full width, rounded pill ends, subtle white rim highlight along the top edge, soft drop shadow underneath, clean matte finish. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no additional decorations. Represents the 'Common' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-uncommon",
       "filename": "rarity-uncommon.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy emerald-green gradient, subtle lime rim highlight, drop shadow, clean finish, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Uncommon' rarity."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Emerald-green metallic gradient with lime highlights filling the full width, rounded pill ends, subtle lime rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Uncommon' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-rare",
       "filename": "rarity-rare.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy sapphire-blue gradient, subtle cyan rim highlight, drop shadow, clean finish, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Rare' rarity."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Sapphire-blue glossy gradient with cyan highlights filling the full width, rounded pill ends, cyan rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Rare' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-epic",
       "filename": "rarity-epic.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy royal-purple to magenta gradient, subtle violet rim highlight, drop shadow, slight inner shimmer, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Epic' rarity."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Royal-purple to magenta glossy gradient with violet inner shimmer filling the full width, rounded pill ends, violet rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Epic' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-legendary",
       "filename": "rarity-legendary.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy warm-orange to deep-gold gradient, bright gold rim highlight, strong drop shadow, subtle inner sparkle shimmer, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Legendary' rarity."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Warm-orange to deep-gold glossy gradient with sparkle shimmer filling the full width, rounded pill ends, bright gold rim highlight along the top edge, strong drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no stars, no trophies. Represents the 'Legendary' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-mythic",
       "filename": "rarity-mythic.png",
-      "size": "512x256",
-      "prompt": "Premium mobile game rarity chip: a pill-shaped badge, glossy crimson-red to hot-pink gradient with a faint holographic rainbow shimmer across the surface, bright white-hot rim highlight, heavy drop shadow, no text on the chip. Centered, transparent background, no text anywhere. Represents 'Mythic' rarity — the top tier."
+      "size": "1024x256",
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Crimson-red to hot-pink glossy gradient with faint holographic rainbow sheen across the surface filling the full width, rounded pill ends, bright white-hot rim highlight along the top edge, heavy drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Mythic' tier label plate — the top tier."
     },
 
     {
