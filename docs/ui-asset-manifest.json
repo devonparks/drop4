@@ -537,6 +537,58 @@
       "filename": "coll-awards.png",
       "size": "512x512",
       "prompt": "Premium mobile game tab icon: a glossy gold ribbon medal with a star center and a warm red-white-blue striped ribbon, chunky stylized. Centered, transparent background, no text. Represents an 'awards' or 'milestones' collection tab."
+    },
+
+    {
+      "group": "career-cities",
+      "id": "city-brooklyn",
+      "filename": "city-brooklyn.png",
+      "size": "1024x384",
+      "prompt": "Wide horizontal mobile game card art: a stylized Brooklyn blacktop basketball court at dusk, cracked concrete, chain-link fence, graffiti on brick walls in the background, warm orange sunset, distant Brooklyn rowhouse silhouettes. Gritty-yet-polished illustration style. No characters, no text, edges fade softly so the card border can overlay. Premium polish like Basketball Stars arena art. Represents 'The Rec, Brooklyn NY' — where every baller starts."
+    },
+    {
+      "group": "career-cities",
+      "id": "city-venice",
+      "filename": "city-venice.png",
+      "size": "1024x384",
+      "prompt": "Wide horizontal mobile game card art: a stylized Venice Beach boardwalk basketball court at high noon, sandy edges, palm trees, ocean horizon behind, bright California sun, warm teal-orange palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Boardwalk, Venice Beach CA' — sun sand and speed."
+    },
+    {
+      "group": "career-cities",
+      "id": "city-cathedral",
+      "filename": "city-cathedral.png",
+      "size": "1024x384",
+      "prompt": "Wide horizontal mobile game card art: a stylized cathedral-like indoor arena court with high vaulted ceilings, stained glass windows, polished hardwood floor with brass inlay, dramatic stage lighting, deep purple + gold palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Cathedral' — the holy grail of basketball arenas."
+    },
+
+    {
+      "group": "career-extras",
+      "id": "boss-crown",
+      "filename": "boss-crown.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a chunky glossy gold crown with a red ruby center and a faint purple sparkle, chibi stylized proportions, slight battle-wear. Centered, transparent background, no text. Represents a boss-level career node."
+    },
+
+    {
+      "group": "settings",
+      "id": "settings-audio",
+      "filename": "settings-audio.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game settings icon: a glossy orange speaker silhouette with three small curved sound waves, chunky stylized. Centered, transparent background, no text. Represents a sound-effects toggle."
+    },
+    {
+      "group": "settings",
+      "id": "settings-haptic",
+      "filename": "settings-haptic.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game settings icon: a glossy orange smartphone silhouette with curved motion-vibration lines radiating outward from both sides, chunky stylized. Centered, transparent background, no text. Represents a haptic-feedback toggle."
+    },
+    {
+      "group": "settings",
+      "id": "settings-notif",
+      "filename": "settings-notif.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game settings icon: a glossy gold notification bell with a small red dot badge, chunky stylized, slight tilt. Centered, transparent background, no text. Represents a push-notifications toggle."
     }
   ]
 }

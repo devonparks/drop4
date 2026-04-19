@@ -6,7 +6,54 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Whole-app visual overhaul (batch 4) shipped. Devon's ask: "complete the whole game visually EVERY SCREEN … up to $9, save $1 buffer, make it triple-A." Audited every tab + screen, graded each, targeted weakest visuals. 26 new Flux assets + 23 Bria-cleaned. ChallengesScreen, PlayScreen, MatchupScreen, CollectionScreen (Characters + Loot sub-tabs), ProfileScreen stats, GameScreen HUD action icons all painted. ScreenBackground gained challenges/play/matchup scenes, GlossyButton extended with `iconImage`/`iconImageRight` for painted leading/trailing icons. Session cumulative spend ~$2.65 of $9 budget (~$6.35 headroom remaining).
+**Now:** Batch 5 ships during Devon's sleep — Career flow painted (city hero art per zone card + painted boss crown on boss nodes), Settings row icons painted. 7 new Flux assets + 4 Bria-cleaned. Session cumulative spend ~$2.86 of $9 budget (~$6.14 headroom remaining).
+
+---
+
+## 2026-04-19 (overnight, autonomous) — Career + Settings polish — Batch 5
+
+Devon crashed for the night with: "is there any progress you can make
+overnight while i'm sleeping." Green-lit autonomous work within budget.
+
+### Overnight audit pass (screens not yet painted)
+- Career (CareerMap) 6/10 — flat gradient zone cards, no art per city, 🔒 emoji everywhere, 👑 emoji for boss nodes
+- DailySpinWheel 8/10 — already polished, skipping
+- Settings 7/10 — all toggles use emoji icons, no scene bg (low-traffic → minimal paint)
+- Stats 8/10 — StatCard is shared with ProfileScreen, already picked up painted icons from batch 4 for free
+- Learn 7/10 — lesson icons already styled, skipping
+- MatchHistory / LootBoxReveal — skipped (low traffic / reuses existing rarity system)
+
+### Batch 5 art — 7 assets, $0.175 + $0.040 bg-removal
+- **Career cities:** city-brooklyn (blacktop sunset), city-venice (beach boardwalk), city-cathedral (indoor arena with stained glass) — 1024×384 wide card backdrops, kept full-bg for card cover
+- **Career extras:** boss-crown (gold crown with red gems)
+- **Settings icons:** settings-audio (speaker), settings-haptic (phone vibration), settings-notif (bell)
+
+### Wiring
+- **CareerMapScreen:**
+  - Added `CITY_ART` map keyed by CareerCity.id (brooklyn / venice_beach / harlem)
+  - Each zone card now renders the painted city art at 55% opacity (20% when locked) behind the skyGradient, so every city has its own identity
+  - Boss level nodes now show painted crown instead of 👑 emoji
+- **SettingsScreen:**
+  - SettingToggle extended with optional `iconImage` prop — painted PNG takes precedence over emoji string, same footprint
+  - Sound Effects / Haptic Feedback / Push Notifications toggles now render painted icons
+
+### Post-batch grades
+- Career: 6 → 9 ✅
+- Settings: 7 → 7.5 (top 3 toggles painted, "What's New" list still emoji — low-traffic intentional skip)
+
+### Budget
+- Batch 5: 7 images × $0.025 = $0.175 + 4 bg-removed × $0.01 = $0.040 = **$0.215**
+- Cumulative session: **~$2.86 of $9** ($6.14 headroom remaining)
+
+### Verified
+- `npx tsc --noEmit`: 0 errors
+- `npx jest`: 3/3 pass
+- CareerMap screenshot confirms painted Brooklyn blacktop behind THE REC + Venice boardwalk behind THE BOARDWALK
+
+### Files touched
+- `docs/ui-asset-manifest.json` — +7 entries (career-cities, career-extras, settings groups)
+- `src/screens/CareerMapScreen.tsx` — CITY_ART map, painted city layer on zone cards, painted boss-crown on boss nodes
+- `src/screens/SettingsScreen.tsx` — iconImage prop on SettingToggle, painted audio/haptic/notif
 
 ---
 

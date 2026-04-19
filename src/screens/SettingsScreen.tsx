@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView, Platform, Image, ImageSourcePropType } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,12 +32,16 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 };
 
-function SettingToggle({ label, value, onToggle, icon }: {
-  label: string; value: boolean; onToggle: () => void; icon: string;
+function SettingToggle({ label, value, onToggle, icon, iconImage }: {
+  label: string; value: boolean; onToggle: () => void; icon: string; iconImage?: ImageSourcePropType;
 }) {
   return (
     <View style={styles.settingRow}>
-      <Text style={styles.settingIcon}>{icon}</Text>
+      {iconImage ? (
+        <Image source={iconImage} style={styles.settingIconImg} resizeMode="contain" />
+      ) : (
+        <Text style={styles.settingIcon}>{icon}</Text>
+      )}
       <Text style={styles.settingLabel}>{label}</Text>
       <Switch
         value={value}
@@ -108,12 +112,14 @@ export function SettingsScreen({ navigation }: Props) {
             value={soundOn}
             onToggle={() => { toggleMute(); setSoundOn(!soundOn); }}
             icon="🔊"
+            iconImage={require('../assets/images/ui/settings-audio.png')}
           />
           <SettingToggle
             label="Haptic Feedback"
             value={hapticsOn}
             onToggle={() => { const next = !hapticsOn; setHapticsOn(next); setHapticsEnabled(next); }}
             icon="📳"
+            iconImage={require('../assets/images/ui/settings-haptic.png')}
           />
         </View>
         </StaggeredEntry>
@@ -127,6 +133,7 @@ export function SettingsScreen({ navigation }: Props) {
             value={notificationsOn}
             onToggle={() => setNotificationsOn(!notificationsOn)}
             icon="🔔"
+            iconImage={require('../assets/images/ui/settings-notif.png')}
           />
         </View>
         </StaggeredEntry>
@@ -404,6 +411,13 @@ const styles = StyleSheet.create({
   },
   settingIcon: {
     fontSize: 20,
+  },
+  // Flux-painted Settings row icon — replaces the emoji when iconImage is
+  // provided. Same visual footprint as the 20pt emoji so toggle/link rows
+  // stay the same height whether painted or emoji.
+  settingIconImg: {
+    width: 26,
+    height: 26,
   },
   settingLabel: {
     fontFamily: fonts.body,

@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   Animated,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,6 +38,16 @@ type Props = {
 };
 
 const NODE_SIZE = 64;
+
+// Flux-painted city hero art keyed by CareerCity.id. Used as an atmospheric
+// backdrop on each zone card (Brooklyn blacktop, Venice beach, Harlem
+// cathedral). Wide 1024x384 so it fills the card on low- and high-density
+// displays. Missing keys leave the card with just its skyGradient.
+const CITY_ART: Record<string, ImageSourcePropType> = {
+  brooklyn: require('../assets/images/ui/city-brooklyn.png'),
+  venice_beach: require('../assets/images/ui/city-venice.png'),
+  harlem: require('../assets/images/ui/city-cathedral.png'),
+};
 
 // ─────────────────────────────────────────────────────────────────────────
 // CareerMapScreen — Vertical Path (Candy Crush style)
@@ -158,6 +170,21 @@ export function CareerMapScreen({ navigation }: Props) {
                   end={{ x: 0.5, y: 1 }}
                   style={styles.zoneGradient}
                 >
+                  {/* Painted city hero — Flux-generated arena scene per
+                      city. Sits under the gradient at reduced opacity so
+                      the skyGradient still tints the card but each city
+                      gets its own atmospheric identity. Locked cities
+                      render at lower opacity to read as muted. */}
+                  {CITY_ART[city.id] && (
+                    <View pointerEvents="none" style={styles.zoneArtLayer}>
+                      <Image
+                        source={CITY_ART[city.id]}
+                        style={[styles.zoneArtImg, { opacity: unlocked ? 0.55 : 0.2 }]}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
+
                   {/* City name */}
                   <Text style={[styles.zoneName, { color: unlocked ? city.themeColor : 'rgba(255,255,255,0.35)' }]} accessibilityRole="header">
                     {city.nickname.toUpperCase()}
@@ -315,7 +342,11 @@ function PathNode({ level, levelNumber, isComplete, isNext, isLocked, stars, cit
       {isLocked ? (
         <Text style={styles.nodeLock}>🔒</Text>
       ) : level.isBoss ? (
-        <Text style={styles.nodeBossIcon}>👑</Text>
+        <Image
+          source={require('../assets/images/ui/boss-crown.png')}
+          style={styles.nodeBossImg}
+          resizeMode="contain"
+        />
       ) : (
         <Text style={[styles.nodeNumber, { color: nodeColor }]}>{levelNumber}</Text>
       )}
@@ -419,6 +450,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     minHeight: 140,
     justifyContent: 'center',
+    position: 'relative',
+  },
+  // Painted city art layer — sits between the gradient and the text.
+  // Covers the full card so the painted arena reads as the hero visual.
+  zoneArtLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  zoneArtImg: {
+    width: '100%',
+    height: '100%',
   },
   zoneName: {
     fontFamily: fonts.heading,
@@ -530,6 +571,12 @@ const styles = StyleSheet.create({
   nodeLock: {
     fontSize: 18,
     opacity: 0.7,
+  },
+  // Flux-painted boss crown — replaces the 👑 emoji inside boss-level nodes.
+  // Sized to fit the 64px node with comfortable padding.
+  nodeBossImg: {
+    width: 36,
+    height: 36,
   },
   nodeStars: {
     position: 'absolute',
