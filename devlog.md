@@ -4,6 +4,30 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ---
 
+## ☕ Good morning Devon — what shipped while you slept
+
+One commit: **`a65396d`** — batch 5 career + settings polish.
+
+**Visual changes to eyeball when you wake up:**
+1. **Career map** — Each city card (The Rec / The Boardwalk / The Cathedral) now has painted arena art behind the gradient. Brooklyn = blacktop sunset with graffiti + chain-link fence. Venice = beach boardwalk with palms. Harlem = vaulted cathedral interior. Locked cities render dimmer.
+2. **Boss nodes** — The 👑 crown emoji on boss-level nodes is now a painted gold-with-ruby crown.
+3. **Settings** — Sound Effects / Haptic Feedback / Push Notifications toggles now show painted icons instead of 🔊📳🔔 emoji. ("What's New" list below is still emoji — low-traffic, intentional skip.)
+
+**Budget:** spent $0.215, cumulative **$2.86 / $9**. $6.14 headroom if you want more paint on anything specific after your audit.
+
+**What I intentionally did NOT touch:**
+- DailySpinWheel (already 8/10, doesn't need it)
+- Stats (StatCard picked up painted icons from batch 4 for free)
+- Learn (lesson icons already styled)
+- MatchHistory / LootBoxReveal / CustomGame / BoardEditor (low traffic, diminishing returns)
+- Settings "What's New" 7-emoji list (low traffic, 7 more generations for content users rarely see)
+- Any game logic, state, navigation, or data files
+- Career map node locks (too tiny at ~44px for paint to read)
+
+**Green-field for your piece-by-piece audit:** everything I shipped is additive — existing emoji calls still work if you want to revert any single wire. `git show a65396d --stat` to see all 11 files that changed. `git revert a65396d` kills it cleanly.
+
+---
+
 ## 🔥 Currently working on
 
 **Now:** Batch 5 ships during Devon's sleep — Career flow painted (city hero art per zone card + painted boss crown on boss nodes), Settings row icons painted. 7 new Flux assets + 4 Bria-cleaned. Session cumulative spend ~$2.86 of $9 budget (~$6.14 headroom remaining).
