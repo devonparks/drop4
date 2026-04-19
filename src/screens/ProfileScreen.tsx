@@ -148,7 +148,7 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="profile">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile header */}
         <StaggeredEntry index={0} delay={60}>

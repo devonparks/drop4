@@ -347,7 +347,7 @@ export function HomeScreen() {
   };
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="home">
       <View style={styles.container}>
         <View>
           <TopBar

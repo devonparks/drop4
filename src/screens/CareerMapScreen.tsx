@@ -84,7 +84,7 @@ export function CareerMapScreen({ navigation }: Props) {
   const scrollRef = useRef<ScrollView>(null);
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="career">
       <TopBar
         coins={coins}
         gems={gems}
