@@ -11,6 +11,9 @@ const SCENE_IMAGES: Record<string, ImageSourcePropType> = {
   shop: require('../../assets/images/ui/bg-shop.png'),
   career: require('../../assets/images/ui/bg-career.png'),
   profile: require('../../assets/images/ui/bg-profile.png'),
+  challenges: require('../../assets/images/ui/bg-challenges.png'),
+  play: require('../../assets/images/ui/bg-play.png'),
+  matchup: require('../../assets/images/ui/bg-matchup.png'),
 };
 
 interface ScreenBackgroundProps {
@@ -19,7 +22,8 @@ interface ScreenBackgroundProps {
   variant?: 'default' | 'game' | 'gold';
   /** Optional painted scene. When set, renders the matching PNG at ~40%
    *  opacity behind the gradient so each screen has its own atmosphere.
-   *  Accepted values: 'home', 'shop', 'career', 'profile'. */
+   *  Accepted values: 'home', 'shop', 'career', 'profile',
+   *  'challenges', 'play', 'matchup'. */
   scene?: keyof typeof SCENE_IMAGES;
 }
 

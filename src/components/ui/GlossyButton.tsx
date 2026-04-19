@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Pressable, Text, View, StyleSheet, ViewStyle, Platform, Image } from 'react-native';
+import { Pressable, Text, View, StyleSheet, ViewStyle, Platform, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -35,6 +35,10 @@ interface GlossyButtonProps {
   variant?: ButtonVariant;
   icon?: string;
   iconRight?: string;
+  /** Painted left-side icon — takes precedence over `icon` emoji when set. */
+  iconImage?: ImageSourcePropType;
+  /** Painted right-side icon — takes precedence over `iconRight` emoji. */
+  iconImageRight?: ImageSourcePropType;
   onPress: () => void;
   style?: ViewStyle;
   disabled?: boolean;
@@ -51,6 +55,8 @@ export function GlossyButton({
   variant = 'orange',
   icon,
   iconRight,
+  iconImage,
+  iconImageRight,
   onPress,
   style,
   disabled = false,
@@ -112,12 +118,20 @@ export function GlossyButton({
           style={[StyleSheet.absoluteFill]}
         />
         <View style={styles.content}>
-          {icon && <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>}
+          {iconImage ? (
+            <Image source={iconImage} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" />
+          ) : icon ? (
+            <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>
+          ) : null}
           <View style={styles.textWrap}>
             <Text style={[styles.label, small && styles.labelSmall]}>{label}</Text>
             {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
-          {iconRight && <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>}
+          {iconImageRight ? (
+            <Image source={iconImageRight} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" />
+          ) : iconRight ? (
+            <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>
+          ) : null}
         </View>
       </View>
     </View>
@@ -203,5 +217,16 @@ const styles = StyleSheet.create({
   iconRight: {
     fontSize: 22,
     marginLeft: 2,
+  },
+  // Painted Image variant of icon/iconRight — sized to match the emoji's
+  // optical weight so painted and emoji buttons sit in a mixed row without
+  // height jitter.
+  iconImg: {
+    width: 30,
+    height: 30,
+  },
+  iconImgSmall: {
+    width: 22,
+    height: 22,
   },
 });

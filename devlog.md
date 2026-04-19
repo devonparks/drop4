@@ -6,7 +6,79 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Batch 2 polish wave shipped after Devon's bug-fix pass — new chunky painted DROP4 logo, painted silhouette side buttons, tighter currency + buttons, RarityChip component with 6 painted chip backdrops, new app-icon + splash. 17 more Flux assets generated + 13 Bria-cleaned. Session total spend ~$1.56 of the $5 budget.
+**Now:** Whole-app visual overhaul (batch 4) shipped. Devon's ask: "complete the whole game visually EVERY SCREEN … up to $9, save $1 buffer, make it triple-A." Audited every tab + screen, graded each, targeted weakest visuals. 26 new Flux assets + 23 Bria-cleaned. ChallengesScreen, PlayScreen, MatchupScreen, CollectionScreen (Characters + Loot sub-tabs), ProfileScreen stats, GameScreen HUD action icons all painted. ScreenBackground gained challenges/play/matchup scenes, GlossyButton extended with `iconImage`/`iconImageRight` for painted leading/trailing icons. Session cumulative spend ~$2.65 of $9 budget (~$6.35 headroom remaining).
+
+---
+
+## 2026-04-19 (post-home-fix) — Whole-app visual overhaul — Batch 4
+
+Devon: "do another visual overhaul and screenshot each screen to see what
+needs fal.ai work. complete the whole game visually EVERY SCREEN. simulate
+a curious human who beats the whole app and grade every screen and make the
+whole app triple-A level. use up to $9, save $1 just in case."
+
+### Audit pass (grades pre-batch)
+- Home 9/10 (already painted batch 2+3)
+- Shop 9/10 (already painted batch 2+3)
+- Challenges 6/10 — emoji icons, no scene bg
+- Collection/Characters 6/10 — boss unlocks are empty placeholder slots
+- Collection/Loot 5/10 — emoji boxes everywhere
+- Collection/Awards 6/10 — functional, plain
+- Profile 7/10 — portrait great, stats rows flat
+- Play 6/10 — sparse, emoji difficulty icons
+- Matchup 7/10 — flat white "VS" text, no arena
+- Game 7/10 — emoji HUD actions
+
+### Batch 4 art — 26 assets, $0.65 + $0.230 bg-removal
+- **Scenes:** bg-challenges (dojo at dusk), bg-play (stage spotlight pool), bg-matchup (arena clash lighting)
+- **Difficulty icons:** diff-easy (green leaf), diff-medium (crossed swords), diff-hard (flame skull)
+- **Versus:** vs-clash (chunky 3D "VS" with starburst)
+- **Loot boxes:** loot-bronze (wood+bronze chest), loot-silver (chrome chest), loot-gold (ornate gold chest)
+- **Challenge icons:** challenge-medal (karate medallion), challenge-fire (hat-trick fireballs), challenge-skull (chrome battle skull), challenge-trophy (win-20 trophy), challenge-bag (reward bag hero)
+- **Stats:** stat-wins (green check), stat-losses (red X), stat-winrate (gold %), stat-games (controller)
+- **Game actions:** action-hint (lightbulb), action-undo (circular arrow), action-quit (red flag), action-emote (chat bubble smile)
+- **Collection sub-tabs:** coll-characters (trio busts), coll-loot (mini crate stack), coll-awards (ribbon medal)
+
+### Shared infrastructure
+- **`ScreenBackground`**: added 3 scene keys (challenges/play/matchup) with painted atmosphere PNGs
+- **`GlossyButton`**: added optional `iconImage` + `iconImageRight` props. Painted PNGs take precedence over emoji `icon`/`iconRight` strings, with matched `iconImg` / `iconImgSmall` dimensions so emoji and painted buttons sit flush in mixed rows.
+
+### Component wiring
+- **ChallengesScreen**: `scene="challenges"` backdrop + `ICON_ART` emoji→PNG resolver in ChallengeCard (🏅/🏆/💀/🌶️/🔥 mapped) + painted reward bag replacing 🎁
+- **PlayScreen**: `scene="play"` backdrop + painted leading icons on EASY/MEDIUM/HARD GlossyButtons
+- **MatchupScreen**: `scene="matchup"` backdrop + painted vs-clash replaces the flat 68pt "VS" text + glow combo; wrap sized up 100→140 to showcase the painted hero
+- **CollectionScreen**: 3 painted sub-tab icons (replacing 👥 📦 🏅), painted locked-opponent replaces 🔒 in Boss Unlocks, LOOT_TIERS converted from emoji strings → painted PNG art, hero gold crate replaces the 📦 emoji at the Loot tab top
+- **ProfileScreen**: painted stat icons keyed by label via `STAT_ICONS` map — Wins/Losses/Win Rate/Games now have painted heroes (Coins/Gems reuse the existing currency icons)
+- **GameScreen**: action-hint / action-undo / action-quit / action-emote replace the 💡/↩️/🏳️/😀 emoji in the HUD control row and emote wheel trigger
+
+### Post-batch grades
+- Challenges 9/10 ✅
+- Collection/Characters 8/10 ✅ (locked bosses painted)
+- Collection/Loot 9/10 ✅ (3 painted crates + hero)
+- Profile 8/10 ✅ (painted stat icons)
+- Play 8/10 ✅ (scene + painted difficulty)
+- Matchup 9/10 ✅ (scene + painted clash)
+- Game 8/10 ✅ (painted action icons)
+
+### Budget
+- Batch 4: 26 images × $0.025 = $0.650 + 23 bg-removed × $0.01 = $0.230 = **$0.88**
+- Cumulative session: **~$2.65 of $9** ($6.35 headroom remaining for follow-ups)
+
+### Files touched
+- `docs/ui-asset-manifest.json` — +26 entries across 7 new groups
+- `src/components/ui/ScreenBackground.tsx` — 3 new scenes
+- `src/components/ui/GlossyButton.tsx` — iconImage/iconImageRight props + styles
+- `src/screens/ChallengesScreen.tsx` — ICON_ART map + painted renders
+- `src/screens/PlayScreen.tsx` — painted difficulty icons
+- `src/screens/MatchupScreen.tsx` — painted VS clash
+- `src/screens/CollectionScreen.tsx` — sub-tabs + loot tiers + locked bosses
+- `src/screens/ProfileScreen.tsx` — stat icon map
+- `src/screens/GameScreen.tsx` — HUD + emote wheel trigger painted icons
+
+### Verified
+- `npx tsc --noEmit`: 0 errors
+- `npx jest`: 3/3 pass
+- Screenshot sweep: Home/Challenges/Collection/Loot/Profile/Play/Matchup all read premium
 
 ---
 

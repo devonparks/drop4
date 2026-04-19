@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Share, Image, ImageSourcePropType } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -22,9 +22,25 @@ import { Shimmer, PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
+// Painted Flux stat icons keyed by label — batch 4 added wins/losses/winrate/games.
+// Missing keys render the card without a hero icon (streak "Current / Best"
+// cards don't need painted icons — the value itself is the hero).
+const STAT_ICONS: Record<string, ImageSourcePropType> = {
+  'Wins': require('../assets/images/ui/stat-wins.png'),
+  'Losses': require('../assets/images/ui/stat-losses.png'),
+  'Win Rate': require('../assets/images/ui/stat-winrate.png'),
+  'Games': require('../assets/images/ui/stat-games.png'),
+  'Coins': require('../assets/images/ui/icon-coin.png'),
+  'Gems': require('../assets/images/ui/icon-gem.png'),
+};
+
 function StatCard({ label, value, color = '#ffffff' }: { label: string; value: string | number; color?: string }) {
+  const iconSource = STAT_ICONS[label];
   return (
     <View style={styles.statCard}>
+      {iconSource && (
+        <Image source={iconSource} style={styles.statIcon} resizeMode="contain" />
+      )}
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -656,6 +672,14 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 26,
     marginBottom: 3,
+  },
+  // Flux-painted stat icon — sits above the number. Adds identity to each
+  // stat card without cluttering the tight 3-column grid (cards are ~30%
+  // of screen width).
+  statIcon: {
+    width: 28,
+    height: 28,
+    marginBottom: 4,
   },
   statLabel: {
     fontFamily: fonts.body,

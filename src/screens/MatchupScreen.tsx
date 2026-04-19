@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, Image } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInLeft,
@@ -223,7 +223,7 @@ export function MatchupScreen({ navigation }: Props) {
   const isBossMatch = params.mode === 'career' && courtName.startsWith('BOSS');
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="matchup">
       <View style={styles.container}>
         {/* No TopBar — this is a cinematic VS reveal */}
 
@@ -307,9 +307,16 @@ export function MatchupScreen({ navigation }: Props) {
               <>
                 <Animated.View entering={ZoomIn.springify().damping(8).stiffness(120)}>
                   <Animated.View style={vsPulseStyle}>
-                    <Text style={styles.vsGlowText}>VS</Text>
+                    {/* Painted VS clash element — Flux-generated chunky 3D
+                        block letters with explosive starburst. Replaces the
+                        flat "VS" text + text-shadow glow combo. */}
+                    <Image
+                      source={require('../assets/images/ui/vs-clash.png')}
+                      style={styles.vsClashImg}
+                      resizeMode="contain"
+                      accessibilityLabel="versus"
+                    />
                   </Animated.View>
-                  <Text style={styles.vsText} accessibilityLabel="versus">VS</Text>
                 </Animated.View>
 
                 {/* Match details below VS — only show non-standard rules */}
@@ -639,8 +646,15 @@ const styles = StyleSheet.create({
   vsCenter: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 100,
+    width: 140,
     zIndex: 2,
+  },
+  // Painted Flux VS clash — chunky 3D block letters with explosive
+  // starburst backdrop. Bigger than the old 68pt text so the hero clash
+  // moment reads with real weight.
+  vsClashImg: {
+    width: 140,
+    height: 140,
   },
   vsText: {
     fontFamily: fonts.heading,

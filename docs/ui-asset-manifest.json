@@ -347,6 +347,196 @@
       "filename": "mode-local-icon.png",
       "size": "512x512",
       "prompt": "Premium mobile game icon: two glossy smartphone silhouettes angled toward each other, slight overlap, warm teal rim light between them, soft glow connecting line. Centered, transparent background, no text. Represents local pass-and-play mode."
+    },
+
+    {
+      "group": "scene-bgs",
+      "id": "bg-challenges",
+      "filename": "bg-challenges.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: stylized dojo-training arena at dusk, warm orange sky through high windows, silhouetted columns, subtle motion-line streaks suggesting action, dark navy floor. No characters, no text, no borders. Just atmospheric backdrop for a challenges/missions screen. Premium polish."
+    },
+    {
+      "group": "scene-bgs",
+      "id": "bg-play",
+      "filename": "bg-play.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game background: glossy spotlit stage floor with a subtle Connect-4 board pattern visible in the distance, warm orange spotlight pool at bottom center fading to dark navy top, faint purple nebula flecks. No characters, no text, no borders. Premium polish."
+    },
+    {
+      "group": "scene-bgs",
+      "id": "bg-matchup",
+      "filename": "bg-matchup.png",
+      "size": "1080x1920",
+      "prompt": "Portrait mobile game arena backdrop: dramatic clash lighting, orange-vs-blue split with a vertical light beam splitting the composition in half, subtle crowd silhouettes faint in the background, motion-blur streaks radiating outward from center, dark navy floor reflecting the lights. No characters, no text, no borders. Feels like a boxing-match weigh-in staging. Premium polish."
+    },
+
+    {
+      "group": "difficulty",
+      "id": "diff-easy",
+      "filename": "diff-easy.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy green leaf with dew drops, chibi-cute style, soft emerald rim light. Centered, transparent background, no text. Represents 'Easy' casual difficulty."
+    },
+    {
+      "group": "difficulty",
+      "id": "diff-medium",
+      "filename": "diff-medium.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy crossed-swords emblem, warm orange blades, gold cross guard, slight spark at the intersection point. Centered, transparent background, no text. Represents 'Medium' difficulty."
+    },
+    {
+      "group": "difficulty",
+      "id": "diff-hard",
+      "filename": "diff-hard.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game icon: a glossy red-orange flame skull, chunky stylized, bright white-hot core, smoky wisp curling above. Centered, transparent background, no text. Represents 'Hard' punishing difficulty."
+    },
+
+    {
+      "group": "versus",
+      "id": "vs-clash",
+      "filename": "vs-clash.png",
+      "size": "1024x1024",
+      "prompt": "Premium mobile game VS clash element: the letters 'V' and 'S' rendered as chunky 3D glossy block type, warm orange-to-red gradient on the letters with gold rim highlights, an explosive yellow-white starburst behind them, lightning cracks radiating outward, smoke wisps at the base. Centered, transparent background except the element itself. The only glyphs are the VS — no other text. Hero clash element used between two fighting characters on a matchup screen."
+    },
+
+    {
+      "group": "loot-boxes",
+      "id": "loot-bronze",
+      "filename": "loot-bronze.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game loot crate: a chunky wooden treasure chest with bronze metal bands and studs, slightly open with a warm glow escaping, bronze padlock on the front, chibi stylized proportions. Three-quarter angle. Centered, transparent background, no text. Polished like Clash Royale or Brawl Stars loot chests."
+    },
+    {
+      "group": "loot-boxes",
+      "id": "loot-silver",
+      "filename": "loot-silver.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game loot crate: a polished silver metal chest with chrome rivets and a brushed finish, slightly open with a bright cyan glow escaping, silver clasp on the front, chibi stylized proportions. Three-quarter angle. Centered, transparent background, no text."
+    },
+    {
+      "group": "loot-boxes",
+      "id": "loot-gold",
+      "filename": "loot-gold.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game loot crate: a glossy gold treasure chest with elaborate filigree trim, sparkle dust around it, slightly open with a blinding warm-white glow escaping, gold ornate clasp on the front, chibi stylized proportions. Three-quarter angle. Centered, transparent background, no text. The top-tier loot box, legendary quality."
+    },
+
+    {
+      "group": "challenge-icons",
+      "id": "challenge-medal",
+      "filename": "challenge-medal.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game challenge icon: a glossy martial-arts medallion with a karate-belt ribbon, warm orange belt, gold medal center with a stylized fist emblem, small sparkle dust. Centered, transparent background, no text. Represents a 'dominant force' daily challenge."
+    },
+    {
+      "group": "challenge-icons",
+      "id": "challenge-fire",
+      "filename": "challenge-fire.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game challenge icon: three stylized glossy fireballs stacked in a hat-trick arrangement, warm orange cores with yellow-white hot centers, subtle smoke trails. Centered, transparent background, no text. Represents a 'hat trick' win-streak challenge."
+    },
+    {
+      "group": "challenge-icons",
+      "id": "challenge-skull",
+      "filename": "challenge-skull.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game challenge icon: a chunky glossy chrome skull with red eye-sockets, slight battle-wear, subtle smoke curling from the top. Centered, transparent background, no text. Represents a 'hard knocks' high-difficulty win challenge."
+    },
+    {
+      "group": "challenge-icons",
+      "id": "challenge-trophy",
+      "filename": "challenge-trophy.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game challenge icon: a glossy gold trophy cup with a bright red '20' numeral plate on the front, sparkle dust around, star on top. Centered, transparent background, no text OTHER than the '20' numeral on the plate. Represents a 'win 20 games this week' weekly challenge trophy."
+    },
+    {
+      "group": "challenge-icons",
+      "id": "challenge-bag",
+      "filename": "challenge-bag.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game challenge hero icon: a glossy reward bag tied with a gold ribbon, warm orange fabric, gold tag hanging off it, small warm glow from inside the opening. Centered, transparent background, no text. Represents a daily-challenge reward bag."
+    },
+
+    {
+      "group": "stats",
+      "id": "stat-wins",
+      "filename": "stat-wins.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game stat icon: a glossy green checkmark inside a small circle backdrop, chunky 3D, bright lime rim highlight. Centered, transparent background, no text. Represents the 'wins' player stat."
+    },
+    {
+      "group": "stats",
+      "id": "stat-losses",
+      "filename": "stat-losses.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game stat icon: a glossy red X mark, chunky 3D, bright crimson rim highlight. Centered, transparent background, no text. Represents the 'losses' player stat."
+    },
+    {
+      "group": "stats",
+      "id": "stat-winrate",
+      "filename": "stat-winrate.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game stat icon: a glossy golden percent symbol (%) rendered as chunky 3D with bevel and highlight. Centered, transparent background, no text OTHER than the % symbol itself. Represents win-rate percentage."
+    },
+    {
+      "group": "stats",
+      "id": "stat-games",
+      "filename": "stat-games.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game stat icon: a glossy game controller silhouette, chunky navy-and-orange, gold button accents. Centered, transparent background, no text. Represents total games played."
+    },
+
+    {
+      "group": "game-actions",
+      "id": "action-hint",
+      "filename": "action-hint.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game action icon: a glossy warm-yellow lightbulb with a bright filament glow, slight chibi proportions, subtle sparkle at the top. Centered, transparent background, no text. Represents a 'hint' gameplay helper."
+    },
+    {
+      "group": "game-actions",
+      "id": "action-undo",
+      "filename": "action-undo.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game action icon: a glossy blue circular arrow curving counter-clockwise, chunky 3D, cyan rim light, small motion spark at the tip. Centered, transparent background, no text. Represents an 'undo last move' gameplay action."
+    },
+    {
+      "group": "game-actions",
+      "id": "action-quit",
+      "filename": "action-quit.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game action icon: a glossy red flag on a short pole, chunky stylized, slight wave-motion in the fabric, dark metal pole. Centered, transparent background, no text. Represents a 'surrender' or 'quit match' gameplay action."
+    },
+    {
+      "group": "game-actions",
+      "id": "action-emote",
+      "filename": "action-emote.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game action icon: a glossy orange chat-bubble with a stylized smiling face inside, chunky 3D, gold rim highlight, subtle sparkle. Centered, transparent background, no text. Represents opening an emote picker during a match."
+    },
+
+    {
+      "group": "collection-subtabs",
+      "id": "coll-characters",
+      "filename": "coll-characters.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game tab icon: a glossy trio of stylized character busts overlapping, warm orange rim light on the front figure, navy shadows behind. Centered, transparent background, no text. Represents a 'characters' collection tab."
+    },
+    {
+      "group": "collection-subtabs",
+      "id": "coll-loot",
+      "filename": "coll-loot.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game tab icon: a glossy stack of three tiny loot crates (bronze/silver/gold) with a sparkle above them, chibi stylized. Centered, transparent background, no text. Represents a 'loot' collection tab."
+    },
+    {
+      "group": "collection-subtabs",
+      "id": "coll-awards",
+      "filename": "coll-awards.png",
+      "size": "512x512",
+      "prompt": "Premium mobile game tab icon: a glossy gold ribbon medal with a star center and a warm red-white-blue striped ribbon, chunky stylized. Centered, transparent background, no text. Represents an 'awards' or 'milestones' collection tab."
     }
   ]
 }

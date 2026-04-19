@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,13 +41,14 @@ export function CollectionScreen() {
         <Text style={styles.headerTitle} accessibilityRole="header">COLLECTION</Text>
       </View>
 
-      {/* Sub-tab bar */}
+      {/* Sub-tab bar — painted Flux icons replace the emoji (👥 📦 🏅) so
+          the Collection tabs match the main-tab bar's art treatment. */}
       <View style={styles.tabRow}>
-        {([
-          { id: 'characters' as SubTab, icon: '👥', label: 'Characters' },
-          { id: 'loot' as SubTab, icon: '📦', label: 'Loot' },
-          { id: 'awards' as SubTab, icon: '🏅', label: 'Awards' },
-        ]).map((tab) => (
+        {(([
+          { id: 'characters' as SubTab, iconSource: require('../assets/images/ui/coll-characters.png'), label: 'Characters' },
+          { id: 'loot' as SubTab, iconSource: require('../assets/images/ui/coll-loot.png'), label: 'Loot' },
+          { id: 'awards' as SubTab, iconSource: require('../assets/images/ui/coll-awards.png'), label: 'Awards' },
+        ]) as { id: SubTab; iconSource: ImageSourcePropType; label: string }[]).map((tab) => (
           <PressScale
             key={tab.id}
             onPress={() => { haptics.tap(); setActiveTab(tab.id); }}
@@ -57,7 +58,11 @@ export function CollectionScreen() {
             accessibilityState={{ selected: activeTab === tab.id }}
           >
             <View style={[styles.tab, activeTab === tab.id && styles.tabActive]}>
-              <Text style={styles.tabIcon}>{tab.icon}</Text>
+              <Image
+                source={tab.iconSource}
+                style={[styles.tabIconImg, activeTab !== tab.id && styles.tabIconImgInactive]}
+                resizeMode="contain"
+              />
               <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
                 {tab.label}
               </Text>
@@ -174,7 +179,14 @@ function CharCard({ char, equipped, unlocked, onEquip }: {
           {unlocked ? (
             <Character3DPortrait width={65} height={80} customization={getRosterCustomization(char.id) ?? undefined} showFloor={false} />
           ) : (
-            <Text style={{ fontSize: 26, opacity: 0.6 }}>🔒</Text>
+            // Painted locked-opponent silhouette — Flux-generated "???"
+            // portrait with padlock corner badge. Replaces the flat 🔒
+            // emoji so boss slots tease the reveal moment.
+            <Image
+              source={require('../assets/images/ui/locked-opponent.png')}
+              style={styles.charLockedImg}
+              resizeMode="contain"
+            />
           )}
           <Text style={[styles.charName, !unlocked && { color: 'rgba(255,255,255,0.35)' }]} numberOfLines={1}>
             {unlocked ? char.name : '???'}
@@ -342,12 +354,20 @@ function PlaceholderTab({ icon, title, desc, tip }: { icon: string; title: strin
 // Was a dead-air placeholder that occupied ~60% of the screen. Now
 // previews the three tiers so the player SEES what's coming before
 // they've earned any.
-const LOOT_TIERS = [
+const LOOT_TIERS: {
+  id: string;
+  name: string;
+  art: ImageSourcePropType;
+  gradient: [string, string];
+  glow: string;
+  unlockHint: string;
+  contents: string;
+}[] = [
   {
     id: 'bronze_box',
     name: 'Bronze Box',
-    icon: '📦',
-    gradient: ['#c07532', '#8a4a14'] as [string, string],
+    art: require('../assets/images/ui/loot-bronze.png'),
+    gradient: ['#c07532', '#8a4a14'],
     glow: '#c07532',
     unlockHint: 'Earn by winning 3 games in a row',
     contents: 'Coins · common boards · common pieces',
@@ -355,8 +375,8 @@ const LOOT_TIERS = [
   {
     id: 'silver_box',
     name: 'Silver Box',
-    icon: '🎁',
-    gradient: ['#cbd0dd', '#6a6e7a'] as [string, string],
+    art: require('../assets/images/ui/loot-silver.png'),
+    gradient: ['#cbd0dd', '#6a6e7a'],
     glow: '#cbd0dd',
     unlockHint: 'Earn by winning 5 Medium matches',
     contents: 'Coins · gems · uncommon + rare drops',
@@ -364,8 +384,8 @@ const LOOT_TIERS = [
   {
     id: 'gold_box',
     name: 'Gold Box',
-    icon: '✨',
-    gradient: ['#ffd54f', '#c89030'] as [string, string],
+    art: require('../assets/images/ui/loot-gold.png'),
+    gradient: ['#ffd54f', '#c89030'],
     glow: '#ffd54f',
     unlockHint: 'Beat career bosses or 10-win streak',
     contents: 'Big gems · epic boards · legendary shot',
@@ -384,7 +404,11 @@ function LootTab() {
   return (
     <Animated.View entering={FadeIn.duration(280)}>
       <View style={styles.lootHeader}>
-        <Text style={{ fontSize: 40, marginBottom: 6 }}>📦</Text>
+        <Image
+          source={require('../assets/images/ui/loot-gold.png')}
+          style={styles.lootHeroArt}
+          resizeMode="contain"
+        />
         <Text style={styles.placeholderTitle}>LOOT BOXES</Text>
         <Text style={styles.placeholderDesc}>
           {totalOwned > 0
@@ -409,7 +433,7 @@ function LootTab() {
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.lootTierTop}>
-                  <Text style={styles.lootTierIcon}>{tier.icon}</Text>
+                  <Image source={tier.art} style={styles.lootTierArt} resizeMode="contain" />
                   <Text style={[styles.lootTierName, { color: tier.glow }]}>{tier.name}</Text>
                   {owned > 0 && (
                     <View style={[styles.lootTierCountPill, { backgroundColor: tier.glow }]}>
@@ -437,6 +461,10 @@ const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', paddingVertical: 10, position: 'relative' },
   tabActive: {},
   tabIcon: { fontSize: 18 },
+  // Painted Flux sub-tab icon (coll-characters / coll-loot / coll-awards).
+  // Dimmed when inactive so the selected tab still has visual dominance.
+  tabIconImg: { width: 26, height: 26 },
+  tabIconImgInactive: { opacity: 0.45 },
   tabLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.5 },
   tabLabelActive: { color: colors.orange },
   tabIndicator: { position: 'absolute', bottom: 0, width: 24, height: 3, borderRadius: 2, backgroundColor: colors.orange },
@@ -486,6 +514,13 @@ const styles = StyleSheet.create({
   },
   lootTierTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   lootTierIcon: { fontSize: 28 },
+  // Flux-painted loot crate hero — sits at the top of the Loot sub-tab.
+  lootHeroArt: { width: 82, height: 82, marginBottom: 6 },
+  // Flux-painted loot crate per tier row (bronze/silver/gold).
+  lootTierArt: { width: 46, height: 46 },
+  // Painted locked-opponent "???" silhouette used in Boss Unlocks slots.
+  // Sized to fit inside the ~100px character card with padding.
+  charLockedImg: { width: 72, height: 90 },
   lootTierName: {
     fontFamily: fonts.heading, fontWeight: weight.black,
     fontSize: 15, letterSpacing: 1, flex: 1,

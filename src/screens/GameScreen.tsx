@@ -1125,7 +1125,11 @@ export function GameScreen({ navigation }: Props) {
                 accessibilityLabel={hintLabel}
                 accessibilityState={{ disabled: !canAffordHint }}
               >
-                <Text style={styles.controlIcon}>💡</Text>
+                <Image
+                  source={require('../assets/images/ui/action-hint.png')}
+                  style={styles.controlIconImg}
+                  resizeMode="contain"
+                />
                 <Text style={styles.controlLabel}>{hintLabel}</Text>
               </Pressable>
             );
@@ -1149,7 +1153,11 @@ export function GameScreen({ navigation }: Props) {
               accessibilityRole="button"
               accessibilityLabel="Undo last move"
             >
-              <Text style={styles.controlIcon}>↩️</Text>
+              <Image
+                source={require('../assets/images/ui/action-undo.png')}
+                style={styles.controlIconImg}
+                resizeMode="contain"
+              />
               <Text style={styles.controlLabel}>Undo</Text>
             </Pressable>
           )}
@@ -1161,7 +1169,11 @@ export function GameScreen({ navigation }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Quit game"
           >
-            <Text style={styles.controlIcon}>🏳️</Text>
+            <Image
+              source={require('../assets/images/ui/action-quit.png')}
+              style={styles.controlIconImg}
+              resizeMode="contain"
+            />
             <Text style={styles.resignLabel}>Quit</Text>
           </Pressable>
         </View>
@@ -1181,7 +1193,11 @@ export function GameScreen({ navigation }: Props) {
             colors={['rgba(255,140,0,0.3)', 'rgba(255,100,0,0.12)']}
             style={styles.emoteWheelTriggerGradient}
           >
-            <Text style={styles.emoteWheelTriggerIcon}>{'😀'}</Text>
+            <Image
+              source={require('../assets/images/ui/action-emote.png')}
+              style={styles.emoteWheelTriggerImg}
+              resizeMode="contain"
+            />
           </LinearGradient>
         </Pressable>
 
@@ -1951,6 +1967,13 @@ const styles = StyleSheet.create({
   controlIcon: {
     fontSize: 15,
   },
+  // Flux-painted action icon (hint/undo/quit) — replaces the emoji glyph
+  // inside the HUD control buttons. Same footprint so the buttons don't
+  // resize.
+  controlIconImg: {
+    width: 18,
+    height: 18,
+  },
   controlLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
@@ -2072,6 +2095,13 @@ const styles = StyleSheet.create({
   },
   emoteWheelTriggerIcon: {
     fontSize: 26,
+  },
+  // Painted emote bubble icon for the floating emote wheel trigger in the
+  // bottom-right of the game screen. Slightly bigger than the text emoji
+  // so the painted bevel reads inside the 48px trigger circle.
+  emoteWheelTriggerImg: {
+    width: 36,
+    height: 36,
   },
   // ======== Basketball Stars-style Game Over ========
   overlay: {

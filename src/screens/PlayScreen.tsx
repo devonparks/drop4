@@ -96,7 +96,7 @@ export function PlayScreen({ navigation }: Props) {
   };
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="play">
       <View style={styles.container}>
         <TopBar
           coins={coins} gems={gems} level={level}
@@ -131,17 +131,26 @@ export function PlayScreen({ navigation }: Props) {
             <GlossyButton
               label="EASY"
               subtitle={mastery.easy.games > 0 ? `${mastery.easy.wins}W · ${masteryLosses.easy}L` : 'Casual & Fun'}
-              variant="green" iconRight="⭐" onPress={() => startGame('easy')}
+              variant="green"
+              iconImage={require('../assets/images/ui/diff-easy.png')}
+              iconRight="⭐"
+              onPress={() => startGame('easy')}
             />
             <GlossyButton
               label="MEDIUM"
               subtitle={mastery.medium.games > 0 ? `${mastery.medium.wins}W · ${masteryLosses.medium}L` : 'Think Ahead'}
-              variant="orange" iconRight="⭐⭐" onPress={() => startGame('medium')}
+              variant="orange"
+              iconImage={require('../assets/images/ui/diff-medium.png')}
+              iconRight="⭐⭐"
+              onPress={() => startGame('medium')}
             />
             <GlossyButton
               label="HARD"
               subtitle={mastery.hard.games > 0 ? `${mastery.hard.wins}W · ${masteryLosses.hard}L` : 'No Mercy'}
-              variant="red" iconRight="⭐⭐⭐" onPress={() => startGame('hard')}
+              variant="red"
+              iconImage={require('../assets/images/ui/diff-hard.png')}
+              iconRight="⭐⭐⭐"
+              onPress={() => startGame('hard')}
             />
           </View>
           </StaggeredEntry>

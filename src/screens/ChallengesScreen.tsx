@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useChallengeStore, Challenge } from '../stores/challengeStore';
@@ -29,6 +29,17 @@ const ICON_COLORS: Record<string, [string, string]> = {
 function getIconColors(icon: string): [string, string] {
   return ICON_COLORS[icon] || [colors.orange, colors.orangeDark];
 }
+
+// Flux-painted replacement for specific challenge icon glyphs. Missing keys
+// fall back to rendering the raw emoji so the existing challenges data
+// doesn't need to change. Added with batch 4 of the UI art pack.
+const ICON_ART: Record<string, ImageSourcePropType> = {
+  '🏅': require('../assets/images/ui/challenge-medal.png'),
+  '🏆': require('../assets/images/ui/challenge-trophy.png'),
+  '💀': require('../assets/images/ui/challenge-skull.png'),
+  '🌶️': require('../assets/images/ui/challenge-fire.png'),
+  '🔥': require('../assets/images/ui/challenge-fire.png'),
+};
 
 // ── Individual Challenge Card ────────────────────────────────────────
 function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: () => void }) {
@@ -66,9 +77,19 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
       )}
 
       <View style={styles.cardRow}>
-        {/* Left: colored icon circle */}
+        {/* Left: colored icon circle. Prefers a Flux-painted PNG (challenge-*)
+            when available for this icon glyph, falls back to the raw emoji
+            so unmapped challenges still render. */}
         <LinearGradient colors={iconColors} style={styles.iconCircle}>
-          <Text style={styles.iconEmoji}>{challenge.icon}</Text>
+          {ICON_ART[challenge.icon] ? (
+            <Image
+              source={ICON_ART[challenge.icon]}
+              style={styles.iconImg}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={styles.iconEmoji}>{challenge.icon}</Text>
+          )}
           {challenge.completed && (
             <View style={styles.iconCheckOverlay}>
               <Text style={styles.iconCheckMark}>✓</Text>
@@ -349,7 +370,7 @@ export function ChallengesScreen() {
   });
 
   return (
-    <ScreenBackground>
+    <ScreenBackground scene="challenges">
       <ScrollView
         style={styles.scrollRoot}
         contentContainerStyle={styles.container}
@@ -376,7 +397,11 @@ export function ChallengesScreen() {
               <Text style={styles.bagCount}>{completedCount}/{totalCount} challenges</Text>
             </View>
             <View style={styles.bagIconWrap}>
-              <Text style={styles.bagEmoji}>🎁</Text>
+              <Image
+                source={require('../assets/images/ui/challenge-bag.png')}
+                style={styles.bagImg}
+                resizeMode="contain"
+              />
               {allComplete && !bonusClaimed && (
                 <Animated.View style={[styles.bagGlow, { opacity: bagGlowOpacity }]} />
               )}
@@ -871,6 +896,20 @@ const styles = StyleSheet.create({
   },
   iconEmoji: {
     fontSize: 22,
+  },
+  // Flux-painted challenge icon PNG — swaps the iconEmoji Text when a map
+  // entry exists in ICON_ART. Sized to sit inside the 50px iconCircle with
+  // a little breathing room so the painted bevel reads cleanly.
+  iconImg: {
+    width: 38,
+    height: 38,
+  },
+  // Painted reward-bag PNG shown at the CHALLENGE BAG PROGRESS header.
+  // Slightly bigger than the old 🎁 emoji so the atmospheric bag reads
+  // without looking cramped in the bagIconWrap.
+  bagImg: {
+    width: 46,
+    height: 46,
   },
   iconCheckOverlay: {
     ...StyleSheet.absoluteFillObject,
