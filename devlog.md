@@ -6,7 +6,46 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Visual audit pass complete. Devon complained during the exploration that "LOCAL PLAY isn't visible, the home looks horrible, legacy character code still there, T-poses on certain screens, characters angled weirdly." This session addressed each. Tree clean on main.
+**Now:** Ecosystem upgrade sprint complete. Art generation workflow live (Nano Banana API). App Store license blocker closed. GLB skeleton audit script + docs shipped. Tree clean on main, ~11 commits this session.
+
+**Awaiting Devon:** drop `GOOGLE_API_KEY` into `.env.local` → run `node tools/gen-art.mjs` → I wire the resulting PNGs into components. First asset pack is 14 images, $0.55 total.
+
+---
+
+## 2026-04-18 (late) — Upgrade Sprint (art workflow + tech-stack integration)
+
+From Devon's sprint prompt + "can I use a Nano Banana API key so Claude can do art." Three deliverables: autonomous art workflow, App Store blockers cleared, skeleton future-proofing.
+
+### Art pipeline (autonomous generation)
+- `44fb839` — Nano Banana workflow. `tools/gen-art.mjs` (Node script, Gemini 2.5 Flash Image), `docs/ui-asset-manifest.json` (14 starter assets across tab-icons / mode-cards / backgrounds / frames), `docs/ART_WORKFLOW.md` (setup + usage), `.env.example` (key template). Key goes in `.env.local` (gitignored). Dry-run verified: $0.55 to generate the initial pack at standard rate. Any future Claude session can add manifest entries and run the script autonomously — no more "paste prompts into ComfyUI by hand."
+
+### App Store blockers
+- `041cce1` — `react-native-legal` v1.6.2 installed + Expo config plugin wired + Settings → About → "Open Source Licenses" row. Platform-guarded (native-only). Apple rejects apps without OSS acknowledgements — this closes that blocker before submission.
+
+### Skeleton audit for Express Mode v1.1
+- `0d74511` — `tools/audit-bone-names.mjs` scans all 216 GLBs in ~0.2s. 184 humanoid characters all use the Synty Sidekick (UE4-standard) naming scheme — `pelvis`, `spine_01`, `head`, `upperarm_l`, `clavicle_r`, etc. Not Mixamo. 32 pet GLBs detected + skipped as non-humanoid. Zero broken exports. `docs/character-export.md` documents the full Synty ↔ Mixamo bone-name mapping so three-mediapipe-rig can use it later without guessing. Express Mode v1.1 is unblocked on the data side.
+
+### Tech-stack reality check
+- `CALLSTACK_PACKAGE_STATUS.md` — audited which `@callstackincubator/*` packages in `amg-tech-stack.md` actually exist on npm. Only `react-native-legal` and `@callstack/licenses` are published. `agent-react-devtools`, `agent-device`, `ai`, `voltra`, `agent-skills` were aspirational in the stack doc — not yet shipped. Marked Task 4 (DevTools MCP) as blocked on upstream. Check back in 4-6 weeks.
+
+### Regression pass (Task 6)
+- TSC: 0 errors
+- Jest: 3/3 pass (1 suite)
+- Bone audit: 216 clean GLBs
+- Preview server green on port 8086
+- Home screen smoke: all 3 mode cards visible
+
+### What's still open
+
+- Sprint Task 1 (SectionList → LegendList migration): target surface doesn't exist. Career mode uses absolute-positioned maps, not lists. LegendList stays on the shelf until MatchHistory grows big enough to need it.
+- Sprint Task 3 (Argent / agent-device for iOS sim): blocked until Mac access.
+- Art pack generation: blocked on Devon's API key.
+
+---
+
+## 2026-04-18 (evening) — Visual Audit + Legacy Cleanup (autonomous)
+
+Devon's frustration dump distilled into 7 concrete fixes, all shipped through the pre-commit gate.
 
 ---
 
