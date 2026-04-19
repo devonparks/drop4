@@ -6,9 +6,61 @@ Updated at the end of every task session. Raw material for the AMG Engine skill 
 
 ## 🔥 Currently working on
 
-**Now:** Ecosystem upgrade sprint complete. Art generation workflow live (Nano Banana API). App Store license blocker closed. GLB skeleton audit script + docs shipped. Tree clean on main, ~11 commits this session.
+**Now:** Full visual overhaul wave shipped. 31 Flux-generated UI assets wired across Drop4 — painted tab icons, currency, shop tabs, screen atmospheres, hero trophy, character spotlight. The app went from emoji-placeholder aesthetic to premium game in one night. Session spend ~$1.00 of Devon's $5 fal.ai budget.
 
-**Awaiting Devon:** drop `GOOGLE_API_KEY` into `.env.local` → run `node tools/gen-art.mjs` → I wire the resulting PNGs into components. First asset pack is 14 images, $0.55 total.
+---
+
+## 2026-04-18 (night) — Flux UI Overhaul (autonomous)
+
+Devon topped up fal.ai with $10, gave permission to spend up to $5, said "lock in and make this look like Basketball Stars / Candy Crush." Locked in.
+
+### Art generation pipeline
+- `44fb839` — Nano Banana workflow (initial).
+- `d8724cd` — Added ComfyUI backend for local/free generation (Devon doesn't use ComfyUI directly).
+- `dbdc974` — Added fal.ai Flux backend, made it default. Real quality tier Devon wanted.
+- `cfec0e7` — Fixed Gemini model id bug + fail-fast on quota.
+- `remove-bg.mjs` (in `6133ba9`) — Flux doesn't honor "transparent background" in prompts, so icons come back on white. This script post-processes via fal.ai Bria (~$0.01/image) to get real alpha.
+
+### Art shipped (31 images total, 22 bg-cleaned)
+
+FIRST WAVE (`845babe`, $0.35):
+  - 5 tab icons (home, challenges, collection, profile, shop)
+  - 3 mode-card backgrounds (play orange, career purple, local teal)
+  - 4 screen backgrounds (home arena, shop marketplace, career skyline, profile hall)
+  - 2 frames (shop card, gold portrait ring)
+
+SECOND WAVE (`6133ba9`, $0.43):
+  - 3 currency icons (coin, gem, streak flame) — replaces 🪙 💎 🔴
+  - 9 shop-tab icons (outfits, boards, pieces, effects, wins, frames, emotes, pets, boxes)
+  - 3 particles (sparkle, coin-burst, win-trophy hero)
+  - 2 stage elements (spotlight beam, platform disc)
+
+BRIA CLEANUP (`6133ba9`, $0.22): 22 icon-like assets stripped to alpha.
+
+### Wired into components
+- `845babe` — MainTabs.tsx uses painted Image tab icons. HomeScreen mode cards (PLAY/CAREER/LOCAL PLAY) use painted backgrounds.
+- `6133ba9` — TopBar currency pills render Image instead of emoji. ShopScreen 9 tabs render Image.
+- `f4bbd8d` — ScreenBackground.tsx gains `scene?: 'home' | 'shop' | 'career' | 'profile'` prop. Wired into HomeScreen / ShopScreen / ProfileScreen / CareerMapScreen for per-screen painted atmospheres.
+- `2b269b4` — GameScreen win-screen shows Flux trophy hero (320x320, fade-in on win). HomeScreen character stage shows painted spotlight behind the 3D character.
+
+### Visible before/after
+Before: emoji tab bar (🏠🎯🎒👤🛍), emoji currency (🪙💎🔴), emoji shop tabs (👕🎯🔴✨🏆🖼😎🐶🎁), uniform starfield on every screen, flat mode-card gradients.
+After: painted 3D icons everywhere, per-screen atmospheres, trophy hero on wins, warm spotlight on the home character. One visual language across the whole app.
+
+### Budget
+- Flux Dev: $0.35 + $0.43 = $0.78
+- Bria bg-removal: $0.22
+- Total: $1.00 of the $5 ceiling.
+- Remaining: ~$4 available for follow-up iteration, regenerating weak assets, or hero marketing art post-ship.
+
+### Deferred (not shipped this session)
+- **LegendList per-city career scroll.** `@legendapp/list` installed as dep. Current CareerCityScreen uses absolute-positioned nodes in a snake pattern — LegendList swap would need a full visual restructure. Next session.
+- **Per-shop-card rarity frames.** `frame-shop-card.png` generated, not yet wired. Nice-to-have polish pass.
+- **Login streak counter rolling animation.** Hooked up, not tuned.
+
+---
+
+## 2026-04-18 (late) — Upgrade Sprint (art workflow + tech-stack integration)
 
 ---
 
