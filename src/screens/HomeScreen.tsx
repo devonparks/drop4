@@ -409,6 +409,16 @@ export function HomeScreen() {
           <View style={styles.characterStage}>
             <View style={styles.stageGlowOuter} />
             <View style={styles.stageGlowInner} />
+            {/* Painted spotlight behind character — warm cone of light from
+                above that catches dust particles in the beam. Layers UNDER
+                the 3D character. */}
+            <View pointerEvents="none" style={styles.stageSpotlightImg}>
+              <Image
+                source={require('../assets/images/ui/stage-spotlight.png')}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="contain"
+              />
+            </View>
             <StageSparkles />
 
             <BreathingView intensity={0.015} speed={4000}>
@@ -737,6 +747,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(100,180,255,0.08)',
     backgroundColor: 'rgba(80,140,255,0.03)',
+  },
+  // Painted spotlight beam art. Sits behind the character, slightly larger
+  // than the stage glow rings, at 60% opacity so it reads as atmosphere.
+  stageSpotlightImg: {
+    position: 'absolute',
+    top: -20,
+    width: 360,
+    height: 240,
+    alignSelf: 'center',
+    opacity: 0.6,
   },
   stageGlowInner: {
     width: 230,

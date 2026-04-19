@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
 import Animated, {
   FadeIn,
 } from 'react-native-reanimated';
@@ -1263,6 +1263,22 @@ export function GameScreen({ navigation }: Props) {
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
+            {/* Painted hero trophy — Flux-generated gold cup with sunburst.
+                Sits behind the celebration banner, zooms in from center
+                on win, fades as the game-over card slides up to take over. */}
+            {status === 'won' && winner === 1 && (
+              <Animated.View
+                entering={FadeIn.duration(500).delay(100)}
+                style={styles.winTrophyHero}
+                pointerEvents="none"
+              >
+                <Image
+                  source={require('../assets/images/ui/particle-win-trophy.png')}
+                  style={StyleSheet.absoluteFill as any}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            )}
             {/* Win celebration variety banner */}
             {celebrationText && status === 'won' && winner === 1 && !showFirstWin && (
               <Animated.View entering={FadeIn.duration(400)} style={styles.celebrationBanner} pointerEvents="none">
@@ -2063,6 +2079,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Painted win-screen trophy hero. Scales to roughly 70% of screen width
+  // at the top of the overlay; the game-over card slides in below it and
+  // pushes it upward visually.
+  winTrophyHero: {
+    position: 'absolute',
+    top: '2%',
+    alignSelf: 'center',
+    width: 320,
+    height: 320,
   },
   celebrationBanner: {
     position: 'absolute',
