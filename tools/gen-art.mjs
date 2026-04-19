@@ -2,14 +2,18 @@
 // ═══════════════════════════════════════════════════════════════════════
 // gen-art.mjs — batch UI asset generator for Drop4
 //
-// Supports two backends. Pick via ART_BACKEND env var.
+// Supports three backends. Pick via ART_BACKEND env var.
 //
-//  1. comfyui (default) — talks to your local ComfyUI server on the 4090.
-//                          Free, unlimited, any checkpoint (SDXL, Flux, etc).
+//  1. fal (default)     — fal.ai cloud API with Flux image models. Premium
+//                          game-UI quality, strong prompt fidelity, pay-
+//                          per-use (~$0.05/image Flux Pro, cheaper Schnell).
+//                          Requires FAL_KEY.
+//
+//  2. comfyui           — local ComfyUI server on the 4090. Free,
+//                          unlimited, any checkpoint (SDXL, Flux, etc).
 //                          Requires `python main.py --listen` running.
 //
-//  2. gemini            — Google's Nano Banana API. $0.039/image standard,
-//                          $0.0195 batch. Good when ComfyUI isn't running.
+//  3. gemini            — Google's Nano Banana API. $0.039/image standard.
 //                          Requires GOOGLE_API_KEY.
 //
 // Output: src/assets/images/ui/<filename> per docs/ui-asset-manifest.json.
@@ -57,7 +61,7 @@ function loadEnvLocal() {
 }
 loadEnvLocal();
 
-const BACKEND = (process.env.ART_BACKEND || 'comfyui').toLowerCase();
+const BACKEND = (process.env.ART_BACKEND || 'fal').toLowerCase();
 
 const args = new Set(process.argv.slice(2));
 const FORCE = args.has('--force');
@@ -232,9 +236,94 @@ async function generateViaComfyUI(item) {
   throw new Error('ComfyUI timed out after 5 min waiting for completion');
 }
 
+// ── Backend: fal.ai (Flux) ──────────────────────────────────────────────
+
+// fal.ai model IDs: fast cheap → slow premium.
+//   fal-ai/flux/schnell       — Flux Schnell: 4 steps, fastest, ~$0.003/image
+//   fal-ai/flux/dev           — Flux Dev: 28 steps, ~$0.025/image
+//   fal-ai/flux-pro/v1.1      — Flux 1.1 Pro: premium, ~$0.05/image
+//   fal-ai/flux-pro/v1.1-ultra — Flux 1.1 Pro Ultra: highest quality, ~$0.06/image
+// Default is dev — good balance of quality + cost for a UI pack.
+const FAL_MODEL = process.env.FAL_MODEL || 'fal-ai/flux/dev';
+const FAL_API_BASE = 'https://queue.fal.run';
+
+async function generateViaFal(item) {
+  const apiKey = process.env.FAL_KEY || process.env.FAL_API_KEY;
+  if (!apiKey) throw new Error('FAL_KEY missing');
+  const { width, height } = parseSize(item.size);
+
+  // fal.ai's Flux endpoints accept this shape.
+  const body = {
+    prompt: item.prompt,
+    image_size: { width, height },
+    num_inference_steps: FAL_MODEL.includes('schnell') ? 4 : 28,
+    num_images: 1,
+    enable_safety_checker: true,
+  };
+
+  // Submit the job to the queue
+  const submitRes = await fetch(`${FAL_API_BASE}/${FAL_MODEL}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Key ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`fal.ai submit ${submitRes.status}: ${errText.slice(0, 300)}`);
+  }
+  const submitJson = await submitRes.json();
+  const statusUrl = submitJson?.status_url;
+  const responseUrl = submitJson?.response_url;
+  if (!statusUrl || !responseUrl) {
+    throw new Error('fal.ai response missing status_url / response_url');
+  }
+
+  // Poll status until COMPLETED
+  const startTime = Date.now();
+  const MAX_WAIT_MS = 180_000;
+  while (Date.now() - startTime < MAX_WAIT_MS) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const statusRes = await fetch(statusUrl, {
+      headers: { 'Authorization': `Key ${apiKey}` },
+    });
+    if (!statusRes.ok) continue;
+    const status = await statusRes.json();
+    if (status.status === 'COMPLETED') break;
+    if (status.status === 'FAILED') {
+      throw new Error('fal.ai job failed: ' + JSON.stringify(status).slice(0, 200));
+    }
+  }
+
+  // Pull the final response
+  const resultRes = await fetch(responseUrl, {
+    headers: { 'Authorization': `Key ${apiKey}` },
+  });
+  if (!resultRes.ok) {
+    const errText = await resultRes.text();
+    throw new Error(`fal.ai result ${resultRes.status}: ${errText.slice(0, 200)}`);
+  }
+  const result = await resultRes.json();
+  const imageUrl = result?.images?.[0]?.url;
+  if (!imageUrl) throw new Error('fal.ai result has no image URL');
+
+  // Download the PNG
+  const imgRes = await fetch(imageUrl);
+  if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
+  const arr = await imgRes.arrayBuffer();
+  return Buffer.from(arr);
+}
+
 // ── Backend dispatch ────────────────────────────────────────────────────
 
 const BACKENDS = {
+  fal: { generate: generateViaFal, preflight: async () => {
+    if (!process.env.FAL_KEY && !process.env.FAL_API_KEY) {
+      throw new Error('FAL_KEY missing (add to .env.local — get one at fal.ai → Dashboard → API Keys)');
+    }
+  }},
   gemini: { generate: generateViaGemini, preflight: async () => {
     if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY missing (add to .env.local)');
   }},
@@ -277,6 +366,13 @@ async function main() {
   log(`\nBackend: ${BACKEND}`);
   log(`Plan: generate ${todo.length} image${todo.length === 1 ? '' : 's'}.`);
   if (BACKEND === 'gemini') log('Estimated cost: $' + (todo.length * 0.039).toFixed(3) + ' at Gemini standard.');
+  if (BACKEND === 'fal') {
+    const per = FAL_MODEL.includes('schnell') ? 0.003
+             : FAL_MODEL.includes('ultra') ? 0.06
+             : FAL_MODEL.includes('pro') ? 0.05
+             : 0.025;
+    log(`Estimated cost: $${(todo.length * per).toFixed(3)} at ${FAL_MODEL}.`);
+  }
   log('');
 
   if (DRY_RUN) {
