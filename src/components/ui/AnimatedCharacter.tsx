@@ -49,8 +49,6 @@ export type IdleVariantId =
   | 'foottap' | 'swingarms' | 'checkwatch' | 'headnod' | 'lookaround'
   | 'stretch' | 'yawn' | 'chinscratch' | 'weightshift' | 'phonescroll';
 
-export type PoseId = 'default' | 'arms_crossed' | 'hands_on_hips' | 'lean' | 'flex' | 'point' | 'peace' | 'salute';
-
 export const EMOTE_CATEGORIES: { name: string; emotes: EmoteId[] }[] = [
   { name: 'Affection', emotes: ['blowkiss', 'callme', 'fingerheart', 'hearthands'] },
   { name: 'Angry', emotes: ['angry', 'tantrum'] },
