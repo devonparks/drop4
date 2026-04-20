@@ -420,21 +420,15 @@ export function HomeScreen() {
           </View>
 
           {/* Character on stage.
-              - home-platform.png is the painted glowing podium
-                (Flux Pro). Sits BEHIND the character at foot level, so
-                it looks like the character is standing on it. Replaces
-                the old blue stageGlow rings which clashed with the
-                painted orange stage in bg-home.
+              - The painted bg-home already has a gorgeous hexagonal
+                orange spotlight stage baked in — we just add two
+                radial glow circles at the character's feet to cue
+                the "standing on a warm spotlight" read.
               - StagePremiumFX adds rising embers + slow conic shimmer
-                over the top. */}
+                floating up the character silhouette. */}
           <View style={styles.characterStage}>
-            <View pointerEvents="none" style={styles.homePlatform}>
-              <Image
-                source={require('../assets/images/ui/home-platform.png')}
-                style={StyleSheet.absoluteFill}
-                resizeMode="contain"
-              />
-            </View>
+            <View pointerEvents="none" style={styles.footGlowOuter} />
+            <View pointerEvents="none" style={styles.footGlowInner} />
             <StageSparkles />
             <StagePremiumFX width={320} />
 
@@ -832,19 +826,43 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingTop: 0,
   },
-  homePlatform: {
-    // Painted glowing podium from fal.ai Flux Pro. Centered under the
-    // character's feet. Sized large enough that the warm rim extends
-    // out past the character silhouette for the "spotlight on stage"
-    // read. Web: screen blend so the dark edges of the PNG disappear
-    // against the dark painted bg-home — only the bright podium + rim
-    // + embers show through.
-    width: 340,
-    height: 120,
+  // Soft warm spotlight pooling under the character's feet — a pure
+  // View with a radial-gradient backgroundImage (web) plus a glowing
+  // shadow (native). Reinforces the painted stage in bg-home without
+  // adding another image asset that can scale/clip in weird ways.
+  footGlowOuter: {
     position: 'absolute',
     bottom: 40,
     alignSelf: 'center',
-    ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
+    width: 320,
+    height: 90,
+    borderRadius: 160,
+    ...(Platform.OS === 'web' ? ({
+      backgroundImage: 'radial-gradient(ellipse at center, rgba(255,180,80,0.35) 0%, rgba(255,120,40,0.18) 35%, rgba(255,120,40,0) 70%)',
+      filter: 'blur(6px)',
+      mixBlendMode: 'screen',
+    } as any) : {
+      backgroundColor: 'rgba(255,140,60,0.14)',
+      shadowColor: '#ff9040',
+      shadowOpacity: 0.6,
+      shadowRadius: 40,
+      shadowOffset: { width: 0, height: 0 },
+    }),
+  },
+  footGlowInner: {
+    position: 'absolute',
+    bottom: 56,
+    alignSelf: 'center',
+    width: 210,
+    height: 60,
+    borderRadius: 105,
+    ...(Platform.OS === 'web' ? ({
+      backgroundImage: 'radial-gradient(ellipse at center, rgba(255,220,150,0.55) 0%, rgba(255,170,80,0.2) 50%, rgba(255,170,80,0) 80%)',
+      filter: 'blur(4px)',
+      mixBlendMode: 'screen',
+    } as any) : {
+      backgroundColor: 'rgba(255,200,120,0.22)',
+    }),
   },
   stagePlatform: {
     width: 200,
