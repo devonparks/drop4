@@ -26,6 +26,7 @@ import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
 import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import { BreathingView, SlideReveal, StaggeredEntry } from '../components/animations';
+import { StagePremiumFX } from '../components/effects/StagePremiumFX';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -375,15 +376,19 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* ═══ DROP4 LOGO ═══ */}
+        {/* ═══ DROP4 LOGO ═══ Breathing scale so the header feels
+            alive on idle. ~3% scale range on a 5s cycle — subtle
+            enough to read as premium polish, not jumpy. */}
         <StaggeredEntry index={0}>
-        <View style={styles.logoArea}>
-          <Image
-            source={require('../assets/images/ui/home-logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
+        <BreathingView intensity={0.015} speed={5000}>
+          <View style={styles.logoArea}>
+            <Image
+              source={require('../assets/images/ui/home-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+        </BreathingView>
         </StaggeredEntry>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
@@ -423,6 +428,10 @@ export function HomeScreen() {
                 atmosphere. The existing stageGlowOuter/Inner rings already
                 handle the theatrical lighting cue. */}
             <StageSparkles />
+            {/* Premium home-only FX: rising embers + slow conic shimmer
+                reinforcing the painted stage spotlight. Sized to the
+                character stage so the embers rise ALONG the character. */}
+            <StagePremiumFX width={320} />
 
             <BreathingView intensity={0.015} speed={4000}>
             <Pressable

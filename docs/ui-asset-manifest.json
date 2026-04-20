@@ -64,7 +64,7 @@
       "id": "bg-home",
       "filename": "bg-home.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game background: a stylized arena stage floor with concentric orange glow rings, dark navy depth above, subtle purple nebula dots, warm spotlight from below. No characters, no text, just the environment. Premium polish, Candy Crush Saga meets Basketball Stars."
+      "prompt": "Portrait mobile game lobby background, 9:16 aspect ratio. Cinematic stage for a Sims-meets-Fortnite premium lobby: deep navy-to-black cosmic sky upper 60 percent with drifting magenta and cyan nebula wisps plus glittering white star dust and a single soft lens flare; lower 40 percent is a raked perspective stage floor built from glossy hexagonal tiles emitting warm orange spotlight pooling toward the center, soft gold light rays fanning up and out from the stage. Scattered holographic HUD accents far in the background (rank chevrons, tiny coin sparkles, faint vertical energy lines) but absolutely NO text, NO letters, NO character, NO logo, NO UI elements, NO buttons. Premium AAA mobile aesthetic like the Apex Legends main lobby crossed with The Sims 4 Create A Sim menu crossed with Fortnite locker. Polished, painterly, highly saturated but readable, high contrast, clean, no banding, no JPEG artifacts. Focus soft, painterly bokeh, mood energetic and expensive. 4K quality."
     },
     {
       "group": "backgrounds",
@@ -101,7 +101,6 @@
       "size": "800x800",
       "prompt": "Mobile game portrait frame: ornate gold circular ring, sports-card-style bevel and engraved detail, slight wear, inner shadow. No content in center (transparent), edges define the frame. Like an NBA 2K MyPlayer portrait ring."
     },
-
     {
       "group": "currency",
       "id": "icon-coin",
@@ -123,7 +122,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game flame icon: a stylized glossy red-orange flame with a bright warm-yellow core, single tongue of fire, slight curl at the top, neon rim glow. Centered, transparent background, no text. Represents a streak or fire meter."
     },
-
     {
       "group": "shop-tabs",
       "id": "shop-outfits",
@@ -187,7 +185,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game icon: a glossy wrapped gift box, warm orange paper, gold ribbon in a neat bow, slight glow escaping from under the lid, 3/4 angle. Centered, transparent background, no text."
     },
-
     {
       "group": "particles",
       "id": "sparkle",
@@ -209,7 +206,6 @@
       "size": "768x768",
       "prompt": "Premium mobile game victory hero element: a large gleaming gold trophy cup with a bright sunburst behind it, purple-to-navy radial backdrop fading to transparent, confetti particles in the air, subtle gold dust. Centered, transparent background except the sunburst, no text. Hero element for the win screen."
     },
-
     {
       "group": "stage",
       "id": "stage-spotlight",
@@ -224,7 +220,6 @@
       "size": "1024x256",
       "prompt": "Premium mobile game stage floor element: a wide glossy circular platform disc seen at a low angle, dark navy top with a neon orange rim light and subtle blue inner glow, slight reflection on the surface, floating in transparent space. Centered, transparent background, no text. Goes under a character on the home lobby."
     },
-
     {
       "group": "home-polish",
       "id": "home-logo",
@@ -246,56 +241,54 @@
       "size": "512x512",
       "prompt": "Premium mobile game icon: a stylized silhouette of a person in a confident standing idle pose, hands on hips, slight lean. Glossy orange with gold rim light, navy inner shadow. Centered, transparent background, no text. Chibi-ish proportions, readable at small sizes. Represents an idle-animation selector."
     },
-
     {
       "group": "rarity",
       "id": "rarity-common",
       "filename": "rarity-common.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Silver-gray metallic gradient filling the full width, rounded pill ends, subtle white rim highlight along the top edge, soft drop shadow underneath, clean matte finish. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no additional decorations. Represents the 'Common' tier label plate."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Silver-gray metallic gradient filling the full width, rounded pill ends, subtle white rim highlight along the top edge, soft drop shadow underneath, clean matte finish. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no additional decorations. Represents the 'Common' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-uncommon",
       "filename": "rarity-uncommon.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Emerald-green metallic gradient with lime highlights filling the full width, rounded pill ends, subtle lime rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Uncommon' tier label plate."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Emerald-green metallic gradient with lime highlights filling the full width, rounded pill ends, subtle lime rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Uncommon' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-rare",
       "filename": "rarity-rare.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Sapphire-blue glossy gradient with cyan highlights filling the full width, rounded pill ends, cyan rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Rare' tier label plate."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Sapphire-blue glossy gradient with cyan highlights filling the full width, rounded pill ends, cyan rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Rare' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-epic",
       "filename": "rarity-epic.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Royal-purple to magenta glossy gradient with violet inner shimmer filling the full width, rounded pill ends, violet rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Epic' tier label plate."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Royal-purple to magenta glossy gradient with violet inner shimmer filling the full width, rounded pill ends, violet rim highlight along the top edge, soft drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Epic' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-legendary",
       "filename": "rarity-legendary.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Warm-orange to deep-gold glossy gradient with sparkle shimmer filling the full width, rounded pill ends, bright gold rim highlight along the top edge, strong drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no stars, no trophies. Represents the 'Legendary' tier label plate."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Warm-orange to deep-gold glossy gradient with sparkle shimmer filling the full width, rounded pill ends, bright gold rim highlight along the top edge, strong drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters, no stars, no trophies. Represents the 'Legendary' tier label plate."
     },
     {
       "group": "rarity",
       "id": "rarity-mythic",
       "filename": "rarity-mythic.png",
       "size": "1024x256",
-      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion — a stretched lozenge bar shape like a racing stripe or a name-plate tag. Crimson-red to hot-pink glossy gradient with faint holographic rainbow sheen across the surface filling the full width, rounded pill ends, bright white-hot rim highlight along the top edge, heavy drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Mythic' tier label plate — the top tier."
+      "prompt": "Horizontal elongated rounded rectangle banner, 4:1 aspect ratio, NOT a circle, NOT a coin, NOT a medallion \u00e2\u20ac\u201d a stretched lozenge bar shape like a racing stripe or a name-plate tag. Crimson-red to hot-pink glossy gradient with faint holographic rainbow sheen across the surface filling the full width, rounded pill ends, bright white-hot rim highlight along the top edge, heavy drop shadow underneath. The shape spans edge-to-edge of the canvas horizontally and only ~half the canvas vertically. Centered, transparent background, no text, no icons, no characters. Represents the 'Mythic' tier label plate \u00e2\u20ac\u201d the top tier."
     },
-
     {
       "group": "splash",
       "id": "app-icon",
       "filename": "app-icon.png",
       "size": "1024x1024",
-      "prompt": "Premium mobile app icon: a chunky glossy red Connect-4 style disc with a large numeral '4' engraved into its face, warm orange rim light, subtle neon glow, sitting inside a rounded-square icon backdrop that fades from deep navy to warm orange radial glow behind the disc. Centered, fills the square, no text anywhere — the '4' on the disc is the only glyph and must be bold and readable. Designed for iOS/Android home-screen icons at small sizes. Polished like Candy Crush or Basketball Stars app icons."
+      "prompt": "Premium mobile app icon: a chunky glossy red Connect-4 style disc with a large numeral '4' engraved into its face, warm orange rim light, subtle neon glow, sitting inside a rounded-square icon backdrop that fades from deep navy to warm orange radial glow behind the disc. Centered, fills the square, no text anywhere \u00e2\u20ac\u201d the '4' on the disc is the only glyph and must be bold and readable. Designed for iOS/Android home-screen icons at small sizes. Polished like Candy Crush or Basketball Stars app icons."
     },
     {
       "group": "splash",
@@ -304,7 +297,6 @@
       "size": "1024x1024",
       "prompt": "Premium mobile game splash-screen hero: a giant chunky glossy red Connect-4 style disc floating in space, a single numeral '4' engraved on its face, sparks and warm golden light rays radiating outward, subtle Connect-4 board silhouette in the blurred background, navy-to-warm-orange radial backdrop fading to transparent at the edges. Centered, dominant subject. The only glyph anywhere is the '4' on the disc. No other text, no wordmark."
     },
-
     {
       "group": "polish",
       "id": "locked-opponent",
@@ -326,7 +318,6 @@
       "size": "1024x1024",
       "prompt": "Premium mobile game level-up VFX hero: a radial sunburst of warm golden light rays exploding from center, confetti particles, soft glowing rings expanding outward, warm orange-to-white gradient core, fades to transparent at the edges. Centered, transparent background, no text. Used as an overlay when the player levels up."
     },
-
     {
       "group": "modes",
       "id": "mode-play-icon",
@@ -348,7 +339,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game icon: two glossy smartphone silhouettes angled toward each other, slight overlap, warm teal rim light between them, soft glow connecting line. Centered, transparent background, no text. Represents local pass-and-play mode."
     },
-
     {
       "group": "scene-bgs",
       "id": "bg-challenges",
@@ -370,7 +360,6 @@
       "size": "1080x1920",
       "prompt": "Portrait mobile game arena backdrop: dramatic clash lighting, orange-vs-blue split with a vertical light beam splitting the composition in half, subtle crowd silhouettes faint in the background, motion-blur streaks radiating outward from center, dark navy floor reflecting the lights. No characters, no text, no borders. Feels like a boxing-match weigh-in staging. Premium polish."
     },
-
     {
       "group": "difficulty",
       "id": "diff-easy",
@@ -392,15 +381,13 @@
       "size": "512x512",
       "prompt": "Premium mobile game icon: a glossy red-orange flame skull, chunky stylized, bright white-hot core, smoky wisp curling above. Centered, transparent background, no text. Represents 'Hard' punishing difficulty."
     },
-
     {
       "group": "versus",
       "id": "vs-clash",
       "filename": "vs-clash.png",
       "size": "1024x1024",
-      "prompt": "Premium mobile game VS clash element: the letters 'V' and 'S' rendered as chunky 3D glossy block type, warm orange-to-red gradient on the letters with gold rim highlights, an explosive yellow-white starburst behind them, lightning cracks radiating outward, smoke wisps at the base. Centered, transparent background except the element itself. The only glyphs are the VS — no other text. Hero clash element used between two fighting characters on a matchup screen."
+      "prompt": "Premium mobile game VS clash element: the letters 'V' and 'S' rendered as chunky 3D glossy block type, warm orange-to-red gradient on the letters with gold rim highlights, an explosive yellow-white starburst behind them, lightning cracks radiating outward, smoke wisps at the base. Centered, transparent background except the element itself. The only glyphs are the VS \u00e2\u20ac\u201d no other text. Hero clash element used between two fighting characters on a matchup screen."
     },
-
     {
       "group": "loot-boxes",
       "id": "loot-bronze",
@@ -422,7 +409,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game loot crate: a glossy gold treasure chest with elaborate filigree trim, sparkle dust around it, slightly open with a blinding warm-white glow escaping, gold ornate clasp on the front, chibi stylized proportions. Three-quarter angle. Centered, transparent background, no text. The top-tier loot box, legendary quality."
     },
-
     {
       "group": "challenge-icons",
       "id": "challenge-medal",
@@ -458,7 +444,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game challenge hero icon: a glossy reward bag tied with a gold ribbon, warm orange fabric, gold tag hanging off it, small warm glow from inside the opening. Centered, transparent background, no text. Represents a daily-challenge reward bag."
     },
-
     {
       "group": "stats",
       "id": "stat-wins",
@@ -487,7 +472,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game stat icon: a glossy game controller silhouette, chunky navy-and-orange, gold button accents. Centered, transparent background, no text. Represents total games played."
     },
-
     {
       "group": "game-actions",
       "id": "action-hint",
@@ -516,7 +500,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game action icon: a glossy orange chat-bubble with a stylized smiling face inside, chunky 3D, gold rim highlight, subtle sparkle. Centered, transparent background, no text. Represents opening an emote picker during a match."
     },
-
     {
       "group": "collection-subtabs",
       "id": "coll-characters",
@@ -538,29 +521,27 @@
       "size": "512x512",
       "prompt": "Premium mobile game tab icon: a glossy gold ribbon medal with a star center and a warm red-white-blue striped ribbon, chunky stylized. Centered, transparent background, no text. Represents an 'awards' or 'milestones' collection tab."
     },
-
     {
       "group": "career-cities",
       "id": "city-brooklyn",
       "filename": "city-brooklyn.png",
       "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized Brooklyn blacktop basketball court at dusk, cracked concrete, chain-link fence, graffiti on brick walls in the background, warm orange sunset, distant Brooklyn rowhouse silhouettes. Gritty-yet-polished illustration style. No characters, no text, edges fade softly so the card border can overlay. Premium polish like Basketball Stars arena art. Represents 'The Rec, Brooklyn NY' — where every baller starts."
+      "prompt": "Wide horizontal mobile game card art: a stylized Brooklyn blacktop basketball court at dusk, cracked concrete, chain-link fence, graffiti on brick walls in the background, warm orange sunset, distant Brooklyn rowhouse silhouettes. Gritty-yet-polished illustration style. No characters, no text, edges fade softly so the card border can overlay. Premium polish like Basketball Stars arena art. Represents 'The Rec, Brooklyn NY' \u00e2\u20ac\u201d where every baller starts."
     },
     {
       "group": "career-cities",
       "id": "city-venice",
       "filename": "city-venice.png",
       "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized Venice Beach boardwalk basketball court at high noon, sandy edges, palm trees, ocean horizon behind, bright California sun, warm teal-orange palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Boardwalk, Venice Beach CA' — sun sand and speed."
+      "prompt": "Wide horizontal mobile game card art: a stylized Venice Beach boardwalk basketball court at high noon, sandy edges, palm trees, ocean horizon behind, bright California sun, warm teal-orange palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Boardwalk, Venice Beach CA' \u00e2\u20ac\u201d sun sand and speed."
     },
     {
       "group": "career-cities",
       "id": "city-cathedral",
       "filename": "city-cathedral.png",
       "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized cathedral-like indoor arena court with high vaulted ceilings, stained glass windows, polished hardwood floor with brass inlay, dramatic stage lighting, deep purple + gold palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Cathedral' — the holy grail of basketball arenas."
+      "prompt": "Wide horizontal mobile game card art: a stylized cathedral-like indoor arena court with high vaulted ceilings, stained glass windows, polished hardwood floor with brass inlay, dramatic stage lighting, deep purple + gold palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Cathedral' \u00e2\u20ac\u201d the holy grail of basketball arenas."
     },
-
     {
       "group": "career-extras",
       "id": "boss-crown",
@@ -568,7 +549,6 @@
       "size": "512x512",
       "prompt": "Premium mobile game icon: a chunky glossy gold crown with a red ruby center and a faint purple sparkle, chibi stylized proportions, slight battle-wear. Centered, transparent background, no text. Represents a boss-level career node."
     },
-
     {
       "group": "settings",
       "id": "settings-audio",
