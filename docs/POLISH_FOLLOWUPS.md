@@ -2,6 +2,32 @@
 
 The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add ideas here when you notice something too big for a single iteration.
 
+## Open — GTA-meets-Sims shop integration (HIGH PRIORITY)
+
+Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore + `amgPartPricing.ts` + `handleLockedPart` in CharacterCreatorScreen spends coins + unlocks. The shop UI and creator lock overlays still need work. Each item below is sized for ONE polish iteration — ship one, commit, the next iteration picks the next.
+
+- **Shop: AMG Parts tab scaffold.** Add a new "CLOTHES" tab (or "PARTS") to `src/screens/ShopScreen.tsx` alongside existing tabs. Content: grouped grids of Sidekick parts fetched from the R2 manifest at `https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/manifest.json`. Use `getPartPrice()` from `src/data/amgPartPricing.ts` for the price chip. Initial grouping by pack prefix (packPrefixFromPartName), section header per pack. Only ~20 parts per render pass to keep scrolling snappy — infinite scroll if needed. Filter chip row up top for species (All / Human / Goblin / Elves / Skeleton / Zombie).
+
+- **Shop: Part card component.** Extract a reusable `<AmgPartCard>` from the ShopScreen grid: part name, pack emoji, rarity badge using `RARITY_LABELS[rarity]` + `RARITY_COLORS[rarity]` for border/glow, coin-price chip, "OWNED" overlay when `useCharacterStore.getState().isAmgPartOwned(name)` returns true, `Buy` button otherwise. OnPress: identical flow to `CharacterCreatorScreen.handleLockedPart` — Alert → `spendCoins(price)` → `unlockAmgPart(name)`.
+
+- **Shop: Pack emoji + display name lookup.** Create `src/data/amgPackMeta.ts` mapping pack prefix → `{ emoji, displayName, description }`. E.g. `MDRN_CIVL` → `{ emoji: '👖', displayName: 'Modern Civilians', description: 'Jeans, tees, hoodies' }`. Use it in both the shop section headers and the AmgPartCard. Cover at least these packs present on R2: HUMN_BASE, GOBL_BASE, ELVS_BASE, SKEL_BASE, ZOMB_BASE, MDRN_CIVL, MDRN_CASH, MDRN_POLC, SCFI_CIVL, MDRN_FIGT, GOBL_FIGT, ELVS_WARR, SAMR_WARR, APOC_OUTL. Rest fall back to `{ emoji: '👕', displayName: pack.replace('_', ' ') }`.
+
+- **Creator: lock overlay on part thumbnails.** In `@amg/character-creator`'s `PartGrid` component (packages/character-creator/src/controls/PartGrid.tsx), when a part is NOT in `ownedParts`, render a darkened overlay + padlock icon + price chip ('500 🪙') using the same `getPartPrice` price. Tapping a locked part already calls `onLockedTap(partName)` which fires the handleLockedPart buy flow in Drop4. This is UI only — the data is already wired.
+
+- **Creator: rarity-tinted border on part cards.** Thin 2-px border matching `RARITY_COLORS[rarity]` around every part thumbnail in the creator's Outfit / Hair / Face pickers. Subtle but sells the economy.
+
+- **Shop: preview modal on long-press.** Tapping a shop card adds to cart / buys; long-press opens a `<CharacterPreviewModal>` that mounts a `<CompositeCharacter>` rendering the current player wearing JUST this part swapped in. Helps players decide before spending.
+
+- **Creator: "BUY X PARTS" bulk action.** When the player selects multiple locked parts (tap to select instead of equip, then tap again), a bottom bar shows total cost + a `Buy All` button that dispatches the sum to `spendCoins` in one shot. Great for outfit-pack purchases.
+
+- **Shop: "NEW" badge on parts unlocked this week.** Track `unlockedAt: Date` when `unlockAmgPart` fires; show a red NEW badge on the part card in the Collection → Clothes section for 7 days so players notice their recent purchases.
+
+- **Collection: Clothes tab.** Add a new tab to `src/screens/CollectionScreen.tsx` listing every part the player owns (via `ownedAmgParts` + starter packs), with counts per pack and "Equip" CTA that deep-links to the creator with that part preselected.
+
+- **Daily deal on AMG parts.** shopStore already rotates 4 daily featured deals (legacy outfits). Add a 5th slot that picks a random rare-or-epic AMG part and discounts it 40%. `shopStore.dailyAmgDeal` + `refreshDailyDeals` picks one at rollover.
+
+- **Starter pack unlock ceremony.** First-run onboarding: when the creator mounts for the first time, briefly show a "starter wardrobe unlocked" toast listing the free packs (Modern Civilians 12 outfits, base heads/hair for all 5 species). Sells the "you already own a bunch of cool stuff" hook.
+
 ## Open — visual / UX polish
 
 - Crossfade outfit mesh when the player switches in the creator (currently hard-cuts on GLB swap)
