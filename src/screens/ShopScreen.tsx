@@ -606,6 +606,7 @@ export function ShopScreen() {
   const ownedAmgParts = useCharacterStore(s => s.ownedAmgParts);
   const unlockAmgPart = useCharacterStore(s => s.unlockAmgPart);
   const isAmgPartOwned = useCharacterStore(s => s.isAmgPartOwned);
+  const amgPartUnlockedAt = useCharacterStore(s => s.amgPartUnlockedAt);
   const [amgManifest, setAmgManifest] = useState<AmgManifestPart[] | null>(null);
   const [amgSpecies, setAmgSpecies] = useState<AmgSpecies>('All');
   const [amgBucket, setAmgBucket] = useState<AmgSlotBucket>('All');
@@ -1049,16 +1050,22 @@ export function ShopScreen() {
                             {meta.emoji}  {meta.displayName}  <Text style={{ color: '#888', fontSize: 11, fontWeight: '600' }}>{parts.filter(p => isAmgPartOwned(p.name)).length}/{parts.length}</Text>
                           </Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 }}>
-                            {parts.map((p) => (
-                              <AmgPartCard
-                                key={p.name}
-                                partName={p.name}
-                                owned={isAmgPartOwned(p.name)}
-                                onBuy={handleBuy}
-                                onEquip={handleEquip}
-                                size="compact"
-                              />
-                            ))}
+                            {parts.map((p) => {
+                              const unlockedAt = amgPartUnlockedAt[p.name];
+                              const isNew = unlockedAt !== undefined
+                                && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
+                              return (
+                                <AmgPartCard
+                                  key={p.name}
+                                  partName={p.name}
+                                  owned={isAmgPartOwned(p.name)}
+                                  onBuy={handleBuy}
+                                  onEquip={handleEquip}
+                                  size="compact"
+                                  isNew={isNew}
+                                />
+                              );
+                            })}
                           </View>
                         </View>
                       );

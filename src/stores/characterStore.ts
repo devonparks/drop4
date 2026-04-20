@@ -143,6 +143,12 @@ interface CharacterState {
   // this set plus the starter override. The shop adds to it, the creator
   // reads from it via the `ownedParts` prop to render lock overlays.
   ownedAmgParts: string[];
+  /** Unlock timestamps for AMG parts — `partName → epoch millis` at
+   *  purchase time. The Shop reads this to show a "NEW" badge for
+   *  parts unlocked in the last 7 days. Legacy ownedAmgParts entries
+   *  (pre-timestamp-tracking) don't appear in this map and simply
+   *  don't get the badge, which is fine. */
+  amgPartUnlockedAt: Record<string, number>;
   /** True after the player has seen the "starter wardrobe unlocked"
    *  toast. Gates CharacterCreatorScreen's first-open ceremony so the
    *  toast doesn't fire every time they open the creator. */
@@ -182,6 +188,7 @@ interface PersistedCharacter {
   unlockedOutfitPacks: string[];
   ownedOutfits?: string[];
   ownedAmgParts?: string[];
+  amgPartUnlockedAt?: Record<string, number>;
   amgStarterSeen?: boolean;
   amgCharacter?: AmgCharacterState | null;
 }
@@ -202,6 +209,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // owned automatically, so a fresh player can already equip base
   // heads/hair + MDRN_CIVL outfits without any purchases.
   ownedAmgParts: [],
+  amgPartUnlockedAt: {},
   amgStarterSeen: false,
   amgCharacter: null,
 
@@ -248,9 +256,15 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // AMG part unlocks. Called from the shop after a successful purchase;
   // the creator reads ownership via isAmgPartOwned() to decide whether
   // to show a lock overlay / buy prompt on a part grid thumbnail.
-  unlockAmgPart: (name) => set((s) => ({
-    ownedAmgParts: s.ownedAmgParts.includes(name) ? s.ownedAmgParts : [...s.ownedAmgParts, name],
-  })),
+  unlockAmgPart: (name) => set((s) => {
+    // No-op if already owned so repeated taps don't refresh the NEW
+    // badge timestamp. Timestamps are only written for fresh unlocks.
+    if (s.ownedAmgParts.includes(name)) return s;
+    return {
+      ownedAmgParts: [...s.ownedAmgParts, name],
+      amgPartUnlockedAt: { ...s.amgPartUnlockedAt, [name]: Date.now() },
+    };
+  }),
   isAmgPartOwned: (name) => {
     // Fast path: starter packs are owned for free.
     if (isStarterPack(packPrefixFromPartName(name))) return true;
@@ -281,6 +295,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
         ownedAmgParts: saved.ownedAmgParts ?? [],
+        amgPartUnlockedAt: saved.amgPartUnlockedAt ?? {},
         amgStarterSeen: saved.amgStarterSeen ?? false,
         amgCharacter: saved.amgCharacter ?? null,
       });
@@ -296,6 +311,7 @@ useCharacterStore.subscribe((state) => {
     unlockedOutfitPacks: state.unlockedOutfitPacks,
     ownedOutfits: state.ownedOutfits,
     ownedAmgParts: state.ownedAmgParts,
+    amgPartUnlockedAt: state.amgPartUnlockedAt,
     amgStarterSeen: state.amgStarterSeen,
     amgCharacter: state.amgCharacter,
   });

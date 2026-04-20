@@ -39,6 +39,10 @@ interface AmgPartCardProps {
   /** Compact size for dense grids (3 cols) vs comfortable (2 cols).
    *  Defaults to comfortable. */
   size?: 'compact' | 'comfortable';
+  /** Show a red NEW ribbon in the top-right corner. Parent sets this
+   *  when the part was unlocked within the last N days — the card
+   *  itself is time-agnostic. */
+  isNew?: boolean;
 }
 
 /** Extract the variant number from a part name — 'SK_MDRN_CIVL_01_10TORS_HU01' → '01' */
@@ -47,7 +51,7 @@ function variantFromPartName(name: string): string {
   return m ? m[1] : '??';
 }
 
-export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortable' }: AmgPartCardProps) {
+export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortable', isNew = false }: AmgPartCardProps) {
   const { price, rarity, pack } = getPartPrice(partName);
   const meta = packMeta(pack);
   const rarityColor = RARITY_COLORS[rarity];
@@ -73,6 +77,14 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
           <Text style={styles.emoji}>{meta.emoji}</Text>
           <Text style={styles.variant}>#{variant}</Text>
         </View>
+
+        {/* NEW ribbon — only shows for parts unlocked in the last 7 days.
+            Absolute-positioned over the top-right corner of the card. */}
+        {isNew ? (
+          <View style={styles.newRibbon}>
+            <Text style={styles.newText}>NEW</Text>
+          </View>
+        ) : null}
 
         {/* Footer: rarity/price or OWNED chip */}
         <View style={styles.footer}>
@@ -149,5 +161,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     letterSpacing: 1.5,
+  },
+  newRibbon: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.red,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  newText: {
+    fontSize: 8,
+    color: '#ffffff',
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    letterSpacing: 1,
   },
 });
