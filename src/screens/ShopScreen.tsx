@@ -994,7 +994,7 @@ export function ShopScreen() {
                           key={sp}
                           label={sp}
                           active={amgSpecies === sp}
-                          onPress={() => { setAmgSpecies(sp); haptics.tap(); playSound('click'); }}
+                          onPress={() => setAmgSpecies(sp)}
                         />
                       ))}
                     </ScrollView>
