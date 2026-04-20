@@ -419,18 +419,23 @@ export function HomeScreen() {
             <Text style={styles.sideBtnLabel} pointerEvents="none">Emotes</Text>
           </View>
 
-          {/* Character on stage */}
+          {/* Character on stage.
+              - home-platform.png is the painted glowing podium
+                (Flux Pro). Sits BEHIND the character at foot level, so
+                it looks like the character is standing on it. Replaces
+                the old blue stageGlow rings which clashed with the
+                painted orange stage in bg-home.
+              - StagePremiumFX adds rising embers + slow conic shimmer
+                over the top. */}
           <View style={styles.characterStage}>
-            <View style={styles.stageGlowOuter} />
-            <View style={styles.stageGlowInner} />
-            {/* Painted spotlight was here — removed. At 60% opacity it read
-                as a weird washed-out square behind the character instead of
-                atmosphere. The existing stageGlowOuter/Inner rings already
-                handle the theatrical lighting cue. */}
+            <View pointerEvents="none" style={styles.homePlatform}>
+              <Image
+                source={require('../assets/images/ui/home-platform.png')}
+                style={StyleSheet.absoluteFill}
+                resizeMode="contain"
+              />
+            </View>
             <StageSparkles />
-            {/* Premium home-only FX: rising embers + slow conic shimmer
-                reinforcing the painted stage spotlight. Sized to the
-                character stage so the embers rise ALONG the character. */}
             <StagePremiumFX width={320} />
 
             <BreathingView intensity={0.015} speed={4000}>
@@ -827,27 +832,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingTop: 0,
   },
-  stageGlowOuter: {
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+  homePlatform: {
+    // Painted glowing podium from fal.ai Flux Pro. Centered under the
+    // character's feet. Sized large enough that the warm rim extends
+    // out past the character silhouette for the "spotlight on stage"
+    // read. Web: screen blend so the dark edges of the PNG disappear
+    // against the dark painted bg-home — only the bright podium + rim
+    // + embers show through.
+    width: 340,
+    height: 120,
     position: 'absolute',
-    bottom: 30,
+    bottom: 40,
     alignSelf: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(100,180,255,0.08)',
-    backgroundColor: 'rgba(80,140,255,0.03)',
-  },
-  stageGlowInner: {
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    position: 'absolute',
-    bottom: 70,
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(100,180,255,0.12)',
-    backgroundColor: 'rgba(80,140,255,0.04)',
+    ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
   },
   stagePlatform: {
     width: 200,

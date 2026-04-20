@@ -43,21 +43,21 @@
       "id": "mode-play",
       "filename": "mode-play-bg.png",
       "size": "1200x300",
-      "prompt": "Wide mobile game button background: dynamic orange-to-deep-orange gradient with a faint Connect-4 board pattern in the distance, warm glow, diagonal light streaks. No text, edges fade to transparent. Premium mobile game feel like Basketball Stars."
+      "prompt": "Wide premium mobile-game card background, 4:1 aspect ratio. Cinematic arena battle scene: two silhouetted Connect-4 boards facing off on a glossy hex-tile floor, warm orange spotlight pooling in the center, embers rising, magenta nebula bokeh top-right, cyan energy sparks top-left. Dramatic rim light on the boards. Saturated orange-to-deep-crimson gradient sky. Painterly, AAA mobile aesthetic like a Clash Royale / Apex Legends card. NO text, NO letters, NO numbers, NO logos, NO UI chrome. Edges softly fade to black so the card reads against any background. Polished, premium."
     },
     {
       "group": "mode-cards",
       "id": "mode-career",
       "filename": "mode-career-bg.png",
       "size": "1200x300",
-      "prompt": "Wide mobile game button background: deep purple-to-violet gradient with faint city skyline silhouette, trophy glint, subtle spotlight beams. No text, edges fade to transparent. Premium mobile game feel."
+      "prompt": "Wide premium mobile-game card background, 4:1 aspect ratio. Epic city skyline panorama at golden hour: silhouetted skyscrapers across a deep purple-to-magenta dusk sky, warm windows glowing yellow, a brilliant gold trophy-shaped beam of light rising from the center of the city skyline to the top. Subtle volumetric haze, scattered star accents. Painterly, AAA mobile aesthetic. NO text, NO letters, NO numbers, NO UI. Edges softly fade so the card reads against any background. Polished, premium."
     },
     {
       "group": "mode-cards",
       "id": "mode-local",
       "filename": "mode-local-bg.png",
       "size": "1200x300",
-      "prompt": "Wide mobile game button background: teal-to-cyan gradient with two stylized controllers facing each other, warm glow between them, faint dotted connection line. No text, edges fade to transparent. Premium mobile game feel."
+      "prompt": "Wide premium mobile-game card background, 4:1 aspect ratio. Cozy co-op living-room vibe filtered through a sci-fi lens: two glossy game controllers facing each other on a clean teal-to-cyan glass floor, a warm white spotlight between them, faint dotted energy arc connecting the two controllers, soft bokeh halos. Deep navy-to-teal gradient sky. Painterly, AAA mobile aesthetic. NO text, NO letters, NO numbers, NO UI. Edges softly fade so the card reads against any background. Polished, premium."
     },
     {
       "group": "backgrounds",
@@ -569,6 +569,13 @@
       "filename": "settings-notif.png",
       "size": "512x512",
       "prompt": "Premium mobile game settings icon: a glossy gold notification bell with a small red dot badge, chunky stylized, slight tilt. Centered, transparent background, no text. Represents a push-notifications toggle."
+    },
+    {
+      "group": "home-polish",
+      "id": "home-platform",
+      "filename": "home-platform.png",
+      "size": "800x256",
+      "prompt": "Transparent PNG, premium mobile-game character podium foreground element. A wide oval glossy platform disc seen at a slight top-down perspective, rendered in glowing warm orange with a gold rim highlight, dark navy shadow underside, subtle hexagonal tile pattern on the surface catching a bright central spotlight, faint orange ember particles rising from the edges. Centered on a fully transparent background \u2014 just the platform object and its light emission, nothing else. Intended to be composited UNDER a 3D character. NO text, NO letters, NO numbers, NO characters, NO other objects. High quality, painterly, AAA mobile aesthetic."
     }
   ]
 }
