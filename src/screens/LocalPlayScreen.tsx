@@ -11,6 +11,7 @@ import { useGameStore } from '../stores/gameStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -29,6 +30,7 @@ export function LocalPlayScreen({ navigation }: Props) {
 
   const startLocalGame = () => {
     haptics.tap();
+    playSound('click');
     resetScores();
     newGame('medium', false);
     navigation.navigate('Matchup', {
