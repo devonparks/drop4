@@ -352,6 +352,8 @@ export function LootBoxScreen() {
   };
 
   const handleCancelOpen = () => {
+    haptics.tap();
+    playSound('click');
     setOpeningBox(null);
   };
 
