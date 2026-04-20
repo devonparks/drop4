@@ -7,7 +7,6 @@ import {
   type ContentSource,
 } from '@amg/character-runtime';
 import { useCharacterStore } from '../stores/characterStore';
-import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 
 // ═══════════════════════════════════════════════════════════════════════

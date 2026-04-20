@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, Animated as RNAnimated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, Animated as RNAnimated } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlossyButton } from './GlossyButton';
@@ -22,8 +22,6 @@ import { fonts, weight } from '../../theme/typography';
 // is on when the win handler completes (win-screen → Home → ceremony is
 // a common path).
 // ═══════════════════════════════════════════════════════════════════════
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 const SPECIES_DISPLAY: Record<string, { label: string; emoji: string; blurb: string }> = {
   elves: { label: 'Elven Warriors', emoji: '🏹', blurb: 'Forest archers joined your roster.' },
