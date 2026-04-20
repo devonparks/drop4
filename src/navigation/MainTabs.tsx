@@ -137,9 +137,11 @@ export function MainTabs() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: 'rgba(8,10,30,0.97)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(8,10,30,0.85)',
+    borderTopWidth: 1.5,
+    // Warm gold top border — reads as premium, matches the card-rim
+    // + TopBar pill-rim treatment used elsewhere.
+    borderTopColor: 'rgba(255,210,120,0.45)',
     height: Platform.OS === 'ios' ? 80 : 72,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
@@ -150,6 +152,9 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     ...(Platform.OS === 'web' ? {
       backdropFilter: 'blur(20px)',
+      // Subtle inset gold top-edge highlight on web for a premium
+      // embossed-metal feel matching TopBar + mode cards.
+      boxShadow: 'inset 0 1px 0 rgba(255,240,200,0.25), 0 -4px 16px rgba(0,0,0,0.5)',
     } as any : {}),
   },
   tabItem: {
