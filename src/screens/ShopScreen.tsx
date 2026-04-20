@@ -1010,7 +1010,7 @@ export function ShopScreen() {
                       return (
                         <View key={pack} style={{ marginTop: 12 }}>
                           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginLeft: 8, marginBottom: 6, letterSpacing: 0.8 }}>
-                            {meta.emoji}  {meta.displayName}  <Text style={{ color: '#888', fontSize: 11, fontWeight: '600' }}>{parts.length}</Text>
+                            {meta.emoji}  {meta.displayName}  <Text style={{ color: '#888', fontSize: 11, fontWeight: '600' }}>{parts.filter(p => isAmgPartOwned(p.name)).length}/{parts.length}</Text>
                           </Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 }}>
                             {parts.map((p) => (
