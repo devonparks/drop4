@@ -21,6 +21,7 @@ import {
   RARITY_LABELS,
 } from '../../data/amgPartPricing';
 import { packMeta } from '../../data/amgPackMeta';
+import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
@@ -58,6 +59,7 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
   return (
     <PressScale
       onPress={() => {
+        playSound('click');
         if (owned) onEquip?.(partName);
         else onBuy?.(partName);
       }}
