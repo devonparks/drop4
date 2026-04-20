@@ -10,6 +10,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -172,7 +173,7 @@ export function LearnScreen({ navigation }: Props) {
             return (
               <StaggeredEntry key={lesson.id} index={i}>
               <PressScale
-                onPress={() => { haptics.tap(); setSelected(lesson); }}
+                onPress={() => { haptics.tap(); playSound('click'); setSelected(lesson); }}
                 scaleTo={0.97}
                 accessibilityRole="button"
                 accessibilityLabel={`${lesson.title} lesson, ${lesson.difficulty}${isMastered ? ', mastered' : ''}`}
