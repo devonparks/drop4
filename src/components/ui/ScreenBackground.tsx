@@ -2,6 +2,56 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, ViewStyle, Platform, Image, ImageSourcePropType, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// AnimatedSceneImage — painted scene with slow drift + scale pulse so
+// the galaxy feels alive. On WEB we use CSS keyframes (compositor-driven,
+// smooth, cheap) because react-native-web's Animated + native driver
+// doesn't apply transforms on regular Images. On NATIVE we use the JS
+// driver since native + transform still lands.
+function AnimatedSceneImage({ sceneImage, animated }: { sceneImage: ImageSourcePropType; animated: boolean }) {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!animated || Platform.OS === 'web') return;
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 14_000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(pulse, { toValue: 0, duration: 14_000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+      ]),
+    );
+    pulseLoop.start();
+    return () => { pulseLoop.stop(); };
+  }, [animated, pulse]);
+
+  if (Platform.OS === 'web') {
+    // CSS keyframes drive the drift + scale + brightness cycle. Defined
+    // once at module load in the styles block below.
+    return (
+      <Image
+        source={sceneImage}
+        style={[styles.sceneImage, animated ? styles.sceneImageAnim : null]}
+        resizeMode="cover"
+      />
+    );
+  }
+
+  const animStyle = animated
+    ? {
+        transform: [
+          { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1.0, 1.06] }) },
+        ],
+        opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1.0] }),
+      }
+    : {};
+
+  return (
+    <Animated.Image
+      source={sceneImage}
+      style={[styles.sceneImage, animStyle]}
+      resizeMode="cover"
+    />
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // ScreenBackground — painted atmosphere + live-wallpaper motion
 //
@@ -127,14 +177,18 @@ export function ScreenBackground({
       end={{ x: 0.5, y: 1 }}
       style={[styles.container, style]}
     >
-      {/* Painted scene — primary atmosphere when a scene prop is set. */}
+      {/* Painted scene — primary atmosphere when a scene prop is set.
+          When `animated` is true, the scene slowly drifts + pulses
+          scale so the galaxy/nebula feels alive instead of being a
+          static PNG. The edge-feather overlay hides hard horizontal
+          cuts from cropped scene PNGs. */}
       {sceneImage && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <Image
-            source={sceneImage}
-            style={styles.sceneImage}
-            resizeMode="cover"
+          <AnimatedSceneImage
+            sceneImage={sceneImage}
+            animated={animated}
           />
+          <View pointerEvents="none" style={styles.sceneEdgeFeather} />
         </View>
       )}
 
@@ -179,7 +233,23 @@ const styles = StyleSheet.create({
   },
   sceneImage: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.45,
+    // Brightness bump — the painted galaxy IS the hero. Set to full
+    // opacity so the art reads as painted intended.
+    opacity: 1,
+  },
+  sceneImageAnim: Platform.OS === 'web' ? ({
+    animation: 'drop4SceneDrift 28s ease-in-out infinite',
+    willChange: 'transform, opacity',
+  } as any) : null,
+  // Horizontal edge feather — dark bands fading in from each side so
+  // painted scene PNGs that get cropped by `resizeMode: cover` don't
+  // show hard horizontal cuts. Also gives every screen a subtle
+  // letterbox feel that reads premium.
+  sceneEdgeFeather: {
+    ...StyleSheet.absoluteFillObject,
+    ...(Platform.OS === 'web' ? ({
+      backgroundImage: 'linear-gradient(to right, rgba(5,5,32,0.85) 0%, rgba(5,5,32,0) 12%, rgba(5,5,32,0) 88%, rgba(5,5,32,0.85) 100%)',
+    } as any) : {}),
   },
   vignette: {
     ...StyleSheet.absoluteFillObject,
@@ -277,6 +347,11 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       @keyframes drop4BgDriftA { from { background-position: 0 0; } to { background-position: 200px 200px; } }
       @keyframes drop4BgDriftB { from { background-position: 0 0; } to { background-position: -150px 100px; } }
       @keyframes drop4BgDriftC { from { background-position: 0 0; } to { background-position: 100px -250px; } }
+      @keyframes drop4SceneDrift {
+        0%   { transform: scale(1.04) translateX(-12px); opacity: 0.92; }
+        50%  { transform: scale(1.08) translateX(12px);  opacity: 1.00; }
+        100% { transform: scale(1.04) translateX(-12px); opacity: 0.92; }
+      }
     `;
     document.head.appendChild(el);
   }

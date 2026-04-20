@@ -106,17 +106,39 @@ export function GlossyButton({
             resizeMode="cover"
           />
         )}
-        <LinearGradient
-          colors={
-            bgImage
-              ? [colors.top + 'cc', colors.main + '88', colors.dark + 'cc']
-              : [colors.top, colors.main, colors.dark]
-          }
-          locations={[0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={[StyleSheet.absoluteFill]}
-        />
+        {/* When a painted bgImage is set, we DON'T want a heavy colored
+            overlay dimming the art — we only want just enough shade to
+            keep the label + subtitle legible at the bottom. Drop the
+            full-card gradient to a thin bottom-fade vignette. Without a
+            bgImage (plain color buttons), keep the original 3-stop
+            glossy gradient. */}
+        {bgImage ? (
+          // Minimal bottom-only vignette so the painted art reads at
+          // near-full brightness and the label+subtitle at the bottom
+          // still contrast. Was too dark before; dial way down.
+          <LinearGradient
+            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.35)']}
+            locations={[0, 0.6, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill]}
+          />
+        ) : (
+          <LinearGradient
+            colors={[colors.top, colors.main, colors.dark]}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill]}
+          />
+        )}
+        {/* Premium gold rim — a subtle inner stroke that hugs the card
+            edge. Sells the AAA mobile card feel (Clash Royale / Brawl
+            Stars chest cards). Only applied when bgImage is set since
+            plain color buttons already have the glossy gradient edges. */}
+        {bgImage && (
+          <View pointerEvents="none" style={styles.goldRim} />
+        )}
         <View style={styles.content}>
           {iconImage ? (
             <Image source={iconImage} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" />
@@ -171,6 +193,17 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
     overflow: 'hidden',
+  },
+  goldRim: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1.5,
+    borderRadius: borderRadius.xl,
+    borderColor: 'rgba(255,210,120,0.55)',
+    ...(Platform.OS === 'web' ? ({
+      // Subtle inset gold glow on web so the rim reads as a glossy
+      // metal edge, not a painted stroke.
+      boxShadow: 'inset 0 0 10px rgba(255,210,120,0.25), inset 0 1px 0 rgba(255,240,200,0.4)',
+    } as any) : {}),
   },
   gradient: {
     borderRadius: borderRadius.xl,

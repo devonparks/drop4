@@ -586,7 +586,6 @@ export function HomeScreen() {
                 subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
                 variant="orange"
                 small
-                icon="🎮"
                 iconRight="›"
                 bgImage={require('../assets/images/ui/mode-play-bg.png')}
                 onPress={() => navigateTo('Play')}
@@ -598,7 +597,6 @@ export function HomeScreen() {
                 subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : 'Take the City · 3 launch cities'}
                 variant="purple"
                 small
-                icon="🏆"
                 iconRight="›"
                 bgImage={require('../assets/images/ui/mode-career-bg.png')}
                 onPress={() => navigateTo('CareerMap')}
@@ -611,7 +609,6 @@ export function HomeScreen() {
                 subtitle="Pass & play on one device"
                 variant="teal"
                 small
-                icon="👥"
                 iconRight="›"
                 bgImage={require('../assets/images/ui/mode-local-bg.png')}
                 onPress={() => navigateTo('LocalPlay')}
@@ -826,42 +823,42 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingTop: 0,
   },
-  // Soft warm spotlight pooling under the character's feet — a pure
-  // View with a radial-gradient backgroundImage (web) plus a glowing
-  // shadow (native). Reinforces the painted stage in bg-home without
-  // adding another image asset that can scale/clip in weird ways.
+  // Warm spotlight pooling at the character's feet. Bounded Views with
+  // radial gradients WILL clip at their box edges — so we stretch both
+  // glow layers much wider than the visible frame (-40% left, +40% right
+  // on web via left/right instead of width) AND push the gradient fall-
+  // off all the way to 100% so the color reaches full transparency
+  // before the box boundary. Result: no hard edge at any zoom level.
   footGlowOuter: {
     position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    width: 320,
-    height: 90,
-    borderRadius: 160,
+    bottom: 30,
+    left: -120,
+    right: -120,
+    height: 180,
     ...(Platform.OS === 'web' ? ({
-      backgroundImage: 'radial-gradient(ellipse at center, rgba(255,180,80,0.35) 0%, rgba(255,120,40,0.18) 35%, rgba(255,120,40,0) 70%)',
-      filter: 'blur(6px)',
+      backgroundImage: 'radial-gradient(ellipse 55% 50% at 50% 60%, rgba(255,170,80,0.45) 0%, rgba(255,140,60,0.25) 25%, rgba(255,120,40,0.1) 55%, rgba(255,120,40,0) 100%)',
+      filter: 'blur(8px)',
       mixBlendMode: 'screen',
     } as any) : {
-      backgroundColor: 'rgba(255,140,60,0.14)',
+      backgroundColor: 'rgba(255,140,60,0.12)',
       shadowColor: '#ff9040',
       shadowOpacity: 0.6,
-      shadowRadius: 40,
+      shadowRadius: 60,
       shadowOffset: { width: 0, height: 0 },
     }),
   },
   footGlowInner: {
     position: 'absolute',
-    bottom: 56,
-    alignSelf: 'center',
-    width: 210,
-    height: 60,
-    borderRadius: 105,
+    bottom: 50,
+    left: -40,
+    right: -40,
+    height: 100,
     ...(Platform.OS === 'web' ? ({
-      backgroundImage: 'radial-gradient(ellipse at center, rgba(255,220,150,0.55) 0%, rgba(255,170,80,0.2) 50%, rgba(255,170,80,0) 80%)',
-      filter: 'blur(4px)',
+      backgroundImage: 'radial-gradient(ellipse 40% 45% at 50% 60%, rgba(255,230,170,0.65) 0%, rgba(255,190,100,0.3) 40%, rgba(255,170,80,0.1) 70%, rgba(255,170,80,0) 100%)',
+      filter: 'blur(6px)',
       mixBlendMode: 'screen',
     } as any) : {
-      backgroundColor: 'rgba(255,200,120,0.22)',
+      backgroundColor: 'rgba(255,200,120,0.18)',
     }),
   },
   stagePlatform: {
