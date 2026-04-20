@@ -34,7 +34,7 @@ export function FilterChip({ label, icon, active, locked, onPress, style }: Prop
     <PressScale
       onPress={() => {
         if (locked) { haptics.error(); playSound('error'); return; }
-        haptics.tap();
+        haptics.tap(); playSound('click');
         onPress();
       }}
       accessibilityLabel={label}
