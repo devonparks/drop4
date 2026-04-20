@@ -21,7 +21,6 @@ import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { AmgTestScreen } from '../screens/AmgTestScreen';
 import { CharacterCreatorScreen as AmgCharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
 
 export type CareerRewardParams = {
@@ -94,13 +93,10 @@ export type RootStackParamList = {
   // TopBar) rather than a bottom tab — the 4-tab redesign removed Profile
   // from the tab bar.
   Profile: undefined;
-  // Temporary smoke-test for the amg-engine character pipeline. Delete
-  // this route (and src/screens/AmgTestScreen.tsx) once the new
-  // CharacterCreator replaces Character3DCreator everywhere.
-  AmgTest: undefined;
   // The new AMG Studios character creator (Sims-tier tabbed editor).
-  // Lives in @amg/character-creator and will replace Character3DCreator
-  // across every AMG game.
+  // Lives in @amg/character-creator and replaces Character3DCreator
+  // across every AMG game. Character state persists to
+  // characterStore.amgCharacter.
   AmgCreator: undefined;
 };
 
@@ -186,11 +182,6 @@ export function RootNavigator() {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ animation: 'fade_from_bottom' }}
-      />
-      <Stack.Screen
-        name="AmgTest"
-        component={AmgTestScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

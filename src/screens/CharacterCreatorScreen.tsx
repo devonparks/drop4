@@ -34,30 +34,24 @@ const CONTENT_SOURCE: ContentSource = {
 export function CharacterCreatorScreen() {
   const navigation = useNavigation<any>();
 
-  // Character store currently holds the legacy single-GLB shape
-  // (outfitId + skinColor + hairColor etc.). Until we migrate the store
-  // to AMG CharacterState, we translate in-memory: reads pull a neutral
-  // AMG state + merge any colors that map 1:1, writes save AMG state
-  // into a new `amgCharacter` slot on the store.
-  const amgCharacter = useCharacterStore(
-    (s) => (s as any).amgCharacter as CharacterState | undefined,
+  // characterStore now has a dedicated amgCharacter slot persisted to
+  // AsyncStorage alongside the legacy single-GLB customization. First
+  // open gets NEUTRAL_CHARACTER; subsequent opens restore the last save.
+  //
+  // The store types amgCharacter as Record<string, unknown> to stay
+  // decoupled from @amg/character-runtime. We cast at this boundary
+  // since this screen is the one place that knows the shape is
+  // actually CharacterState.
+  const amgCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
+  const setAmgCharacter = useCharacterStore((s) => s.setAmgCharacter);
+  const initial = useMemo<CharacterState>(
+    () => amgCharacter ?? NEUTRAL_CHARACTER,
+    [amgCharacter],
   );
-  const setAmgCharacter = useCharacterStore(
-    (s) => (s as any).setAmgCharacter as ((next: CharacterState) => void) | undefined,
-  );
-  // Fallback — on first open, use NEUTRAL_CHARACTER.
-  const initial = useMemo<CharacterState>(() => amgCharacter ?? NEUTRAL_CHARACTER, [amgCharacter]);
 
   function handleSave(next: CharacterState) {
     haptics.win();
-    // Persist via the store if the slot is wired, otherwise log for now —
-    // the characterStore migration lands in a follow-up commit.
-    if (setAmgCharacter) {
-      setAmgCharacter(next);
-    } else {
-      // eslint-disable-next-line no-console
-      console.log('[Drop4] AMG character saved (store slot not yet wired):', next);
-    }
+    setAmgCharacter(next as unknown as Record<string, unknown>);
     navigation.goBack();
   }
 

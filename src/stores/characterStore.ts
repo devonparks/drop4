@@ -125,12 +125,22 @@ const DEFAULT_CUSTOMIZATION: CharacterCustomization = {
 
 // ── Store ──────────────────────────────────────────────────────
 
+// New AMG CharacterState shape from @amg/character-runtime. Kept loosely
+// typed here (Record<string, unknown>) to avoid coupling the store to
+// the runtime package — the runtime still owns the canonical type.
+type AmgCharacterState = Record<string, unknown>;
+
 interface CharacterState {
   customization: CharacterCustomization;
   // Unlocks
   unlockedHairColors: string[];     // PREMIUM_HAIR_COLORS ids
   unlockedOutfitPacks: string[];    // PREMIUM_OUTFIT_PACKS ids (color packs)
   ownedOutfits: string[];           // outfit IDs from outfitRegistry
+  // New: AMG Studios character state (from the Sims-tier creator).
+  // When present, this is the source of truth for the player's avatar
+  // across every AMG game. Legacy `customization` stays for the existing
+  // single-GLB renderer until all screens migrate.
+  amgCharacter: AmgCharacterState | null;
   // Actions
   setOutfit: (id: OutfitId) => void;
   setSkinColor: (hex: string) => void;
@@ -139,6 +149,7 @@ interface CharacterState {
   setBodyType: (v: number) => void;
   setBodySize: (v: number) => void;
   setMuscle: (v: number) => void;
+  setAmgCharacter: (next: AmgCharacterState) => void;
   unlockHairColor: (id: string) => void;
   unlockOutfitPack: (id: string) => void;
   unlockOutfit: (id: string) => void;
@@ -156,6 +167,7 @@ interface PersistedCharacter {
   unlockedHairColors: string[];
   unlockedOutfitPacks: string[];
   ownedOutfits?: string[];
+  amgCharacter?: AmgCharacterState | null;
 }
 
 // Starter outfits every player owns for free (one per species).
@@ -170,6 +182,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   unlockedHairColors: [],
   unlockedOutfitPacks: [],
   ownedOutfits: [...STARTER_OUTFITS],
+  amgCharacter: null,
 
   setOutfit: (id) => set((s) => ({
     customization: { ...s.customization, outfitId: id },
@@ -192,6 +205,13 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   setMuscle: (v) => set((s) => ({
     customization: { ...s.customization, muscle: Math.max(0, Math.min(100, v)) },
   })),
+
+  // Persist the full AMG character blob from @amg/character-creator.
+  // Written whenever the player taps Save in the new creator; consumed
+  // by CharacterCreatorScreen's `initial` prop on next open, and
+  // (eventually) by in-game renderers once they migrate off the legacy
+  // single-GLB Character3D.
+  setAmgCharacter: (next) => set({ amgCharacter: next }),
 
   unlockHairColor: (id) => set((s) => ({
     unlockedHairColors: s.unlockedHairColors.includes(id) ? s.unlockedHairColors : [...s.unlockedHairColors, id],
@@ -226,6 +246,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         unlockedOutfitPacks: saved.unlockedOutfitPacks || [],
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
+        amgCharacter: saved.amgCharacter ?? null,
       });
     }
   },
@@ -238,5 +259,6 @@ useCharacterStore.subscribe((state) => {
     unlockedHairColors: state.unlockedHairColors,
     unlockedOutfitPacks: state.unlockedOutfitPacks,
     ownedOutfits: state.ownedOutfits,
+    amgCharacter: state.amgCharacter,
   });
 });
