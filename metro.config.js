@@ -29,8 +29,12 @@ config.resolver.extraNodeModules = {
   '@amg/character-creator': path.join(amgEngineRoot, 'packages', 'character-creator'),
 };
 
-// Metro needs to be told it can resolve modules from amg-engine's path
-// too, in case the shared packages import anything relative.
+// Metro walks up from the importing file looking for node_modules.
+// amg-engine/node_modules intentionally does NOT contain react/three/
+// @react-three/fiber/react-native — those must come from Drop4's copy
+// so we get exactly one React dispatcher (duplicates trigger the
+// "Cannot read properties of null (reading 'useState')" crash).
+// Drop4's node_modules comes first in this fallback list.
 config.resolver.nodeModulesPaths = [
   path.join(__dirname, 'node_modules'),
   path.join(amgEngineRoot, 'node_modules'),
