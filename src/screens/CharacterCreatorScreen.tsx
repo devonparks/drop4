@@ -25,10 +25,12 @@ import { haptics } from '../services/haptics';
 // parts-based shop we'll wire ownedParts here.
 // ═══════════════════════════════════════════════════════════════════════
 
-// Local dev server for now. Flip to the R2 URL when production content
-// goes live; the component + runtime don't care which.
+// Content fetched from Cloudflare R2 public URL. Same URL works in dev
+// and production — no need for the local `npm run serve-content` unless
+// you're working offline or iterating on the exporter output. To swap
+// back to local dev, change this to 'http://localhost:8080'.
 const CONTENT_SOURCE: ContentSource = {
-  baseUrl: 'http://localhost:8080',
+  baseUrl: 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev',
 };
 
 export function CharacterCreatorScreen() {
