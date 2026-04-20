@@ -49,7 +49,7 @@ export function MissionsScreen() {
   }
 
   return (
-    <ScreenBackground scene="challenges">
+    <ScreenBackground scene="challenges" liveWallpaper nebulaHue={-60}>
       <MilestonesBody />
       <SubTabSwitcher tab={tab} onChange={setTab} />
     </ScreenBackground>

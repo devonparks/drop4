@@ -808,7 +808,7 @@ export function ShopScreen() {
                    activeTab === 'emotes' ? 'emotes' : 'pieces';
 
   return (
-    <ScreenBackground scene="shop">
+    <ScreenBackground scene="shop" liveWallpaper nebulaHue={60}>
       <View style={[s.container, { paddingTop: insets.top + 12 }]}>
         {/* ── Header ── */}
         <StaggeredEntry index={0} delay={60}>

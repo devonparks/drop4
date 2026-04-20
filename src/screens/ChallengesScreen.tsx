@@ -370,7 +370,7 @@ export function ChallengesScreen() {
   });
 
   return (
-    <ScreenBackground scene="challenges">
+    <ScreenBackground scene="challenges" liveWallpaper nebulaHue={-60}>
       <ScrollView
         style={styles.scrollRoot}
         contentContainerStyle={styles.container}

@@ -96,7 +96,7 @@ export function CareerMapScreen({ navigation }: Props) {
   const scrollRef = useRef<ScrollView>(null);
 
   return (
-    <ScreenBackground scene="career">
+    <ScreenBackground scene="career" liveWallpaper nebulaHue={-90}>
       <TopBar
         coins={coins}
         gems={gems}

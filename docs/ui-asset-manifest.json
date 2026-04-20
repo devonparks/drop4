@@ -78,7 +78,7 @@
       "id": "bg-career",
       "filename": "bg-career.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game background: stylized city skyline at sunset (Brooklyn-coded), orange-purple sky, silhouetted buildings, warm windows glowing, dusky clouds. No characters, no text."
+      "prompt": "Portrait mobile game career-mode background, 9:16 aspect ratio. Cinematic neon-drenched Brooklyn skyline at dusk: silhouetted skyscrapers receding into magenta-to-purple dusk sky, warm yellow windows glittering across the city like stars, volumetric orange god-rays beaming down between buildings, bright gold trophy-shaped beam of light rising from the center of the skyline to the top of the frame, aurora ribbons draping the upper sky. Scattered distant stars + lens flares in the mid-ground. Painterly AAA mobile aesthetic \u2014 Cyberpunk 2077 cinematic crossed with Spider-Man: Miles Morales NYC. NO text, NO characters, NO UI, NO logos. Premium, high contrast, saturated."
     },
     {
       "group": "backgrounds",
@@ -351,14 +351,14 @@
       "id": "bg-play",
       "filename": "bg-play.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game background: glossy spotlit stage floor with a subtle Connect-4 board pattern visible in the distance, warm orange spotlight pool at bottom center fading to dark navy top, faint purple nebula flecks. No characters, no text, no borders. Premium polish."
+      "prompt": "Portrait mobile game PvP / quick-match background, 9:16 aspect ratio. Cinematic arena battle ambience: two oversized silhouetted Connect-4 boards facing off on a glossy obsidian hex-tile floor, warm orange spotlight pooling in the center between them with embers rising, magenta + cyan nebula wisps flanking on left and right, volumetric rim lights on the boards, electric energy sparks scattered. Deep navy sky fading to crimson at the bottom. Painterly AAA mobile aesthetic \u2014 Apex Legends lobby crossed with a fighting-game versus screen. NO text, NO characters, NO UI, NO logos. Saturated, high contrast, dramatic."
     },
     {
       "group": "scene-bgs",
       "id": "bg-matchup",
       "filename": "bg-matchup.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game arena backdrop: dramatic clash lighting, orange-vs-blue split with a vertical light beam splitting the composition in half, subtle crowd silhouettes faint in the background, motion-blur streaks radiating outward from center, dark navy floor reflecting the lights. No characters, no text, no borders. Feels like a boxing-match weigh-in staging. Premium polish."
+      "prompt": "Portrait mobile game matchup / versus background, 9:16 aspect ratio. Epic VS-screen energy: vertical cosmic rift splitting the canvas down the middle with magenta plasma energy on the left half, cyan plasma energy on the right half, lightning cracks between them, deep navy sky filled with stars and nebula wisps, volumetric lens flares at the center where the two energies meet, embers + sparks scattered throughout. Painterly AAA mobile aesthetic \u2014 Street Fighter / Marvel vs Capcom versus screen crossed with a cosmic event. NO text, NO characters, NO UI, NO logos. Highly saturated, dramatic, high contrast."
     },
     {
       "group": "difficulty",

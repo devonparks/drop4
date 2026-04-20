@@ -96,7 +96,7 @@ export function PlayScreen({ navigation }: Props) {
   };
 
   return (
-    <ScreenBackground scene="play">
+    <ScreenBackground scene="play" liveWallpaper nebulaHue={30}>
       <View style={styles.container}>
         <TopBar
           coins={coins} gems={gems} level={level}

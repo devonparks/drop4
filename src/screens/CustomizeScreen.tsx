@@ -143,7 +143,7 @@ export function CustomizeScreen() {
   };
 
   return (
-    <ScreenBackground scene="profile">
+    <ScreenBackground scene="profile" liveWallpaper nebulaHue={20}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           coins={coins}

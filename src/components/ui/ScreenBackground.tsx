@@ -70,7 +70,7 @@ const NEBULA_BACK = require('../../assets/images/ui/nebula-back.png');
 const NEBULA_MID = require('../../assets/images/ui/nebula-mid.png');
 const NEBULA_NEAR = require('../../assets/images/ui/nebula-near.png');
 
-function LiveNebulaWallpaper({ animated }: { animated: boolean }) {
+function LiveNebulaWallpaper({ animated, hue = 0 }: { animated: boolean; hue?: number }) {
   // Native uses Animated transforms on JS driver for the big layers.
   // Web uses CSS keyframes registered once at module load.
   const back = useRef(new Animated.Value(0)).current;
@@ -91,12 +91,16 @@ function LiveNebulaWallpaper({ animated }: { animated: boolean }) {
   }, [animated, back, mid, near]);
 
   if (Platform.OS === 'web') {
+    // Hue-rotate filter applied on the web parent gives every layer
+    // the same color shift at zero asset cost. 0deg = the painted
+    // magenta/cyan palette; any other value shifts the entire stack.
+    const hueWrap = hue ? ({ filter: `hue-rotate(${hue}deg)` } as any) : null;
     return (
-      <>
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, hueWrap]}>
         <Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, animated ? styles.nebulaBackAnim : null]} />
         <Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, animated ? styles.nebulaMidAnim : null]} />
         <Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, animated ? styles.nebulaNearAnim : null]} />
-      </>
+      </View>
     );
   }
 
@@ -171,6 +175,16 @@ interface ScreenBackgroundProps {
    *  drifting stars (web) + breathing glow orbs (all platforms). Opt
    *  out with `animated={false}` for static contexts. */
   animated?: boolean;
+  /** Render the live nebula wallpaper on ANY screen, not just home.
+   *  When true, the LiveNebulaWallpaper 3-layer parallax replaces the
+   *  single painted scene PNG. Hue shift (web only) tints the whole
+   *  stack so each tab gets a themed palette without regenerating art.
+   *  Default hue is 0 = the magenta/cyan painted palette. */
+  liveWallpaper?: boolean;
+  /** CSS hue-rotate in degrees applied to the live wallpaper layers
+   *  (web only). 0=magenta/cyan, 30=warm pink, 60=orange/gold,
+   *  120=teal/green, 180=cyan/blue, 240=blue/purple, 300=pink/purple. */
+  nebulaHue?: number;
 }
 
 const VARIANTS = {
@@ -203,6 +217,8 @@ export function ScreenBackground({
   variant = 'default',
   scene,
   animated = true,
+  liveWallpaper,
+  nebulaHue = 0,
 }: ScreenBackgroundProps) {
   const { colors } = VARIANTS[variant];
   const sceneImage = scene ? SCENE_IMAGES[scene] : null;
@@ -257,14 +273,14 @@ export function ScreenBackground({
       end={{ x: 0.5, y: 1 }}
       style={[styles.container, style]}
     >
-      {/* scene='home' is a SPECIAL CASE that renders the 3-layer
-          LiveNebulaWallpaper (back sky + mid clouds + near sparkles)
-          with independent parallax animations — a real live wallpaper,
-          not a static PNG. Every other scene value renders the single
-          painted scene image via AnimatedSceneImage. */}
-      {scene === 'home' ? (
+      {/* Backdrop layer:
+          - scene='home' or liveWallpaper=true → 3-layer animated
+            LiveNebulaWallpaper (back sky + mid clouds + near sparkles)
+            with optional hue shift for per-tab theming
+          - Otherwise, the single painted scene image */}
+      {(scene === 'home' || liveWallpaper) ? (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <LiveNebulaWallpaper animated={animated} />
+          <LiveNebulaWallpaper animated={animated} hue={nebulaHue} />
           <View pointerEvents="none" style={styles.sceneEdgeFeather} />
         </View>
       ) : sceneImage && (
