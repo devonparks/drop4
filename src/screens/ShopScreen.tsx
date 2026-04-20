@@ -30,6 +30,11 @@ import { OUTFIT_SHOP_ITEMS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalo
 import { getDailyFeatured } from '../data/shopRotation';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
+import { AmgPartCard } from '../components/ui/AmgPartCard';
+import { packMeta, sortPacksForShop } from '../data/amgPackMeta';
+import { getPartPrice, isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
+import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { PETS as PETS_3D } from '../data/petRegistry';
 import { DOG_IDLES } from '../data/animationRegistry';
@@ -41,7 +46,23 @@ import { fonts, weight } from '../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type ShopTab = 'outfits' | 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
+type ShopTab = 'clothes' | 'outfits' | 'boards' | 'pieces' | 'effects' | 'wins' | 'accessories' | 'emotes' | 'pets' | 'boxes';
+
+// R2 manifest URL — source of truth for every Sidekick part available
+// on the CDN. Fetched once when the Clothes tab first renders and
+// cached in component state for the remainder of the screen's life.
+const AMG_MANIFEST_URL = 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/manifest.json';
+
+interface AmgManifestPart {
+  name: string;
+  species: string;
+  slot: string;
+  file: string;
+}
+
+/** Species values that can appear in the manifest. The shop filter chip
+ *  row exposes these; 'All' is the unfiltered default. */
+type AmgSpecies = 'All' | 'Human' | 'Goblin' | 'Elves' | 'Skeleton' | 'Zombie';
 
 // ─── Effect/Win/Frame preview configs ──────────────────────────
 interface EffectPreviewConfig {
@@ -560,10 +581,35 @@ export function ShopScreen() {
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
   const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
-  const [activeTab, setActiveTab] = useState<ShopTab>('boards');
+  const [activeTab, setActiveTab] = useState<ShopTab>('clothes');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
   const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
   const [outfitPreview, setOutfitPreview] = useState<ShopItem | null>(null);
+
+  // AMG Clothes tab: manifest of every Sidekick part available on R2.
+  // Fetched once on first Clothes render, grouped by pack prefix, and
+  // rendered via AmgPartCard. Species chip filters the grid.
+  const navigation = useNavigation<any>();
+  const ownedAmgParts = useCharacterStore(s => s.ownedAmgParts);
+  const unlockAmgPart = useCharacterStore(s => s.unlockAmgPart);
+  const isAmgPartOwned = useCharacterStore(s => s.isAmgPartOwned);
+  const [amgManifest, setAmgManifest] = useState<AmgManifestPart[] | null>(null);
+  const [amgSpecies, setAmgSpecies] = useState<AmgSpecies>('All');
+  useEffect(() => {
+    if (activeTab !== 'clothes' || amgManifest) return;
+    let canceled = false;
+    (async () => {
+      try {
+        const r = await fetch(AMG_MANIFEST_URL);
+        if (!r.ok) return;
+        const data = await r.json();
+        if (!canceled) setAmgManifest(data.parts as AmgManifestPart[]);
+      } catch {
+        // Best-effort — shop stays on the empty-state message.
+      }
+    })();
+    return () => { canceled = true; };
+  }, [activeTab, amgManifest]);
 
   // Cosmetic preview modal state
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
@@ -704,6 +750,7 @@ export function ShopScreen() {
   // each tab now has a consistent glossy illustrated icon that reads
   // as premium game art at 32-48px.
   const tabs: { key: ShopTab; label: string; iconSource: any }[] = [
+    { key: 'clothes', label: 'Clothes', iconSource: require('../assets/images/ui/shop-outfits.png') },
     { key: 'outfits', label: 'Outfits', iconSource: require('../assets/images/ui/shop-outfits.png') },
     { key: 'boards', label: 'Boards', iconSource: require('../assets/images/ui/shop-boards.png') },
     { key: 'pieces', label: 'Pieces', iconSource: require('../assets/images/ui/shop-pieces.png') },
@@ -871,7 +918,119 @@ export function ShopScreen() {
             )}
 
             {/* Items */}
-            {activeTab === 'pets' ? (
+            {activeTab === 'clothes' ? (
+              // AMG parts grid — manifest-driven, grouped by pack prefix.
+              // Species filter applies across every pack. Each card is an
+              // AmgPartCard that dispatches buy / equip through the
+              // shared handler below.
+              amgManifest === null ? (
+                <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
+                  <Text style={s.comingSoonText}>Loading clothes library…</Text>
+                </Animated.View>
+              ) : (() => {
+                const speciesOK = (p: AmgManifestPart) => amgSpecies === 'All' || p.species === amgSpecies;
+                // Only show slots that are visually equipable cosmetics —
+                // hide internal pieces like Teeth, Tongue, Eyes (those
+                // are fixed per head). Torso, Hair, Hips, Legs, Feet,
+                // Arms, Hands, Head, FacialHair, and Attachment* slots
+                // are the full wardrobe.
+                const ALLOWED_SLOTS = [
+                  'Head', 'Hair', 'FacialHair',
+                  'Torso', 'Hips',
+                  'ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight',
+                  'HandLeft', 'HandRight',
+                  'LegLeft', 'LegRight', 'FootLeft', 'FootRight',
+                  'AttachmentHead', 'AttachmentFace', 'AttachmentBack',
+                ];
+                const filtered = amgManifest.filter(
+                  (p) => speciesOK(p) && ALLOWED_SLOTS.includes(p.slot),
+                );
+                const byPack: Record<string, AmgManifestPart[]> = {};
+                for (const p of filtered) {
+                  const pack = packPrefixFromPartName(p.name);
+                  // Skip starter packs in the shop — they're already
+                  // owned by every player on first launch, so showing
+                  // them as "buy" would be confusing. Collection tab
+                  // will list them separately.
+                  if (isStarterPack(pack)) continue;
+                  (byPack[pack] ||= []).push(p);
+                }
+                const packOrder = sortPacksForShop(Object.keys(byPack));
+                const handleBuy = (partName: string) => {
+                  const { price, rarity } = getPartPrice(partName);
+                  if (coins < price) {
+                    haptics.error();
+                    Alert.alert('Not enough coins', `This ${rarity} item costs ${price}. You have ${coins}.`);
+                    return;
+                  }
+                  Alert.alert('Buy this part?', `Unlock this ${rarity} item for ${price} coins?`, [
+                    { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+                    {
+                      text: `Buy ${price}`,
+                      onPress: () => {
+                        const ok = spendCoins(price);
+                        if (!ok) { haptics.error(); return; }
+                        haptics.win();
+                        playSound('purchase');
+                        unlockAmgPart(partName);
+                      },
+                    },
+                  ]);
+                };
+                const handleEquip = (_partName: string) => {
+                  haptics.tap();
+                  navigation.navigate('AmgCreator');
+                };
+                return (
+                  <>
+                    {/* Species filter chips */}
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 4, gap: 8 }}
+                    >
+                      {(['All', 'Human', 'Goblin', 'Elves', 'Skeleton', 'Zombie'] as AmgSpecies[]).map((sp) => (
+                        <FilterChip
+                          key={sp}
+                          label={sp}
+                          active={amgSpecies === sp}
+                          onPress={() => { setAmgSpecies(sp); haptics.tap(); playSound('click'); }}
+                        />
+                      ))}
+                    </ScrollView>
+
+                    {/* Pack sections */}
+                    {packOrder.length === 0 ? (
+                      <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
+                        <Text style={s.comingSoonText}>No parts for this species yet.</Text>
+                      </Animated.View>
+                    ) : packOrder.map((pack) => {
+                      const meta = packMeta(pack);
+                      const parts = byPack[pack];
+                      return (
+                        <View key={pack} style={{ marginTop: 12 }}>
+                          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginLeft: 8, marginBottom: 6, letterSpacing: 0.8 }}>
+                            {meta.emoji}  {meta.displayName}  <Text style={{ color: '#888', fontSize: 11, fontWeight: '600' }}>{parts.length}</Text>
+                          </Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 }}>
+                            {parts.map((p) => (
+                              <AmgPartCard
+                                key={p.name}
+                                partName={p.name}
+                                owned={isAmgPartOwned(p.name)}
+                                onBuy={handleBuy}
+                                onEquip={handleEquip}
+                                size="compact"
+                              />
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </>
+                );
+              })()
+            ) : activeTab === 'pets' ? (
               <View style={s.grid}>
                 {PETS.map((pet, i) => (
                   <PetCard

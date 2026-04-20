@@ -348,20 +348,6 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  rarityBadge: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  rarityText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
   description: {
     fontFamily: fonts.body,
     fontWeight: weight.regular,
