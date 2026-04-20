@@ -96,8 +96,8 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   const isEmote = !!emoteMeta;
   return (
     <Character3D
-      width={320}
-      height={400}
+      width={400}
+      height={480}
       bodyGlb={outfit.glb}
       skinColor={cust.skinColor}
       hairColor={cust.hairColor}
@@ -430,7 +430,7 @@ export function HomeScreen() {
             <View pointerEvents="none" style={styles.footGlowOuter} />
             <View pointerEvents="none" style={styles.footGlowInner} />
             <StageSparkles />
-            <StagePremiumFX width={320} />
+            <StagePremiumFX width={400} />
 
             <BreathingView intensity={0.015} speed={4000}>
             <Pressable

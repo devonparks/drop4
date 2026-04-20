@@ -64,7 +64,7 @@
       "id": "bg-home",
       "filename": "bg-home.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game lobby background, 9:16 aspect ratio. Cinematic stage for a Sims-meets-Fortnite premium lobby: deep navy-to-black cosmic sky upper 60 percent with drifting magenta and cyan nebula wisps plus glittering white star dust and a single soft lens flare; lower 40 percent is a raked perspective stage floor built from glossy hexagonal tiles emitting warm orange spotlight pooling toward the center, soft gold light rays fanning up and out from the stage. Scattered holographic HUD accents far in the background (rank chevrons, tiny coin sparkles, faint vertical energy lines) but absolutely NO text, NO letters, NO character, NO logo, NO UI elements, NO buttons. Premium AAA mobile aesthetic like the Apex Legends main lobby crossed with The Sims 4 Create A Sim menu crossed with Fortnite locker. Polished, painterly, highly saturated but readable, high contrast, clean, no banding, no JPEG artifacts. Focus soft, painterly bokeh, mood energetic and expensive. 4K quality."
+      "prompt": "Portrait mobile game sky background, 9:16 aspect ratio. Edge-to-edge cosmic nebula ONLY \u2014 absolutely NO stage, NO podium, NO platform, NO floor, NO ground, NO horizon line, NO hexagonal tiles, NO spotlight beam. Just a deep navy-to-black cosmic sky filled with drifting magenta and cyan nebula clouds, glittering white star dust, a single subtle lens flare, scattered distant star clusters, soft volumetric bokeh. The nebula fills the ENTIRE canvas corner-to-corner with no visible boundaries or hard edges \u2014 the center is slightly brighter than the corners for a natural vignette. Premium AAA mobile aesthetic like a Destiny 2 / Stellaris starfield. Painterly, highly saturated, soft focus, no text, no characters, no UI."
     },
     {
       "group": "backgrounds",
@@ -583,6 +583,27 @@
       "filename": "free-spin-btn.png",
       "size": "1024x512",
       "prompt": "Premium mobile game wide pill button background, 2:1 aspect ratio, isolated on transparent background. A glossy teal-to-emerald gradient pill shape with a bright warm-gold rim highlight on top, subtle inner shadow at bottom, a soft warm pink glow halo radiating outward. Surface has faint hexagonal tile shimmer + a single bright yellow-white lens flare on the left side suggesting a slot-machine reward. Absolutely NO text, NO letters, NO numbers, NO characters, NO icons. Just the premium painted pill button shape + its light emission. AAA mobile-game polish like a Coin Master daily-reward button. Painterly, saturated, glossy."
+    },
+    {
+      "group": "backgrounds",
+      "id": "nebula-back",
+      "filename": "nebula-back.png",
+      "size": "1080x1920",
+      "prompt": "Seamless tileable cosmic nebula layer, 9:16 portrait. PURE cosmic sky, deep navy-to-black base, scattered pin-prick stars of various sizes, very subtle distant purple and blue nebula wisps in the background. Soft, low contrast, meant to sit as the DEEPEST parallax layer behind other nebula clouds. No horizon, no foreground, no text, no characters. Fully dark-sky aesthetic, no bright focal point. Painterly but restrained \u2014 this is the sky, not the hero."
+    },
+    {
+      "group": "backgrounds",
+      "id": "nebula-mid",
+      "filename": "nebula-mid.png",
+      "size": "1080x1920",
+      "prompt": "Cosmic nebula cloud layer on a TRANSPARENT or pure black background, 9:16 portrait. Wispy bright magenta and cyan nebula smoke in three-four distinct streaming cloud formations, one curving diagonally from top-left to mid-right, another swirling in the lower-right, edges softly dissipate into invisible. Between clouds is pure black/transparent \u2014 this is a MID-parallax layer that overlays a deeper starfield below. Saturated neon magenta + electric cyan color palette, volumetric painterly wisps like airbrushed smoke. No horizon, no stars (they belong to a different layer), no characters, no text. Painterly AAA mobile aesthetic."
+    },
+    {
+      "group": "backgrounds",
+      "id": "nebula-near",
+      "filename": "nebula-near.png",
+      "size": "1080x1920",
+      "prompt": "Foreground sparkle dust layer on a TRANSPARENT or pure black background, 9:16 portrait. Bright white and warm gold pinprick stars of varying sizes scattered across the canvas, with 4-6 larger lens-flare style sparkles featuring cross-shaped light rays. A few floating glowing dust motes in warm orange and magenta. Everything else is pure black/transparent \u2014 this is a NEAR parallax layer that floats in front of other nebula layers. No solid nebula clouds, no horizon, no characters, no text. Painterly AAA mobile aesthetic."
     }
   ]
 }

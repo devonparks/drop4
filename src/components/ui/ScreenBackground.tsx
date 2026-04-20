@@ -52,6 +52,86 @@ function AnimatedSceneImage({ sceneImage, animated }: { sceneImage: ImageSourceP
   );
 }
 
+// LiveNebulaWallpaper — true multi-layer parallax live wallpaper for
+// the home screen. Three independently-animated nebula planes stacked
+// via mixBlendMode: screen so the bright clouds + stars composite over
+// the deep starfield base with no hard edges anywhere. Each layer
+// rotates + drifts at a different speed/direction so the eye never
+// sees a seam and the motion never visibly loops.
+//
+// Layer stack (bottom → top):
+//   1. nebula-back.png — deep starfield + subtle blue/purple wisps,
+//      rotates 180s CW + slow scale pulse
+//   2. nebula-mid.png  — magenta + cyan smoke clouds (on pure black),
+//      drifts + scales 70s opposite direction, blend=screen
+//   3. nebula-near.png — bright gold sparkle dust + star flares,
+//      drifts + twinkles 45s, blend=screen
+const NEBULA_BACK = require('../../assets/images/ui/nebula-back.png');
+const NEBULA_MID = require('../../assets/images/ui/nebula-mid.png');
+const NEBULA_NEAR = require('../../assets/images/ui/nebula-near.png');
+
+function LiveNebulaWallpaper({ animated }: { animated: boolean }) {
+  // Native uses Animated transforms on JS driver for the big layers.
+  // Web uses CSS keyframes registered once at module load.
+  const back = useRef(new Animated.Value(0)).current;
+  const mid = useRef(new Animated.Value(0)).current;
+  const near = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!animated || Platform.OS === 'web') return;
+    const mkLoop = (val: Animated.Value, ms: number) => Animated.loop(
+      Animated.sequence([
+        Animated.timing(val, { toValue: 1, duration: ms / 2, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(val, { toValue: 0, duration: ms / 2, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+      ]),
+    );
+    const loops = [mkLoop(back, 180_000), mkLoop(mid, 70_000), mkLoop(near, 45_000)];
+    loops.forEach((l) => l.start());
+    return () => { loops.forEach((l) => l.stop()); };
+  }, [animated, back, mid, near]);
+
+  if (Platform.OS === 'web') {
+    return (
+      <>
+        <Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, animated ? styles.nebulaBackAnim : null]} />
+        <Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, animated ? styles.nebulaMidAnim : null]} />
+        <Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, animated ? styles.nebulaNearAnim : null]} />
+      </>
+    );
+  }
+
+  // Native transforms — mixBlendMode unavailable, so we emulate with
+  // opacity. Still reads as depth because each layer moves differently.
+  const backStyle = animated ? {
+    transform: [
+      { scale: back.interpolate({ inputRange: [0, 1], outputRange: [1.02, 1.08] }) },
+      { rotate: back.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '3deg'] }) },
+    ],
+  } : {};
+  const midStyle = animated ? {
+    opacity: mid.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0.75] }),
+    transform: [
+      { scale: mid.interpolate({ inputRange: [0, 1], outputRange: [1.0, 1.06] }) },
+      { translateX: mid.interpolate({ inputRange: [0, 1], outputRange: [-8, 8] }) },
+      { rotate: mid.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-2deg'] }) },
+    ],
+  } : { opacity: 0.65 };
+  const nearStyle = animated ? {
+    opacity: near.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0.95] }),
+    transform: [
+      { translateY: near.interpolate({ inputRange: [0, 1], outputRange: [-10, 10] }) },
+    ],
+  } : { opacity: 0.75 };
+
+  return (
+    <>
+      <Animated.Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, backStyle]} />
+      <Animated.Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, midStyle]} />
+      <Animated.Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, nearStyle]} />
+    </>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // ScreenBackground — painted atmosphere + live-wallpaper motion
 //
@@ -177,12 +257,17 @@ export function ScreenBackground({
       end={{ x: 0.5, y: 1 }}
       style={[styles.container, style]}
     >
-      {/* Painted scene — primary atmosphere when a scene prop is set.
-          When `animated` is true, the scene slowly drifts + pulses
-          scale so the galaxy/nebula feels alive instead of being a
-          static PNG. The edge-feather overlay hides hard horizontal
-          cuts from cropped scene PNGs. */}
-      {sceneImage && (
+      {/* scene='home' is a SPECIAL CASE that renders the 3-layer
+          LiveNebulaWallpaper (back sky + mid clouds + near sparkles)
+          with independent parallax animations — a real live wallpaper,
+          not a static PNG. Every other scene value renders the single
+          painted scene image via AnimatedSceneImage. */}
+      {scene === 'home' ? (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <LiveNebulaWallpaper animated={animated} />
+          <View pointerEvents="none" style={styles.sceneEdgeFeather} />
+        </View>
+      ) : sceneImage && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <AnimatedSceneImage
             sceneImage={sceneImage}
@@ -239,6 +324,42 @@ const styles = StyleSheet.create({
   },
   sceneImageAnim: Platform.OS === 'web' ? ({
     animation: 'drop4SceneDrift 28s ease-in-out infinite',
+    willChange: 'transform, opacity',
+  } as any) : null,
+  // ── Live nebula wallpaper layers ──────────────────────────────────
+  // Each layer is a full-screen Image stacked in absoluteFill. The
+  // _Anim variants attach a CSS keyframe animation on web. On native,
+  // the component file applies Animated transforms directly.
+  nebulaLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  nebulaBackStyle: {
+    // Deep starfield — fully opaque, it's the base.
+    opacity: 1,
+  },
+  nebulaBackAnim: Platform.OS === 'web' ? ({
+    animation: 'drop4NebulaBack 180s linear infinite',
+    willChange: 'transform',
+  } as any) : null,
+  nebulaMidStyle: {
+    // Magenta + cyan cloud wisps painted on black bg. `screen` blend
+    // mode makes black pixels transparent at the compositor level, so
+    // only the bright nebula wisps composite onto the layer below.
+    opacity: 0.75,
+    ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
+  },
+  nebulaMidAnim: Platform.OS === 'web' ? ({
+    animation: 'drop4NebulaMid 70s ease-in-out infinite',
+    willChange: 'transform, opacity',
+  } as any) : null,
+  nebulaNearStyle: {
+    // Sparkle dust — bright star flares on black bg. Same screen blend
+    // trick so only the stars punch through the clouds below.
+    opacity: 0.8,
+    ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
+  },
+  nebulaNearAnim: Platform.OS === 'web' ? ({
+    animation: 'drop4NebulaNear 45s ease-in-out infinite',
     willChange: 'transform, opacity',
   } as any) : null,
   // Horizontal edge feather — dark bands fading in from each side so
@@ -351,6 +472,25 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
         0%   { transform: scale(1.04) translateX(-12px); opacity: 0.92; }
         50%  { transform: scale(1.08) translateX(12px);  opacity: 1.00; }
         100% { transform: scale(1.04) translateX(-12px); opacity: 0.92; }
+      }
+      @keyframes drop4NebulaBack {
+        0%   { transform: scale(1.04) rotate(0deg); }
+        50%  { transform: scale(1.08) rotate(2deg); }
+        100% { transform: scale(1.04) rotate(0deg); }
+      }
+      @keyframes drop4NebulaMid {
+        0%   { transform: scale(1.05) translate(-10px, 0px) rotate(0deg); opacity: 0.55; }
+        25%  { transform: scale(1.08) translate(5px, -8px) rotate(-1.5deg); opacity: 0.75; }
+        50%  { transform: scale(1.10) translate(12px, 6px) rotate(1deg);  opacity: 0.85; }
+        75%  { transform: scale(1.07) translate(-4px, 10px) rotate(0.5deg); opacity: 0.70; }
+        100% { transform: scale(1.05) translate(-10px, 0px) rotate(0deg); opacity: 0.55; }
+      }
+      @keyframes drop4NebulaNear {
+        0%   { transform: translate(0px, 0px); opacity: 0.65; }
+        25%  { transform: translate(8px, -6px); opacity: 0.95; }
+        50%  { transform: translate(-4px, 10px); opacity: 0.75; }
+        75%  { transform: translate(-10px, -4px); opacity: 1.00; }
+        100% { transform: translate(0px, 0px); opacity: 0.65; }
       }
     `;
     document.head.appendChild(el);
