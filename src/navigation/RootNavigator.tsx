@@ -22,6 +22,7 @@ import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AmgTestScreen } from '../screens/AmgTestScreen';
+import { CharacterCreatorScreen as AmgCharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
 
 export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
@@ -97,6 +98,10 @@ export type RootStackParamList = {
   // this route (and src/screens/AmgTestScreen.tsx) once the new
   // CharacterCreator replaces Character3DCreator everywhere.
   AmgTest: undefined;
+  // The new AMG Studios character creator (Sims-tier tabbed editor).
+  // Lives in @amg/character-creator and will replace Character3DCreator
+  // across every AMG game.
+  AmgCreator: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -186,6 +191,11 @@ export function RootNavigator() {
       <Stack.Screen
         name="AmgTest"
         component={AmgTestScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="AmgCreator"
+        component={AmgCharacterCreatorScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

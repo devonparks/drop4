@@ -104,8 +104,9 @@ export function AmgTestScreen() {
         ) : (
           <View style={styles.canvasWrap}>
             <Canvas
-              camera={{ position: [0, 1.4, 2.5], fov: 35 }}
+              camera={{ position: [0, 1.1, 3.2], fov: 42 }}
               gl={{ antialias: true, alpha: true }}
+              onCreated={(state) => state.camera.lookAt(0, 0.95, 0)}
             >
               <ambientLight intensity={0.5} />
               <directionalLight position={[3, 5, 3]} intensity={0.8} />
