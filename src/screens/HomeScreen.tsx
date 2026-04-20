@@ -798,9 +798,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
   },
-  sideBtnEmoji: {
-    fontSize: 28,
-  },
   // Painted side-button icon (replaces the old 🕺 / 💫 emoji). Sits inside
   // the glowing circle so keep it tight — the circle is 58px, the icon
   // reads well at 42px with a little breathing room for the glow.
@@ -831,16 +828,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(100,180,255,0.08)',
     backgroundColor: 'rgba(80,140,255,0.03)',
-  },
-  // Painted spotlight beam art. Sits behind the character, slightly larger
-  // than the stage glow rings, at 60% opacity so it reads as atmosphere.
-  stageSpotlightImg: {
-    position: 'absolute',
-    top: -20,
-    width: 360,
-    height: 240,
-    alignSelf: 'center',
-    opacity: 0.6,
   },
   stageGlowInner: {
     width: 230,

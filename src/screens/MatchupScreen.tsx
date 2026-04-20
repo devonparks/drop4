@@ -656,32 +656,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
   },
-  vsText: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 68,
-    color: '#ffffff',
-    letterSpacing: 4,
-    textShadowColor: 'rgba(255,140,0,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-    position: 'absolute',
-    textAlign: 'center',
-    width: '100%',
-  },
-  vsGlowText: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 68,
-    color: 'rgba(255,140,0,0.3)',
-    letterSpacing: 4,
-    textAlign: 'center',
-    // Glow layer behind the crisp text
-    textShadowColor: 'rgba(255,140,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 40,
-  },
-
   // Searching state
   searchingWrap: {
     alignItems: 'center',

@@ -565,9 +565,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 22,
   },
-  nodeBossIcon: {
-    fontSize: 24,
-  },
   nodeLock: {
     fontSize: 18,
     opacity: 0.7,

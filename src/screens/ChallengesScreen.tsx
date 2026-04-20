@@ -729,9 +729,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  bagEmoji: {
-    fontSize: 32,
-  },
   bagGlow: {
     position: 'absolute',
     width: 60,
