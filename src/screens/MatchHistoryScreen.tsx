@@ -248,7 +248,7 @@ export function MatchHistoryScreen() {
                   label={opt.label}
                   active={filter === opt.key}
                   color={opt.color}
-                  onPress={() => { setFilter(opt.key); setPage(1); }}
+                  onPress={() => { haptics.select(); playSound('click'); setFilter(opt.key); setPage(1); }}
                 />
               ))}
             </View>
