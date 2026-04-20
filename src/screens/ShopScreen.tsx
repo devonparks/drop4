@@ -64,6 +64,19 @@ interface AmgManifestPart {
  *  row exposes these; 'All' is the unfiltered default. */
 type AmgSpecies = 'All' | 'Human' | 'Goblin' | 'Elves' | 'Skeleton' | 'Zombie';
 
+/** Part slot buckets the Clothes tab exposes as a filter row. "All"
+ *  shows every ALLOWED_SLOTS part; the other buckets group the slots
+ *  the way a player thinks about an outfit ("I want to change my
+ *  upper body"). Keep in sync with SLOT_BUCKETS below. */
+type AmgSlotBucket = 'All' | 'Upper Body' | 'Lower Body' | 'Face' | 'Accessories';
+
+const SLOT_BUCKETS: Record<Exclude<AmgSlotBucket, 'All'>, readonly string[]> = {
+  'Upper Body': ['Torso', 'ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight'],
+  'Lower Body': ['Hips', 'LegLeft', 'LegRight', 'FootLeft', 'FootRight'],
+  'Face':       ['Head', 'Hair', 'FacialHair'],
+  'Accessories':['AttachmentHead', 'AttachmentFace', 'AttachmentBack'],
+};
+
 // ─── Effect/Win/Frame preview configs ──────────────────────────
 interface EffectPreviewConfig {
   bg: [string, string];
@@ -595,6 +608,7 @@ export function ShopScreen() {
   const isAmgPartOwned = useCharacterStore(s => s.isAmgPartOwned);
   const [amgManifest, setAmgManifest] = useState<AmgManifestPart[] | null>(null);
   const [amgSpecies, setAmgSpecies] = useState<AmgSpecies>('All');
+  const [amgBucket, setAmgBucket] = useState<AmgSlotBucket>('All');
   useEffect(() => {
     if (activeTab !== 'clothes' || amgManifest) return;
     let canceled = false;
@@ -942,8 +956,12 @@ export function ShopScreen() {
                   'LegLeft', 'LegRight', 'FootLeft', 'FootRight',
                   'AttachmentHead', 'AttachmentFace', 'AttachmentBack',
                 ];
+                const bucketOK = (p: AmgManifestPart) => {
+                  if (amgBucket === 'All') return ALLOWED_SLOTS.includes(p.slot);
+                  return SLOT_BUCKETS[amgBucket].includes(p.slot);
+                };
                 const filtered = amgManifest.filter(
-                  (p) => speciesOK(p) && ALLOWED_SLOTS.includes(p.slot),
+                  (p) => speciesOK(p) && bucketOK(p),
                 );
                 const byPack: Record<string, AmgManifestPart[]> = {};
                 for (const p of filtered) {
@@ -995,6 +1013,24 @@ export function ShopScreen() {
                           label={sp}
                           active={amgSpecies === sp}
                           onPress={() => setAmgSpecies(sp)}
+                        />
+                      ))}
+                    </ScrollView>
+
+                    {/* Slot-bucket filter chips: lets players narrow the
+                        grid to a body region instead of scrolling past
+                        unrelated packs. Bucket + species combine as AND. */}
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingVertical: 4, paddingHorizontal: 4, gap: 8 }}
+                    >
+                      {(['All', 'Upper Body', 'Lower Body', 'Face', 'Accessories'] as AmgSlotBucket[]).map((b) => (
+                        <FilterChip
+                          key={b}
+                          label={b}
+                          active={amgBucket === b}
+                          onPress={() => setAmgBucket(b)}
                         />
                       ))}
                     </ScrollView>

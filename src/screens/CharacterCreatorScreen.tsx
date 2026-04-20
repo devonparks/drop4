@@ -10,7 +10,7 @@ import {
 import { useCharacterStore } from '../stores/characterStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { isStarterPack, packPrefixFromPartName, getPartPrice } from '../data/amgPartPricing';
+import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS } from '../data/amgPartPricing';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CharacterCreatorScreen — Drop4's wiring for the shared AMG creator
@@ -120,6 +120,23 @@ export function CharacterCreatorScreen() {
     );
   }
 
+  // Creator visual callbacks: rarity tint on every part thumbnail + a
+  // coin-price chip on locked ones. The creator itself is economy-
+  // agnostic; Drop4 supplies both by routing through getPartPrice().
+  // Starter-pack parts skip the chip (their price is 0 + they're always
+  // owned) so the UI only highlights purchasable tiers.
+  function getRarityColor(partName: string): string | null {
+    const { rarity, pack } = getPartPrice(partName);
+    if (isStarterPack(pack)) return null;
+    return RARITY_COLORS[rarity] ?? null;
+  }
+
+  function getPriceLabel(partName: string): string | null {
+    const { price, pack } = getPartPrice(partName);
+    if (isStarterPack(pack)) return null;
+    return `${price} 🪙`;
+  }
+
   return (
     <CharacterCreator
       source={CONTENT_SOURCE}
@@ -128,6 +145,8 @@ export function CharacterCreatorScreen() {
       onSave={handleSave}
       onCancel={handleCancel}
       onLockedPart={handleLockedPart}
+      getRarityColor={getRarityColor}
+      getPriceLabel={getPriceLabel}
     />
   );
 }
