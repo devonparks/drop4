@@ -83,7 +83,7 @@ export function TopBar({
           </Pressable>
         ) : (
           <Pressable
-            onPress={() => { haptics.tap(); onSettingsPress?.(); }}
+            onPress={() => { haptics.tap(); playSound('click'); onSettingsPress?.(); }}
             style={styles.settingsBtn}
             accessibilityLabel="Open settings"
             accessibilityRole="button"
