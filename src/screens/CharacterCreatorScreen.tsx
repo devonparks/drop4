@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { Alert } from 'react-native';
 import { CharacterCreator } from '@amg/character-creator';
 import {
   NEUTRAL_CHARACTER,
@@ -7,21 +8,21 @@ import {
   type ContentSource,
 } from '@amg/character-runtime';
 import { useCharacterStore } from '../stores/characterStore';
+import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { isStarterPack, packPrefixFromPartName, getPartPrice } from '../data/amgPartPricing';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CharacterCreatorScreen — Drop4's wiring for the shared AMG creator
 //
-// The creator itself lives in @amg/character-creator. This screen only:
-//   1. Pulls the current character state from Drop4's characterStore
-//   2. Hands it to <CharacterCreator> alongside the content source
+// The creator itself lives in @amg/character-creator. This screen:
+//   1. Pulls the current character state + ownedAmgParts from
+//      Drop4's characterStore
+//   2. Hands them to <CharacterCreator> alongside the content source
 //   3. Persists the result back on Save
-//
-// Drop4 doesn't track per-part ownership yet at the AMG level (the
-// existing ownedOutfits store is for the legacy single-GLB outfit
-// system), so we pass ownedParts=null — every part is treated as
-// owned during the creator UX transition. When Drop4 migrates to the
-// parts-based shop we'll wire ownedParts here.
+//   4. Handles inline "buy this locked part" via onLockedPart — spends
+//      coins from shopStore and unlocks the part so the creator can
+//      equip it immediately (GTA-meets-Sims flow).
 // ═══════════════════════════════════════════════════════════════════════
 
 // Content fetched from Cloudflare R2 public URL. Same URL works in dev
@@ -45,10 +46,24 @@ export function CharacterCreatorScreen() {
   // actually CharacterState.
   const amgCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const setAmgCharacter = useCharacterStore((s) => s.setAmgCharacter);
+  const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
+  const unlockAmgPart = useCharacterStore((s) => s.unlockAmgPart);
   const initial = useMemo<CharacterState>(
     () => amgCharacter ?? NEUTRAL_CHARACTER,
     [amgCharacter],
   );
+
+  // Build the ownedParts set the creator wants: combine the player's
+  // explicitly-unlocked parts with every starter-pack part we know
+  // about. The creator renders a lock chip on any part NOT in this set.
+  // Using a Set means the creator's lookup is O(1) per thumbnail.
+  //
+  // We can't enumerate "every starter part" without the manifest, so we
+  // pass the explicit list + rely on the creator's onLockedPart hook
+  // for anything else — the starter-pack guard also lives in
+  // characterStore.isAmgPartOwned so ownership decisions stay consistent
+  // across the app.
+  const ownedParts = useMemo(() => new Set(ownedAmgParts), [ownedAmgParts]);
 
   function handleSave(next: CharacterState) {
     haptics.win();
@@ -61,13 +76,58 @@ export function CharacterCreatorScreen() {
     navigation.goBack();
   }
 
+  // Inline buy-and-equip. When the player taps a locked part in any
+  // picker (Outfit / Hair / Face), the creator calls this with the part
+  // name. We price it, show a coin-spend prompt, and on confirm move
+  // coins → unlock the part → the creator picks up the new ownedParts
+  // set on the next render and unlocks the thumbnail.
+  function handleLockedPart(partName: string) {
+    // Starter-pack parts should never reach this handler, but guard
+    // anyway so a stale render doesn't double-charge.
+    if (isStarterPack(packPrefixFromPartName(partName))) return;
+
+    const { price, rarity } = getPartPrice(partName);
+    const coins = useShopStore.getState().coins;
+
+    if (coins < price) {
+      haptics.error();
+      Alert.alert(
+        'Not enough coins',
+        `This ${rarity} item costs ${price} coins. You have ${coins}.`,
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Buy this part?',
+      `Unlock this ${rarity} item for ${price} coins?`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+        {
+          text: `Buy ${price}`,
+          style: 'default',
+          onPress: () => {
+            const ok = useShopStore.getState().spendCoins(price);
+            if (!ok) {
+              haptics.error();
+              return;
+            }
+            haptics.win();
+            unlockAmgPart(partName);
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <CharacterCreator
       source={CONTENT_SOURCE}
       initial={initial}
-      ownedParts={null}
+      ownedParts={ownedParts}
       onSave={handleSave}
       onCancel={handleCancel}
+      onLockedPart={handleLockedPart}
     />
   );
 }

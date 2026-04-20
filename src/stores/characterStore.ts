@@ -15,6 +15,7 @@
 
 import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
+import { isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -136,6 +137,12 @@ interface CharacterState {
   unlockedHairColors: string[];     // PREMIUM_HAIR_COLORS ids
   unlockedOutfitPacks: string[];    // PREMIUM_OUTFIT_PACKS ids (color packs)
   ownedOutfits: string[];           // outfit IDs from outfitRegistry
+  // GTA-meets-Sims AMG part ownership. Every Sidekick part the player has
+  // bought (by exact part name like 'SK_SAMR_WARR_03_10TORS_HU01').
+  // STARTER_PACKS are treated as owned for free — isAmgPartOwned() reads
+  // this set plus the starter override. The shop adds to it, the creator
+  // reads from it via the `ownedParts` prop to render lock overlays.
+  ownedAmgParts: string[];
   // New: AMG Studios character state (from the Sims-tier creator).
   // When present, this is the source of truth for the player's avatar
   // across every AMG game. Legacy `customization` stays for the existing
@@ -153,9 +160,11 @@ interface CharacterState {
   unlockHairColor: (id: string) => void;
   unlockOutfitPack: (id: string) => void;
   unlockOutfit: (id: string) => void;
+  unlockAmgPart: (name: string) => void;
   isOutfitOwned: (id: string) => boolean;
   isHairColorUnlocked: (hex: string) => boolean;
   isOutfitPackUnlocked: (id: string) => boolean;
+  isAmgPartOwned: (name: string) => boolean;
   resetCustomization: () => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -167,6 +176,7 @@ interface PersistedCharacter {
   unlockedHairColors: string[];
   unlockedOutfitPacks: string[];
   ownedOutfits?: string[];
+  ownedAmgParts?: string[];
   amgCharacter?: AmgCharacterState | null;
 }
 
@@ -182,6 +192,10 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   unlockedHairColors: [],
   unlockedOutfitPacks: [],
   ownedOutfits: [...STARTER_OUTFITS],
+  // Empty by default — isAmgPartOwned() treats STARTER_PACKS parts as
+  // owned automatically, so a fresh player can already equip base
+  // heads/hair + MDRN_CIVL outfits without any purchases.
+  ownedAmgParts: [],
   amgCharacter: null,
 
   setOutfit: (id) => set((s) => ({
@@ -224,6 +238,18 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   })),
   isOutfitOwned: (id) => get().ownedOutfits.includes(id) || STARTER_OUTFITS.includes(id),
 
+  // AMG part unlocks. Called from the shop after a successful purchase;
+  // the creator reads ownership via isAmgPartOwned() to decide whether
+  // to show a lock overlay / buy prompt on a part grid thumbnail.
+  unlockAmgPart: (name) => set((s) => ({
+    ownedAmgParts: s.ownedAmgParts.includes(name) ? s.ownedAmgParts : [...s.ownedAmgParts, name],
+  })),
+  isAmgPartOwned: (name) => {
+    // Fast path: starter packs are owned for free.
+    if (isStarterPack(packPrefixFromPartName(name))) return true;
+    return get().ownedAmgParts.includes(name);
+  },
+
   isHairColorUnlocked: (hex) => {
     if (FREE_HAIR_COLORS.includes(hex)) return true;
     const premium = PREMIUM_HAIR_COLORS.find((c) => c.hex === hex);
@@ -246,6 +272,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         unlockedOutfitPacks: saved.unlockedOutfitPacks || [],
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
+        ownedAmgParts: saved.ownedAmgParts ?? [],
         amgCharacter: saved.amgCharacter ?? null,
       });
     }
@@ -259,6 +286,7 @@ useCharacterStore.subscribe((state) => {
     unlockedHairColors: state.unlockedHairColors,
     unlockedOutfitPacks: state.unlockedOutfitPacks,
     ownedOutfits: state.ownedOutfits,
+    ownedAmgParts: state.ownedAmgParts,
     amgCharacter: state.amgCharacter,
   });
 });
