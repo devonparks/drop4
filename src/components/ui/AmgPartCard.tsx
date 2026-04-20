@@ -12,8 +12,8 @@
 // owned card fires onEquip(partName). Parent decides what to do.
 // ═══════════════════════════════════════════════════════════════════════
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import { PressScale } from '../animations';
 import {
   getPartPrice,
@@ -60,6 +60,53 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
 
   const dim = size === 'compact' ? 96 : 120;
 
+  // Rarity glow pulse — only runs for epic+ items so common cards
+  // stay quiet. Drives the card's outer shadow opacity in a slow
+  // breath so a Samurai/Apocalypse part visibly sells its tier
+  // across the grid. Not a distraction since it's soft + slow.
+  const glow = useRef(new Animated.Value(0)).current;
+  const shouldGlow = rarity === 'epic' || rarity === 'rare';
+  useEffect(() => {
+    if (!shouldGlow) return;
+    const period = rarity === 'epic' ? 2400 : 3600;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, { toValue: 1, duration: period / 2, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(glow, { toValue: 0, duration: period / 2, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shouldGlow, rarity, glow]);
+
+  // NEW ribbon shake — tiny rotate wobble so the player's eye catches
+  // recently-purchased parts in the Collection grid. 2s cycle.
+  const wobble = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!isNew) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(wobble, { toValue: 1, duration: 1000, useNativeDriver: true, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(wobble, { toValue: -1, duration: 1000, useNativeDriver: true, easing: Easing.inOut(Easing.sin) }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isNew, wobble]);
+
+  const glowStyle = shouldGlow ? {
+    shadowColor: rarityColor,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: glow.interpolate({ inputRange: [0, 1], outputRange: [3, 14] }),
+    shadowOpacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.95] }),
+    ...(Platform.OS === 'web' ? ({
+      // Web shadow driver — boxShadow animation can't interpolate, so
+      // use a filter drop-shadow that grows via the same glow value.
+      // @ts-expect-error CSS-only on web
+      boxShadow: glow.interpolate ? undefined : undefined,
+    } as any) : {}),
+  } : null;
+
   return (
     <PressScale
       onPress={() => {
@@ -71,19 +118,24 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
       accessibilityRole="button"
       accessibilityLabel={owned ? `Equip ${meta.displayName} ${variant}` : `Buy ${meta.displayName} ${variant} for ${price} coins`}
     >
-      <View style={[styles.card, { borderColor: rarityColor, width: dim, height: dim + 32 }]}>
+      <Animated.View style={[styles.card, { borderColor: rarityColor, width: dim, height: dim + 32 }, glowStyle]}>
         {/* Pack emoji block */}
         <View style={[styles.swatch, { backgroundColor: rarityColor + '22' }]}>
           <Text style={styles.emoji}>{meta.emoji}</Text>
           <Text style={styles.variant}>#{variant}</Text>
         </View>
 
-        {/* NEW ribbon — only shows for parts unlocked in the last 7 days.
-            Absolute-positioned over the top-right corner of the card. */}
+        {/* NEW ribbon — shows for parts unlocked in the last 7 days.
+            Subtly wobbles so the player's eye catches fresh unlocks. */}
         {isNew ? (
-          <View style={styles.newRibbon}>
+          <Animated.View
+            style={[
+              styles.newRibbon,
+              { transform: [{ rotate: wobble.interpolate({ inputRange: [-1, 1], outputRange: ['-6deg', '6deg'] }) }] },
+            ]}
+          >
             <Text style={styles.newText}>NEW</Text>
-          </View>
+          </Animated.View>
         ) : null}
 
         {/* Footer: rarity/price or OWNED chip */}
@@ -99,7 +151,7 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
             </>
           )}
         </View>
-      </View>
+      </Animated.View>
     </PressScale>
   );
 }
