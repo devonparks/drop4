@@ -339,7 +339,10 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   sceneImageAnim: Platform.OS === 'web' ? ({
-    animation: 'drop4SceneDrift 28s ease-in-out infinite',
+    animationName: 'drop4SceneDrift',
+    animationDuration: '28s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
     willChange: 'transform, opacity',
   } as any) : null,
   // ── Live nebula wallpaper layers ──────────────────────────────────
@@ -354,7 +357,10 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   nebulaBackAnim: Platform.OS === 'web' ? ({
-    animation: 'drop4NebulaBack 180s linear infinite',
+    animationName: 'drop4NebulaBack',
+    animationDuration: '180s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
     willChange: 'transform',
   } as any) : null,
   nebulaMidStyle: {
@@ -365,7 +371,10 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
   },
   nebulaMidAnim: Platform.OS === 'web' ? ({
-    animation: 'drop4NebulaMid 70s ease-in-out infinite',
+    animationName: 'drop4NebulaMid',
+    animationDuration: '70s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
     willChange: 'transform, opacity',
   } as any) : null,
   nebulaNearStyle: {
@@ -375,7 +384,10 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
   },
   nebulaNearAnim: Platform.OS === 'web' ? ({
-    animation: 'drop4NebulaNear 45s ease-in-out infinite',
+    animationName: 'drop4NebulaNear',
+    animationDuration: '45s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
     willChange: 'transform, opacity',
   } as any) : null,
   // Horizontal edge feather — dark bands fading in from each side so
@@ -412,7 +424,10 @@ const styles = StyleSheet.create({
     // very slow parallax that the eye registers as "alive" rather than
     // "moving." All three layers drift in loosely different directions
     // to create depth.
-    animation: 'drop4BgDriftA 120s linear infinite',
+    animationName: 'drop4BgDriftA',
+    animationDuration: '120s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
   } as any) : null,
   starFieldSmall1: {
     ...StyleSheet.absoluteFillObject,
@@ -423,7 +438,10 @@ const styles = StyleSheet.create({
     } as any : {}),
   },
   starFieldSmall1Anim: Platform.OS === 'web' ? ({
-    animation: 'drop4BgDriftB 85s linear infinite',
+    animationName: 'drop4BgDriftB',
+    animationDuration: '85s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
   } as any) : null,
   starFieldSmall2: {
     ...StyleSheet.absoluteFillObject,
@@ -434,7 +452,10 @@ const styles = StyleSheet.create({
     } as any : {}),
   },
   starFieldSmall2Anim: Platform.OS === 'web' ? ({
-    animation: 'drop4BgDriftC 160s linear infinite',
+    animationName: 'drop4BgDriftC',
+    animationDuration: '160s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
   } as any) : null,
   // Breathing glow orbs — large soft radial gradients sized to fill
   // ~60% of the viewport, positioned off-screen so only the glow edge
