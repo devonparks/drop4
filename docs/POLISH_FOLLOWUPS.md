@@ -10,7 +10,8 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 <!-- Shipped: Shop Part card component — src/components/ui/AmgPartCard.tsx (commit 2ee926f) -->
 <!-- Shipped: Shop Pack emoji + display name lookup — src/data/amgPackMeta.ts (commit 2ee926f) -->
 
-- **Shop Clothes tab: show owned count per pack.** Section header currently shows just the part count. Add `(N/M)` where N = owned parts in this pack for the current species, M = total. Makes pack completion a visible goal.
+<!-- Shipped: Shop Clothes tab owned count per pack — section headers now show N/M (commit 527ae83) -->
+
 
 - **Shop Clothes tab: collection tab filter chips.** Add a second chip row below species: "All / Upper Body / Lower Body / Face / Accessories". Maps ALLOWED_SLOTS into 4 buckets so players can browse by what they want to change. Define buckets: upperBody=[Torso, ArmUpperLeft/Right, ArmLowerLeft/Right, HandLeft/Right], lowerBody=[Hips, LegLeft/Right, FootLeft/Right], face=[Head, Hair, FacialHair], accessories=[AttachmentHead, AttachmentFace, AttachmentBack].
 
