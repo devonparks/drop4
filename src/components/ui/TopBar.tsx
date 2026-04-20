@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated, Image, ImageSourcePropType, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -248,12 +248,17 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,210,120,0.3)', // Soft gold tint on the pill rim
     shadowColor: 'rgba(0,0,0,0.8)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 3,
+    ...(Platform.OS === 'web' ? ({
+      // Subtle inset gold sheen on web so the pill reads as a premium
+      // metal chip, not a flat dark capsule.
+      boxShadow: 'inset 0 1px 0 rgba(255,240,200,0.2), inset 0 -1px 0 rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.5)',
+    } as any) : {}),
   },
   pillInner: {
     flexDirection: 'row',
