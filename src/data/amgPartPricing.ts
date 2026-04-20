@@ -18,9 +18,9 @@
 // later by adding explicit entries to PACK_PRICE_OVERRIDES.
 // ═══════════════════════════════════════════════════════════════════════
 
-export type PartRarity = 'starter' | 'common' | 'uncommon' | 'rare' | 'epic';
+type PartRarity = 'starter' | 'common' | 'uncommon' | 'rare' | 'epic';
 
-export interface PartPriceInfo {
+interface PartPriceInfo {
   /** Coin cost. 0 = starter / always owned. */
   price: number;
   /** Rarity tier — drives UI color + badge copy. */
@@ -40,7 +40,7 @@ export const STARTER_PACKS: readonly string[] = [
 /** Explicit price overrides for specific packs. If a pack isn't listed
  *  here we fall back to the rarity table below. Use this for premium
  *  packs that deserve a different price point than their tier default. */
-export const PACK_PRICE_OVERRIDES: Record<string, { price: number; rarity: PartRarity }> = {
+const PACK_PRICE_OVERRIDES: Record<string, { price: number; rarity: PartRarity }> = {
   'HUMN_BASE': { price: 0,    rarity: 'starter' },
   'GOBL_BASE': { price: 0,    rarity: 'starter' },
   'ELVS_BASE': { price: 0,    rarity: 'starter' },

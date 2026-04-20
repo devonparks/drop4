@@ -11,7 +11,7 @@
 // library beyond what's currently on R2.
 // ═══════════════════════════════════════════════════════════════════════
 
-export interface AmgPackMeta {
+interface AmgPackMeta {
   /** Single emoji for shop section headers and card corners. */
   emoji: string;
   /** Player-facing pack name. No "Pack" suffix — the UI adds it. */
@@ -20,7 +20,7 @@ export interface AmgPackMeta {
   description: string;
 }
 
-export const AMG_PACK_META: Record<string, AmgPackMeta> = {
+const AMG_PACK_META: Record<string, AmgPackMeta> = {
   // Starter — always owned
   HUMN_BASE: { emoji: '🧑', displayName: 'Human Base', description: 'Essential human heads, hair, and anatomy.' },
   GOBL_BASE: { emoji: '👺', displayName: 'Goblin Base', description: 'Essential goblin heads and features.' },
