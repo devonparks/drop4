@@ -518,7 +518,7 @@ export function CareerScreen({ navigation }: Props) {
                     </View>
                   )}
                   <Pressable
-                    onPress={() => { haptics.tap(); setChapterCelebration(null); }}
+                    onPress={() => { haptics.tap(); playSound('click'); setChapterCelebration(null); }}
                     style={styles.celebButton}
                     accessibilityRole="button"
                     accessibilityLabel="Continue"
