@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { MilestonesList } from '../components/missions/MilestonesList';
 import { ChallengesScreen } from './ChallengesScreen';
-import { PressScale } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -68,7 +68,9 @@ function MilestonesBody() {
       }}
       showsVerticalScrollIndicator={false}
     >
-      <MilestonesList />
+      <StaggeredEntry index={0} delay={60}>
+        <MilestonesList />
+      </StaggeredEntry>
     </ScrollView>
   );
 }
