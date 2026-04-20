@@ -7,6 +7,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { Character3D } from '../components/3d/Character3D';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { useShopStore } from '../stores/shopStore';
 import { useCharacterStore } from '../stores/characterStore';
 import { usePetStore } from '../stores/petStore';
@@ -106,6 +107,7 @@ export function CustomizeScreen() {
 
   const handleCategoryTap = (cat: CategoryMeta) => {
     haptics.tap();
+    playSound('click');
     if (cat.id === 'character') {
       // The Sims-tier AMG creator — @amg/character-creator wired via
       // Drop4's CharacterCreatorScreen. Replaces the legacy
