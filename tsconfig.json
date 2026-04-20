@@ -1,6 +1,19 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@amg/character-runtime": ["../amg-engine/packages/character-runtime/src/index"],
+      "@amg/character-runtime/*": ["../amg-engine/packages/character-runtime/src/*"],
+      "@amg/character-creator": ["../amg-engine/packages/character-creator/src/index"],
+      "@amg/character-creator/*": ["../amg-engine/packages/character-creator/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../amg-engine/packages/*/src/**/*.ts",
+    "../amg-engine/packages/*/src/**/*.tsx"
+  ]
 }

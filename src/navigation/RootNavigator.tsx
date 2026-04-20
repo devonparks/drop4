@@ -21,6 +21,7 @@ import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { AmgTestScreen } from '../screens/AmgTestScreen';
 
 export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
@@ -92,6 +93,10 @@ export type RootStackParamList = {
   // TopBar) rather than a bottom tab — the 4-tab redesign removed Profile
   // from the tab bar.
   Profile: undefined;
+  // Temporary smoke-test for the amg-engine character pipeline. Delete
+  // this route (and src/screens/AmgTestScreen.tsx) once the new
+  // CharacterCreator replaces Character3DCreator everywhere.
+  AmgTest: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -176,6 +181,11 @@ export function RootNavigator() {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="AmgTest"
+        component={AmgTestScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

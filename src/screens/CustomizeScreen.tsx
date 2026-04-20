@@ -107,7 +107,10 @@ export function CustomizeScreen() {
   const handleCategoryTap = (cat: CategoryMeta) => {
     haptics.tap();
     if (cat.id === 'character') {
-      navigation.navigate('Character3DCreator' as never);
+      // TEMP: routes to the amg-engine smoke test while we build out the
+      // full Sims-tier creator. Once the new creator screen lands this
+      // swaps back to the real creator route.
+      navigation.navigate('AmgTest' as never);
       return;
     }
     // Jump to the Shop tab. Shop's activeTab state is internal so for now
