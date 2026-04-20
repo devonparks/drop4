@@ -32,7 +32,7 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
 <!-- src/screens/CharacterCreatorScreen.tsx was repurposed (commit a61651a era) as the AMG creator wrapper that bridges RootNavigator to @amg/character-creator. DO NOT delete — it is the live screen behind the 'AmgCreator' route. The OLD 2D creator code that used to live at this path is gone (replaced wholesale). -->
 - (Reserved slot — see comment above re: CharacterCreatorScreen.tsx repurpose; do not re-flag it as unreachable.)
-<!-- GameScreen isOnlineMatch / onlineMatchId / myPlayerNum stripped (commit 40316bc). WagerCourtParams, rankedMode, rankedClockSeconds deleted (commit e2be2a5). Remaining dead shared-type fields — blocked by charter rule 5: MatchupParams.wagerAmount (zero callers), MatchupParams.mode 'ranked'|'wager' values (zero callers, only 'casual'/'career'/'local' are live). -->
+<!-- GameScreen isOnlineMatch / onlineMatchId / myPlayerNum stripped (commit 40316bc). WagerCourtParams, rankedMode, rankedClockSeconds deleted (commit e2be2a5). MatchupParams.wagerAmount and dead 'ranked'|'wager' mode values cleaned (commit TBD). -->
 
 ## Open — beta prep
 

@@ -30,7 +30,7 @@ export type CareerRewardParams = {
 };
 
 export type MatchupParams = {
-  mode: 'casual' | 'ranked' | 'career' | 'wager' | 'local';
+  mode: 'casual' | 'career' | 'local';
   difficulty?: string;
   opponentName?: string;
   opponentLevel?: number;
@@ -39,7 +39,6 @@ export type MatchupParams = {
   connectCount?: number;
   boardSize?: string;
   timerSeconds?: number;
-  wagerAmount?: number;
   careerLevelId?: number;
   careerLevelReward?: CareerRewardParams;
   careerChapter?: number;
