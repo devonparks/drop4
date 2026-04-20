@@ -72,13 +72,25 @@ function SparkleParticle({ color, size, left, bottom, delay }: {
   );
 }
 
+// 12 sparkles with varied colors + positions + delays so the stage
+// reads as actively alive, not a static set of 4 dots. Colors match
+// the live-wallpaper palette (magenta, cyan, warm gold) so the stage
+// feels continuous with the cosmic bg rather than a different layer.
 function StageSparkles() {
   return (
     <>
-      <SparkleParticle color="rgba(255,210,80,0.9)" size={4} left={30} bottom={90} delay={0} />
-      <SparkleParticle color="rgba(100,180,255,0.9)" size={3} left={200} bottom={110} delay={600} />
-      <SparkleParticle color="rgba(255,210,80,0.9)" size={3.5} left={60} bottom={150} delay={1200} />
-      <SparkleParticle color="rgba(100,180,255,0.9)" size={4} left={180} bottom={160} delay={800} />
+      <SparkleParticle color="rgba(255,210,80,0.9)"  size={4}   left={30}  bottom={90}  delay={0} />
+      <SparkleParticle color="rgba(100,180,255,0.9)" size={3}   left={200} bottom={110} delay={600} />
+      <SparkleParticle color="rgba(255,210,80,0.9)"  size={3.5} left={60}  bottom={150} delay={1200} />
+      <SparkleParticle color="rgba(100,180,255,0.9)" size={4}   left={180} bottom={160} delay={800} />
+      <SparkleParticle color="rgba(255,140,200,0.9)" size={3}   left={110} bottom={180} delay={1800} />
+      <SparkleParticle color="rgba(255,220,120,0.9)" size={5}   left={250} bottom={130} delay={2200} />
+      <SparkleParticle color="rgba(180,140,255,0.9)" size={3.5} left={80}  bottom={220} delay={2600} />
+      <SparkleParticle color="rgba(120,255,200,0.9)" size={3}   left={220} bottom={200} delay={3200} />
+      <SparkleParticle color="rgba(255,180,100,0.9)" size={4}   left={150} bottom={240} delay={3800} />
+      <SparkleParticle color="rgba(255,120,180,0.9)" size={2.5} left={40}  bottom={260} delay={4400} />
+      <SparkleParticle color="rgba(100,220,255,0.9)" size={3}   left={290} bottom={240} delay={5000} />
+      <SparkleParticle color="rgba(255,240,180,0.9)" size={4.5} left={170} bottom={280} delay={5600} />
     </>
   );
 }
