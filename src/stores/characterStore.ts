@@ -143,6 +143,10 @@ interface CharacterState {
   // this set plus the starter override. The shop adds to it, the creator
   // reads from it via the `ownedParts` prop to render lock overlays.
   ownedAmgParts: string[];
+  /** True after the player has seen the "starter wardrobe unlocked"
+   *  toast. Gates CharacterCreatorScreen's first-open ceremony so the
+   *  toast doesn't fire every time they open the creator. */
+  amgStarterSeen: boolean;
   // New: AMG Studios character state (from the Sims-tier creator).
   // When present, this is the source of truth for the player's avatar
   // across every AMG game. Legacy `customization` stays for the existing
@@ -161,6 +165,7 @@ interface CharacterState {
   unlockOutfitPack: (id: string) => void;
   unlockOutfit: (id: string) => void;
   unlockAmgPart: (name: string) => void;
+  markAmgStarterSeen: () => void;
   isOutfitOwned: (id: string) => boolean;
   isHairColorUnlocked: (hex: string) => boolean;
   isOutfitPackUnlocked: (id: string) => boolean;
@@ -177,6 +182,7 @@ interface PersistedCharacter {
   unlockedOutfitPacks: string[];
   ownedOutfits?: string[];
   ownedAmgParts?: string[];
+  amgStarterSeen?: boolean;
   amgCharacter?: AmgCharacterState | null;
 }
 
@@ -196,6 +202,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   // owned automatically, so a fresh player can already equip base
   // heads/hair + MDRN_CIVL outfits without any purchases.
   ownedAmgParts: [],
+  amgStarterSeen: false,
   amgCharacter: null,
 
   setOutfit: (id) => set((s) => ({
@@ -249,6 +256,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
     if (isStarterPack(packPrefixFromPartName(name))) return true;
     return get().ownedAmgParts.includes(name);
   },
+  markAmgStarterSeen: () => set({ amgStarterSeen: true }),
 
   isHairColorUnlocked: (hex) => {
     if (FREE_HAIR_COLORS.includes(hex)) return true;
@@ -273,6 +281,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
         ownedAmgParts: saved.ownedAmgParts ?? [],
+        amgStarterSeen: saved.amgStarterSeen ?? false,
         amgCharacter: saved.amgCharacter ?? null,
       });
     }
@@ -287,6 +296,7 @@ useCharacterStore.subscribe((state) => {
     unlockedOutfitPacks: state.unlockedOutfitPacks,
     ownedOutfits: state.ownedOutfits,
     ownedAmgParts: state.ownedAmgParts,
+    amgStarterSeen: state.amgStarterSeen,
     amgCharacter: state.amgCharacter,
   });
 });

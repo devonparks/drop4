@@ -37,6 +37,7 @@ import { fonts, weight } from '../theme/typography';
 
 type CategoryId =
   | 'character'
+  | 'clothes'
   | 'outfits'
   | 'emotes'
   | 'pets'
@@ -58,6 +59,7 @@ type CategoryMeta = {
 // stays consistent between the Customize dashboard and the Shop detail.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/shop-outfits.png') },
+  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/shop-outfits.png'), shopTab: 'clothes' },
   { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/shop-emotes.png'),  shopTab: 'emotes' },
   { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/shop-pets.png'),    shopTab: 'pets' },
   { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/shop-pieces.png'),  shopTab: 'pieces' },
@@ -121,8 +123,14 @@ export function CustomizeScreen() {
     navigation.navigate('MainTabs', { screen: 'Shop' } as never);
   };
 
+  // Clothes (AMG parts) owned count — no canonical total yet because the
+  // manifest is fetched at shop mount, so we show just the owned count
+  // for now. The `/M` slot renders blank when total===0 below.
+  const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
+
   const counts: Record<CategoryId, { owned: number; total: number }> = {
     character: { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
+    clothes:   { owned: ownedAmgParts.length, total: 0 },
     outfits:   { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
     emotes:    { owned: ownedEmotes.length,  total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },

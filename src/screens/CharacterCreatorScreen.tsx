@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 import { CharacterCreator } from '@amg/character-creator';
@@ -48,6 +48,29 @@ export function CharacterCreatorScreen() {
   const setAmgCharacter = useCharacterStore((s) => s.setAmgCharacter);
   const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
   const unlockAmgPart = useCharacterStore((s) => s.unlockAmgPart);
+  const amgStarterSeen = useCharacterStore((s) => s.amgStarterSeen);
+  const markAmgStarterSeen = useCharacterStore((s) => s.markAmgStarterSeen);
+
+  // First-open ceremony: tell the player they already own a starter
+  // wardrobe so the creator doesn't feel gated from the jump. One-shot
+  // per player — gated on characterStore.amgStarterSeen. Delayed a beat
+  // so the creator gets to render its first frame before the modal
+  // shows up, otherwise it pops before the character finishes loading.
+  useEffect(() => {
+    if (amgStarterSeen) return;
+    const timer = setTimeout(() => {
+      haptics.win();
+      Alert.alert(
+        '🎁 Starter Wardrobe Unlocked',
+        "You already own 5 base character heads/hair (one per species) " +
+        "and 12 Modern Civilian outfit variants. Browse the Shop's Clothes " +
+        "tab to buy more packs (Samurai, Apocalypse, Fighters, and more).",
+        [{ text: "Let's go", onPress: () => markAmgStarterSeen() }],
+        { cancelable: false },
+      );
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [amgStarterSeen, markAmgStarterSeen]);
   const initial = useMemo<CharacterState>(
     () => amgCharacter ?? NEUTRAL_CHARACTER,
     [amgCharacter],
