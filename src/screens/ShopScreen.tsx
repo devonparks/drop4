@@ -1308,7 +1308,6 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent',
   },
   tabActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' },
-  tabIcon: { fontSize: 13 },
   tabIconImg: { width: 22, height: 22 },
   tabLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
   tabLabelActive: { color: colors.orange },
@@ -1329,10 +1328,6 @@ const s = StyleSheet.create({
   itemName: {
     fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, color: '#ffffff',
     textAlign: 'center', marginTop: 6, paddingHorizontal: 6,
-  },
-  rarityLabel: {
-    fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 9, textAlign: 'center',
-    textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2,
   },
   // Centering wrap for the painted RarityChip inside the 108px item card.
   // The chip itself has no outer spacing, so we center it + give it breathing
