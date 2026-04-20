@@ -6,6 +6,7 @@ import { MilestonesList } from '../components/missions/MilestonesList';
 import { ChallengesScreen } from './ChallengesScreen';
 import { PressScale } from '../components/animations';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -84,7 +85,7 @@ function SubTabSwitcher({ tab, onChange }: { tab: MissionsTab; onChange: (t: Mis
       {(['daily', 'milestones'] as MissionsTab[]).map((key) => (
         <PressScale
           key={key}
-          onPress={() => { haptics.tap(); onChange(key); }}
+          onPress={() => { haptics.tap(); playSound('click'); onChange(key); }}
           accessibilityRole="tab"
           accessibilityLabel={key === 'daily' ? 'Daily Challenges tab' : 'Milestones tab'}
           accessibilityState={{ selected: tab === key }}
