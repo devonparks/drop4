@@ -790,7 +790,7 @@ export function ShopScreen() {
                 {tabs.map(tab => (
                   <PressScale
                     key={tab.key}
-                    onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); }}
+                    onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); playSound('click'); }}
                     scaleTo={0.94}
                     accessibilityRole="tab"
                     accessibilityLabel={`${tab.label} tab`}
