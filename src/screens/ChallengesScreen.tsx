@@ -179,7 +179,7 @@ function AchievementGroup({ difficulty, achievements }: { difficulty: Achievemen
   return (
     <View style={styles.achGroup}>
       <Pressable
-        onPress={() => { haptics.tap(); setExpanded(!expanded); }}
+        onPress={() => { haptics.tap(); playSound('click'); setExpanded(!expanded); }}
         style={styles.achGroupHeader}
         accessibilityRole="button"
         accessibilityLabel={`${meta.label} achievements, ${unlocked} of ${total} unlocked`}
@@ -433,7 +433,7 @@ export function ChallengesScreen() {
           {allComplete && !bonusClaimed && (
             <PulseGlow color="#27ae3d" size={50} active>
             <Pressable
-              onPress={() => { haptics.tap(); handleClaimBonus(); }}
+              onPress={() => { haptics.tap(); playSound('click'); handleClaimBonus(); }}
               style={styles.claimBagBtn}
               accessibilityRole="button"
               accessibilityLabel="Claim daily reward bag, 200 coins"
