@@ -71,7 +71,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>City not found.</Text>
           <Pressable
-            onPress={() => navigation.goBack()}
+            onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
             style={styles.errorBtn}
             accessibilityRole="button"
             accessibilityLabel="Back to map"
