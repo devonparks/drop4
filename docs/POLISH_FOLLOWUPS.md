@@ -30,7 +30,8 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 <!-- seriesStore.ts deleted — zero importers after MP kill (commit TBD) -->
 - MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
-- `src/screens/CharacterCreatorScreen.tsx` (2D creator) now unreachable after CareerCityScreen HUD was rerouted to Character3DCreator. Delete the file + its RootNavigator registration + its `CharacterCreator` key from `RootStackParamList`. Non-loop cleanup — touches a shared type (charter rule 5).
+<!-- src/screens/CharacterCreatorScreen.tsx was repurposed (commit a61651a era) as the AMG creator wrapper that bridges RootNavigator to @amg/character-creator. DO NOT delete — it is the live screen behind the 'AmgCreator' route. The OLD 2D creator code that used to live at this path is gone (replaced wholesale). -->
+- (Reserved slot — see comment above re: CharacterCreatorScreen.tsx repurpose; do not re-flag it as unreachable.)
 <!-- GameScreen isOnlineMatch / onlineMatchId / myPlayerNum stripped (commit 40316bc). WagerCourtParams, rankedMode, rankedClockSeconds deleted (commit e2be2a5). Remaining dead shared-type fields — blocked by charter rule 5: MatchupParams.wagerAmount (zero callers), MatchupParams.mode 'ranked'|'wager' values (zero callers, only 'casual'/'career'/'local' are live). -->
 
 ## Open — beta prep
