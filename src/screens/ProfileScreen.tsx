@@ -479,7 +479,7 @@ export function ProfileScreen() {
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]} accessibilityRole="header">RECENT MATCHES</Text>
               <PressScale scaleTo={0.95}>
                 <Pressable
-                  onPress={() => { haptics.tap(); navigateTo('MatchHistory'); }}
+                  onPress={() => { haptics.tap(); playSound('click'); navigateTo('MatchHistory'); }}
                   accessibilityRole="button"
                   accessibilityLabel="View all matches"
                   accessibilityHint="Open the full match history"
