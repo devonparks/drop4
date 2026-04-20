@@ -57,6 +57,10 @@ function TabIcon({ iconKey, label, focused, badgeCount }: { iconKey: keyof typeo
 
   return (
     <Animated.View style={[styles.tabItem, animStyle]}>
+      {/* Focused glow ring — a soft orange halo behind the active tab
+          icon so the selected tab reads unmistakably. Only renders
+          when focused so inactive tabs stay visually quiet. */}
+      {focused && <View pointerEvents="none" style={styles.tabFocusGlow} />}
       <Image
         source={iconSource}
         style={[styles.tabIconImg, !focused && styles.tabIconImgInactive]}
@@ -153,6 +157,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     minWidth: 50,
+  },
+  // Soft orange halo behind the active tab icon. On web we also use
+  // a filter: blur to feather the edges for a premium neon-sign feel.
+  tabFocusGlow: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    top: -2,
+    backgroundColor: 'rgba(255,140,0,0.18)',
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(2px)' } as any) : {}),
   },
   // Flux-generated PNG tab icons replace the emoji set. Sized smaller than
   // the emoji (28 vs 20px font) because the painted icons have built-in

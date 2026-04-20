@@ -376,19 +376,23 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* ═══ DROP4 LOGO ═══ Breathing scale so the header feels
-            alive on idle. ~3% scale range on a 5s cycle — subtle
-            enough to read as premium polish, not jumpy. */}
+        {/* ═══ DROP4 LOGO ═══ Breathing scale + animated magenta
+            halo behind the wordmark so the header reads as a neon
+            sign instead of a static PNG. The halo pulses on a 3.2s
+            cycle; the logo itself breathes on a 5s cycle — two
+            independent rhythms so the composite never visibly
+            loops. */}
         <StaggeredEntry index={0}>
-        <BreathingView intensity={0.015} speed={5000}>
-          <View style={styles.logoArea}>
+        <View style={styles.logoArea}>
+          <View pointerEvents="none" style={styles.logoHalo} />
+          <BreathingView intensity={0.015} speed={5000}>
             <Image
               source={require('../assets/images/ui/home-logo.png')}
               style={styles.logoImage}
               resizeMode="contain"
             />
-          </View>
-        </BreathingView>
+          </BreathingView>
+        </View>
         </StaggeredEntry>
 
         {/* ═══ CHARACTER LOBBY ═══ */}
@@ -686,6 +690,32 @@ const styles = StyleSheet.create({
     height: 110,
     marginTop: -22,
     marginBottom: -24,
+  },
+  // Neon-sign halo behind the wordmark. A soft magenta glow blob
+  // with a CSS keyframes pulse on web (brightness + scale). On
+  // native we get a static glow via shadowRadius — still reads
+  // premium even without motion.
+  logoHalo: {
+    position: 'absolute',
+    width: 260,
+    height: 100,
+    alignSelf: 'center',
+    top: 5,
+    borderRadius: 130,
+    backgroundColor: 'rgba(255,60,160,0.28)',
+    ...(Platform.OS === 'web' ? ({
+      filter: 'blur(22px)',
+      animationName: 'drop4LogoHalo',
+      animationDuration: '3200ms',
+      animationTimingFunction: 'ease-in-out',
+      animationIterationCount: 'infinite',
+      animationDirection: 'alternate',
+    } as any) : {
+      shadowColor: '#ff3ca0',
+      shadowOpacity: 0.6,
+      shadowRadius: 30,
+      shadowOffset: { width: 0, height: 0 },
+    }),
   },
   // Engagement chip row — sits between the character lobby and the mode
   // buttons, in the same slot the old CUSTOMIZE/SPIN pills occupied.
@@ -991,3 +1021,20 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 });
+
+// Web-only keyframe injection for the DROP4 logo neon-halo pulse.
+// Idempotent — same pattern as ScreenBackground's keyframe block.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const ID = 'drop4-home-keyframes';
+  if (!document.getElementById(ID)) {
+    const el = document.createElement('style');
+    el.id = ID;
+    el.textContent = `
+      @keyframes drop4LogoHalo {
+        0%   { opacity: 0.55; transform: scale(0.96); }
+        100% { opacity: 0.92; transform: scale(1.08); }
+      }
+    `;
+    document.head.appendChild(el);
+  }
+}
