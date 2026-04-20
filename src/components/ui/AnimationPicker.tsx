@@ -109,7 +109,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
         {/* Tab bar */}
         <View style={styles.tabRow}>
           <Pressable
-            onPress={() => { haptics.tap(); setActiveTab('emotes'); }}
+            onPress={() => { haptics.tap(); playSound('click'); setActiveTab('emotes'); }}
             style={[styles.tab, activeTab === 'emotes' && styles.tabActive]}
             accessibilityRole="tab"
             accessibilityLabel="Emotes tab"
@@ -118,7 +118,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
             <Text style={[styles.tabText, activeTab === 'emotes' && styles.tabTextActive]}>🕺 EMOTES</Text>
           </Pressable>
           <Pressable
-            onPress={() => { haptics.tap(); setActiveTab('idles'); }}
+            onPress={() => { haptics.tap(); playSound('click'); setActiveTab('idles'); }}
             style={[styles.tab, activeTab === 'idles' && styles.tabActive]}
             accessibilityRole="tab"
             accessibilityLabel="Idles tab"
