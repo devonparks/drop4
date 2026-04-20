@@ -1964,9 +1964,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 6,
   },
-  controlIcon: {
-    fontSize: 15,
-  },
   // Flux-painted action icon (hint/undo/quit) — replaces the emoji glyph
   // inside the HUD control buttons. Same footprint so the buttons don't
   // resize.
@@ -2092,9 +2089,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,140,0,0.4)',
-  },
-  emoteWheelTriggerIcon: {
-    fontSize: 26,
   },
   // Painted emote bubble icon for the floating emote wheel trigger in the
   // bottom-right of the game screen. Slightly bigger than the text emoji
