@@ -33,7 +33,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 - **Streak freeze visible.** characterStore / shopStore tracks streak freeze charges but it's only surfaced in DailyRewardPopup. Add a small icon in the TopBar (next to the streak flame) when player has freezes available, with a tap-to-explain tooltip.
 
-- **Replace legacy CharacterCreatorScreen (2D creator) leftover styles.** File was repurposed for AMG wrapper — the old styles might still lurk. Audit `src/screens/CharacterCreatorScreen.tsx` for unused StyleSheet keys.
+<!-- Shipped: CharacterCreatorScreen audit — file has no StyleSheet at all after AMG repurpose; no dead styles to remove -->
 
 ## Open — GTA-meets-Sims shop integration (HIGH PRIORITY)
 

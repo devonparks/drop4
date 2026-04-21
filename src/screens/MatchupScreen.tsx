@@ -170,6 +170,22 @@ export function MatchupScreen({ navigation }: Props) {
   }, []);
 
   // ═══════════════════════════════════
+  // Animation: Spinner rotation
+  // ═══════════════════════════════════
+  const spinRotation = useSharedValue(0);
+  const spinStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${spinRotation.value}deg` }],
+  }));
+
+  useEffect(() => {
+    spinRotation.value = withRepeat(
+      withTiming(360, { duration: 1000, easing: Easing.linear }),
+      -1,
+      false,
+    );
+  }, []);
+
+  // ═══════════════════════════════════
   // Animation: Searching dots
   // ═══════════════════════════════════
   const [dots, setDots] = useState('');
@@ -319,9 +335,9 @@ export function MatchupScreen({ navigation }: Props) {
               <Animated.View entering={FadeIn.duration(300)} style={styles.searchingWrap}>
                 <Text style={styles.searchingText}>Finding{'\n'}opponent{dots}</Text>
                 {/* Spinning ring */}
-                <View style={styles.spinnerOuter}>
+                <Animated.View style={[styles.spinnerOuter, spinStyle]}>
                   <View style={styles.spinnerInner} />
-                </View>
+                </Animated.View>
               </Animated.View>
             ) : (
               <>
@@ -698,12 +714,6 @@ const styles = StyleSheet.create({
     borderTopColor: colors.orange,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' ? {
-      animationKeyframes: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
-      animationDuration: '1s',
-      animationTimingFunction: 'linear',
-      animationIterationCount: 'infinite',
-    } as any : {}),
   },
   spinnerInner: {
     width: 8,
