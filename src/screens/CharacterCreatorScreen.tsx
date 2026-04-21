@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { CharacterCreator } from '@amg/character-creator';
 import {
   NEUTRAL_CHARACTER,
@@ -114,33 +114,34 @@ export function CharacterCreatorScreen() {
 
     if (coins < price) {
       haptics.error();
-      Alert.alert(
-        'Not enough coins',
-        `This ${rarity} item costs ${price} coins. You have ${coins}.`,
-      );
+      const msg = `Not enough coins — this ${rarity} item costs ${price}. You have ${coins}.`;
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Not enough coins', msg);
       return;
     }
 
-    Alert.alert(
-      'Buy this part?',
-      `Unlock this ${rarity} item for ${price} coins?`,
-      [
-        { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-        {
-          text: `Buy ${price}`,
-          style: 'default',
-          onPress: () => {
-            const ok = useShopStore.getState().spendCoins(price);
-            if (!ok) {
-              haptics.error();
-              return;
-            }
-            haptics.win();
-            unlockAmgPart(partName);
-          },
-        },
-      ],
-    );
+    // RN-Web's Alert.alert silently swallows multi-button configs, so
+    // we branch: native gets a proper Alert, web uses window.confirm.
+    const doBuy = () => {
+      const ok = useShopStore.getState().spendCoins(price);
+      if (!ok) { haptics.error(); return; }
+      haptics.win();
+      unlockAmgPart(partName);
+    };
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Unlock this ${rarity} item for ${price} coins?`);
+      if (confirmed) doBuy();
+      else haptics.tap();
+    } else {
+      Alert.alert(
+        'Buy this part?',
+        `Unlock this ${rarity} item for ${price} coins?`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+          { text: `Buy ${price}`, style: 'default', onPress: doBuy },
+        ],
+      );
+    }
   }
 
   // Creator visual callbacks: rarity tint on every part thumbnail + a

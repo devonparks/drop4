@@ -33,7 +33,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { AmgPartCard } from '../components/ui/AmgPartCard';
 import { packMeta, sortPacksForShop } from '../data/amgPackMeta';
 import { getPartPrice, isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { PETS as PETS_3D } from '../data/petRegistry';
@@ -979,22 +979,37 @@ export function ShopScreen() {
                   const { price, rarity } = getPartPrice(partName);
                   if (coins < price) {
                     haptics.error();
-                    Alert.alert('Not enough coins', `This ${rarity} item costs ${price}. You have ${coins}.`);
+                    if (Platform.OS === 'web') {
+                      window.alert(`Not enough coins — this ${rarity} item costs ${price}. You have ${coins}.`);
+                    } else {
+                      Alert.alert('Not enough coins', `This ${rarity} item costs ${price}. You have ${coins}.`);
+                    }
                     return;
                   }
-                  Alert.alert('Buy this part?', `Unlock this ${rarity} item for ${price} coins?`, [
-                    { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-                    {
-                      text: `Buy ${price}`,
-                      onPress: () => {
-                        const ok = spendCoins(price);
-                        if (!ok) { haptics.error(); return; }
-                        haptics.win();
-                        playSound('purchase');
-                        unlockAmgPart(partName);
-                      },
-                    },
-                  ]);
+                  // RN-Web's Alert.alert silently fails with multi-button
+                  // config, so the buy flow was a dead-end on web. Use
+                  // window.confirm on web (reliable) and Alert.alert on
+                  // native (proper native UI). Same end behavior: yes →
+                  // spend + unlock, no → cancel.
+                  const confirmed = Platform.OS === 'web'
+                    ? window.confirm(`Unlock this ${rarity} item for ${price} coins?`)
+                    : null;
+                  const doBuy = () => {
+                    const ok = spendCoins(price);
+                    if (!ok) { haptics.error(); return; }
+                    haptics.win();
+                    playSound('purchase');
+                    unlockAmgPart(partName);
+                  };
+                  if (Platform.OS === 'web') {
+                    if (confirmed) doBuy();
+                    else haptics.tap();
+                  } else {
+                    Alert.alert('Buy this part?', `Unlock this ${rarity} item for ${price} coins?`, [
+                      { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+                      { text: `Buy ${price}`, onPress: doBuy },
+                    ]);
+                  }
                 };
                 const handleEquip = (_partName: string) => {
                   haptics.tap();
