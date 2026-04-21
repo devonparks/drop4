@@ -710,6 +710,10 @@ export function GameScreen({ navigation }: Props) {
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
       const quoteResult: 'win' | 'loss' | 'draw' = status === 'won' ? (winner === 1 ? 'win' : 'loss') : 'draw';
       setGameOverQuote(getRandomGameOverQuote(quoteResult));
+      // First-game loss: override with an encouraging message
+      if (status === 'won' && winner === 2 && useMatchHistoryStore.getState().matches.length === 1) {
+        setGameOverQuote("Great first try! Tap Rematch to even the score \uD83D\uDCAA");
+      }
     }
     // Save replay on game end
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {

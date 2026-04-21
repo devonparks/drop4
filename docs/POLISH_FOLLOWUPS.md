@@ -9,7 +9,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 <!-- Shipped: Defer "Tap Your Character!" tooltip — 5-min cooldown after welcome dismiss (HomeScreen) -->
 <!-- Shipped: Defer "Need Help?" tooltip — 10-min cooldown after welcome dismiss (GameScreen) -->
 
-- **Encouraging message on first-game loss.** MatchupScreen/GameScreen end state: if player just lost their FIRST game ever (gameStore.gamesPlayed === 1 and they lost), show a friendly "Great first try! Tap Rematch to even the score" message instead of the generic score display. Tracks `firstGameShown` in a local ref or characterStore.
+<!-- Shipped: Encouraging message on first-game loss — overrides generic quote with "Great first try!" when matchHistory has exactly 1 game -->
 
 - **Bot persona avatars.** Every bot in MatchupScreen/GameScreen uses the same generic player outfit. Add a `portrait: string` or `glb: string` field to each BOT_POOL persona and render a distinct 3D portrait / emoji per bot. "Rookie Ron" with a rookie cap, "Savage Sam" with a skull — sells the character.
 
