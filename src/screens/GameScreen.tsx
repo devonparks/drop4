@@ -920,7 +920,7 @@ export function GameScreen({ navigation }: Props) {
   }, []);
 
   return (
-    <ScreenBackground>
+    <ScreenBackground liveWallpaper nebulaHue={-20}>
       <View style={styles.container}>
 
         {/* Back/Exit button — top left */}

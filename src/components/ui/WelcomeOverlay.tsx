@@ -51,7 +51,7 @@ const PAGES: WelcomePage[] = [
     kicker: 'EXPRESS YOURSELF',
     title: 'Customize',
     lines: [
-      '152 outfits across 12 packs.',
+      'Thousands of outfit parts. Real Sims-tier creator.',
       '16 collectible pets.',
       '48 emotes + idle animations.',
     ],
