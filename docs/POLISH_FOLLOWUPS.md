@@ -2,6 +2,40 @@
 
 The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add ideas here when you notice something too big for a single iteration.
 
+## Open — Playtest-driven fixes (2026-04-20 session, NEW HIGH PRIORITY)
+
+Devon's playtest pass surfaced these. Each is self-contained and sized for one polish iteration.
+
+- **Defer "Tap Your Character!" tooltip on first session.** HomeScreen shows the tooltip on first boot after Welcome dismiss. Same stacking issue as the Daily Reward (now deferred via `drop4_welcome_dismissed_at`). Gate the `home_tap_character` tutorial tip with the same 5-minute cooldown — if `Date.now() - welcome_dismissed_at < 5 minutes`, skip showing it this session. Re-uses `AsyncStorage.getItem('drop4_welcome_dismissed_at')` which is already written by WelcomeOverlay.
+
+- **Defer "Need Help?" tooltip on first game.** GameScreen shows a tutorial popup about the Hint button on the first game launch. Same fix: check welcome_dismissed_at timestamp, skip if < 10 minutes old (give the player one full game first).
+
+- **Encouraging message on first-game loss.** MatchupScreen/GameScreen end state: if player just lost their FIRST game ever (gameStore.gamesPlayed === 1 and they lost), show a friendly "Great first try! Tap Rematch to even the score" message instead of the generic score display. Tracks `firstGameShown` in a local ref or characterStore.
+
+- **Bot persona avatars.** Every bot in MatchupScreen/GameScreen uses the same generic player outfit. Add a `portrait: string` or `glb: string` field to each BOT_POOL persona and render a distinct 3D portrait / emoji per bot. "Rookie Ron" with a rookie cap, "Savage Sam" with a skull — sells the character.
+
+- **Match-end coin/XP count-up animation.** The game-over screen shows final score but the reward doesn't animate. Add a count-up from 0 → earned amount for coins + XP on win, so the dopamine hits right. Maybe 800ms cubic-easeOut with a scale pulse.
+
+- **First-time creator "Tap your character" tooltip defer.** Same pattern — don't stack another popup right after Welcome. Gate on welcome_dismissed_at.
+
+- **GameScreen match-end: show winning line animation.** When the winning 4 pieces light up, add a sparkle/shimmer sweep across them over 600ms. Currently they just go static colored.
+
+- **Easy AI tuning round 2.** First pass bumped miss-win to 30% and miss-block to 45%. Verify a playtest with a fresh player wins their first Easy game ~80% of the time. If not, bump to 40% miss-win / 55% miss-block.
+
+- **Shop Clothes: 3D thumbnails (LARGE — split into 2 iterations).** Emoji thumbnails work but the real win is a 64×64 rendered GLB preview. Iteration 1: implement `AmgPartThumbnail3D` that mounts a tiny R3F Canvas with JUST the part mesh (no full character) against a dark disc. Iteration 2: swap emoji for the new component in AmgPartCard. Cache materials so the grid scroll stays 60fps.
+
+- **Shop Clothes: long-press preview modal.** Tapping buys, long-press opens a modal showing the full player character with JUST this part swapped in. Helps players commit to a purchase. Reuses CompositeCharacter from @amg/character-runtime.
+
+- **Bottom tab badges.** Shop tab could get a small red dot when new shop rotation hits (currently static). Missions tab already has badge for unclaimed — extend pattern to Shop + Customize (Customize dot if player has unequipped clothes newly unlocked this week).
+
+- **Career: tap the NEXT circle on CareerMap to jump straight into the matchup sheet.** Currently tapping any level circle goes to CareerCity (shipped, good). Next iteration: for the single NEXT level, skip the city sheet and open the match sheet directly — saves a tap on the most common action.
+
+- **Post-match: show "+1 owned part" hint if career win unlocks a part.** Career match sheet lists rewards; after winning, show a subtle toast or confetti.
+
+- **Streak freeze visible.** characterStore / shopStore tracks streak freeze charges but it's only surfaced in DailyRewardPopup. Add a small icon in the TopBar (next to the streak flame) when player has freezes available, with a tap-to-explain tooltip.
+
+- **Replace legacy CharacterCreatorScreen (2D creator) leftover styles.** File was repurposed for AMG wrapper — the old styles might still lurk. Audit `src/screens/CharacterCreatorScreen.tsx` for unused StyleSheet keys.
+
 ## Open — GTA-meets-Sims shop integration (HIGH PRIORITY)
 
 Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore + `amgPartPricing.ts` + `handleLockedPart` in CharacterCreatorScreen spends coins + unlocks. Shop UI scaffold shipped (commits 2ee926f, e05018a): AmgPartCard + amgPackMeta + Clothes tab in ShopScreen rendering the R2 manifest grouped by pack. The remaining items are visual polish + edge cases. Each sized for ONE polish iteration — ship one, commit, next iteration picks the next.
