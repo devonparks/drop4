@@ -69,22 +69,20 @@ export function packMeta(pack: string): AmgPackMeta {
 // indistinguishable without 3D thumbnails — slot emoji fixes that.
 
 const SLOT_EMOJI: Record<string, string> = {
-  // Head + face — use distinctive single-object emoji so every slot
-  // is visually its own thing, not a variant of the default emoji face.
-  '01HEAD': '😊',  // face (head slot = face reveal)
-  '02HAIR': '✂️',  // scissors = hair style
-  '03EBLL': '➰',  // eyebrow shape
-  '04EBRL': '➰',
+  // Head + face
+  '01HEAD': '😊',
+  '02HAIR': '✂️',
+  '03EBRL': '➰',  // eyebrow left (correct code per manifest)
+  '04EBRR': '➰',  // eyebrow right
   '05EYEL': '👁️',
   '06EYER': '👁️',
   '07EARL': '👂',
   '08EARR': '👂',
-  '09FCHR': '🧔‍♂️',  // facial hair
-  '32FHAR': '🧔‍♂️',
+  '09FCHR': '🧔‍♂️',
   '35NOSE': '👃',
   '36TETH': '🦷',
   '37TONG': '👅',
-  // Upper body — garment-specific
+  // Upper body
   '10TORS': '👕',
   '11AUPL': '💪',
   '12AUPR': '💪',
@@ -98,10 +96,23 @@ const SLOT_EMOJI: Record<string, string> = {
   '19LEGR': '🦵',
   '20FOTL': '👟',
   '21FOTR': '👟',
-  // Accessories
-  'AHEAD': '🧢',   // AttachmentHead (hat)
-  'AFACE': '🕶️',  // AttachmentFace (glasses/masks)
-  'ABACK': '🎒',   // AttachmentBack (backpack)
+  // Wrap (full-body one-piece)
+  '38WRAP': '🥋',
+  // Attachments — head/face/back visible accessories
+  '22AHED': '🧢',  // AttachmentHead (hat)
+  '23AFAC': '🕶️', // AttachmentFace (glasses / masks)
+  '24ABAC': '🎒',  // AttachmentBack (backpack)
+  // Attachment hips + shoulders + elbows + knees (armor / holsters)
+  '25AHPF': '🗡️', // hips front
+  '26AHPB': '🗡️', // hips back
+  '27AHPL': '🗡️', // hips left
+  '28AHPR': '🗡️', // hips right
+  '29ASHL': '🛡️', // shoulder left
+  '30ASHR': '🛡️', // shoulder right
+  '31AEBL': '🛡️', // elbow left
+  '32AEBR': '🛡️', // elbow right
+  '33AKNL': '🦿',  // knee left (mechanical leg emoji = knee pad)
+  '34AKNR': '🦿',  // knee right
 };
 
 /** Emoji for a Sidekick part based on its slot code. Extract the slot
