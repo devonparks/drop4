@@ -54,9 +54,29 @@ const BOT_POOLS: Record<string, { name: string; level: number; title: string }[]
   ],
 };
 
-function pickRandomBot(difficulty: string) {
+/**
+ * Pick an opponent bot with an APPROPRIATE level for the player. Playtest
+ * caught that a brand-new level-1 player was matched against "Rookie Ron
+ * Level 5" on Easy — visually they're already outmatched before the game
+ * begins. Now we clamp the shown level to the player's current level:
+ *  - Easy: clamp to playerLevel (never shows higher)
+ *  - Medium / Hard: lift the pool's level to at least playerLevel + 3 so
+ *    harder difficulties feel like real steps up, not a gentle nudge.
+ * Name + title stay from the pool so the personas are intact.
+ */
+function pickRandomBot(difficulty: string, playerLevel: number) {
   const pool = BOT_POOLS[difficulty] || BOT_POOLS.medium;
-  return pool[Math.floor(Math.random() * pool.length)];
+  const persona = pool[Math.floor(Math.random() * pool.length)];
+  let level = persona.level;
+  if (difficulty === 'easy') {
+    // Never show a higher level than the player on Easy.
+    level = Math.max(1, Math.min(persona.level, playerLevel));
+  } else if (difficulty === 'medium') {
+    level = Math.max(persona.level, playerLevel + 3);
+  } else if (difficulty === 'hard') {
+    level = Math.max(persona.level, playerLevel + 6);
+  }
+  return { ...persona, level };
 }
 
 type Props = {
@@ -75,7 +95,7 @@ export function MatchupScreen({ navigation }: Props) {
 
   // Determine opponent info — pick a random bot from the pool (stable per mount)
   const difficulty = params.difficulty || 'medium';
-  const [botPersona] = useState(() => pickRandomBot(difficulty));
+  const [botPersona] = useState(() => pickRandomBot(difficulty, playerLevel));
   const opponentName = params.opponentName || botPersona.name;
   const opponentLevel = params.opponentLevel ?? botPersona.level;
   const opponentTitle = params.opponentTitle || botPersona.title;

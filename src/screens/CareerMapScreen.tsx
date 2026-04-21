@@ -239,17 +239,40 @@ export function CareerMapScreen({ navigation }: Props) {
                     const isNext = lvl.id === nextLevelId;
                     const priorIncomplete = cityLevels.slice(0, idx).some((l) => !progress[l.id]?.completed);
                     const isLocked = priorIncomplete && !isComplete;
+                    // Pressable wrapper so tapping any unlocked level
+                    // circle jumps to the city sheet for context — users
+                    // instinctively try to tap the numbered circle, not
+                    // the banner above. Locked circles don't fire so
+                    // the padlock reads as "not yet" cleanly.
                     return (
                       <StaggeredEntry key={lvl.id} index={idx}>
-                        <PathNode
-                          level={lvl}
-                          levelNumber={idx + 1}
-                          isComplete={isComplete}
-                          isNext={isNext}
-                          isLocked={isLocked}
-                          stars={stars}
-                          city={city}
-                        />
+                        <Pressable
+                          disabled={isLocked}
+                          onPress={() => {
+                            haptics.tap();
+                            playSound('click');
+                            navigation.navigate('CareerCity', { cityId: city.id });
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            isLocked
+                              ? `Level ${idx + 1} locked`
+                              : isComplete
+                              ? `Level ${idx + 1} complete, ${stars} of 3 stars`
+                              : `Play level ${idx + 1}`
+                          }
+                          accessibilityState={{ disabled: isLocked }}
+                        >
+                          <PathNode
+                            level={lvl}
+                            levelNumber={idx + 1}
+                            isComplete={isComplete}
+                            isNext={isNext}
+                            isLocked={isLocked}
+                            stars={stars}
+                            city={city}
+                          />
+                        </Pressable>
                       </StaggeredEntry>
                     );
                   })}

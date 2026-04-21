@@ -114,6 +114,18 @@ export function DailyRewardPopup() {
       const welcomeDismissed = await AsyncStorage.getItem('drop4_welcome_dismissed');
       if (cancelled) return;
       if (welcomeDismissed !== 'true') return false;
+      // Breathing-room gate: if the player JUST finished the Welcome
+      // onboarding in this session, don't immediately stack a Daily
+      // Reward popup — let the home screen be the first thing they
+      // see and interact with. The reward will fire naturally on the
+      // next app launch. 5-minute cooldown covers even a slow walk-
+      // through of the welcome carousel.
+      const dismissedAtStr = await AsyncStorage.getItem('drop4_welcome_dismissed_at');
+      if (dismissedAtStr) {
+        const elapsed = Date.now() - Number(dismissedAtStr);
+        if (elapsed >= 0 && elapsed < 5 * 60 * 1000) return true; // "done" — don't poll
+      }
+      if (cancelled) return;
       const available = checkAndShowReward();
       if (available) {
         setReward(available);

@@ -231,18 +231,25 @@ export function getAIMove(board: Board, difficulty: Difficulty, connectCount: nu
     return validCols[Math.floor(Math.random() * validCols.length)];
   }
 
-  // Check for immediate winning move first (all difficulties)
+  // Check for immediate winning move first — but Easy AI sometimes
+  // misses even its own winning move (playtest found new players
+  // losing their first game on Easy, which kills retention). ~30%
+  // chance the Easy AI fails to seize the win.
   const validCols = getValidCols(board);
-  for (const col of validCols) {
-    const row = getLowestEmptyRow(board, col, board[col].length);
-    const testBoard = board.map(c => [...c]);
-    testBoard[col][row] = AI;
-    if (isWinningMove(testBoard, col, row, AI, connectN)) return col;
+  const shouldTakeWin = difficulty === 'easy' ? Math.random() > 0.30 : true;
+  if (shouldTakeWin) {
+    for (const col of validCols) {
+      const row = getLowestEmptyRow(board, col, board[col].length);
+      const testBoard = board.map(c => [...c]);
+      testBoard[col][row] = AI;
+      if (isWinningMove(testBoard, col, row, AI, connectN)) return col;
+    }
   }
 
   // Check for immediate block — on Easy, the AI sometimes misses blocks
-  // to give new players a chance to win
-  const shouldBlock = difficulty === 'easy' ? Math.random() > 0.35 : true;
+  // to give new players a chance to win (45% miss rate now — bumped
+  // from 35% after playtest showed Easy was still beating randoms).
+  const shouldBlock = difficulty === 'easy' ? Math.random() > 0.45 : true;
   if (shouldBlock) {
     for (const col of validCols) {
       const row = getLowestEmptyRow(board, col, board[col].length);

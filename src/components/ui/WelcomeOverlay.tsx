@@ -106,6 +106,11 @@ export function WelcomeOverlay() {
     setVisible(false);
     setDismissed(true);
     AsyncStorage.setItem('drop4_welcome_dismissed', 'true');
+    // Stamp the dismissal timestamp so DailyRewardPopup (and any other
+    // first-session popup) can give the player breathing room right
+    // after onboarding — if we pop the next modal immediately, the
+    // home screen never gets a chance to be the first thing they see.
+    AsyncStorage.setItem('drop4_welcome_dismissed_at', String(Date.now()));
   };
 
   const goToPage = (p: number) => {
