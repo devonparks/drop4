@@ -58,6 +58,62 @@ export function packMeta(pack: string): AmgPackMeta {
   };
 }
 
+// ── Slot-code → emoji mapping ────────────────────────────────────────
+//
+// The Sidekick part-code is the 2-digit + 3-5-letter segment in every
+// part name (e.g. 'SK_MDRN_CIVL_01_10TORS_HU01' → '10TORS'). Mapping
+// these to slot-specific emoji lets the shop card show at-a-glance
+// what body region the part is for (👕 torso, 👖 legs, 🧢 head, etc.)
+// instead of the same pack emoji on every variant. Playtest caught
+// that 6 Modern Police cards in a row all showed 👮👮👮 and were
+// indistinguishable without 3D thumbnails — slot emoji fixes that.
+
+const SLOT_EMOJI: Record<string, string> = {
+  // Head + face
+  '01HEAD': '🧑',
+  '02HAIR': '💇',
+  '03EBLL': '🪒',
+  '04EBRL': '🪒',
+  '05EYEL': '👁️',
+  '06EYER': '👁️',
+  '07EARL': '👂',
+  '08EARR': '👂',
+  '09FCHR': '🧔', // facial hair
+  '32FHAR': '🧔',
+  '35NOSE': '👃',
+  '36TETH': '🦷',
+  '37TONG': '👅',
+  // Upper body
+  '10TORS': '👕',
+  '11AUPL': '💪',
+  '12AUPR': '💪',
+  '13ALWL': '🫱',
+  '14ALWR': '🫱',
+  '15HNDL': '🤚',
+  '16HNDR': '🤚',
+  // Lower body
+  '17HIPS': '👖',
+  '18LEGL': '🦵',
+  '19LEGR': '🦵',
+  '20FOTL': '👟',
+  '21FOTR': '👟',
+  // Accessories
+  'AHEAD': '🧢', // AttachmentHead
+  'AFACE': '🕶️', // AttachmentFace (glasses/masks)
+  'ABACK': '🎒', // AttachmentBack
+};
+
+/** Emoji for a Sidekick part based on its slot code. Extract the slot
+ *  code from the part name first (regex match for _XXYYYY_ segment),
+ *  then look up the slot emoji. Falls back to the pack emoji via
+ *  packMeta if we can't derive a slot. */
+export function slotEmoji(partName: string, packEmoji: string): string {
+  const m = partName.match(/_\d{2}[A-Z]{3,4}(?=_|$)/);
+  if (!m) return packEmoji;
+  const code = m[0].slice(1); // drop leading underscore
+  return SLOT_EMOJI[code] || packEmoji;
+}
+
 /** Stable ordering for shop section headers: starters first, then rising
  *  rarity tiers, then anything else alphabetically. Callers can pass
  *  their live list of packs and get an ordered copy. */

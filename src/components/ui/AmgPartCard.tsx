@@ -20,7 +20,7 @@ import {
   RARITY_COLORS,
   RARITY_LABELS,
 } from '../../data/amgPartPricing';
-import { packMeta } from '../../data/amgPackMeta';
+import { packMeta, slotEmoji } from '../../data/amgPackMeta';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -119,10 +119,14 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
       accessibilityLabel={owned ? `Equip ${meta.displayName} ${variant}` : `Buy ${meta.displayName} ${variant} for ${price} coins`}
     >
       <Animated.View style={[styles.card, { borderColor: rarityColor, width: dim, height: dim + 32 }, glowStyle]}>
-        {/* Pack emoji block */}
+        {/* Pack emoji block — SLOT-aware. The hero emoji now reflects
+            the BODY REGION (shirt/pants/hat/shoes) so a grid of police
+            parts reads as "shirt, shirt, pants, shoes" at a glance
+            instead of "cop-head x6." The small pack emoji in the
+            corner preserves the fashion brand identity. */}
         <View style={[styles.swatch, { backgroundColor: rarityColor + '22' }]}>
-          <Text style={styles.emoji}>{meta.emoji}</Text>
-          <Text style={styles.variant}>#{variant}</Text>
+          <Text style={styles.emoji}>{slotEmoji(partName, meta.emoji)}</Text>
+          <Text style={styles.packBadge}>{meta.emoji} #{variant}</Text>
         </View>
 
         {/* NEW ribbon — shows for parts unlocked in the last 7 days.
@@ -179,6 +183,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontWeight: weight.medium,
     letterSpacing: 1,
+  },
+  // Tiny pack-emoji + variant tag underneath the big slot emoji.
+  // Keeps the pack brand visible without making the card noisy.
+  packBadge: {
+    marginTop: 4,
+    fontSize: 10,
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    letterSpacing: 0.6,
   },
   footer: {
     height: 28,
