@@ -165,6 +165,19 @@ export function ProfileScreen() {
 
   return (
     <ScreenBackground scene="profile" liveWallpaper nebulaHue={-40}>
+      {/* Floating back button — absolute-positioned at top-left so it
+          sits above the ScrollView without competing with the portrait
+          layout. ProfileScreen doesn't have a TopBar (trophy card is
+          the hero), so this dedicated gold-rimmed back chevron is the
+          only way out. Matches the settings gear style from TopBar. */}
+      <Pressable
+        onPress={() => { haptics.tap(); playSound('back'); navigation.goBack(); }}
+        style={styles.backBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Text style={styles.backIcon}>{'‹'}</Text>
+      </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile header */}
         <StaggeredEntry index={0} delay={60}>
@@ -530,6 +543,29 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Floating back button — matches the TopBar settings gear size /
+  // color treatment. Sits above ScrollView content via high zIndex.
+  backBtn: {
+    position: 'absolute',
+    top: 48,
+    left: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,120,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  backIcon: {
+    color: '#ffffff',
+    fontSize: 26,
+    fontWeight: weight.bold,
+    marginTop: -4,
+    marginLeft: -2,
+  },
   content: {
     paddingTop: 16,
     paddingBottom: 100,
