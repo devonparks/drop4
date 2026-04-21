@@ -6,9 +6,8 @@ The continuous polish loop (`tools/polish-loop.sh`) picks from this list. Add id
 
 Devon's playtest pass surfaced these. Each is self-contained and sized for one polish iteration.
 
-- **Defer "Tap Your Character!" tooltip on first session.** HomeScreen shows the tooltip on first boot after Welcome dismiss. Same stacking issue as the Daily Reward (now deferred via `drop4_welcome_dismissed_at`). Gate the `home_tap_character` tutorial tip with the same 5-minute cooldown — if `Date.now() - welcome_dismissed_at < 5 minutes`, skip showing it this session. Re-uses `AsyncStorage.getItem('drop4_welcome_dismissed_at')` which is already written by WelcomeOverlay.
-
-- **Defer "Need Help?" tooltip on first game.** GameScreen shows a tutorial popup about the Hint button on the first game launch. Same fix: check welcome_dismissed_at timestamp, skip if < 10 minutes old (give the player one full game first).
+<!-- Shipped: Defer "Tap Your Character!" tooltip — 5-min cooldown after welcome dismiss (HomeScreen) -->
+<!-- Shipped: Defer "Need Help?" tooltip — 10-min cooldown after welcome dismiss (GameScreen) -->
 
 - **Encouraging message on first-game loss.** MatchupScreen/GameScreen end state: if player just lost their FIRST game ever (gameStore.gamesPlayed === 1 and they lost), show a friendly "Great first try! Tap Rematch to even the score" message instead of the generic score display. Tracks `firstGameShown` in a local ref or characterStore.
 

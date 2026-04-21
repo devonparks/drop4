@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, Pressable, Animated, Platform, PanResponder } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -284,17 +285,16 @@ export function HomeScreen() {
     }
   }, [spinAvailable]);
 
-  // Show tutorial on first visit — delay enough for stores to load from AsyncStorage
+  // Show tutorial on first visit — defer if welcome was just dismissed (< 5 min ago)
   const homeTip = getTipById('home_tap_character')!;
   const tipAlreadySeen = seenTips.includes('home_tap_character');
   useEffect(() => {
     if (!tipAlreadySeen) {
-      // Wait 3s to ensure tutorialStore has loaded from AsyncStorage
-      const timer = setTimeout(() => {
-        // Re-check after delay in case store loaded in the meantime
-        if (!useTutorialStore.getState().seenTips.includes('home_tap_character')) {
-          setShowTutorial(true);
-        }
+      const timer = setTimeout(async () => {
+        if (useTutorialStore.getState().seenTips.includes('home_tap_character')) return;
+        const dismissedAtStr = await AsyncStorage.getItem('drop4_welcome_dismissed_at');
+        if (dismissedAtStr && Date.now() - Number(dismissedAtStr) < 5 * 60 * 1000) return;
+        setShowTutorial(true);
       }, 3000);
       return () => clearTimeout(timer);
     } else {

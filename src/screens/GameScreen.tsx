@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   FadeIn,
 } from 'react-native-reanimated';
@@ -146,10 +147,14 @@ export function GameScreen({ navigation }: Props) {
 
   const totalWins = useMemo(() => matches.filter(m => m.result === 'win').length, [matches]);
 
-  // Show tutorial on first game
+  // Show tutorial on first game — defer if welcome was just dismissed (< 10 min ago)
   useEffect(() => {
     if (!hasSeenGameTip('game_hint')) {
-      const timer = setTimeout(() => setShowGameTutorial(true), 2000);
+      const timer = setTimeout(async () => {
+        const dismissedAtStr = await AsyncStorage.getItem('drop4_welcome_dismissed_at');
+        if (dismissedAtStr && Date.now() - Number(dismissedAtStr) < 10 * 60 * 1000) return;
+        setShowGameTutorial(true);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, []);
