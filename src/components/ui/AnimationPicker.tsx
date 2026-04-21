@@ -163,7 +163,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                 </View>
                 <Switch
                   value={homeEmoteRandomMode}
-                  onValueChange={(v) => { haptics.tap(); setHomeEmoteRandomMode(v); }}
+                  onValueChange={(v) => { haptics.tap(); playSound('toggle'); setHomeEmoteRandomMode(v); }}
                   trackColor={{ false: 'rgba(255,255,255,0.15)', true: 'rgba(255,140,0,0.55)' }}
                   thumbColor={homeEmoteRandomMode ? colors.orange : '#e0e0e8'}
                 />
