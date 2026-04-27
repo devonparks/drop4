@@ -29,7 +29,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 <!-- Shipped: Career NEXT-level shortcut — CareerMapScreen onPress branches on isNext: the single NEXT level calls newGame() + navigates straight to Matchup with full level params; other completed levels still route to CareerCity for review. Verified: tapping level 1 from a fresh save lands on Matchup with Rookie Ron / THE REC, skipping the city sheet. Saves a tap on the most common career action. -->
 
-- **Post-match: show "+1 owned part" hint if career win unlocks a part.** Career match sheet lists rewards; after winning, show a subtle toast or confetti.
+<!-- Shipped: Career part unlock celebration — wasCareerLevel wins now track non-coin rewards (board / pieces / pet / emote / title) and render a green "NEW [TYPE] UNLOCKED" chip per reward in the rewards block, alongside the existing star block. Coin rewards stay in the dedicated count-up. -->
 
 <!-- N/A: Streak freeze visible — already shown on ProfileScreen (🧊 row in daily goals card with Ready/Stored/Used status). The polish item asked for it in the TopBar next to the streak flame, but the streak flame was intentionally removed from TopBar in the calm-pass to reduce visual noise. Visibility intent met on Profile. -->
 

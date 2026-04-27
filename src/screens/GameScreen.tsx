@@ -105,6 +105,7 @@ export function GameScreen({ navigation }: Props) {
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
   const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
+  const [unlockedCareerRewards, setUnlockedCareerRewards] = useState<Array<{type: string; amount?: number; id?: string}>>([]);
   const preLevelRef = useRef(useShopStore.getState().level);
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
@@ -499,6 +500,14 @@ export function GameScreen({ navigation }: Props) {
         // Grant bonus reward (e.g. pet from boss levels)
         const levelData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
         if (levelData?.bonusReward) grantReward(levelData.bonusReward as any);
+        // Track non-coin rewards so the rewards block can celebrate the unlock.
+        // Coins are already shown via the dedicated count-up.
+        const collected: Array<{type: string; amount?: number; id?: string}> = [];
+        if (careerReward && careerReward.type !== 'coins') collected.push(careerReward);
+        if (levelData?.bonusReward && (levelData.bonusReward as any).type !== 'coins') {
+          collected.push(levelData.bonusReward as any);
+        }
+        if (collected.length > 0) setUnlockedCareerRewards(collected);
       }
       // Check achievements
       const matchHistory = useMatchHistoryStore.getState();
@@ -1576,6 +1585,27 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   );
                 })()}
+                {/* Career part unlock celebration — fires when a career win
+                    grants a board / pieces / pet / emote / title (non-coin
+                    rewards). The reward itself was already granted server-side
+                    in the win path; this surfaces the unlock so the player
+                    sees what they earned beyond the coin total. */}
+                {wasCareerLevel && unlockedCareerRewards.map((r, i) => {
+                  const meta: Record<string, { icon: string; label: string }> = {
+                    pet:    { icon: '🐶', label: 'NEW PET UNLOCKED' },
+                    board:  { icon: '🎯', label: 'NEW BOARD UNLOCKED' },
+                    pieces: { icon: '🎨', label: 'NEW PIECES UNLOCKED' },
+                    emote:  { icon: '💃', label: 'NEW EMOTE UNLOCKED' },
+                    title:  { icon: '🎖️', label: 'NEW TITLE EARNED' },
+                  };
+                  const m = meta[r.type] || { icon: '🎁', label: 'NEW UNLOCK' };
+                  return (
+                    <View key={`career-unlock-${i}`} style={[styles.goEventRow, { borderColor: 'rgba(76,175,80,0.4)', backgroundColor: 'rgba(76,175,80,0.08)' }]}>
+                      <Text style={styles.goEventIcon}>{m.icon}</Text>
+                      <Text style={[styles.goEventText, { color: '#4caf50' }]}>{m.label}</Text>
+                    </View>
+                  );
+                })}
                 {status === 'won' && winner === 2 && streakBrokenAt !== null && (
                   <View style={[styles.goEventRow, { borderColor: 'rgba(231,76,60,0.3)' }]}>
                     <Text style={styles.goEventIcon}>💔</Text>
