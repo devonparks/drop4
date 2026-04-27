@@ -19,6 +19,7 @@ import {
   CAREER_CITIES,
   CareerCity,
   CareerLevel,
+  CAREER_RATINGS,
   isCityUnlocked,
   getCityCompletion,
   getReputationStars,
@@ -26,6 +27,7 @@ import {
   ALL_CAREER_LEVELS,
 } from '../data/careerLevels';
 import { useCareerStore } from '../stores/careerStore';
+import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -59,6 +61,7 @@ const CITY_ART: Record<string, ImageSourcePropType> = {
 
 export function CareerMapScreen({ navigation }: Props) {
   const progress = useCareerStore((s) => s.progress);
+  const newGame = useGameStore((s) => s.newGame);
   const coins = useShopStore((s) => s.coins);
   const gems = useShopStore((s) => s.gems);
   const level = useShopStore((s) => s.level);
@@ -242,6 +245,12 @@ export function CareerMapScreen({ navigation }: Props) {
                     // instinctively try to tap the numbered circle, not
                     // the banner above. Locked circles don't fire so
                     // the padlock reads as "not yet" cleanly.
+                    //
+                    // Shortcut: tapping the single NEXT (current) level
+                    // skips the city sheet and opens the matchup directly,
+                    // since that's the most common action and the city
+                    // context is unnecessary for the player's already-
+                    // active level.
                     return (
                       <StaggeredEntry key={lvl.id} index={idx}>
                         <Pressable
@@ -249,6 +258,39 @@ export function CareerMapScreen({ navigation }: Props) {
                           onPress={() => {
                             haptics.tap();
                             playSound('click');
+                            if (isNext) {
+                              newGame(lvl.difficulty, true, {
+                                rows: lvl.settings.rows,
+                                cols: lvl.settings.cols,
+                                connectCount: lvl.settings.connectCount,
+                                timerSeconds: lvl.settings.timerSeconds || 0,
+                                startingPlayer: (lvl.settings.playerGoesFirst === false ? 2 : 1) as 1 | 2,
+                              });
+                              navigation.navigate('Matchup', {
+                                mode: 'career',
+                                difficulty: lvl.difficulty,
+                                opponentName: lvl.opponent,
+                                opponentLevel: CAREER_RATINGS[lvl.id],
+                                opponentTitle: lvl.opponentPersonality,
+                                courtName: lvl.isBoss
+                                  ? `BOSS · ${city.nickname.toUpperCase()}`
+                                  : city.nickname.toUpperCase(),
+                                careerLevelId: lvl.id,
+                                careerLevelReward: lvl.reward
+                                  ? { type: lvl.reward.type, amount: lvl.reward.amount, id: lvl.reward.id }
+                                  : undefined,
+                                careerChapter: lvl.chapter,
+                                connectCount: lvl.settings.connectCount,
+                                boardSize: lvl.settings.rows && lvl.settings.cols
+                                  ? `${lvl.settings.rows}x${lvl.settings.cols}`
+                                  : undefined,
+                                timerSeconds: lvl.settings.timerSeconds,
+                                presetBoard: lvl.settings.presetBoard as any,
+                                movesLimit: lvl.settings.movesLimit,
+                                rewardMultiplier: lvl.settings.rewardMultiplier,
+                              });
+                              return;
+                            }
                             navigation.navigate('CareerCity', { cityId: city.id });
                           }}
                           accessibilityRole="button"

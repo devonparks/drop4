@@ -15,11 +15,11 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 <!-- Shipped: Match-end XP count-up — coins were already animated; added xpEarned state in GameScreen, set in win/draw paths, rendered as a CountUp row under coins (purple level-up tint, ⭐ icon, "+N XP" with 900ms ease). Both coin and XP rewards now hit on game-over. -->
 
-- **First-time creator "Tap your character" tooltip defer.** Same pattern — don't stack another popup right after Welcome. Gate on welcome_dismissed_at.
+<!-- N/A: First-time creator tooltip defer — investigated and there is no first-time tooltip on Character3DCreatorScreen, CharacterCreatorScreen, or CustomizeScreen to defer. The "Tap Your Character" tooltip is on HomeScreen (already deferred). Closing as nothing to ship. -->
 
-- **GameScreen match-end: show winning line animation.** When the winning 4 pieces light up, add a sparkle/shimmer sweep across them over 600ms. Currently they just go static colored.
+<!-- Shipped: Winning line sparkle sweep — GameBoard.tsx WinHighlight component fires a 100ms ramp + 250ms fade flash on each winning piece with cascaded delay (i * 120ms), so the bright burst sweeps down the line over ~600ms. Discovered already implemented during queue audit. -->
 
-- **Easy AI tuning round 2.** First pass bumped miss-win to 30% and miss-block to 45%. Verify a playtest with a fresh player wins their first Easy game ~80% of the time. If not, bump to 40% miss-win / 55% miss-block.
+- **Easy AI tuning round 2.** First pass bumped miss-win to 30% and miss-block to 45%. Verify a playtest with a fresh player wins their first Easy game ~80% of the time. If not, bump to 40% miss-win / 55% miss-block. **NOTE:** Needs fresh-player playtest data before tuning. Don't bump without a signal — the current values were already tuned once from real playtest feedback.
 
 - **Shop Clothes: 3D thumbnails (LARGE — split into 2 iterations).** Emoji thumbnails work but the real win is a 64×64 rendered GLB preview. Iteration 1: implement `AmgPartThumbnail3D` that mounts a tiny R3F Canvas with JUST the part mesh (no full character) against a dark disc. Iteration 2: swap emoji for the new component in AmgPartCard. Cache materials so the grid scroll stays 60fps.
 
@@ -27,11 +27,11 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 - **Bottom tab badges.** Shop tab could get a small red dot when new shop rotation hits (currently static). Missions tab already has badge for unclaimed — extend pattern to Shop + Customize (Customize dot if player has unequipped clothes newly unlocked this week).
 
-- **Career: tap the NEXT circle on CareerMap to jump straight into the matchup sheet.** Currently tapping any level circle goes to CareerCity (shipped, good). Next iteration: for the single NEXT level, skip the city sheet and open the match sheet directly — saves a tap on the most common action.
+<!-- Shipped: Career NEXT-level shortcut — CareerMapScreen onPress branches on isNext: the single NEXT level calls newGame() + navigates straight to Matchup with full level params; other completed levels still route to CareerCity for review. Verified: tapping level 1 from a fresh save lands on Matchup with Rookie Ron / THE REC, skipping the city sheet. Saves a tap on the most common career action. -->
 
 - **Post-match: show "+1 owned part" hint if career win unlocks a part.** Career match sheet lists rewards; after winning, show a subtle toast or confetti.
 
-- **Streak freeze visible.** characterStore / shopStore tracks streak freeze charges but it's only surfaced in DailyRewardPopup. Add a small icon in the TopBar (next to the streak flame) when player has freezes available, with a tap-to-explain tooltip.
+<!-- N/A: Streak freeze visible — already shown on ProfileScreen (🧊 row in daily goals card with Ready/Stored/Used status). The polish item asked for it in the TopBar next to the streak flame, but the streak flame was intentionally removed from TopBar in the calm-pass to reduce visual noise. Visibility intent met on Profile. -->
 
 <!-- Shipped: CharacterCreatorScreen audit — file has no StyleSheet at all after AMG repurpose; no dead styles to remove -->
 
