@@ -11,7 +11,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 <!-- Shipped: Encouraging message on first-game loss — overrides generic quote with "Great first try!" when matchHistory has exactly 1 game -->
 
-- **Bot persona avatars.** Every bot in MatchupScreen/GameScreen uses the same generic player outfit. Add a `portrait: string` or `glb: string` field to each BOT_POOL persona and render a distinct 3D portrait / emoji per bot. "Rookie Ron" with a rookie cap, "Savage Sam" with a skull — sells the character.
+<!-- Shipped: Bot persona avatars — QUICK_PLAY_BOTS map added in npcCustomizations.ts with distinct outfits, body types, and palettes for the 10 BOT_POOLS personas not already covered by CAREER_NPCS. Resolved through getNpcCustomization() so MatchupScreen + GameScreen both show unique opponents per persona. -->
 
 - **Match-end coin/XP count-up animation.** The game-over screen shows final score but the reward doesn't animate. Add a count-up from 0 → earned amount for coins + XP on win, so the dopamine hits right. Maybe 800ms cubic-easeOut with a scale pulse.
 

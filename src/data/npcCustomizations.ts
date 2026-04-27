@@ -127,6 +127,26 @@ const CAREER_NPCS: Record<string, CharacterCustomization> = {
   'the dark lord':    BOSS_CHAPTER_3,
 };
 
+// ── Quick Play bot personas (BOT_POOLS in MatchupScreen) ──────────
+// Each persona name in MatchupScreen.tsx BOT_POOLS resolves here so the
+// player sees distinct opponent looks instead of generic difficulty tiers.
+// Rookie Ron / Beginner Ben already covered by CAREER_NPCS (chapter 1).
+const QUICK_PLAY_BOTS: Record<string, CharacterCustomization> = {
+  // Easy — casual humans, mellow vibes
+  'chill charlie':  make('human_modern_civilians_06', { bodyType: 35, bodySize: 60, muscle: 45, skinColor: '#a07050', hairColor: '#3d2817' }),
+  'lazy luna':      make('human_modern_civilians_07', { bodyType: 85, bodySize: 50, muscle: 35, skinColor: '#dcb088', hairColor: '#7a3a8a' }),
+  // Medium — police / tactical, athletic strategists
+  'midfield mike':  make('human_modern_police_04', { bodyType: 12, bodySize: 50, muscle: 70, skinColor: '#c49272', hairColor: '#1a0e08' }),
+  'steady steve':   make('human_modern_police_06', { bodyType: 8,  bodySize: 65, muscle: 75, skinColor: '#b89472', hairColor: '#5a3820' }),
+  'tactical tara':  make('human_modern_police_08', { bodyType: 90, bodySize: 42, muscle: 65, skinColor: '#dcb088', hairColor: '#0a0606' }),
+  'careful chris':  make('human_modern_police_09', { bodyType: 18, bodySize: 50, muscle: 70, skinColor: '#96654a', hairColor: '#3d2817' }),
+  // Hard — samurai / sci-fi / pirate, ruthless tier
+  'master maxine':  make('human_samurai_warriors_07', { bodyType: 88, bodySize: 45, muscle: 75, skinColor: '#d4a374', hairColor: '#0a0606' }),
+  'grand gary':     make('human_samurai_warriors_05', { bodyType: 10, bodySize: 60, muscle: 80, skinColor: '#c49272', hairColor: '#e8e8e8' }),
+  'elite emma':     make('human_sci_fi_soldiers_07', { bodyType: 90, bodySize: 45, muscle: 75, skinColor: '#b89472', hairColor: '#c73838' }),
+  'savage sam':     make('human_pirate_captains_06', { bodyType: 5,  bodySize: 78, muscle: 95, skinColor: '#7a513e', hairColor: '#1a0e08' }),
+};
+
 /**
  * Resolve a NPC key (difficulty tier, bot_XXX, boss name, career level id,
  * etc.) to a 3D customization. Falls back to BOT_MEDIUM for unknown keys.
@@ -137,6 +157,9 @@ export function getNpcCustomization(key: string | null | undefined): CharacterCu
 
   // Exact career NPC name match first (covers all 36 opponents)
   if (CAREER_NPCS[k]) return CAREER_NPCS[k];
+
+  // Quick Play bot persona name match (covers MatchupScreen BOT_POOLS)
+  if (QUICK_PLAY_BOTS[k]) return QUICK_PLAY_BOTS[k];
 
   // Difficulty tiers (for quick-play bots)
   if (k.includes('easy'))   return BOT_EASY;
