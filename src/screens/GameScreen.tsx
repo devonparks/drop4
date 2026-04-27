@@ -104,6 +104,7 @@ export function GameScreen({ navigation }: Props) {
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
   const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
+  const [xpEarned, setXpEarned] = useState(0);
   const preLevelRef = useRef(useShopStore.getState().level);
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
@@ -437,6 +438,7 @@ export function GameScreen({ navigation }: Props) {
       const isFirstToday = winsToday.length === 0;
       const xpAmount = isFirstToday ? reward * 2 : reward;
       addXp(xpAmount);
+      setXpEarned(xpAmount);
       if (isFirstToday) setIsFirstWinOfDay(true);
       // Detect level-up
       const newLevel = useShopStore.getState().level;
@@ -691,6 +693,7 @@ export function GameScreen({ navigation }: Props) {
         }))]);
       }
       addXp(10); // Participation XP on draw
+      setXpEarned(10);
       haptics.coinEarn();
       playSound('coin');
     }
@@ -1527,6 +1530,20 @@ export function GameScreen({ navigation }: Props) {
                       />
                     </View>
                   </Shimmer>
+                )}
+                {/* XP gained — count-up paired with the coins so the player
+                    sees both reward currencies pop on match-end. */}
+                {((status === 'won' && winner === 1) || status === 'draw') && xpEarned > 0 && (
+                  <View style={[styles.goEventRow, { borderColor: 'rgba(176,108,199,0.3)' }]}>
+                    <Text style={styles.goEventIcon}>⭐</Text>
+                    <CountUp
+                      value={xpEarned}
+                      duration={900}
+                      prefix="+"
+                      suffix=" XP"
+                      style={[styles.goEventText, { color: '#b06cc7' }]}
+                    />
+                  </View>
                 )}
                 {/* Notable events — max 3, only the most exciting */}
                 {didLevelUp && (

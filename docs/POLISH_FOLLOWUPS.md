@@ -13,7 +13,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 <!-- Shipped: Bot persona avatars — QUICK_PLAY_BOTS map added in npcCustomizations.ts with distinct outfits, body types, and palettes for the 10 BOT_POOLS personas not already covered by CAREER_NPCS. Resolved through getNpcCustomization() so MatchupScreen + GameScreen both show unique opponents per persona. -->
 
-- **Match-end coin/XP count-up animation.** The game-over screen shows final score but the reward doesn't animate. Add a count-up from 0 → earned amount for coins + XP on win, so the dopamine hits right. Maybe 800ms cubic-easeOut with a scale pulse.
+<!-- Shipped: Match-end XP count-up — coins were already animated; added xpEarned state in GameScreen, set in win/draw paths, rendered as a CountUp row under coins (purple level-up tint, ⭐ icon, "+N XP" with 900ms ease). Both coin and XP rewards now hit on game-over. -->
 
 - **First-time creator "Tap your character" tooltip defer.** Same pattern — don't stack another popup right after Welcome. Gate on welcome_dismissed_at.
 
