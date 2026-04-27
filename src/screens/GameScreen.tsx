@@ -5,7 +5,7 @@ import Animated, {
   FadeIn,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PressScale, SlideReveal, Shimmer } from '../components/animations';
+import { PressScale, SlideReveal, Shimmer, CountUp } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -929,7 +929,7 @@ export function GameScreen({ navigation }: Props) {
   }, []);
 
   return (
-    <ScreenBackground liveWallpaper nebulaHue={-20}>
+    <ScreenBackground>
       <View style={styles.container}>
 
         {/* Back/Exit button — top left */}
@@ -1499,12 +1499,19 @@ export function GameScreen({ navigation }: Props) {
 
               {/* ---- Rewards — clean consolidated view ---- */}
               <View style={styles.goRewardsBlock}>
-                {/* Big total coins earned */}
+                {/* Big total coins earned — count-up animation rolls
+                    from 0 → totalCoinsEarned in ~800ms cubic-easeOut for
+                    a slot-machine dopamine hit at match-end. */}
                 {status === 'won' && winner === 1 && totalCoinsEarned > 0 && (
                   <Shimmer color="rgba(255,215,0,0.25)" duration={2800}>
                     <View style={styles.goTotalCoins}>
                       <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                      <Text style={styles.goTotalCoinsAmount}>+{totalCoinsEarned}</Text>
+                      <CountUp
+                        value={totalCoinsEarned}
+                        duration={900}
+                        prefix="+"
+                        style={styles.goTotalCoinsAmount}
+                      />
                     </View>
                   </Shimmer>
                 )}
@@ -1512,7 +1519,12 @@ export function GameScreen({ navigation }: Props) {
                   <Shimmer color="rgba(255,215,0,0.18)" duration={3200}>
                     <View style={styles.goTotalCoins}>
                       <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                      <Text style={styles.goTotalCoinsAmount}>+{Math.round(10 * getStreakMultiplier())}</Text>
+                      <CountUp
+                        value={Math.round(10 * getStreakMultiplier())}
+                        duration={700}
+                        prefix="+"
+                        style={styles.goTotalCoinsAmount}
+                      />
                     </View>
                   </Shimmer>
                 )}
@@ -1583,31 +1595,30 @@ export function GameScreen({ navigation }: Props) {
 
               {/* Double Coins — UI-only ad concept */}
               {status === 'won' && winner === 1 && !doubleCoinsUsed && (
-                <PressScale scaleTo={0.96}>
-                  <Pressable
-                    style={styles.doubleCoinsBtn}
-                    onPress={() => {
-                      const reward = COIN_REWARDS[difficulty];
-                      const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
-                      const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
-                      addCoins(total);
-                      setDoubleCoinsUsed(true);
-                      haptics.win();
-                      playSound('coin');
-                      setShowCoinBurst(true);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Watch ad to double coin reward"
-                  >
-                    <View style={styles.doubleCoinsAdBadge}>
-                      <Text style={styles.doubleCoinsAdText}>AD</Text>
-                    </View>
-                    <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
-                    <View style={styles.doubleCoinsBtnTextWrap}>
-                      <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
-                      <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
-                    </View>
-                  </Pressable>
+                <PressScale
+                  scaleTo={0.96}
+                  style={styles.doubleCoinsBtn}
+                  onPress={() => {
+                    const reward = COIN_REWARDS[difficulty];
+                    const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
+                    const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
+                    addCoins(total);
+                    setDoubleCoinsUsed(true);
+                    haptics.win();
+                    playSound('coin');
+                    setShowCoinBurst(true);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Watch ad to double coin reward"
+                >
+                  <View style={styles.doubleCoinsAdBadge}>
+                    <Text style={styles.doubleCoinsAdText}>AD</Text>
+                  </View>
+                  <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
+                  <View style={styles.doubleCoinsBtnTextWrap}>
+                    <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
+                    <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
+                  </View>
                 </PressScale>
               )}
               {doubleCoinsUsed && status === 'won' && winner === 1 && (
@@ -1679,42 +1690,42 @@ export function GameScreen({ navigation }: Props) {
                           const isActive = d === difficulty;
                           const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : colors.pieceRed;
                           return (
-                            <PressScale key={d} scaleTo={0.92}>
-                              <Pressable
-                                onPress={() => {
-                                  if (!isActive) {
-                                    haptics.tap();
-                                    // Reset state and start new game with the selected difficulty
-                                    setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
-                                    setShowConfetti(false);
-                                    setWasCareerLevel(false);
-                                    setFreeHintsRemaining(3);
-                                    setDidLevelUp(false);
-                                    setStreakReward(null);
-                                    setCompletedChallengeName(null);
-                                    setStreakBrokenAt(null);
-                                    setDailyStreakMultiplier(1);
-                                    setDoubleCoinsUsed(false);
-                                    setIsFirstWinOfDay(false);
-                                    newGame(d, isVsAi);
-                                  }
-                                }}
-                                style={[
-                                  styles.goDiffBtn,
-                                  isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
-                                ]}
-                                accessibilityRole="button"
-                                accessibilityLabel={`Switch to ${d} difficulty`}
-                                accessibilityState={{ selected: isActive }}
-                              >
-                                <Text style={[
-                                  styles.goDiffBtnText,
-                                  { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
-                                  isActive && { fontWeight: '800' as any },
-                                ]}>
-                                  {d.toUpperCase()}
-                                </Text>
-                              </Pressable>
+                            <PressScale
+                              key={d}
+                              scaleTo={0.92}
+                              style={[
+                                styles.goDiffBtn,
+                                isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
+                              ]}
+                              onPress={() => {
+                                if (!isActive) {
+                                  haptics.tap();
+                                  // Reset state and start new game with the selected difficulty
+                                  setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
+                                  setShowConfetti(false);
+                                  setWasCareerLevel(false);
+                                  setFreeHintsRemaining(3);
+                                  setDidLevelUp(false);
+                                  setStreakReward(null);
+                                  setCompletedChallengeName(null);
+                                  setStreakBrokenAt(null);
+                                  setDailyStreakMultiplier(1);
+                                  setDoubleCoinsUsed(false);
+                                  setIsFirstWinOfDay(false);
+                                  newGame(d, isVsAi);
+                                }
+                              }}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Switch to ${d} difficulty`}
+                              accessibilityState={{ selected: isActive }}
+                            >
+                              <Text style={[
+                                styles.goDiffBtnText,
+                                { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
+                                isActive && { fontWeight: '800' as any },
+                              ]}>
+                                {d.toUpperCase()}
+                              </Text>
                             </PressScale>
                           );
                         })}
@@ -1737,41 +1748,38 @@ export function GameScreen({ navigation }: Props) {
                   </>
                 )}
                 {/* Share Score */}
-                <PressScale scaleTo={0.95}>
-                  <Pressable
-                    style={styles.shareButton}
-                    onPress={handleShareScore}
-                    accessibilityRole="button"
-                    accessibilityLabel={shareCopied ? 'Score copied to clipboard' : 'Share score'}
-                  >
-                    <Text style={styles.shareButtonText}>
-                      {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
-                    </Text>
-                  </Pressable>
+                <PressScale
+                  scaleTo={0.95}
+                  style={styles.shareButton}
+                  onPress={handleShareScore}
+                  accessibilityRole="button"
+                  accessibilityLabel={shareCopied ? 'Score copied to clipboard' : 'Share score'}
+                >
+                  <Text style={styles.shareButtonText}>
+                    {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
+                  </Text>
                 </PressScale>
 
                 {/* Quick Actions */}
                 <View style={styles.quickActionsRow}>
-                  <PressScale scaleTo={0.93}>
-                    <Pressable
-                      style={styles.quickActionLink}
-                      onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Stats' as any); }}
-                      accessibilityRole="link"
-                      accessibilityLabel="View stats"
-                    >
-                      <Text style={styles.quickActionText}>View Stats</Text>
-                    </Pressable>
+                  <PressScale
+                    scaleTo={0.93}
+                    style={styles.quickActionLink}
+                    onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Stats' as any); }}
+                    accessibilityRole="link"
+                    accessibilityLabel="View stats"
+                  >
+                    <Text style={styles.quickActionText}>View Stats</Text>
                   </PressScale>
                   <Text style={styles.quickActionDot}>·</Text>
-                  <PressScale scaleTo={0.93}>
-                    <Pressable
-                      style={styles.quickActionLink}
-                      onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
-                      accessibilityRole="link"
-                      accessibilityLabel="Open shop"
-                    >
-                      <Text style={styles.quickActionText}>Shop</Text>
-                    </Pressable>
+                  <PressScale
+                    scaleTo={0.93}
+                    style={styles.quickActionLink}
+                    onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
+                    accessibilityRole="link"
+                    accessibilityLabel="Open shop"
+                  >
+                    <Text style={styles.quickActionText}>Shop</Text>
                   </PressScale>
                 </View>
               </View>

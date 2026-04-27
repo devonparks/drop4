@@ -96,7 +96,7 @@ export function PlayScreen({ navigation }: Props) {
   };
 
   return (
-    <ScreenBackground scene="play" liveWallpaper nebulaHue={30}>
+    <ScreenBackground scene="play">
       <View style={styles.container}>
         <TopBar
           coins={coins} gems={gems} level={level}
@@ -125,31 +125,35 @@ export function PlayScreen({ navigation }: Props) {
           )}
           </StaggeredEntry>
 
-          {/* Difficulty buttons — the main event */}
+          {/* Difficulty buttons — the main event.
+              Calm-pass: dropped the right-side star emoji (⭐/⭐⭐/⭐⭐⭐) — the
+              EASY/MEDIUM/HARD label already signals difficulty and the right
+              column was making the buttons feel like config rows instead of
+              CTAs. Subtitles only appear once the player has games on record
+              (W·L stats). First-time players see clean labels without
+              flavor copy fighting the painted icons. Matches Home's calm
+              button hierarchy. */}
           <StaggeredEntry index={2} delay={60}>
           <View style={styles.buttonsWrap}>
             <GlossyButton
               label="EASY"
-              subtitle={mastery.easy.games > 0 ? `${mastery.easy.wins}W · ${masteryLosses.easy}L` : 'Casual & Fun'}
+              subtitle={mastery.easy.games > 0 ? `${mastery.easy.wins}W · ${masteryLosses.easy}L` : undefined}
               variant="green"
               iconImage={require('../assets/images/ui/diff-easy.png')}
-              iconRight="⭐"
               onPress={() => startGame('easy')}
             />
             <GlossyButton
               label="MEDIUM"
-              subtitle={mastery.medium.games > 0 ? `${mastery.medium.wins}W · ${masteryLosses.medium}L` : 'Think Ahead'}
+              subtitle={mastery.medium.games > 0 ? `${mastery.medium.wins}W · ${masteryLosses.medium}L` : undefined}
               variant="orange"
               iconImage={require('../assets/images/ui/diff-medium.png')}
-              iconRight="⭐⭐"
               onPress={() => startGame('medium')}
             />
             <GlossyButton
               label="HARD"
-              subtitle={mastery.hard.games > 0 ? `${mastery.hard.wins}W · ${masteryLosses.hard}L` : 'No Mercy'}
+              subtitle={mastery.hard.games > 0 ? `${mastery.hard.wins}W · ${masteryLosses.hard}L` : undefined}
               variant="red"
               iconImage={require('../assets/images/ui/diff-hard.png')}
-              iconRight="⭐⭐⭐"
               onPress={() => startGame('hard')}
             />
           </View>

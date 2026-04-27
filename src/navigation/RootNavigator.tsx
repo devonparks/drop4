@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MainTabs } from './MainTabs';
 import { PlayScreen } from '../screens/PlayScreen';
+import { ModePickScreen } from '../screens/ModePickScreen';
 import { GameScreen } from '../screens/GameScreen';
 import { LocalPlayScreen } from '../screens/LocalPlayScreen';
 import { CustomGameScreen } from '../screens/CustomGameScreen';
@@ -75,6 +76,9 @@ export type RootStackParamList = {
   LocalPlay: undefined;
   CustomGame: undefined;
   Career: undefined;
+  // Devon's radical-simplification pass: Home now has a single PLAY button
+  // that opens this picker for VS AI / Career / Local Play.
+  ModePick: undefined;
   Settings: undefined;
   Learn: undefined;
   SeasonPass: undefined;
@@ -112,6 +116,7 @@ export function RootNavigator() {
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="ModePick" component={ModePickScreen} />
       <Stack.Screen name="Play" component={PlayScreen} />
       <Stack.Screen
         name="Matchup"

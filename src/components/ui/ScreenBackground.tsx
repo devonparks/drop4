@@ -274,11 +274,14 @@ export function ScreenBackground({
       style={[styles.container, style]}
     >
       {/* Backdrop layer:
-          - scene='home' or liveWallpaper=true → 3-layer animated
-            LiveNebulaWallpaper (back sky + mid clouds + near sparkles)
-            with optional hue shift for per-tab theming
-          - Otherwise, the single painted scene image */}
-      {(scene === 'home' || liveWallpaper) ? (
+          - liveWallpaper=true → 3-layer animated LiveNebulaWallpaper
+            (used by CareerMap and other surfaces that want motion)
+          - Otherwise, the single painted scene image
+          NOTE: scene='home' was previously routed to LiveNebulaWallpaper.
+          Calm-Home pass swapped that for the static painted bg-home so
+          the home screen reads as a quiet, premium backdrop instead of
+          a 9-layer animated nebula competing with the character. */}
+      {liveWallpaper ? (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <LiveNebulaWallpaper animated={animated} hue={nebulaHue} />
           <View pointerEvents="none" style={styles.sceneEdgeFeather} />
@@ -293,13 +296,16 @@ export function ScreenBackground({
         </View>
       )}
 
-      {/* Subtle radial vignette overlay */}
-      <View style={styles.vignette} />
+      {/* Subtle radial vignette overlay.
+          Calm-pass: when a sceneImage is present the painted bg already
+          has its own vignette baked in (per the master style brief). The
+          additional purple/blue radial gradient overlay was tinting the
+          new calm cinematic bgs purple, killing the cohesion. Only render
+          the global vignette when there's no scene image. */}
+      {!sceneImage && <View style={styles.vignette} />}
 
-      {/* Drifting star field (web only — the CSS backgroundPosition
-          shift runs on the compositor so it's basically free). Three
-          layers at different speeds + parallax directions give the
-          illusion of depth without touching JS every frame. */}
+      {/* Drifting star field (web only). Already gated on no-sceneImage
+          for the same reason — the painted scene IS the atmosphere. */}
       {Platform.OS === 'web' && !sceneImage && (
         <>
           <View style={[styles.starField, animated ? styles.starFieldAnim : null]} />
@@ -308,10 +314,11 @@ export function ScreenBackground({
         </>
       )}
 
-      {/* Breathing glow orbs — cross-platform. Positioned at roughly
-          thirds so the composite vignette doesn't stack them. Colors
-          differ so the overall hue shifts subtly over the full cycle. */}
-      {animated && (
+      {/* Breathing glow orbs — purple + orange blurred blobs.
+          Calm-pass: also gated on no-sceneImage. These were the biggest
+          color-tint culprit on top of the painted bgs (the purple orb
+          was washing every screen with a neon-grape cast). */}
+      {animated && !sceneImage && (
         <>
           <Animated.View pointerEvents="none" style={[styles.orbA, orbAStyle]} />
           <Animated.View pointerEvents="none" style={[styles.orbB, orbBStyle]} />

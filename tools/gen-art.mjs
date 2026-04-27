@@ -2,18 +2,23 @@
 // ═══════════════════════════════════════════════════════════════════════
 // gen-art.mjs — batch UI asset generator for Drop4
 //
-// Supports three backends. Pick via ART_BACKEND env var.
+// Supports four backends. Pick via ART_BACKEND env var.
 //
 //  1. fal (default)     — fal.ai cloud API with Flux image models. Premium
 //                          game-UI quality, strong prompt fidelity, pay-
 //                          per-use (~$0.05/image Flux Pro, cheaper Schnell).
-//                          Requires FAL_KEY.
+//                          Requires FAL_KEY. Use for volume + 3D pipeline.
 //
-//  2. comfyui           — local ComfyUI server on the 4090. Free,
+//  2. openai            — OpenAI gpt-image-1. Highest 2D art quality, native
+//                          transparent-bg support (no Bria post-process),
+//                          ~$0.042/image at medium quality. Requires
+//                          OPENAI_API_KEY. Use for hero 2D icons / marketing.
+//
+//  3. comfyui           — local ComfyUI server on the 4090. Free,
 //                          unlimited, any checkpoint (SDXL, Flux, etc).
 //                          Requires `python main.py --listen` running.
 //
-//  3. gemini            — Google's Nano Banana API. $0.039/image standard.
+//  4. gemini            — Google's Nano Banana API. $0.039/image standard.
 //                          Requires GOOGLE_API_KEY.
 //
 // Output: src/assets/images/ui/<filename> per docs/ui-asset-manifest.json.
@@ -23,7 +28,12 @@
 //   node tools/gen-art.mjs --force               Regenerate all
 //   node tools/gen-art.mjs --only=tab-icons      Filter by manifest group
 //   node tools/gen-art.mjs --dry-run             Plan only, no generation
+//   ART_BACKEND=openai node tools/gen-art.mjs    Force OpenAI backend
 //   ART_BACKEND=gemini node tools/gen-art.mjs    Force Gemini backend
+//
+// OpenAI env (optional):
+//   OPENAI_QUALITY=low|medium|high   (default: medium)
+//   OPENAI_MODEL=gpt-image-1         (default)
 //
 // ComfyUI env (optional, defaults shown):
 //   COMFY_URL=http://127.0.0.1:8188
@@ -316,12 +326,82 @@ async function generateViaFal(item) {
   return Buffer.from(arr);
 }
 
+// ── Backend: OpenAI (gpt-image-1) ───────────────────────────────────────
+//
+// Premium 2D quality, native transparent-bg support (no Bria post-process
+// needed for icons), slower than Flux but the best per-image fidelity for
+// hero UI art and marketing.
+//
+// Pricing (gpt-image-1, square 1024):
+//   low      ~$0.011 / image
+//   medium   ~$0.042 / image  (default — comparable to Flux Dev)
+//   high     ~$0.167 / image  (use sparingly for hero / marketing)
+//
+// Sizes supported by gpt-image-1: 1024x1024, 1024x1536 (portrait),
+// 1536x1024 (landscape), or 'auto'. Manifest sizes get rounded to the
+// closest aspect — wide cards / banners come back at 1536x1024 and can
+// be cropped or used as-is.
+//
+// Per-item override: set "background": "transparent" on a manifest item
+// to request a transparent PNG directly (skips the bria-bg-removal step).
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-image-1';
+const OPENAI_QUALITY = (process.env.OPENAI_QUALITY || 'medium').toLowerCase();
+const OPENAI_API_BASE = 'https://api.openai.com/v1';
+
+function mapSizeToOpenAI(width, height) {
+  // Square if within 64px
+  if (Math.abs(width - height) <= 64) return '1024x1024';
+  return width > height ? '1536x1024' : '1024x1536';
+}
+
+async function generateViaOpenAI(item) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_API_KEY missing');
+  const { width, height } = parseSize(item.size);
+  const size = mapSizeToOpenAI(width, height);
+  const background = item.background || 'auto'; // 'transparent' | 'opaque' | 'auto'
+
+  const body = {
+    model: OPENAI_MODEL,
+    prompt: item.prompt,
+    n: 1,
+    size,
+    quality: OPENAI_QUALITY,
+    background,
+    output_format: 'png',
+  };
+
+  const res = await fetch(`${OPENAI_API_BASE}/images/generations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    const err = new Error(`OpenAI ${res.status}: ${errText.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
+  }
+  const json = await res.json();
+  const b64 = json?.data?.[0]?.b64_json;
+  if (!b64) throw new Error('OpenAI response missing b64_json');
+  return Buffer.from(b64, 'base64');
+}
+
 // ── Backend dispatch ────────────────────────────────────────────────────
 
 const BACKENDS = {
   fal: { generate: generateViaFal, preflight: async () => {
     if (!process.env.FAL_KEY && !process.env.FAL_API_KEY) {
       throw new Error('FAL_KEY missing (add to .env.local — get one at fal.ai → Dashboard → API Keys)');
+    }
+  }},
+  openai: { generate: generateViaOpenAI, preflight: async () => {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY missing (add to .env.local — get one at platform.openai.com → API Keys)');
     }
   }},
   gemini: { generate: generateViaGemini, preflight: async () => {
@@ -372,6 +452,12 @@ async function main() {
              : FAL_MODEL.includes('pro') ? 0.05
              : 0.025;
     log(`Estimated cost: $${(todo.length * per).toFixed(3)} at ${FAL_MODEL}.`);
+  }
+  if (BACKEND === 'openai') {
+    const per = OPENAI_QUALITY === 'low' ? 0.011
+             : OPENAI_QUALITY === 'high' ? 0.167
+             : 0.042;
+    log(`Estimated cost: $${(todo.length * per).toFixed(3)} at ${OPENAI_MODEL} (${OPENAI_QUALITY}).`);
   }
   log('');
 

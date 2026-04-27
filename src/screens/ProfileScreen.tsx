@@ -164,7 +164,7 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScreenBackground scene="profile" liveWallpaper nebulaHue={-40}>
+    <ScreenBackground scene="profile">
       {/* Floating back button — absolute-positioned at top-left so it
           sits above the ScrollView without competing with the portrait
           layout. ProfileScreen doesn't have a TopBar (trophy card is
@@ -232,16 +232,15 @@ export function ProfileScreen() {
           })()}
 
           {/* Share Profile button */}
-          <PressScale scaleTo={0.95}>
-            <Pressable
-              onPress={handleShareProfile}
-              style={styles.shareProfileBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Share profile"
-              accessibilityHint="Share your player card with stats and rank"
-            >
+          <PressScale
+            scaleTo={0.95}
+            onPress={handleShareProfile}
+            style={styles.shareProfileBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Share profile"
+            accessibilityHint="Share your player card with stats and rank"
+          >
               <Text style={styles.shareProfileText}>{'\uD83D\uDCE4'} SHARE PROFILE</Text>
-            </Pressable>
           </PressScale>
 
           {/* Level bar — chunky with XP inside */}
@@ -453,16 +452,15 @@ export function ProfileScreen() {
                   style={[styles.achProgressBarFill, { width: `${Math.max(pct, 4)}%` as any }]}
                 />
               </View>
-              <PressScale scaleTo={0.95}>
-                <Pressable
-                  onPress={() => { haptics.tap(); playSound('click'); navigateTo('Challenges'); }}
-                  style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
-                  accessibilityRole="button"
-                  accessibilityLabel="View all achievements"
-                  accessibilityHint="Open the challenges screen with the full achievement list"
-                >
-                  <Text style={{ fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: colors.orange, letterSpacing: 1 }}>VIEW ALL →</Text>
-                </Pressable>
+              <PressScale
+                scaleTo={0.95}
+                onPress={() => { haptics.tap(); playSound('click'); navigateTo('Challenges'); }}
+                style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
+                accessibilityRole="button"
+                accessibilityLabel="View all achievements"
+                accessibilityHint="Open the challenges screen with the full achievement list"
+              >
+                <Text style={{ fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12, color: colors.orange, letterSpacing: 1 }}>VIEW ALL →</Text>
               </PressScale>
             </View>
           );
@@ -490,15 +488,14 @@ export function ProfileScreen() {
           <>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]} accessibilityRole="header">RECENT MATCHES</Text>
-              <PressScale scaleTo={0.95}>
-                <Pressable
-                  onPress={() => { haptics.tap(); playSound('click'); navigateTo('MatchHistory'); }}
-                  accessibilityRole="button"
-                  accessibilityLabel="View all matches"
-                  accessibilityHint="Open the full match history"
-                >
-                  <Text style={styles.viewAllLink}>View All →</Text>
-                </Pressable>
+              <PressScale
+                scaleTo={0.95}
+                onPress={() => { haptics.tap(); playSound('click'); navigateTo('MatchHistory'); }}
+                accessibilityRole="button"
+                accessibilityLabel="View all matches"
+                accessibilityHint="Open the full match history"
+              >
+                <Text style={styles.viewAllLink}>View All →</Text>
               </PressScale>
             </View>
 

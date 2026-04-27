@@ -24,16 +24,14 @@ const Tab = createBottomTabNavigator();
 // 4-tab structure (BB Stars-style): Home / Customize / Missions / Shop.
 // Profile accessed via the top-right portrait in TopBar. Collection's content
 // migrated: Characters→Customize, Loot→Home chip, Awards→Missions/Milestones.
+// All 4 tab icons regenerated 2026-04-27 to match the locked-in chunky 3D
+// DROP4 logo aesthetic (white-cyan body face + warm orange-red 3D extrusion
+// + thick dark navy outline). Each tab now has its own dedicated PNG —
+// no more reusing shop-outfits or tab-challenges across roles.
 const TAB_ICON_SOURCES: Record<string, ImageSourcePropType> = {
   home: require('../assets/images/ui/tab-home.png'),
-  // Customize reuses the painted shop-outfits (hanger+shirt) icon — it reads
-  // as "wardrobe" which is what the tab is. Dedicated tab-customize.png can
-  // be painted later if we want to differentiate it from the Shop's Outfits
-  // sub-tab visually.
-  customize: require('../assets/images/ui/shop-outfits.png'),
-  // Missions reuses the painted bullseye-target icon — still reads as
-  // "objectives / goals" for the merged Daily + Milestones content.
-  missions: require('../assets/images/ui/tab-challenges.png'),
+  customize: require('../assets/images/ui/tab-customize.png'),
+  missions: require('../assets/images/ui/tab-missions.png'),
   shop: require('../assets/images/ui/tab-shop.png'),
 };
 

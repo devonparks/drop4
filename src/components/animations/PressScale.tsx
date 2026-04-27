@@ -18,7 +18,7 @@
  *   style       — container style
  */
 import React from 'react';
-import { Pressable, ViewStyle, StyleProp, Platform, AccessibilityState } from 'react-native';
+import { Pressable, ViewStyle, StyleProp, Platform, AccessibilityState, Insets } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -33,7 +33,16 @@ interface Props {
   scaleTo?: number;
   overshoot?: number;
   disabled?: boolean;
+  /** Style applied to the inner Animated.View (scales with the press). */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Style applied to the outer Pressable. Use when the touch surface needs
+   * absolute positioning, hitSlop area, or layout the scale animation
+   * shouldn't affect (e.g. snake-pattern node placement in CareerCity).
+   */
+  containerStyle?: StyleProp<ViewStyle>;
+  /** Extra tap tolerance around the visual node. */
+  hitSlop?: number | Insets;
   noHaptics?: boolean;
   /** Screen-reader label. Strongly recommended — PressScale wraps most tappable UI. */
   accessibilityLabel?: string;
@@ -50,6 +59,8 @@ export function PressScale({
   overshoot = 1.02,
   disabled = false,
   style,
+  containerStyle,
+  hitSlop,
   noHaptics = false,
   accessibilityLabel,
   accessibilityHint,
@@ -87,6 +98,8 @@ export function PressScale({
       onPressOut={handlePressOut}
       onPress={onPress}
       disabled={disabled}
+      hitSlop={hitSlop}
+      style={containerStyle}
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}

@@ -259,7 +259,7 @@ export function MatchupScreen({ navigation }: Props) {
   const isBossMatch = params.mode === 'career' && courtName.startsWith('BOSS');
 
   return (
-    <ScreenBackground scene="matchup" liveWallpaper nebulaHue={180}>
+    <ScreenBackground scene="matchup">
       <View style={styles.container}>
         {/* No TopBar — this is a cinematic VS reveal */}
 

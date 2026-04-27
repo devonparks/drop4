@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { Character3D } from '../components/3d/Character3D';
 import { PressScale, StaggeredEntry } from '../components/animations';
+import { EquipPanel, type EquipCategory } from '../components/customize/EquipPanel';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useShopStore } from '../stores/shopStore';
@@ -55,19 +56,22 @@ type CategoryMeta = {
   shopTab?: string;
 };
 
-// Painted icons reuse the batch-2 shop-tab art so the visual language
-// stays consistent between the Customize dashboard and the Shop detail.
+// Customize Overhaul 2026-04-27: 10 dedicated chunky 3D category icons
+// generated via GPT high (cat-*.png) matching the locked-in DROP4 logo
+// style — white-cyan body face + warm orange-red 3D extrusion + thick
+// dark navy outline. Replaces the old shop-* icon reuse where Character /
+// Clothes / Outfits all shared the same orange-shirt-on-hanger PNG.
 const CATEGORIES: CategoryMeta[] = [
-  { id: 'character', label: 'Character', icon: require('../assets/images/ui/shop-outfits.png') },
-  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/shop-outfits.png'), shopTab: 'clothes' },
-  { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/shop-emotes.png'),  shopTab: 'emotes' },
-  { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/shop-pets.png'),    shopTab: 'pets' },
-  { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/shop-pieces.png'),  shopTab: 'pieces' },
-  { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/shop-boards.png'),  shopTab: 'boards' },
-  { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/shop-effects.png'), shopTab: 'dropEffects' },
-  { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/shop-wins.png'),    shopTab: 'winAnimations' },
-  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/shop-frames.png'),  shopTab: 'frames' },
-  { id: 'outfits',   label: 'Outfits',   icon: require('../assets/images/ui/shop-outfits.png'), shopTab: 'outfits' },
+  { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
+  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png'),   shopTab: 'clothes' },
+  { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png'),    shopTab: 'emotes' },
+  { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png'),      shopTab: 'pets' },
+  { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/cat-pieces.png'),    shopTab: 'pieces' },
+  { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/cat-boards.png'),    shopTab: 'boards' },
+  { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png'),   shopTab: 'dropEffects' },
+  { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png'),      shopTab: 'winAnimations' },
+  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
+  { id: 'outfits',   label: 'Outfits',   icon: require('../assets/images/ui/cat-outfits.png'),   shopTab: 'outfits' },
 ];
 
 // 3D character presenter — simpler variant of HomeScreen's Character3DWrapper.
@@ -90,6 +94,12 @@ function CustomizeCharacter() {
       muscle={cust.muscle}
       animationGlb={idleGlb}
       animationLoop
+      // Calm-pass: hide Character3D's built-in dark disc + orange rim
+      // ring. The bg-profile painted scene already provides a warm gold
+      // spotlight at the lower third — the disc was a competing ground
+      // reference that read as a hard-edged orange platform, the thing
+      // Devon called out in the Customize audit (item #1).
+      showFloor={false}
     />
   );
 }
@@ -105,6 +115,12 @@ export function CustomizeScreen() {
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
   const ownedPets = usePetStore((s) => s.ownedPets);
 
+  // Customize-tab equip panel state. Replaces the previous "tap card →
+  // jump to Shop tab" behavior for non-character categories. Tapping a
+  // card now opens this slide-up panel inside Customize so the player
+  // never leaves the tab to equip what they own.
+  const [equipPanelCategory, setEquipPanelCategory] = useState<EquipCategory | null>(null);
+
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
 
   const handleCategoryTap = (cat: CategoryMeta) => {
@@ -112,14 +128,41 @@ export function CustomizeScreen() {
     playSound('click');
     if (cat.id === 'character') {
       // The Sims-tier AMG creator — @amg/character-creator wired via
-      // Drop4's CharacterCreatorScreen. Replaces the legacy
-      // Character3DCreator which only edited the single baked outfit.
+      // Drop4's CharacterCreatorScreen.
       navigation.navigate('AmgCreator' as never);
       return;
     }
-    // Jump to the Shop tab. Shop's activeTab state is internal so for now
-    // we just land on Shop and let the user tap the sub-tab. A future
-    // commit can wire up a nav param to preselect the tab.
+    // CLOTHES + OUTFITS also live in the AMG creator (Outfit tab) since
+    // they're character-modifying. The legacy Shop redirect was a
+    // placeholder. Route to the creator directly so the user picks parts
+    // and sees the live preview composite without screen-hopping.
+    if (cat.id === 'clothes' || cat.id === 'outfits') {
+      navigation.navigate('AmgCreator' as never);
+      return;
+    }
+    // EMOTES has its own dedicated picker (the AnimationPicker modal that
+    // the home screen also uses). Open the Shop's emotes tab for now —
+    // a future pass can mount the picker inline here.
+    if (cat.id === 'emotes') {
+      navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+      return;
+    }
+    // Pets / Boards / Pieces / Effects / Wins / Frames → open the
+    // EquipPanel slide-up sheet inside Customize (no nav detour).
+    const equipPanelMap: Record<string, EquipCategory> = {
+      pets: 'pets',
+      boards: 'boards',
+      pieces: 'pieces',
+      effects: 'effects',
+      wins: 'wins',
+      frames: 'frames',
+    };
+    const panelCategory = equipPanelMap[cat.id];
+    if (panelCategory) {
+      setEquipPanelCategory(panelCategory);
+      return;
+    }
+    // Fallback: if we hit an unknown category, send to Shop.
     navigation.navigate('MainTabs', { screen: 'Shop' } as never);
   };
 
@@ -143,7 +186,7 @@ export function CustomizeScreen() {
   };
 
   return (
-    <ScreenBackground scene="profile" liveWallpaper nebulaHue={20}>
+    <ScreenBackground scene="profile">
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           coins={coins}
@@ -187,6 +230,16 @@ export function CustomizeScreen() {
           </View>
         </ScrollView>
       </View>
+
+      {/* EquipPanel — slide-up sheet for Pets / Boards / Pieces / Effects /
+          Wins / Frames. Replaces the legacy "jump to Shop tab" redirect
+          for those categories. Open: setEquipPanelCategory(id). Close:
+          setEquipPanelCategory(null) via onClose. */}
+      <EquipPanel
+        visible={equipPanelCategory !== null}
+        category={equipPanelCategory}
+        onClose={() => setEquipPanelCategory(null)}
+      />
     </ScreenBackground>
   );
 }

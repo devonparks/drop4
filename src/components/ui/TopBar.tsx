@@ -93,16 +93,19 @@ export function TopBar({
         )}
       </View>
 
-      {/* Center: Currency displays */}
+      {/* Center: Currency displays.
+          Calm-Home pass: dropped the third pill (level/streak — was reading
+          as a confusing streak flame next to coin+gem) and removed the green
+          "+" plus badges (tap-pill already opens the shop, so the plus was
+          redundant visual weight). TopBar is now: settings · coin · gem · profile. */}
       <LinearGradient
         colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0)']}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.currencies}
       >
-        <CurrencyPill iconSource={require('../../assets/images/ui/icon-coin.png')} value={formatNum(coins)} onPress={onCoinPress} onPlusPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} plusLabel="Buy more coins" />
-        <CurrencyPill iconSource={require('../../assets/images/ui/icon-gem.png')} value={formatNum(gems)} onPress={onGemPress} onPlusPress={onGemPress} label={`${gems} gems`} plusLabel="Buy more gems" />
-        <CurrencyPill iconSource={require('../../assets/images/ui/icon-streak.png')} value={level.toString()} label={`Level ${level}`} />
+        <CurrencyPill iconSource={require('../../assets/images/ui/icon-coin.png')} value={formatNum(coins)} onPress={onCoinPress} animatedTextColor={coinTextColor} scaleAnim={coinScaleAnim} label={`${coins} coins`} />
+        <CurrencyPill iconSource={require('../../assets/images/ui/icon-gem.png')} value={formatNum(gems)} onPress={onGemPress} label={`${gems} gems`} />
       </LinearGradient>
 
       {/* Right: Profile avatar + rank */}

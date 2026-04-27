@@ -156,10 +156,25 @@ function GhostPiecePulse({ color }: { color: string }) {
 function WinHighlight({ delay }: { delay: number }) {
   const pulseScale = useSharedValue(1);
   const glowOpacity = useSharedValue(0);
+  // Calm-pass polish: sparkle-flash burst on each winning piece. With the
+  // cascaded delay (delay = i * 120ms across 4 pieces), the flash sweeps
+  // visibly down the winning line over ~600ms — the "sparkle/shimmer
+  // sweep" the polish-followups queue called for. Bright warm-white flash
+  // ramps up over 100ms, then fades out over 250ms while the existing
+  // ring pulse takes over for sustained celebration.
+  const flashOpacity = useSharedValue(0);
 
   React.useEffect(() => {
     // Fade in first
     glowOpacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
+    // Sparkle flash — fires once at this piece's turn in the cascade
+    flashOpacity.value = withDelay(
+      delay,
+      withSequence(
+        withTiming(1, { duration: 100 }),
+        withTiming(0, { duration: 250 }),
+      ),
+    );
     // Then start pulsing
     const startPulse = () => {
       pulseScale.value = withDelay(delay + 300,
@@ -185,12 +200,18 @@ function WinHighlight({ delay }: { delay: number }) {
     transform: [{ scale: pulseScale.value }],
   }));
 
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: flashOpacity.value,
+  }));
+
   return (
     <>
       {/* Outer golden glow */}
       <Animated.View style={[styles.winGlowOuter, ringStyle]} />
       {/* Inner crisp ring */}
       <Animated.View style={[styles.winRing, ringStyle]} />
+      {/* Sparkle flash — single bright burst at each piece's cascade tick */}
+      <Animated.View style={[styles.winFlash, flashStyle]} />
     </>
   );
 }
@@ -532,6 +553,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 8,
+  },
+  // Calm-pass polish: bright warm-white flash burst layered over the
+  // winning piece. Fires once per piece in the cascade. Sized larger
+  // than the winRing so the flash visibly bleeds beyond the ring edge.
+  winFlash: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: CELL_SIZE / 2 + 10,
+    backgroundColor: 'rgba(255,245,210,0.85)',
+    shadowColor: '#fffbe0',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 10,
   },
   touchLayer: {
     position: 'absolute',

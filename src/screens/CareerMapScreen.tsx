@@ -96,7 +96,7 @@ export function CareerMapScreen({ navigation }: Props) {
   const scrollRef = useRef<ScrollView>(null);
 
   return (
-    <ScreenBackground scene="career" liveWallpaper nebulaHue={-90}>
+    <ScreenBackground scene="career">
       <TopBar
         coins={coins}
         gems={gems}
@@ -145,8 +145,7 @@ export function CareerMapScreen({ navigation }: Props) {
           return (
             <View key={city.id}>
               {/* Zone transition card */}
-              <PressScale>
-              <Pressable
+              <PressScale
                 onPress={() => {
                   if (unlocked) {
                     haptics.tap();
@@ -227,7 +226,6 @@ export function CareerMapScreen({ navigation }: Props) {
                     </View>
                   )}
                 </LinearGradient>
-              </Pressable>
               </PressScale>
 
               {/* Level nodes for this city — compact grid preview */}

@@ -11,6 +11,7 @@
  *   StaggeredEntry  — Staggered fade-in-up for lists/grids
  *   BreathingView   — Gentle scale pulse for idle attention-grab
  *   SlideReveal     — Slide-in from direction on mount
+ *   CountUp         — Animate an integer from 0 (or N) to a target value
  */
 
 export { PressScale } from './PressScale';
@@ -19,3 +20,4 @@ export { PulseGlow } from './PulseGlow';
 export { StaggeredEntry } from './StaggeredEntry';
 export { BreathingView } from './BreathingView';
 export { SlideReveal } from './SlideReveal';
+export { CountUp } from './CountUp';

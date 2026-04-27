@@ -7,7 +7,8 @@ import {
   ScrollView,
   Animated,
   Modal,
-  ViewStyle,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +23,7 @@ import {
   getLevelsForCity,
 } from '../data/careerLevels';
 import { useCareerStore } from '../stores/careerStore';
+import { useGameStore } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -29,6 +31,16 @@ import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CareerCity'>;
+
+// Calm-pass: same painted city art used as the CareerMap zone-card preview
+// is now used as the full-screen backdrop INSIDE the city. Reusing one
+// asset across both surfaces ties the navigation visually — the user taps
+// the painted Brooklyn dusk and lands inside that exact scene.
+const CITY_ART: Record<string, ImageSourcePropType> = {
+  brooklyn: require('../assets/images/ui/city-brooklyn.png'),
+  venice_beach: require('../assets/images/ui/city-venice.png'),
+  harlem: require('../assets/images/ui/city-cathedral.png'),
+};
 
 // ─────────────────────────────────────────────────────────────────────────
 // CareerCityScreen — "The Court" (Basketball Stars tribute)
@@ -52,6 +64,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
   const { cityId } = route.params;
   const city = CITY_BY_ID[cityId];
   const progress = useCareerStore((s) => s.progress);
+  const newGame = useGameStore((s) => s.newGame);
   const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -105,14 +118,24 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
   return (
     <ScreenBackground>
-      {/* City backdrop: full-screen gradient based on city's sky palette */}
-      <LinearGradient
-        colors={city.skyGradient}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <CityEnvironmentLayer city={city} />
+      {/* Calm-pass: previously a per-city LinearGradient + procedural
+          CityEnvironmentLayer (silhouette buildings / palms / arches drawn
+          as Views). Now the painted city PNG (Brooklyn dusk / Venice sunset
+          / Harlem cathedral) is the full-screen backdrop — same asset the
+          user tapped on the CareerMap card. Painted scenes are A-tier; the
+          procedural shapes were a placeholder. CityEnvironmentLayer + its
+          BrooklynScene / VeniceBeachScene / HarlemScene helpers are now
+          dead code (left in file for now, can be cleaned in a follow-up). */}
+      {CITY_ART[city.id] && (
+        <Image
+          source={CITY_ART[city.id]}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
+      )}
+      {/* Soft dark overlay so the painted scene recedes behind the
+          opponent nodes / labels — pure darken, no color tint. */}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(5,8,20,0.35)' }]} />
 
       {/* ─── Header ─── */}
       <StaggeredEntry index={0} delay={60}>
@@ -193,8 +216,12 @@ export function CareerCityScreen({ navigation, route }: Props) {
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <PressScale>
-        <Pressable
+        {/* Calm-pass: 4 HUD buttons unified to ONE shared style — translucent
+            dark navy circle with a thin warm-amber border. Was previously 4
+            different bright gradients (orange / city color / purple / gold)
+            that fought the cinematic bg. Now they read as a single chrome
+            row, supporting the painted scene rather than competing with it. */}
+        <PressScale
           onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
           style={styles.hudBtn}
           hitSlop={6}
@@ -202,15 +229,13 @@ export function CareerCityScreen({ navigation, route }: Props) {
           accessibilityLabel="Map"
           accessibilityHint="Return to the career map"
         >
-          <LinearGradient colors={[colors.orange, colors.orangeDark]} style={styles.hudBtnBg}>
+          <View style={styles.hudBtnBgCalm}>
             <Text style={styles.hudBtnIcon}>‹</Text>
-          </LinearGradient>
+          </View>
           <Text style={styles.hudBtnLabel}>MAP</Text>
-        </Pressable>
         </PressScale>
 
-        <PressScale>
-        <Pressable
+        <PressScale
           onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Roster'); }}
           style={styles.hudBtn}
           hitSlop={6}
@@ -218,18 +243,13 @@ export function CareerCityScreen({ navigation, route }: Props) {
           accessibilityLabel="Roster"
           accessibilityHint="Open the character roster"
         >
-          <LinearGradient
-            colors={[city.themeColor, city.accentColor]}
-            style={styles.hudBtnBg}
-          >
+          <View style={styles.hudBtnBgCalm}>
             <Text style={[styles.hudBtnIcon, { fontSize: 20 }]}>★</Text>
-          </LinearGradient>
+          </View>
           <Text style={styles.hudBtnLabel}>ROSTER</Text>
-        </Pressable>
         </PressScale>
 
-        <PressScale>
-        <Pressable
+        <PressScale
           onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Character3DCreator'); }}
           style={styles.hudBtn}
           hitSlop={6}
@@ -237,15 +257,13 @@ export function CareerCityScreen({ navigation, route }: Props) {
           accessibilityLabel="Customize"
           accessibilityHint="Open the character creator"
         >
-          <LinearGradient colors={['#9b59b6', '#6a3c8a']} style={styles.hudBtnBg}>
+          <View style={styles.hudBtnBgCalm}>
             <Text style={[styles.hudBtnIcon, { fontSize: 18 }]}>✎</Text>
-          </LinearGradient>
+          </View>
           <Text style={styles.hudBtnLabel}>CUSTOMIZE</Text>
-        </Pressable>
         </PressScale>
 
-        <PressScale>
-        <Pressable
+        <PressScale
           onPress={() => { haptics.tap(); playSound('click'); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
           style={styles.hudBtn}
           hitSlop={6}
@@ -253,11 +271,10 @@ export function CareerCityScreen({ navigation, route }: Props) {
           accessibilityLabel="Shop"
           accessibilityHint="Open the shop"
         >
-          <LinearGradient colors={[colors.coinGold, '#c89030']} style={styles.hudBtnBg}>
+          <View style={styles.hudBtnBgCalm}>
             <Text style={[styles.hudBtnIcon, { fontSize: 18 }]}>🛒</Text>
-          </LinearGradient>
+          </View>
           <Text style={styles.hudBtnLabel}>SHOP</Text>
-        </Pressable>
         </PressScale>
       </View>
       </StaggeredEntry>
@@ -270,6 +287,18 @@ export function CareerCityScreen({ navigation, route }: Props) {
         onClose={() => setSelectedLevelId(null)}
         onPlay={(lvl) => {
           setSelectedLevelId(null);
+          // Reset gameStore for the fresh match. Without this, stale state
+          // from the previous game (status='draw'/'won', leftover board,
+          // wrong opponent) carries over and the column-tap handler is
+          // gated by `disabled = status !== 'playing'` so pieces can't drop.
+          // Mirrors the pattern in the old CareerScreen.handlePlayLevel.
+          newGame(lvl.difficulty, true, {
+            rows: lvl.settings.rows,
+            cols: lvl.settings.cols,
+            connectCount: lvl.settings.connectCount,
+            timerSeconds: lvl.settings.timerSeconds || 0,
+            startingPlayer: (lvl.settings.playerGoesFirst === false ? 2 : 1) as 1 | 2,
+          });
           // Navigate to Matchup with the career level params (same API the
           // old career screen used — we're not breaking the game flow).
           navigation.navigate('Matchup', {
@@ -310,204 +339,15 @@ export function CareerCityScreen({ navigation, route }: Props) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// CityEnvironmentLayer — procedural scene per city.
-//
-// Each city gets a distinct silhouette layer (buildings, trees, beach, etc.)
-// drawn from simple shapes. This is where we'll later drop in real art —
-// the layout stays the same, you just swap the `View`s for an Image.
+// CityEnvironmentLayer + BrooklynScene/VeniceBeachScene/HarlemScene + the
+// absFill helper were procedural-shape backdrops drawn with View+rgba
+// rectangles to imply each city's atmosphere. Removed in the calm-pass —
+// CareerCity now renders the painted city-* PNGs full-screen instead. The
+// procedural layer was always meant as a placeholder per its original
+// docstring ("This is where we'll later drop in real art — the layout
+// stays the same, you just swap the Views for an Image"). Real art is now
+// in. Keeping the file lean.
 // ─────────────────────────────────────────────────────────────────────────
-function CityEnvironmentLayer({ city }: { city: CareerCity }) {
-  if (city.id === 'brooklyn') {
-    return <BrooklynScene city={city} />;
-  }
-  if (city.id === 'venice_beach') {
-    return <VeniceBeachScene city={city} />;
-  }
-  if (city.id === 'harlem') {
-    return <HarlemScene city={city} />;
-  }
-  return null;
-}
-
-function BrooklynScene(_props: { city: CareerCity }) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Distant building silhouettes */}
-      <View style={[absFill('10%', 0, '40%'), { flexDirection: 'row', alignItems: 'flex-end' }]}>
-        {[60, 90, 45, 110, 70, 85, 50, 95].map((h, i) => (
-          <View
-            key={i}
-            style={{
-              flex: 1,
-              height: h,
-              backgroundColor: 'rgba(0,0,0,0.45)',
-              borderTopLeftRadius: 2,
-              borderTopRightRadius: 2,
-              marginHorizontal: 1,
-              borderTopWidth: 1,
-              borderColor: 'rgba(255,255,255,0.05)',
-            }}
-          />
-        ))}
-      </View>
-      {/* Ground line / blacktop gradient */}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.55)']}
-        style={{ position: 'absolute', left: 0, right: 0, top: '45%', bottom: 0 }}
-      />
-      {/* Cracks / pavement texture — thin diagonal lines */}
-      {[...Array(18)].map((_, i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: `${(i * 13) % 100}%`,
-            top: `${50 + ((i * 7) % 45)}%`,
-            width: 18,
-            height: 1,
-            backgroundColor: 'rgba(255,255,255,0.05)',
-            transform: [{ rotate: `${(i * 23) % 90 - 45}deg` }],
-          }}
-        />
-      ))}
-    </View>
-  );
-}
-
-function VeniceBeachScene(_props: { city: CareerCity }) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Sun */}
-      <View style={{
-        position: 'absolute',
-        left: '35%' as any,
-        top: '18%' as any,
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(255,230,180,0.55)',
-        shadowColor: '#ffb347',
-        shadowOpacity: 1,
-        shadowRadius: 40,
-      }} />
-      {/* Ocean horizon */}
-      <View style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: '38%',
-        height: 2,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-      }} />
-      {/* Palm trees */}
-      {([{ l: '8%', h: 140 }, { l: '80%', h: 120 }, { l: '90%', h: 160 }] as const).map((p, i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: p.l as any,
-            top: `${35 - (p.h / 8)}%` as `${number}%`,
-            width: 6,
-            height: p.h,
-            backgroundColor: 'rgba(0,0,0,0.55)',
-          }}
-        >
-          {/* Fronds */}
-          <View style={{ position: 'absolute', top: -16, left: -28, width: 60, height: 18, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 30, transform: [{ rotate: '-20deg' }] }} />
-          <View style={{ position: 'absolute', top: -14, left: -24, width: 60, height: 18, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 30, transform: [{ rotate: '15deg' }] }} />
-        </View>
-      ))}
-      {/* Sand gradient at the bottom */}
-      <LinearGradient
-        colors={['transparent', 'rgba(244,164,96,0.25)', 'rgba(210,140,70,0.4)']}
-        style={{ position: 'absolute', left: 0, right: 0, top: '55%', bottom: 0 }}
-      />
-    </View>
-  );
-}
-
-function HarlemScene(_props: { city: CareerCity }) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Building silhouettes with window lights */}
-      <View style={[absFill('5%', 0, '45%'), { flexDirection: 'row', alignItems: 'flex-end' }]}>
-        {[180, 140, 220, 160, 200, 130, 170].map((h, i) => (
-          <View
-            key={i}
-            style={{
-              flex: 1,
-              height: h,
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              marginHorizontal: 1,
-              position: 'relative',
-              borderTopWidth: 1,
-              borderColor: 'rgba(155,89,182,0.25)',
-            }}
-          >
-            {/* Window lights grid */}
-            {[...Array(Math.floor(h / 18))].map((_, w) => (
-              <View
-                key={w}
-                style={{
-                  position: 'absolute',
-                  top: w * 18 + 8,
-                  left: '20%',
-                  width: 4,
-                  height: 4,
-                  backgroundColor: (w + i) % 3 === 0 ? '#f1c40f' : 'transparent',
-                }}
-              />
-            ))}
-            {[...Array(Math.floor(h / 18))].map((_, w) => (
-              <View
-                key={`r${w}`}
-                style={{
-                  position: 'absolute',
-                  top: w * 18 + 8,
-                  right: '20%',
-                  width: 4,
-                  height: 4,
-                  backgroundColor: (w + i + 1) % 3 === 0 ? '#f1c40f' : 'transparent',
-                }}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-      {/* Street glow at bottom */}
-      <LinearGradient
-        colors={['transparent', 'rgba(155,89,182,0.2)', 'rgba(155,89,182,0.35)']}
-        style={{ position: 'absolute', left: 0, right: 0, top: '45%', bottom: 0 }}
-      />
-      {/* Streetlight pools */}
-      {[0.15, 0.5, 0.85].map((x, i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: `${x * 100 - 8}%`,
-            top: '65%',
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: 'rgba(241,196,15,0.08)',
-          }}
-        />
-      ))}
-    </View>
-  );
-}
-
-// tiny helper used by scenes
-function absFill(top: ViewStyle['top'], left: number, height: ViewStyle['height']): ViewStyle {
-  return {
-    position: 'absolute',
-    left,
-    right: 0,
-    top,
-    height,
-  };
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 // OpponentNode — single circular node on the path.
@@ -578,7 +418,7 @@ function OpponentNode({
     ['#5a3e0a', '#3a2800'];
 
   return (
-    <Pressable
+    <PressScale
       onPress={onPress}
       disabled={isLocked}
       accessibilityRole="button"
@@ -589,7 +429,7 @@ function OpponentNode({
       }
       accessibilityState={{ disabled: isLocked, selected: isNext }}
       accessibilityHint={isLocked ? undefined : 'Open match details'}
-      style={{
+      containerStyle={{
         position: 'absolute',
         left: `${leftPct}%`,
         top,
@@ -600,7 +440,6 @@ function OpponentNode({
         justifyContent: 'center',
       }}
     >
-      <PressScale>
       {/* Pulse halo for NEXT node */}
       {isNext && (
         <Animated.View
@@ -638,16 +477,25 @@ function OpponentNode({
           colors={isLocked ? ['rgba(40,40,50,0.8)', 'rgba(20,20,25,0.9)'] : bgGradient}
           style={[styles.nodeGradient, { borderRadius: size / 2 - 2 }]}
         >
-          {isLocked ? (
-            <Text style={styles.nodeLock}>🔒</Text>
-          ) : (
-            <>
-              <Text style={[styles.nodeRating, { color: nodeColor }]}>
-                {rating}
-              </Text>
-              <Text style={styles.nodeOvr}>OVR</Text>
-            </>
-          )}
+          {/* Calm-pass: locked nodes used to render a giant 🔒 emoji with no
+              hint of what was coming — Devon's audit called out the visual
+              monotony (11 identical padlocks). Now locked nodes show the
+              opponent's RATING dimmed + small "LOCKED" caption, giving
+              variety per node and teasing difficulty. The grey border +
+              opacity 0.55 on the wrapper still signals "you can't tap me." */}
+          <Text style={[
+            styles.nodeRating,
+            { color: nodeColor },
+            isLocked && { opacity: 0.45 },
+          ]}>
+            {rating}
+          </Text>
+          <Text style={[
+            styles.nodeOvr,
+            isLocked && { opacity: 0.55, letterSpacing: 1.2 },
+          ]}>
+            {isLocked ? 'LOCKED' : 'OVR'}
+          </Text>
         </LinearGradient>
 
         {/* Boss rays */}
@@ -722,8 +570,7 @@ function OpponentNode({
       >
         {isLocked ? '???' : level.opponent}
       </Text>
-      </PressScale>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -823,8 +670,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
               </View>
             )}
 
-            <PressScale>
-            <Pressable
+            <PressScale
               style={styles.modalPlayBtn}
               onPress={() => { haptics.tap(); playSound('whoosh'); onPlay(level); }}
               accessibilityRole="button"
@@ -836,7 +682,6 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
               >
                 <Text style={styles.modalPlayBtnText}>PLAY MATCH ›</Text>
               </LinearGradient>
-            </Pressable>
             </PressScale>
 
             <Pressable
@@ -1008,10 +853,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: -2,
   },
-  nodeLock: {
-    fontSize: 22,
-    opacity: 0.8,
-  },
   bossRays: {
     position: 'absolute',
     top: 0,
@@ -1108,6 +949,24 @@ const styles = StyleSheet.create({
   hudBtn: {
     alignItems: 'center',
     gap: 4,
+  },
+  // Calm-pass replacement for the 4 different bright gradient bgs.
+  // Single shared circular surface: translucent dark navy + thin warm-amber
+  // border + matching subtle drop shadow. Reads as one chrome row.
+  hudBtnBgCalm: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(10,14,32,0.65)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.45)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
   },
   hudBtnBg: {
     width: 46,

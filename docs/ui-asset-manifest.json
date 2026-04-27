@@ -7,36 +7,29 @@
       "group": "tab-icons",
       "id": "tab-home",
       "filename": "tab-home.png",
-      "size": "512x512",
-      "prompt": "Premium mobile game icon: a small glossy house with a warm glowing window, facing camera straight on. Dark navy + orange accents, neon rim light, slight gold reflection. Centered, transparent background, no text. Mobile game polish like Basketball Stars or Candy Crush."
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game tab bar icon for HOME per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D HOUSE with a peaked roof and a single front-facing door, simple and iconic. The house body face uses the Drop4 cool palette (pure white at top, cyan-blue in middle, deep cobalt navy at bottom). Strong downward 3D EXTRUSION underneath the house in a warm orange-to-deep-red gradient (peachy orange top of depth, deep crimson bottom). Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges. Designed to read clearly at 32-40px in a mobile tab bar — silhouette must remain legible at small size. Mood: chunky, playful, premium, dimensional — Brawl Stars / Coin Master / Subway Surfers icon language. NO text, NO numerals, NO photorealism, NO sleek thin styling, NO chrome, NO Connect 4 disc."
     },
     {
       "group": "tab-icons",
-      "id": "tab-challenges",
-      "filename": "tab-challenges.png",
-      "size": "512x512",
-      "prompt": "Premium mobile game icon: a bullseye target with a dart stuck dead-center. Glossy orange and navy, neon rim light, gold glint on the dart tip. Centered, transparent background, no text. Mobile game polish."
+      "id": "tab-customize",
+      "filename": "tab-customize.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game tab bar icon for CUSTOMIZE per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D T-SHIRT (front view, short sleeves, simple silhouette). The shirt face uses the Drop4 cool palette (pure white at top, cyan-blue in middle, deep cobalt navy at bottom). Strong downward 3D EXTRUSION underneath in a warm orange-to-deep-red gradient. Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges. Designed to read clearly at 32-40px in a mobile tab bar. Mood: chunky, playful, premium, dimensional — Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism, NO chrome, NO sleek thin styling."
     },
     {
       "group": "tab-icons",
-      "id": "tab-collection",
-      "filename": "tab-collection.png",
-      "size": "512x512",
-      "prompt": "Premium mobile game icon: a backpack with a glowing gem poking out the top. Glossy orange + navy, neon rim, gold zippers. Centered, transparent background, no text."
-    },
-    {
-      "group": "tab-icons",
-      "id": "tab-profile",
-      "filename": "tab-profile.png",
-      "size": "512x512",
-      "prompt": "Premium mobile game icon: a stylized bust silhouette inside a glowing circular frame, like a character portrait plaque. Glossy navy + orange, gold ring accent. Centered, transparent background, no text."
+      "id": "tab-missions",
+      "filename": "tab-missions.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game tab bar icon for MISSIONS per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D BULLSEYE TARGET (concentric rings, dart stuck dead-center). The target rings face uses the Drop4 cool palette (white outer ring at top, cyan-blue middle, deep cobalt navy at the bullseye), with a small warm gold dart tip catching light. Strong downward 3D EXTRUSION underneath the target in a warm orange-to-deep-red gradient. Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges. Designed to read clearly at 32-40px in a mobile tab bar. Mood: chunky, playful, premium, dimensional — Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism, NO sleek thin styling."
     },
     {
       "group": "tab-icons",
       "id": "tab-shop",
       "filename": "tab-shop.png",
-      "size": "512x512",
-      "prompt": "Premium mobile game icon: a glossy shopping bag with a small star hanging off it. Orange handles, navy body, gold star. Centered, transparent background, no text."
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game tab bar icon for SHOP per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D SHOPPING BAG (square body with two handles arching up from the top, simple iconic silhouette). The bag face uses the Drop4 cool palette (pure white at top, cyan-blue in middle, deep cobalt navy at bottom). Strong downward 3D EXTRUSION underneath the bag in a warm orange-to-deep-red gradient. Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges and along the handles. Designed to read clearly at 32-40px in a mobile tab bar. Mood: chunky, playful, premium, dimensional — Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism, NO chrome, NO sleek thin styling."
     },
     {
       "group": "mode-cards",
@@ -64,28 +57,32 @@
       "id": "bg-home",
       "filename": "bg-home.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game sky background, 9:16 aspect ratio. Edge-to-edge cosmic nebula ONLY \u2014 absolutely NO stage, NO podium, NO platform, NO floor, NO ground, NO horizon line, NO hexagonal tiles, NO spotlight beam. Just a deep navy-to-black cosmic sky filled with drifting magenta and cyan nebula clouds, glittering white star dust, a single subtle lens flare, scattered distant star clusters, soft volumetric bokeh. The nebula fills the ENTIRE canvas corner-to-corner with no visible boundaries or hard edges \u2014 the center is slightly brighter than the corners for a natural vignette. Premium AAA mobile aesthetic like a Destiny 2 / Stellaris starfield. Painterly, highly saturated, soft focus, no text, no characters, no UI."
+      "prompt": "Premium mobile game home screen backdrop, portrait 9:16 aspect ratio. Abstract atmospheric STAGE BACKDROP \u2014 calm, cinematic, NOT literal sports.\n\nUPPER TWO-THIRDS: deep indigo and rich navy gradient sky filled with SCATTERED FAINT PINPRICK STARS (small, soft, distant \u2014 like a clear night sky seen from below). The stars are subtle texture, not bright focal points. Cool palette dominates the upper sky.\n\nLOWER THIRD: a soft warm AMBER SPOTLIGHT POOL centered low on the canvas, glowing up onto the empty space above as if a single warm light from below is hitting an empty stage. Around the lower edges (lower-left and lower-right corners): PAINTERLY BLURRED CROWD SILHOUETTES \u2014 a sea of indistinct heads/shoulders fading into deep shadow, providing ambient sense of PLACE without being literal. The crowd is barely visible, melting into the dark.\n\nStrong vignette: darker corners, calmer center-low.\n\nABSOLUTELY FORBIDDEN \u2014 DO NOT INCLUDE: NO basketball court, NO basketball hoop, NO court markings, NO court lines, NO blue court, NO any sports equipment, NO benches, NO scoreboards, NO stadium light fixtures, NO bleachers, NO seats, NO players, NO referees, NO PEOPLE, NO figures, NO bodies, NO heads, NO Connect 4 discs, NO Connect 4 boards, NO text, NO logos, NO numbers, NO letters, NO bright lens flares, NO large bright stars, NO neon signs, NO architecture details. The image is a near-ABSTRACT dark atmospheric backdrop with one warm spotlight pool below and a starry cool sky above and barely-visible crowd silhouettes melting into shadow at the corners.\n\nMood: cinematic, premium, calm, restrained. Painterly digital illustration. The image MUST recede behind foreground UI.",
+      "background": "opaque"
     },
     {
       "group": "backgrounds",
       "id": "bg-shop",
       "filename": "bg-shop.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game shop background, 9:16 aspect ratio. Luxurious cosmic marketplace vibe: deep navy-to-black upper sky filled with drifting magenta and cyan nebula wisps plus glittering white stars, center focal point an elegant floating holographic vitrine display podium glowing warm gold with a soft light column rising through it, lower 30 percent a glossy dark hexagonal tile floor catching faint reflections. Scattered coin sparkles + floating geometric facets (diamond shards) in the mid-ground. NO text, NO letters, NO characters, NO logos, NO UI elements. Premium AAA mobile aesthetic like the Fortnite Item Shop merged with an Apple Store display. Polished, painterly, highly saturated but readable, soft bokeh focus, expensive feel."
+      "prompt": "Drop4 premium mobile game shop screen backdrop, portrait 9:16 aspect ratio. Cinematic premium marketplace atmosphere: deep midnight navy and indigo gradient sky in upper two-thirds, transitioning to a soft warm amber spotlight pool at center-bottom where shop item cards will float as UI overlays. Painterly atmosphere — hints of distant glossy display vitrines blurred heavily far into the background, faint volumetric warm light pooling at the center-low. Strong vignette: darker corners, calmer center-low. Mood: Apple Store flagship at night meets a high-end auction hall. Cohesion contract with the home backdrop: same calm restrained palette — deep navy base with one warm amber accent. The image MUST recede behind foreground UI shop cards. NO text, NO logos, NO product silhouettes in foreground, NO bright stars, NO lens flares, NO busy particles, NO hard edges. Soft, atmospheric, painterly, restrained.",
+      "background": "opaque"
     },
     {
       "group": "backgrounds",
       "id": "bg-career",
       "filename": "bg-career.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game career-mode background, 9:16 aspect ratio. Cinematic neon-drenched Brooklyn skyline at dusk: silhouetted skyscrapers receding into magenta-to-purple dusk sky, warm yellow windows glittering across the city like stars, volumetric orange god-rays beaming down between buildings, bright gold trophy-shaped beam of light rising from the center of the skyline to the top of the frame, aurora ribbons draping the upper sky. Scattered distant stars + lens flares in the mid-ground. Painterly AAA mobile aesthetic \u2014 Cyberpunk 2077 cinematic crossed with Spider-Man: Miles Morales NYC. NO text, NO characters, NO UI, NO logos. Premium, high contrast, saturated."
+      "prompt": "Drop4 premium mobile game career screen backdrop, portrait 9:16 aspect ratio. Cinematic premium night-court rooftop atmosphere: deep midnight navy gradient sky filling the upper two-thirds with a hint of warm amber horizon glow at the lower edge as if a city is breathing below the frame. Painterly atmosphere \u2014 extremely blurred silhouette of a distant city skyline at the bottom edge with faint warm window lights, gentle haze layer in the middle distance. Strong vignette: darker corners, calmer center. Mood: NBA Street Vol 2 night-court rooftop, Spider-Man: Miles Morales twilight skyline, restrained. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with one warm amber accent. The image MUST recede behind foreground UI city cards and node grids. NO text, NO logos, NO sharp building outlines in foreground, NO bright stars, NO lens flares, NO aurora ribbons, NO busy particles. Soft, atmospheric, painterly, restrained.",
+      "background": "opaque"
     },
     {
       "group": "backgrounds",
       "id": "bg-profile",
       "filename": "bg-profile.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game profile / trophy hall background, 9:16 aspect ratio. Regal cosmic hall of fame: deep purple-to-navy starry sky with subtle aurora ribbons, lower 40 percent a grand marble podium stage with warm gold spotlight beams fanning up and out from the center, silhouetted trophy / crown silhouettes blurred far in the background at different depths, floating gold dust particles. Scattered holographic rank chevrons in bokeh. NO text, NO letters, NO characters, NO UI. Painterly, AAA mobile aesthetic. Polished, warm regal mood, premium."
+      "prompt": "Drop4 premium mobile game profile screen backdrop, portrait 9:16 aspect ratio. Cinematic premium trophy hall atmosphere: deep midnight navy upper two-thirds transitioning to a warm gold-amber blend in the lower third where rank badges and stats will sit. Painterly atmosphere — extremely blurred silhouettes of trophy shapes far in the background at varying depths, faint volumetric gold light beams fanning up softly from the bottom edge. Strong vignette: darker corners, warm calmer center-low. Mood: NBA 2K MyPlayer hall of fame, regal but restrained. Cohesion contract with the home backdrop: same calm restrained palette — deep navy base with warm amber accent. The image MUST recede behind foreground UI portrait + stat cards. NO text, NO logos, NO sharp trophy outlines, NO bright stars, NO lens flares, NO aurora ribbons, NO busy particles, NO chevrons. Soft, atmospheric, painterly, regal.",
+      "background": "opaque"
     },
     {
       "group": "frames",
@@ -224,8 +221,8 @@
       "group": "home-polish",
       "id": "home-logo",
       "filename": "home-logo.png",
-      "size": "1200x512",
-      "prompt": "Premium mobile game wordmark, transparent background isolated. The single word DROP4 in chunky hand-painted 3D block letters, glossy warm orange-to-deep-crimson gradient fill with a bright yellow-white bevel highlight at the top edge, bold gold rim outline, subtle magenta glow halo behind the letters. The 4 is stylized as a minimal Connect-4 game board with a single bright red disc dropping into the rightmost slot. Faint warm ember sparkles floating around the letters. Letters fill most of the canvas edge-to-edge. Absolutely NOTHING else in the image besides the word itself and the drop-shadow-glow around the letters. NO additional text, NO subtitle, NO tagline, NO borders, NO frames, NO characters, NO logos. Premium AAA mobile-game logo polish like Brawl Stars or Clash Royale wordmarks. Painterly, glossy, high contrast, very saturated."
+      "size": "1536x1024",
+      "prompt": "Drop4 premium mobile game wordmark logo per VISUAL_DIRECTION_LOCKIN. Transparent background isolated. The wordmark reads 'DROP4' but the 'DROP' letters and the '4' character use TWO DIFFERENT, CONTRASTING palettes — this is the signature visual feature. They MUST look like two halves of a brand: cool half + warm half.\n\n'DROP' (4 letters: D, R, O, P) — CHUNKY BOLD 3D BLOCK letters with a STRICTLY COOL palette face: pure white at the top of each letter, transitioning to true cyan-blue in the middle, ending at deep cobalt navy at the bottom. Thin white rim highlight along the upper edge. ABSOLUTELY NO pink, NO magenta, NO purple, NO orange, NO red, NO warm tones anywhere on the DROP letter faces. Each DROP letter has a strong downward 3D extrusion underneath in a warm orange-to-deep-red gradient (the warm depth contrasts with the cool face above).\n\n'4' (a single character at the right side of the wordmark) — STRICTLY WARM palette face: rich gold at the top, bright orange in the middle, deep crimson red at the bottom. Golden-yellow rim highlight along the upper edge. ABSOLUTELY NO blue, NO cyan, NO white face on the 4 — this character is the warm half of the wordmark and must be visually distinct from the cool 'DROP' letters next to it. The 4 also has a downward 3D extrusion in a warm deep-red gradient.\n\nThe ENTIRE wordmark silhouette (DROP + 4 together) is wrapped in a thick dark navy outline (~4-5px). A handful of small white-and-yellow sparkle stars scattered subtly around the lower edge only.\n\nMood: chunky playful 3D dimensional, Brawl Stars / Coin Master / Subway Surfers logo language. The cool DROP + warm 4 contrast is the brand's signature.\n\nNO Connect 4 disc replacing any letter. NO halo behind the wordmark. NO drop-shadow stack behind the silhouette. NO sleek chrome. NO thin sans-serif typography. NO childish balloon font. NO uniform color across both DROP and 4 — they MUST be different palettes."
     },
     {
       "group": "home-polish",
@@ -288,14 +285,15 @@
       "id": "app-icon",
       "filename": "app-icon.png",
       "size": "1024x1024",
-      "prompt": "Premium mobile app icon: a chunky glossy red Connect-4 style disc with a large numeral '4' engraved into its face, warm orange rim light, subtle neon glow, sitting inside a rounded-square icon backdrop that fades from deep navy to warm orange radial glow behind the disc. Centered, fills the square, no text anywhere \u00e2\u20ac\u201d the '4' on the disc is the only glyph and must be bold and readable. Designed for iOS/Android home-screen icons at small sizes. Polished like Candy Crush or Basketball Stars app icons."
+      "prompt": "Drop4 premium mobile app icon, square 1:1 aspect ratio. The single red Connect 4 disc as the central brand mark: glossy enamel red disc (#E63946) with a soft white rim highlight at the top-right and subtle vertical drop motion blur on the bottom edge as if the disc just snapped into place. The disc sits centered on a deep navy radial gradient background with a subtle warm amber glow behind it, framed by gentle vignette darker at the corners, slight rounded-square iOS/Android icon mask vibe. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with warm amber accent. Premium AAA app-icon aesthetic \u2014 instantly recognizable at any size. NO text, NO letters, NO numerals on the disc, NO secondary mark, NO halo, NO sparks, NO sparkles, NO busy decoration. Just the clean glossy red disc on the navy field with one warm glow. Designed to read clearly at 60\u00d760 px on a phone home screen."
     },
     {
       "group": "splash",
       "id": "splash-hero",
       "filename": "splash-hero.png",
-      "size": "1024x1024",
-      "prompt": "Premium mobile game splash-screen hero: a giant chunky glossy red Connect-4 style disc floating in space, a single numeral '4' engraved on its face, sparks and warm golden light rays radiating outward, subtle Connect-4 board silhouette in the blurred background, navy-to-warm-orange radial backdrop fading to transparent at the edges. Centered, dominant subject. The only glyph anywhere is the '4' on the disc. No other text, no wordmark."
+      "size": "1080x1920",
+      "prompt": "Drop4 premium mobile game splash screen art, portrait 9:16 aspect ratio. Cinematic premium reveal: deep midnight navy gradient backdrop with a soft warm amber spotlight pool at center-bottom. The single red Connect 4 disc (glossy enamel #E63946 with white rim highlight at top-right) suspended dropping in mid-air at the upper-center as if frozen mid-fall, gentle radial glow behind the disc, subtle vertical motion blur on the bottom edge of the disc. Strong vignette: darker corners. Cohesion contract with the home backdrop: same calm restrained palette — deep navy base with warm amber accent. NO text, NO logos baked in, NO numerals on the disc, NO sparks, NO golden rays, NO Connect 4 board silhouette, NO lens flares, NO busy particles. Painterly, atmospheric, premium, restrained. Lower third intentionally calm so a wordmark can be overlaid in code.",
+      "background": "opaque"
     },
     {
       "group": "polish",
@@ -344,21 +342,24 @@
       "id": "bg-challenges",
       "filename": "bg-challenges.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game missions/challenges background, 9:16 aspect ratio. Dynamic combat-ready arena: deep crimson-to-orange sunset sky with volumetric god-rays, silhouetted floating battle platforms at different depths, streaking motion lines across the scene suggesting fast action, glowing orange and cyan energy sparks scattered. Lower half a dark glossy obsidian floor catching bright reflections. NO text, NO letters, NO characters, NO UI. Painterly, AAA mobile aesthetic like an Apex Legends mission briefing crossed with Destiny 2 strike screen. Premium, energetic, high contrast."
+      "prompt": "Drop4 premium mobile game missions/challenges screen backdrop, portrait 9:16 aspect ratio. Cinematic premium training-hall atmosphere: deep midnight navy and indigo upper two-thirds, transitioning to a soft warm amber spotlight pool at center-bottom where mission cards will sit. Painterly atmosphere — extremely blurred silhouettes of distant training-room banners or trophy shelves, gentle volumetric warm light. Strong vignette: darker corners, calmer center-low. Mood: NBA 2K player career missions hall, restrained. Cohesion contract with the home backdrop: same calm restrained palette — deep navy base with one warm amber accent. The image MUST recede behind foreground UI mission cards. NO text, NO logos, NO sharp objects in foreground, NO bright stars, NO god-rays, NO motion lines, NO busy particles, NO crimson sunset, NO hard edges. Soft, atmospheric, painterly, restrained.",
+      "background": "opaque"
     },
     {
       "group": "scene-bgs",
       "id": "bg-play",
       "filename": "bg-play.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game PvP / quick-match background, 9:16 aspect ratio. Cinematic arena battle ambience: two oversized silhouetted Connect-4 boards facing off on a glossy obsidian hex-tile floor, warm orange spotlight pooling in the center between them with embers rising, magenta + cyan nebula wisps flanking on left and right, volumetric rim lights on the boards, electric energy sparks scattered. Deep navy sky fading to crimson at the bottom. Painterly AAA mobile aesthetic \u2014 Apex Legends lobby crossed with a fighting-game versus screen. NO text, NO characters, NO UI, NO logos. Saturated, high contrast, dramatic."
+      "prompt": "Drop4 premium mobile game quick-play / difficulty-picker screen backdrop, portrait 9:16 aspect ratio. Cinematic premium pre-match staging atmosphere: deep midnight navy and indigo gradient sky filling upper two-thirds, transitioning to a soft warm amber spotlight pool at center-bottom where the difficulty buttons sit. Painterly atmosphere \u2014 extremely blurred silhouette of an empty arena tunnel receding into the distance, gentle warm haze rising from the floor. Strong vignette: darker corners. Mood: about to step into the arena, restrained but charged with anticipation. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with one warm amber accent. The image MUST recede behind foreground UI difficulty cards. NO text, NO logos, NO Connect 4 boards in foreground, NO characters, NO bright stars, NO embers, NO magenta/cyan plasma, NO crimson sunset, NO hex tiles. Soft, atmospheric, painterly, restrained.",
+      "background": "opaque"
     },
     {
       "group": "scene-bgs",
       "id": "bg-matchup",
       "filename": "bg-matchup.png",
       "size": "1080x1920",
-      "prompt": "Portrait mobile game matchup / versus background, 9:16 aspect ratio. Epic VS-screen energy: vertical cosmic rift splitting the canvas down the middle with magenta plasma energy on the left half, cyan plasma energy on the right half, lightning cracks between them, deep navy sky filled with stars and nebula wisps, volumetric lens flares at the center where the two energies meet, embers + sparks scattered throughout. Painterly AAA mobile aesthetic \u2014 Street Fighter / Marvel vs Capcom versus screen crossed with a cosmic event. NO text, NO characters, NO UI, NO logos. Highly saturated, dramatic, high contrast."
+      "prompt": "Drop4 premium mobile game pre-match staging screen backdrop, portrait 9:16 aspect ratio. Cinematic premium tunnel atmosphere: deep midnight navy gradient sky, with a soft warm amber spotlight pool low at center. Painterly atmosphere \u2014 extremely blurred silhouettes of distant arena banners draped at the upper edges, gentle warm haze in the middle distance. Strong vignette: darker corners, calmer center-low. Mood: NBA 2K player intro tunnel, restrained but anticipatory. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with one warm amber accent. CRITICAL: this is a pure painted backdrop. ABSOLUTELY NO text, NO letters, NO numbers, NO words anywhere. NO 'VS', NO 'V S', NO 'VERSUS', NO Roman numerals. NO buttons, NO UI elements, NO cards, NO frames, NO icons, NO logos. NO cosmic rift, NO magenta/cyan plasma, NO lightning, NO embers, NO bright stars, NO lens flares, NO busy particles. The image is a PURE atmospheric tunnel scene \u2014 character portraits and a VS clash mark will be overlaid in code on top. Soft, atmospheric, painterly, restrained.",
+      "background": "opaque"
     },
     {
       "group": "difficulty",
@@ -525,22 +526,25 @@
       "group": "career-cities",
       "id": "city-brooklyn",
       "filename": "city-brooklyn.png",
-      "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized Brooklyn blacktop basketball court at dusk, cracked concrete, chain-link fence, graffiti on brick walls in the background, warm orange sunset, distant Brooklyn rowhouse silhouettes. Gritty-yet-polished illustration style. No characters, no text, edges fade softly so the card border can overlay. Premium polish like Basketball Stars arena art. Represents 'The Rec, Brooklyn NY' \u00e2\u20ac\u201d where every baller starts."
+      "size": "1536x1024",
+      "prompt": "Drop4 premium mobile game career city card backdrop, landscape 3:2 aspect ratio. Cinematic Brooklyn blacktop court at dusk: deep midnight navy and indigo upper sky transitioning to a soft warm amber sunset glow at the horizon. Painterly silhouettes of mid-rise rowhouses and a chain-link fence at the edges, subtle texture suggesting the cracked blacktop court at the lower edge with one warm streetlamp pool. Strong vignette: darker corners, calmer center. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with one warm amber accent. The image MUST recede behind a foreground city card UI overlay. NO text, NO logos, NO graffiti words, NO basketball hoops in foreground, NO characters, NO bright stars, NO lens flares, NO busy particles. Painterly, atmospheric, premium, restrained \u2014 Spider-Man Miles Morales twilight Brooklyn meets NBA Street Vol 2 at dusk.",
+      "background": "opaque"
     },
     {
       "group": "career-cities",
       "id": "city-venice",
       "filename": "city-venice.png",
-      "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized Venice Beach boardwalk basketball court at high noon, sandy edges, palm trees, ocean horizon behind, bright California sun, warm teal-orange palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Boardwalk, Venice Beach CA' \u00e2\u20ac\u201d sun sand and speed."
+      "size": "1536x1024",
+      "prompt": "Drop4 premium mobile game career city card backdrop, landscape 3:2 aspect ratio. Cinematic Venice Beach boardwalk at sunset: deep indigo upper sky transitioning to a warm amber-gold horizon glow over a softly painted ocean. Painterly silhouettes of palm trees at the edges, faint boardwalk lights pooling at the bottom edge. Strong vignette: darker corners, calmer center. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with warm amber accent (replacing the previous bright California-noon palette). The image MUST recede behind a foreground city card UI overlay. NO text, NO logos, NO surfers, NO basketball court, NO bright sun disc, NO lens flares, NO busy particles, NO characters. Painterly, atmospheric, premium, restrained \u2014 Pacific dusk vibe.",
+      "background": "opaque"
     },
     {
       "group": "career-cities",
       "id": "city-cathedral",
       "filename": "city-cathedral.png",
-      "size": "1024x384",
-      "prompt": "Wide horizontal mobile game card art: a stylized cathedral-like indoor arena court with high vaulted ceilings, stained glass windows, polished hardwood floor with brass inlay, dramatic stage lighting, deep purple + gold palette. Polished illustration style. No characters, no text, edges fade softly. Premium polish. Represents 'The Cathedral' \u00e2\u20ac\u201d the holy grail of basketball arenas."
+      "size": "1536x1024",
+      "prompt": "Drop4 premium mobile game career city card backdrop, landscape 3:2 aspect ratio. Cinematic Harlem night cathedral interior: vaulted dark stone arches receding into deep midnight navy shadow, warm amber light pooling on a polished court floor at the lower edge, hints of stained-glass color softly blurred into the upper edges. Strong vignette: darker corners, warm calmer center-low. Cohesion contract with the home backdrop: same calm restrained palette \u2014 deep navy base with warm amber accent (replacing the previous purple + gold palette). The image MUST recede behind a foreground city card UI overlay. NO text, NO logos, NO statues, NO basketball court markings, NO characters, NO bright stars, NO lens flares, NO busy particles. Painterly, atmospheric, premium, regal, restrained \u2014 reverent night-cathedral mood.",
+      "background": "opaque"
     },
     {
       "group": "career-extras",
@@ -585,25 +589,137 @@
       "prompt": "Premium mobile game wide pill button background, 2:1 aspect ratio, isolated on transparent background. A glossy teal-to-emerald gradient pill shape with a bright warm-gold rim highlight on top, subtle inner shadow at bottom, a soft warm pink glow halo radiating outward. Surface has faint hexagonal tile shimmer + a single bright yellow-white lens flare on the left side suggesting a slot-machine reward. Absolutely NO text, NO letters, NO numbers, NO characters, NO icons. Just the premium painted pill button shape + its light emission. AAA mobile-game polish like a Coin Master daily-reward button. Painterly, saturated, glossy."
     },
     {
-      "group": "backgrounds",
+      "group": "nebulas",
       "id": "nebula-back",
       "filename": "nebula-back.png",
       "size": "1080x1920",
       "prompt": "Seamless tileable cosmic nebula layer, 9:16 portrait. PURE cosmic sky, deep navy-to-black base, scattered pin-prick stars of various sizes, very subtle distant purple and blue nebula wisps in the background. Soft, low contrast, meant to sit as the DEEPEST parallax layer behind other nebula clouds. No horizon, no foreground, no text, no characters. Fully dark-sky aesthetic, no bright focal point. Painterly but restrained \u2014 this is the sky, not the hero."
     },
     {
-      "group": "backgrounds",
+      "group": "nebulas",
       "id": "nebula-mid",
       "filename": "nebula-mid.png",
       "size": "1080x1920",
       "prompt": "Cosmic nebula cloud layer on a TRANSPARENT or pure black background, 9:16 portrait. Wispy bright magenta and cyan nebula smoke in three-four distinct streaming cloud formations, one curving diagonally from top-left to mid-right, another swirling in the lower-right, edges softly dissipate into invisible. Between clouds is pure black/transparent \u2014 this is a MID-parallax layer that overlays a deeper starfield below. Saturated neon magenta + electric cyan color palette, volumetric painterly wisps like airbrushed smoke. No horizon, no stars (they belong to a different layer), no characters, no text. Painterly AAA mobile aesthetic."
     },
     {
-      "group": "backgrounds",
+      "group": "nebulas",
       "id": "nebula-near",
       "filename": "nebula-near.png",
       "size": "1080x1920",
       "prompt": "Foreground sparkle dust layer on a TRANSPARENT or pure black background, 9:16 portrait. Bright white and warm gold pinprick stars of varying sizes scattered across the canvas, with 4-6 larger lens-flare style sparkles featuring cross-shaped light rays. A few floating glowing dust motes in warm orange and magenta. Everything else is pure black/transparent \u2014 this is a NEAR parallax layer that floats in front of other nebula layers. No solid nebula clouds, no horizon, no characters, no text. Painterly AAA mobile aesthetic."
+    },
+    {
+      "group": "logo-variants",
+      "id": "home-logo-chunky",
+      "filename": "home-logo-chunky.png",
+      "size": "1536x1024",
+      "prompt": "Premium AAA mobile game logo wordmark, transparent background isolated, centered horizontal lockup with ~10% padding. Reads 'DROP4' as a single chunky horizontal word \u2014 playful but premium, like Brawl Stars / Coin Master / Subway Surfers logo language. The 'DROP' letters are CHUNKY BOLD 3D block letters with a cool white-to-icy-blue gradient on the face (white at the top of each letter, cool sky blue in the middle, deeper steel blue at the lower face), a thin clean white rim highlight along the upper edge. Each letter has a STRONG 3D EXTRUSION downward \u2014 the extruded depth shows a warm orange-to-deep-red gradient (peachy orange near the top of the depth fading to deep crimson at the bottom), as if the letters dropped into place with warm light glowing underneath. The '4' character is the SAME chunky 3D block style but the face is a warm gold-to-orange-to-red gradient (gold top, orange middle, red lower), with golden rim highlights along the upper edge, and the same warm-red 3D extrusion below. The ENTIRE wordmark silhouette is wrapped in a thick dark navy outline (~4px), hugging the chunky shapes tightly. A handful of small white-and-yellow sparkle stars scattered subtly around the lower edge of the wordmark. Mood: chunky, playful, premium, dimensional, gaming \u2014 instantly readable as a Connect-4 mobile game brand mark. NO secondary tagline, NO halo behind, NO Connect 4 disc replacing letters, NO sleek chrome, NO sharp thin typography."
+    },
+    {
+      "group": "logo-variants",
+      "id": "home-logo-3d",
+      "filename": "home-logo-3d.png",
+      "size": "1536x1024",
+      "prompt": "Premium AAA mobile game logo wordmark, transparent background isolated, horizontal lockup with ~12% padding. Reads 'DROP4' tilted at a slight 3-degree perspective. The 'DROP' letters are bold uppercase chunky sans-serif in polished metallic gold with a strong top-down rim light catching the bevel, deep crimson outer stroke, and a soft warm cast shadow on the transparent ground beneath each letter for depth. The '4' is replaced by a glossy enamel-red Connect 4 disc seen at slight 3D angle, dropping down into place with a vertical motion blur trail, a bright white specular highlight at the top, and a red ambient glow bouncing onto the gold letters next to it. Strong cinematic side lighting from upper-right. Mood: NBA 2K hero logo + Coin Master flagship lockup \u2014 chunky, premium, dimensional, sleek. Painterly digital illustration. NO text other than DROP4, NO secondary tagline, NO sparkles, NO halo, NO childish balloon styling."
+    },
+    {
+      "group": "logo-variants",
+      "id": "home-logo-neon",
+      "filename": "home-logo-neon.png",
+      "size": "1536x1024",
+      "prompt": "Premium AAA mobile game logo wordmark, transparent background isolated, horizontal lockup with ~15% padding. Reads 'DROP4' in a single horizontal word. The 'DROP' letters are bold uppercase sans-serif typography in polished gold with a thin warm-amber neon rim trace running along the inner edge of each letter, deep navy outer stroke. Subtle warm amber glow halo bleeding outward from the letters. The '4' is replaced by a glossy enamel-red Connect 4 disc dropping into place with a thin vertical neon trail of warm amber light beneath it (the disc just dropped through a lit slot), bright white rim highlight at the top of the disc. Mood: arcade-meets-AAA \u2014 Marvel Snap meets Tron lightcycle, restrained but unmistakably gaming. Painterly digital illustration. NO text other than DROP4, NO secondary tagline, NO lens flares, NO over-saturated neon, NO 3D balloon styling."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-character",
+      "filename": "cat-character.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for CHARACTER (the character creator entry point) per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D HUMAN BUST (head + neck + shoulders silhouette, simple stylized — no facial details, just a clean profile-front silhouette). The bust face uses the Drop4 cool palette (white at top, cyan-blue mid, deep navy at bottom of the face). Strong downward 3D EXTRUSION underneath in a warm orange-to-deep-red gradient. Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges. Designed to read clearly at 72-96px in a category card. Mood: chunky, playful, premium, dimensional — Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism, NO facial features detail, NO sleek thin styling, NO chrome."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-clothes",
+      "filename": "cat-clothes.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for CLOTHES (individual outfit parts) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D PAIR OF PANTS (front view, simple iconic silhouette) with a small folded shirt or hat next to it suggesting 'wardrobe parts.' Cool palette face (white top, cyan-blue mid, deep navy bottom), strong warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-outfits",
+      "filename": "cat-outfits.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for OUTFITS (full preset outfit packs) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D HANGER WITH SHIRT (the shirt hanging off a wardrobe hanger, classic wardrobe icon). Cool palette shirt face (white top, cyan-blue mid, deep navy bottom), warm orange-red 3D extrusion underneath the shirt, golden hanger hook. Thick dark navy outline ~4-5px, white rim highlight. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-emotes",
+      "filename": "cat-emotes.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for EMOTES per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D SPEECH BUBBLE with a simple smile inside it. Cool palette bubble face (white top, cyan-blue mid, deep navy bottom), warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight. The smile inside the bubble is gold/yellow. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-pets",
+      "filename": "cat-pets.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for PETS per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D PAW PRINT (the iconic paw with 4 toe pads + main pad). Cool palette paw face (white top, cyan-blue mid, deep navy bottom), warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals, NO realistic dog face."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-pieces",
+      "filename": "cat-pieces.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for PIECES (the Connect 4 discs you drop) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Two stacked Connect 4 DISCS — a glossy red disc on top-left and a glossy gold-yellow disc on bottom-right, slightly overlapping at the centers. Each disc has a clean white rim highlight at the top. Thick DARK NAVY OUTLINE (~4-5px) hugging both discs as a single combined silhouette. NO text, NO letters, NO numerals on the discs. Brawl Stars / Coin Master icon language. Read at 72-96px."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-boards",
+      "filename": "cat-boards.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for BOARDS (the Connect 4 board itself) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D CONNECT 4 BOARD — a vertical rectangular grid frame with a 3×3 simplified hole pattern visible (kept simple for legibility at small size). The board frame face uses the cool palette (white top, cyan-blue mid, deep navy bottom), the holes are dark navy. Strong warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight. Read at 72-96px. NO text, NO numerals."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-effects",
+      "filename": "cat-effects.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for EFFECTS (drop animations / VFX) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D FOUR-POINTED SPARKLE STAR (clean geometric star, NOT a sphere). Cool palette star face (white at top, cyan-blue mid, deep navy bottom), warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight at the upper points. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals, NO photorealism."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-wins",
+      "filename": "cat-wins.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for WINS (win celebrations / trophy cosmetics) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D TROPHY CUP (with simple handles and a small base). The trophy face uses the WARM palette (rich gold at top, bright orange middle, deep red lower face — note this icon uses warm palette since trophy = gold/win). Strong warm darker-red 3D extrusion underneath. Thick dark navy outline ~4-5px hugging the silhouette tightly. White rim highlight along the upper edges. Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals."
+    },
+    {
+      "group": "customize-cats",
+      "id": "cat-frames",
+      "filename": "cat-frames.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game category icon for FRAMES (profile portrait frames) per VISUAL_DIRECTION_LOCKIN — chunky 3D dimensional aesthetic. Transparent background, centered, ~12% padding. Single hero object: a stylized chunky 3D ORNATE PORTRAIT FRAME (square or rounded-square frame with a thick decorated rim, hollow center). Cool palette frame face (white at top of the rim, cyan-blue mid, deep navy bottom), warm orange-red 3D extrusion underneath, thick dark navy outline ~4-5px, white rim highlight along upper edges. The hollow center is transparent (you can see through it). Read at 72-96px. Brawl Stars / Coin Master icon language. NO text, NO numerals, NO portrait inside."
+    },
+    {
+      "group": "btn-textures",
+      "id": "btn-texture-orange",
+      "filename": "btn-texture-orange.png",
+      "size": "1536x1024",
+      "prompt": "Premium mobile game CTA button SURFACE TEXTURE, no scene, no text. Pure tileable material study: a horizontally oriented hammered metallic surface in deep amber-orange (#FF8C00 base, #FFB347 highlights, #C0540B shadows). Subtle hammered/forged texture with soft glints catching imaginary overhead light, faint inner top highlight rim, faint bottom shadow rim, edges fading softly so the texture composites cleanly under text in code. Mood: NBA 2K MyPlayer button surface, premium gaming chrome. Painterly digital illustration. ABSOLUTELY NO text, NO letters, NO numerals, NO icons, NO logos, NO scenes, NO objects, NO characters \u2014 this is a pure surface plate that text and an arrow chevron will be overlaid on top of in code."
+    },
+    {
+      "group": "btn-textures",
+      "id": "btn-texture-purple",
+      "filename": "btn-texture-purple.png",
+      "size": "1536x1024",
+      "prompt": "Premium mobile game CTA button SURFACE TEXTURE, no scene, no text. Pure tileable material study: a horizontally oriented hammered metallic surface in deep royal purple (#7E3FA8 base, #B379D0 highlights, #4A1F6E shadows). Subtle hammered/forged texture with soft glints, faint inner top highlight rim, faint bottom shadow rim, edges fading softly so the texture composites cleanly under text in code. Mood: NBA 2K MyPlayer button surface, premium gaming chrome. Painterly digital illustration. ABSOLUTELY NO text, NO letters, NO numerals, NO icons, NO logos, NO scenes, NO objects, NO characters."
+    },
+    {
+      "group": "btn-textures",
+      "id": "btn-texture-teal",
+      "filename": "btn-texture-teal.png",
+      "size": "1536x1024",
+      "prompt": "Premium mobile game CTA button SURFACE TEXTURE, no scene, no text. Pure tileable material study: a horizontally oriented hammered metallic surface in deep teal-cyan (#1ABC9C base, #5DD3B7 highlights, #0F6F5C shadows). Subtle hammered/forged texture with soft glints, faint inner top highlight rim, faint bottom shadow rim, edges fading softly so the texture composites cleanly under text in code. Mood: NBA 2K MyPlayer button surface, premium gaming chrome. Painterly digital illustration. ABSOLUTELY NO text, NO letters, NO numerals, NO icons, NO logos, NO scenes, NO objects, NO characters."
     }
   ]
 }

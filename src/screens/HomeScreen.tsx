@@ -7,6 +7,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { Character3D } from '../components/3d/Character3D';
+import { LiveBackground3D } from '../components/3d/LiveBackground3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { OUTFITS } from '../data/outfitRegistry';
 import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
@@ -366,6 +367,13 @@ export function HomeScreen() {
 
   return (
     <ScreenBackground scene="home">
+      {/* Simple live 3D background — slow-drifting Connect 4 discs in
+          red + yellow at varying depths. Sits between the painted bg-home
+          and the foreground UI (TopBar / logo / character / PLAY). The
+          layer is absolutely-positioned with pointerEvents="none" so it
+          doesn't capture taps. Designed to recede — discs drift slowly,
+          dim ambient + warm directional lighting, opacity 0.55 default. */}
+      <LiveBackground3D discCount={6} opacity={0.4} />
       <View style={styles.container}>
         <View>
           <TopBar
@@ -396,21 +404,27 @@ export function HomeScreen() {
             loops. */}
         <StaggeredEntry index={0}>
         <View style={styles.logoArea}>
-          <View pointerEvents="none" style={styles.logoHalo} />
-          <BreathingView intensity={0.015} speed={5000}>
-            <Image
-              source={require('../assets/images/ui/home-logo.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </BreathingView>
+          <Image
+            source={require('../assets/images/ui/home-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         </StaggeredEntry>
 
-        {/* ═══ CHARACTER LOBBY ═══ */}
-        <StaggeredEntry index={1}>
+        {/* ═══ CHARACTER LOBBY ═══
+            Side buttons (Emotes/Idles) removed in the calm-Home pass —
+            tapping the character still triggers a random owned emote
+            (long-press), and the full picker lives on the Customize tab.
+            StaggeredEntry needs flexGrow:1 here — without it the Animated.View
+            wrapper defaults to shrink-to-fit and the inner lobbyArea's
+            flex props don't reach the parent flex chain (container). Bug
+            symptom: character + PLAY button pushed up off-screen, big
+            empty void below PLAY before the tab bar. */}
+        <StaggeredEntry index={1} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 320 }}>
         <View style={styles.lobbyArea}>
-          {/* Emotes button (left) — opens unified picker on Emotes tab */}
+          {/* Emotes side button (left) — restored per Devon's request.
+              Tap → opens AnimationPicker on Emotes tab. */}
           <View
             style={styles.sideBtn}
             {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('emotes'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
@@ -443,8 +457,9 @@ export function HomeScreen() {
               - StagePremiumFX adds rising embers + slow conic shimmer
                 floating up the character silhouette. */}
           <View style={styles.characterStage}>
-            <View pointerEvents="none" style={styles.footGlowOuter} />
-            <View pointerEvents="none" style={styles.footGlowInner} />
+            {/* Calm-Home pass: foot inner+outer glows and stage ring removed.
+                Only the painted spotlight platform remains as the ground cue.
+                Sparkles + premium FX kept but at reduced visual weight. */}
             <StageSparkles />
             <StagePremiumFX width={400} />
 
@@ -518,15 +533,13 @@ export function HomeScreen() {
                 )}
               </Pressable>
             )}
-            <LinearGradient
-              colors={['rgba(100,180,255,0.3)', 'rgba(80,140,255,0.12)', 'transparent']}
-              style={styles.stagePlatform}
-            />
-            <View style={styles.stageRing} />
-
+            {/* Calm-Home pass: blue gradient platform overlay removed — it
+                fought the warm orange spotlight baked into the painted bg.
+                Single source of ground glow now. */}
           </View>
 
-          {/* Idles button (right) — opens unified picker on Idles tab */}
+          {/* Idles side button (right) — restored per Devon's request.
+              Tap → opens AnimationPicker on Idles tab. */}
           <View
             style={styles.sideBtn}
             {...(Platform.OS === 'web' ? { onClick: () => { haptics.tap(); setAnimPickerTab('idles'); setAnimPickerOpen(true); }, style: [styles.sideBtn, { cursor: 'pointer' }] } as any : {})}
@@ -553,82 +566,37 @@ export function HomeScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* CUSTOMIZE moved to the Customize bottom tab — it's a full
-            destination now. SPIN and LOOT boxes render as engagement
-            chips in the same spot the old CUSTOMIZE/SPIN row occupied.
-            Row is 0-height when neither chip is showing so the mode
-            buttons don't shift. */}
-        {(spinAvailable || unopenedBoxCount > 0) && (
-          <StaggeredEntry index={2}>
-            <View style={styles.chipRow}>
-              {unopenedBoxCount > 0 && (
-                <Pressable
-                  onPress={() => { haptics.tap(); navigation.navigate('LootBox' as never); }}
-                  style={styles.lootChip}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${unopenedBoxCount} unopened loot box${unopenedBoxCount === 1 ? '' : 'es'} ready`}
-                  accessibilityHint="Opens the loot box inventory"
-                >
-                  <Image
-                    source={require('../assets/images/ui/loot-gold.png')}
-                    style={styles.lootChipImg}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.lootChipText}>{unopenedBoxCount}</Text>
-                  <Text style={styles.chipCaption}>READY</Text>
-                </Pressable>
-              )}
-              {spinAvailable && (
-                <Pressable
-                  onPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
-                  style={styles.spinChip}
-                  accessibilityRole="button"
-                  accessibilityLabel="Free daily spin ready"
-                  accessibilityHint="Opens the daily spin wheel"
-                >
-                  <Text style={styles.spinChipIcon}>🎰</Text>
-                  <Text style={styles.spinChipText}>FREE SPIN</Text>
-                </Pressable>
-              )}
-            </View>
-          </StaggeredEntry>
-        )}
+        {/* Devon's radical-simplification pass: removed the FREE SPIN +
+            LOOT BOX chip row from Home. Daily spin + loot inventory still
+            reachable via the daily-reward popup + Missions tab + dedicated
+            screens — they don't need to live on the Home front page.
+            Home is now: TopBar · Logo · Character · PLAY · TabBar. */}
 
-        {/* ═══ MENU BUTTONS ═══ */}
+        {/* ═══ MENU BUTTONS ═══
+            Devon's radical-simplification pass: only ONE button on Home.
+            Tap PLAY → ModePickScreen (sub-options: VS AI / Career /
+            Local Play).
+
+            The PLAY button is Devon's hand-made GPT button (chunky 3D
+            white "PLAY" letters on an orange/yellow gradient pill with
+            blue rim) — used directly as a tappable Image so the painted
+            "PLAY" text on the asset is the label. No GlossyButton wrapping
+            since the asset already has the styling baked in. */}
         <View style={styles.menuButtons}>
           <SlideReveal from="bottom" delay={0}>
-              <GlossyButton
-                label={winStreak > 0 ? `PLAY  🔥${winStreak}` : 'PLAY'}
-                subtitle={aiGameCount > 0 ? `${aiGameCount} game${aiGameCount !== 1 ? 's' : ''} played` : 'vs AI · Easy, Medium, Hard'}
-                variant="orange"
-                small
-                iconRight="›"
-                bgImage={require('../assets/images/ui/mode-play-bg.png')}
-                onPress={() => navigateTo('Play')}
+            <Pressable
+              onPress={() => { haptics.tap(); playSound('click'); navigateTo('ModePick'); }}
+              style={styles.playBtn}
+              accessibilityRole="button"
+              accessibilityLabel="PLAY"
+              accessibilityHint="Choose a game mode"
+            >
+              <Image
+                source={require('../assets/images/ui/btn-play.png')}
+                style={styles.playBtnImage}
+                resizeMode="contain"
               />
-          </SlideReveal>
-          <SlideReveal from="bottom" delay={80}>
-              <GlossyButton
-                label="CAREER"
-                subtitle={careerCompletedCount > 0 ? `${careerCompletedCount}/${totalCareerLevels} levels` : 'Take the City · 3 launch cities'}
-                variant="purple"
-                small
-                iconRight="›"
-                bgImage={require('../assets/images/ui/mode-career-bg.png')}
-                onPress={() => navigateTo('CareerMap')}
-              />
-          </SlideReveal>
-          {/* Local play — pass and play, available in v1 */}
-          <SlideReveal from="bottom" delay={160}>
-              <GlossyButton
-                label="LOCAL PLAY"
-                subtitle="Pass & play on one device"
-                variant="teal"
-                small
-                iconRight="›"
-                bgImage={require('../assets/images/ui/mode-local-bg.png')}
-                onPress={() => navigateTo('LocalPlay')}
-              />
+            </Pressable>
           </SlideReveal>
         </View>
 
@@ -650,12 +618,12 @@ export function HomeScreen() {
         {/* First-launch welcome modal — auto-shows once for new users */}
         <WelcomeOverlay />
 
-        {/* Tutorial tooltip */}
-        <TutorialTooltip
-          tip={homeTip}
-          visible={showTutorial && !hasSeenTip('home_tap_character')}
-          onDismiss={() => setShowTutorial(false)}
-        />
+        {/* Calm-Home pass: the slab TutorialTooltip card was eating ~25% of
+            the home screen and resting on the character's chest. Replaced
+            by the smaller `tapHintBubble` that already lives next to the
+            character (see Character stage). The home_tap_character tip is
+            still tracked in tutorialStore — it just shows as a small arrow
+            bubble now instead of a card. */}
 
         {/* Level Up celebration overlay */}
         {showLevelUp && (
@@ -692,16 +660,20 @@ const styles = StyleSheet.create({
   },
   logoArea: {
     alignItems: 'center',
-    height: 68,
+    // Bumped from 68 → 84 (Devon: "make the drop 4 logo a little bigger").
+    height: 84,
     justifyContent: 'center',
     marginTop: 0,
     marginBottom: 0,
   },
   logoImage: {
-    width: 240,
-    height: 110,
-    marginTop: -22,
-    marginBottom: -24,
+    // Bumped from 240×110 → 290×135 to match the bigger logoArea height.
+    // Negative margins kept proportional so the chunky logo sits flush in
+    // the area without extra padding around it.
+    width: 290,
+    height: 135,
+    marginTop: -24,
+    marginBottom: -27,
   },
   // Neon-sign halo behind the wordmark. A soft magenta glow blob
   // with a CSS keyframes pulse on web (brightness + scale). On
@@ -809,18 +781,15 @@ const styles = StyleSheet.create({
   },
   // Character lobby
   lobbyArea: {
-    // Used to be `flex: 1` — which grew the character stage to eat all
-    // remaining vertical space, pushing the LOCAL PLAY card below the tab
-    // bar on shorter viewports. We still allow shrink on very short screens
-    // but maxHeight was too low at 340 — freed padding space couldn't flow
-    // here, so the character + buttons stayed high with a dead gap above the
-    // tab bar. Bumping to 440 lets the lobby absorb extra vertical space,
-    // which pushes the character (pinned flex-end in characterStage) and
-    // the mode-button stack visually down toward the tab bar.
+    // Calm-Home: dropped maxHeight so the character stage absorbs ALL
+    // remaining vertical space. This kills the dead gap between LOCAL PLAY
+    // and the tab bar that Devon called out. Character stays pinned to the
+    // bottom of the lobbyArea (justifyContent: 'flex-end' on characterStage),
+    // so growing lobbyArea pushes the character + ground glow visually down
+    // toward the menu buttons, and the menu buttons sit just above the tabs.
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 320,
-    maxHeight: 440,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -931,13 +900,42 @@ const styles = StyleSheet.create({
   },
   // Menu buttons
   menuButtons: {
+    alignItems: 'center',
     paddingHorizontal: 20,
-    gap: 6,
-    paddingBottom: 0,  // was 8 — kill the internal pad so the last card
-                        // sits right above the tab bar, no floating gap.
-    // Never shrink — mode buttons must be fully visible. If space is tight,
-    // the character stage above compresses instead (lobbyArea flexShrink=1).
+    gap: 8,
+    // Bumped to 32 (was 18) — Devon: "move it up just a little" (round 2).
+    paddingBottom: 32,
     flexShrink: 0,
+  },
+  // Devon's hand-made chunky 3D PLAY button rendered as a tappable Image.
+  // Bumped from 260×96 → 320×118 — Devon: "make the play button bigger".
+  // The PLAY image is 1536×1024 with the button silhouette ~60% of canvas;
+  // resizeMode: 'contain' preserves the aspect.
+  playBtn: {
+    width: 320,
+    height: 118,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playBtnImage: {
+    width: '100%',
+    height: '100%',
+  },
+  // Calm-Home pass: PLAY is the hero, CAREER + LOCAL PLAY share a row
+  // beneath it. menuRowItem flex:1 so the two secondary CTAs split the
+  // available width evenly. menuRowBtn forces the GlossyButton inside
+  // to stretch to fill its flex:1 wrapper — without this, GlossyButton
+  // sized to its text content (CAREER 6 chars vs LOCAL PLAY 10 chars)
+  // and the buttons rendered at noticeably different widths.
+  menuRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  menuRowItem: {
+    flex: 1,
+  },
+  menuRowBtn: {
+    width: '100%',
   },
   // "Tap me!" tooltip
   tapHintBubble: {
