@@ -85,6 +85,38 @@
       "background": "opaque"
     },
     {
+      "group": "home-pad",
+      "id": "home-spawn-pad",
+      "filename": "home-spawn-pad.png",
+      "size": "1536x1024",
+      "prompt": "Premium mobile game character lobby spawn pad — Fortnite Battle Royale lobby style. Single hero object on a FULLY TRANSPARENT background, landscape 3:2 aspect ratio. The pad is a top-down 3/4-perspective oval podium disc, viewed slightly from above. Composition: center 65% of canvas is the disc itself; outer 35% is the warm volumetric glow halo radiating outward and fading to fully transparent. Disc construction (critical detail): the disc surface (top face) is DARK GLOSSY OBSIDIAN NAVY-BLACK like polished onyx glass — NOT WHITE, NOT light — with a faint internal warm amber radial glow at center and a barely-visible hexagonal tile pattern etched into the dark surface. Around the dark surface: a thick BRIGHT GLOWING WARM AMBER-ORANGE RIM (#ff8c1a saturated orange transitioning to #ffd070 lighter rim highlight at the top) wrapping the perimeter of the disc, glowing like a neon halo. The rim has volumetric depth — you can see slight thickness on the side of the disc where the glow wraps around. NO white interior, NO white border, NO white outline anywhere on the pad. NO flat 2D infographic look — this is a dimensional 3D-rendered object. Below and around the disc: a wide soft warm volumetric glow spreading outward across an implied floor, like the pad is emitting warm light onto the ground around it. Mood: premium sci-fi spawn pad, NBA 2K MyPlayer turntable disc meets Fortnite spawn ring, character-display showcase. Painterly + 3D digital illustration, AAA mobile game polish. Background must be FULLY TRANSPARENT. ABSOLUTELY FORBIDDEN: NO text, NO logos, NO numerals, NO PEOPLE, NO figures, NO Connect 4 elements, NO basketball, NO photorealism, NO floor texture (just the pad with its glow halo on transparent), NO blue-teal coloring (this is the warm-amber Drop4 palette, not the Fortnite teal), NO white center, NO white outer border, NO flat infographic styling, NO rectangle frame around the disc.",
+      "background": "transparent"
+    },
+    {
+      "group": "home-cleveland",
+      "id": "bg-home-far",
+      "filename": "bg-home-far.png",
+      "size": "1024x1536",
+      "prompt": "Premium mobile game home screen FAR background layer (parallax layer 1 of 3), portrait 2:3 aspect ratio. Cleveland Ohio downtown skyline at twilight magic hour, viewed from a low rooftop perspective. Distant silhouette of the Cleveland skyline including TERMINAL TOWER (the iconic 1930 Art Deco skyscraper with its tiered pyramid top, slightly left of center) and KEY TOWER (taller modern glass tower right of center) plus a few shorter office buildings between and around them — all rendered as flat dark navy silhouettes against a glowing twilight sky. Sky gradient: deep indigo at the very top transitioning down through magenta-violet to a warm amber-pink horizon glow at the bottom where the city meets Lake Erie. Scattered faint pinprick stars in the upper sky. A few wispy distant clouds catching pink-orange sunset light, drifting slowly. Subtle reflective shimmer of Lake Erie water at the very bottom horizon. Mood: cinematic, painterly, NBA 2K MyCAREER lobby meets Marvel Snap card vista. ABSOLUTELY FORBIDDEN: NO text, NO logos, NO words, NO numerals, NO billboards with text, NO PEOPLE, NO figures, NO bodies, NO Connect 4 discs or boards, NO basketball hoops, NO court markings, NO bright lens flares, NO sun disc, NO photorealism. Painterly digital illustration. The skyline reads as Cleveland in a stylized way. The image MUST recede behind foreground UI and other parallax layers.",
+      "background": "opaque"
+    },
+    {
+      "group": "home-cleveland",
+      "id": "bg-home-mid",
+      "filename": "bg-home-mid.png",
+      "size": "1024x1536",
+      "prompt": "Premium mobile game home screen MIDDLE parallax layer (layer 2 of 3), portrait 2:3 aspect ratio with FULLY TRANSPARENT BACKGROUND. Mid-distance Cleveland-style urban buildings — much closer than the far skyline. Rows of dark silhouetted building facades occupying the MIDDLE 40% of the canvas vertically, with the upper 30% and lower 30% completely transparent so the far sky and the near rooftop layer can show through. Architectural details: a brick warehouse with iron fire escapes on the left, a glass-windowed office building in the center, a narrow row of brick walk-ups on the right. Glowing windows lit from inside in warm yellow and cool blue tints, irregular checkerboard-like lit/dark pattern (about 60% lit). A few small geometric neon sign shapes (NO text, just glowing rectangles and circles in pink, cyan, amber). Subtle steam vent rising from one rooftop. Cleveland Bedford Heights East 4th industrial-meets-skyline vibe. Buildings are silhouetted DARK with windows glowing warmly. Painterly digital illustration, AAA mobile game polish. ABSOLUTELY FORBIDDEN: NO text, NO logos, NO actual letters or numbers on signs, NO PEOPLE, NO figures, NO Connect 4 elements, NO basketball anything, NO photorealism. Fully transparent above and below the buildings band for clean compositing.",
+      "background": "transparent"
+    },
+    {
+      "group": "home-cleveland",
+      "id": "bg-home-near",
+      "filename": "bg-home-near.png",
+      "size": "1024x1536",
+      "prompt": "Premium mobile game home screen NEAR foreground layer (parallax layer 3 of 3), portrait 2:3 aspect ratio with FULLY TRANSPARENT BACKGROUND. A flat industrial rooftop surface where a 3D player character will stand — occupying the LOWER 40% of the canvas. Ground: weathered asphalt with subtle worn paint markings (a faint white painted half-circle suggesting a pickup-court remnant, slightly off-center, very subtle), small puddles reflecting warm sky color, scattered tiny pebbles. Behind the rooftop surface: a low waist-high concrete parapet wall with a chainlink fence atop it, slightly blurred to read as background. To the sides: a rusty steel HVAC vent on the left and a coiled cable on the right — small props giving the rooftop a lived-in industrial feel without crowding the center. The CENTER of the rooftop is COMPLETELY EMPTY (no props, no markings) so a 3D character can stand there. A subtle warm spotlight pool glows on the center of the asphalt, soft and cinematic, like a single stage light from above. Cleveland industrial rooftop vibes — NBA 2K Park rooftop court meets a Bedford Heights blacktop. Painterly, premium, AAA mobile game polish. The UPPER 60% of the canvas is fully transparent so the city buildings and sky from previous layers show through. ABSOLUTELY FORBIDDEN: NO text, NO logos, NO words, NO PEOPLE, NO figures, NO Connect 4 elements, NO basketball hoops, NO scoreboards, NO photorealism. Fully transparent above the parapet for clean compositing with the mid-city layer behind.",
+      "background": "transparent"
+    },
+    {
       "group": "frames",
       "id": "frame-shop-card",
       "filename": "frame-shop-card.png",

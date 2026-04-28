@@ -375,32 +375,17 @@ function CharacterModel({
   return <primitive object={prepared.clone} />;
 }
 
-// ── Floor plate (receives shadow for grounded look) ──
+// ── Floor plate (receives shadow only — no colored ring/disc) ──
+// The HomeScreen Cleveland city overhaul handles the visible ground via
+// parallax layers. Keep an INVISIBLE shadow-receiving plane so the 3D
+// character's directional shadow still has somewhere to land.
 
 function Floor() {
   return (
-    <group>
-      {/* Shadow-receiving disc */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
-        <circleGeometry args={[1.5, 48]} />
-        <meshStandardMaterial
-          color="#0a0e27"
-          roughness={0.9}
-          metalness={0}
-          transparent
-          opacity={0.55}
-        />
-      </mesh>
-      {/* Warm orange platform glow — reads the character as standing on something */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
-        <ringGeometry args={[0.95, 1.45, 48]} />
-        <meshBasicMaterial
-          color="#ff8c00"
-          transparent
-          opacity={0.18}
-        />
-      </mesh>
-    </group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
+      <circleGeometry args={[1.5, 48]} />
+      <shadowMaterial transparent opacity={0.4} />
+    </mesh>
   );
 }
 

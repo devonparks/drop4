@@ -110,8 +110,8 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   const isEmote = !!emoteMeta;
   return (
     <Character3D
-      width={400}
-      height={480}
+      width={440}
+      height={520}
       bodyGlb={outfit.glb}
       skinColor={cust.skinColor}
       hairColor={cust.hairColor}
@@ -366,14 +366,13 @@ export function HomeScreen() {
   };
 
   return (
-    <ScreenBackground scene="home">
-      {/* Simple live 3D background — slow-drifting Connect 4 discs in
-          red + yellow at varying depths. Sits between the painted bg-home
-          and the foreground UI (TopBar / logo / character / PLAY). The
-          layer is absolutely-positioned with pointerEvents="none" so it
-          doesn't capture taps. Designed to recede — discs drift slowly,
-          dim ambient + warm directional lighting, opacity 0.55 default. */}
-      <LiveBackground3D discCount={6} opacity={0.4} />
+    <ScreenBackground>
+      {/* Clean Basketball-Stars-style lobby: dark navy default backdrop
+          from ScreenBackground. No city, no parallax, no spawn pad. The
+          drifting Connect 4 discs were removed because they competed
+          for attention with the hero character. Particles (sparkles +
+          embers) come back inside the character stage for warm ambient
+          life without crowding the composition. */}
       <View style={styles.container}>
         <View>
           <TopBar
@@ -457,11 +456,12 @@ export function HomeScreen() {
               - StagePremiumFX adds rising embers + slow conic shimmer
                 floating up the character silhouette. */}
           <View style={styles.characterStage}>
-            {/* Calm-Home pass: foot inner+outer glows and stage ring removed.
-                Only the painted spotlight platform remains as the ground cue.
-                Sparkles + premium FX kept but at reduced visual weight. */}
+            {/* Simple lobby — particles for warm ambient life behind the
+                character (sparkles + slow conic shimmer + rising embers).
+                No spawn pad, no floor disc — clean composition. */}
             <StageSparkles />
             <StagePremiumFX width={400} />
+
 
             <BreathingView intensity={0.015} speed={4000}>
             <Pressable
@@ -903,8 +903,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 8,
-    // Bumped to 32 (was 18) — Devon: "move it up just a little" (round 2).
-    paddingBottom: 32,
+    // Cleveland overhaul: PLAY pushed lower, closer to the tab bar, so it
+    // reads as the hero CTA at the bottom of the hero shot. Was 32.
+    paddingBottom: 12,
     flexShrink: 0,
   },
   // Devon's hand-made chunky 3D PLAY button rendered as a tappable Image.
@@ -912,8 +913,9 @@ const styles = StyleSheet.create({
   // The PLAY image is 1536×1024 with the button silhouette ~60% of canvas;
   // resizeMode: 'contain' preserves the aspect.
   playBtn: {
-    width: 320,
-    height: 118,
+    // Cleveland overhaul: hero PLAY is bigger and dominant.
+    width: 380,
+    height: 150,
     alignItems: 'center',
     justifyContent: 'center',
   },
