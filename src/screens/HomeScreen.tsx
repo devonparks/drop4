@@ -127,6 +127,91 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   );
 }
 
+// ═══ Drifting Watermark — repeating brand text behind the lobby ═══
+// Basketball-Stars-style atmospheric layer: huge faint "DROP 4" text
+// drifting slowly across the screen behind everything. Two rows moving
+// in opposite directions at different speeds gives the lobby a sense of
+// motion without competing with the character. White at very low opacity
+// + monospace-y letter-spacing reads as a stadium banner / arena watermark.
+function DriftingWatermark() {
+  const driftA = useRef(new Animated.Value(0)).current;
+  const driftB = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(driftA, { toValue: 1, duration: 38000, useNativeDriver: true }),
+    ).start();
+    Animated.loop(
+      Animated.timing(driftB, { toValue: 1, duration: 52000, useNativeDriver: true }),
+    ).start();
+  }, []);
+  // Each row drifts a full text cycle. The repeated string is wider than
+  // the screen so the wrap-around is invisible — when one "DROP 4" exits
+  // the right edge, an identical one is already visible from the left.
+  const driftAX = driftA.interpolate({ inputRange: [0, 1], outputRange: [0, -460] });
+  const driftBX = driftB.interpolate({ inputRange: [0, 1], outputRange: [-460, 0] });
+
+  const REPEAT_STR = 'DROP4   DROP4   DROP4   DROP4   DROP4   DROP4';
+  return (
+    <View pointerEvents="none" style={watermarkStyles.layer}>
+      <Animated.Text
+        numberOfLines={1}
+        style={[
+          watermarkStyles.row,
+          watermarkStyles.rowTop,
+          { transform: [{ translateX: driftAX }] },
+        ]}
+      >
+        {REPEAT_STR}
+      </Animated.Text>
+      <Animated.Text
+        numberOfLines={1}
+        style={[
+          watermarkStyles.row,
+          watermarkStyles.rowBottom,
+          { transform: [{ translateX: driftBX }] },
+        ]}
+      >
+        {REPEAT_STR}
+      </Animated.Text>
+    </View>
+  );
+}
+
+const watermarkStyles = StyleSheet.create({
+  layer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    // Sit behind the foreground UI container. Without this, RN-Web
+    // stacks the absolute layer above flex siblings, hiding the
+    // watermark behind the character + UI.
+    zIndex: -1,
+  },
+  row: {
+    fontFamily: fonts.heading,
+    fontWeight: '900',
+    color: 'rgba(255,235,180,0.55)',
+    letterSpacing: 14,
+    width: 2400,
+  },
+  rowTop: {
+    fontSize: 160,
+    top: '20%',
+    left: -300,
+    position: 'absolute',
+  },
+  rowBottom: {
+    fontSize: 110,
+    top: '60%',
+    left: -560,
+    position: 'absolute',
+  },
+});
+
 // ═══ Loot Box Row — 4 reward slots between PLAY and the tab bar ═══
 // Basketball Stars-style row of reward chips. Each surfaces an existing
 // reward loop and opens its native UI when tapped.
@@ -470,12 +555,37 @@ export function HomeScreen() {
 
   return (
     <ScreenBackground>
-      {/* Clean Basketball-Stars-style lobby: dark navy default backdrop
-          from ScreenBackground. No city, no parallax, no spawn pad. The
-          drifting Connect 4 discs were removed because they competed
-          for attention with the hero character. Particles (sparkles +
-          embers) come back inside the character stage for warm ambient
-          life without crowding the composition. */}
+      {/* ═══ FINAL BACKGROUND ═══
+          Three stacked atmospheric layers, all code-built (no PNG):
+            1. Subtle navy gradient — top a touch lighter, bottom deeper,
+               so the lobby has stage-spotlight depth instead of flat.
+            2. Halftone dot pattern (web only) — faint warm-amber dots
+               give the bg game-art texture without crowding.
+            3. Drifting "DROP 4" watermark — two rows of huge faint text
+               sliding in opposite directions. Adds the BS-style "this
+               is a real game" sense of motion behind the character.
+          Particles (StageSparkles + StagePremiumFX) sit inside the
+          character stage on top of these layers for warm ambient life. */}
+      <LinearGradient
+        colors={['#1a2244', '#0c1129', '#080a1e']}
+        locations={[0, 0.55, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      {Platform.OS === 'web' && (
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            ({
+              backgroundImage:
+                'radial-gradient(circle at center, rgba(255,200,120,0.08) 1px, transparent 1.6px)',
+              backgroundSize: '22px 22px',
+            } as any),
+          ]}
+        />
+      )}
+      <DriftingWatermark />
       <View style={styles.container}>
         <View>
           <TopBar
@@ -559,9 +669,13 @@ export function HomeScreen() {
               - StagePremiumFX adds rising embers + slow conic shimmer
                 floating up the character silhouette. */}
           <View style={styles.characterStage}>
-            {/* Simple lobby — particles for warm ambient life behind the
-                character (sparkles + slow conic shimmer + rising embers).
-                No spawn pad, no floor disc — clean composition. */}
+            {/* Character spotlight — warm radial glow behind the character
+                so the player reads clearly against ANY background theme.
+                This is lobby UX, not bg art — stays constant when future
+                purchasable bg themes are added (Cleveland skyline, cosmic
+                stadium, neon arena, etc). Sits on top of the bg layers
+                but behind the 3D character + particles. */}
+            <View style={styles.characterSpotlight} pointerEvents="none" />
             <StageSparkles />
             <StagePremiumFX width={400} />
 
@@ -959,6 +1073,30 @@ const styles = StyleSheet.create({
     // feet"). paddingBottom acts as a floor margin between feet and PLAY.
     paddingTop: 28,
     paddingBottom: 18,
+  },
+  // Warm radial spotlight behind the character — lobby UX that survives
+  // any future bg theme. Centered on character body, soft falloff, low
+  // opacity so it pops the character without competing.
+  characterSpotlight: {
+    position: 'absolute',
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    alignSelf: 'center',
+    bottom: 80,
+    ...(Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            'radial-gradient(circle at center, rgba(255,180,100,0.34) 0%, rgba(255,150,80,0.18) 30%, rgba(255,140,60,0.06) 60%, rgba(255,120,40,0) 100%)',
+          filter: 'blur(8px)',
+        } as any)
+      : {
+          backgroundColor: 'rgba(255,150,80,0.12)',
+          shadowColor: '#ff9040',
+          shadowOpacity: 0.7,
+          shadowRadius: 60,
+          shadowOffset: { width: 0, height: 0 },
+        }),
   },
   // Warm spotlight pooling at the character's feet. Bounded Views with
   // radial gradients WILL clip at their box edges — so we stretch both
