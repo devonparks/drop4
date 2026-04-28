@@ -100,35 +100,37 @@ function StageSparkles() {
   );
 }
 
-// AMG content source — same CDN URL the creator uses. Extracted here so
-// the home and the creator both render from the same modular character
-// data model (amgCharacter), not the legacy single-GLB customization.
-const AMG_CONTENT_SOURCE = { baseUrl: 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev' };
-
 function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: string | null; rotationY: number }) {
-  // Render the AMG character — the same one the creator edits. Falls back
-  // to NEUTRAL_CHARACTER on first launch before the player has opened the
-  // creator. Save in the creator → home updates instantly.
-  // NOTE: rotationY + activeEmoteId integration with AMG animation system
-  // is a follow-up. For now the character idles via the runtime's default.
-  const amgChar = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
-  const state = amgChar ?? NEUTRAL_CHARACTER;
-  // Wrap Canvas in a fixed-size View — r3f-native won't size itself via
-  // style alone in a flex container, so the parent must dictate width/height.
+  // Reverted to legacy Character3D — CompositeCharacter's manifest-fetch
+  // gate was preventing the canvas from ever mounting on a fresh page
+  // load (5 instances stuck in 'Loading character…' even after 8s).
+  // The legacy single-GLB path is reliable. Unification with AMG happens
+  // via a sync in CharacterCreatorScreen.onSave that mirrors AMG state
+  // into customization fields, so creator edits still flow to home.
+  // Size kept at 520x620 (the bigger size Devon asked for).
+  const cust = useCharacterStore((s) => s.customization);
+  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
+  const emoteMeta = activeEmoteId
+    ? HUMAN_EMOTES.find((e) => e.id === activeEmoteId) ?? null
+    : null;
+  const defaultIdle = DEFAULT_HUMAN_IDLE;
+  const animGlb = emoteMeta?.glb ?? defaultIdle?.glb;
+  const isEmote = !!emoteMeta;
   return (
-    <View style={{ width: 520, height: 620 }}>
-      <Canvas
-        camera={{ position: [0, 1.1, 3.2], fov: 42 }}
-        gl={{ antialias: true }}
-        onCreated={(s) => s.camera.lookAt(0, 0.95, 0)}
-      >
-        <ambientLight intensity={0.55} />
-        <directionalLight position={[3, 5, 3]} intensity={0.9} />
-        <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-        <directionalLight position={[0, 4, -2]} intensity={0.5} color="#ffd8a0" />
-        <CompositeCharacter source={AMG_CONTENT_SOURCE} state={state} targetHeightMeters={1.8} />
-      </Canvas>
-    </View>
+    <Character3D
+      width={520}
+      height={620}
+      bodyGlb={outfit.glb}
+      skinColor={cust.skinColor}
+      hairColor={cust.hairColor}
+      outfitColors={cust.outfitColors}
+      bodyType={cust.bodyType}
+      bodySize={cust.bodySize}
+      muscle={cust.muscle}
+      animationGlb={animGlb}
+      animationLoop={!isEmote}
+      rotationY={rotationY}
+    />
   );
 }
 
