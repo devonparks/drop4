@@ -88,6 +88,7 @@ function MissionsTabIcon({ focused }: { focused: boolean }) {
 export function MainTabs() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
@@ -102,11 +103,14 @@ export function MainTabs() {
         },
       }}
     >
+      {/* Tab order per Devon: Missions | Career | Home | Customize | Shop.
+          Home is centered (position 3) so it's the thumb's natural anchor.
+          Missions far left, Customize to the right of Home, Shop far right. */}
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Missions"
+        component={MissionsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="home" label="Home" focused={focused} />,
+          tabBarIcon: ({ focused }) => <MissionsTabIcon focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -117,17 +121,17 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="home" label="Home" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
         name="Customize"
         component={CustomizeScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon iconKey="customize" label="Customize" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Missions"
-        component={MissionsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <MissionsTabIcon focused={focused} />,
         }}
       />
       <Tab.Screen

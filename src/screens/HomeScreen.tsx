@@ -112,7 +112,7 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   return (
     <Character3D
       width={440}
-      height={520}
+      height={460}
       bodyGlb={outfit.glb}
       skinColor={cust.skinColor}
       hairColor={cust.hairColor}
@@ -789,10 +789,11 @@ const styles = StyleSheet.create({
   logoImage: {
     // Bumped from 240×110 → 290×135 to match the bigger logoArea height.
     // Negative margins kept proportional so the chunky logo sits flush in
-    // the area without extra padding around it.
+    // the area without extra padding around it. Devon nudge: logo pushed
+    // up another 14px (was -24, now -38) for better top spacing.
     width: 290,
     height: 135,
-    marginTop: -24,
+    marginTop: -38,
     marginBottom: -27,
   },
   // Neon-sign halo behind the wordmark. A soft magenta glow blob
@@ -952,7 +953,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 0,
+    // Devon nudge: character pushed down slightly via paddingTop, BUT
+    // paddingBottom lifts the character off the menuButtons row so the
+    // FEET are visible (Devon: "i want to be able to see the character's
+    // feet"). paddingBottom acts as a floor margin between feet and PLAY.
+    paddingTop: 28,
+    paddingBottom: 18,
   },
   // Warm spotlight pooling at the character's feet. Bounded Views with
   // radial gradients WILL clip at their box edges — so we stretch both
@@ -1023,8 +1029,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 8,
-    // Loot box row sits below PLAY now — small gap separates them.
-    paddingBottom: 8,
+    // Trimmed paddingTop (was 16, now 8) so PLAY isn't pulling INTO the
+    // character zone — combined with characterStage paddingBottom this
+    // gives the character's feet room to clear above PLAY.
+    paddingTop: 8,
+    paddingBottom: 6,
     flexShrink: 0,
   },
   // Devon's hand-made chunky 3D PLAY button rendered as a tappable Image.
@@ -1032,9 +1041,10 @@ const styles = StyleSheet.create({
   // The PLAY image is 1536×1024 with the button silhouette ~60% of canvas;
   // resizeMode: 'contain' preserves the aspect.
   playBtn: {
-    // Cleveland overhaul: hero PLAY is bigger and dominant.
-    width: 380,
-    height: 150,
+    // Hero PLAY — sized big enough to dominate but not crowd the
+    // character's feet or the loot box row. Devon-tuned at 340x130.
+    width: 340,
+    height: 130,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1053,12 +1063,12 @@ const styles = StyleSheet.create({
   },
   lootCard: {
     flex: 1,
-    minHeight: 88,
+    minHeight: 76,
     borderRadius: 12,
     backgroundColor: 'rgba(14,18,42,0.85)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,210,120,0.25)',
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1078,8 +1088,8 @@ const styles = StyleSheet.create({
         }),
   },
   lootCardIcon: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
   },
   lootCardLabel: {
     fontFamily: fonts.body,
