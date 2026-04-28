@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Alert, Platform } from 'react-native';
 import { CharacterCreator } from '@amg/character-creator';
@@ -88,6 +88,17 @@ export function CharacterCreatorScreen() {
   // across the app.
   const ownedParts = useMemo(() => new Set(ownedAmgParts), [ownedAmgParts]);
 
+  // Treat any part in a starter pack (Modern Civilians, base species
+  // heads/hair, etc.) as owned even when not explicitly enumerated in
+  // ownedAmgParts. The creator was rendering padlocks on free starter
+  // parts because the player's saved ownedAmgParts list only captures
+  // explicit purchases — starter ownership is a rule (pack prefix
+  // matches STARTER_PACKS), not enumeration.
+  const isPartOwned = useCallback((name: string) => {
+    if (ownedAmgParts.includes(name)) return true;
+    return isStarterPack(packPrefixFromPartName(name));
+  }, [ownedAmgParts]);
+
   function handleSave(next: CharacterState) {
     haptics.win();
     setAmgCharacter(next as unknown as Record<string, unknown>);
@@ -166,6 +177,7 @@ export function CharacterCreatorScreen() {
       source={CONTENT_SOURCE}
       initial={initial}
       ownedParts={ownedParts}
+      isPartOwned={isPartOwned}
       onSave={handleSave}
       onCancel={handleCancel}
       onLockedPart={handleLockedPart}
