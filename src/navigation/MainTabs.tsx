@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Platform, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image, ImageSourcePropType, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { CustomizeScreen } from '../screens/CustomizeScreen';
@@ -17,17 +17,18 @@ import { useChallengeStore } from '../stores/challengeStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
-const Tab = createBottomTabNavigator();
+// Material Top Tab Navigator — supports horizontal swipe between tabs
+// natively (the gesture lives on the screen content, not just the tab
+// bar). We position the tab bar at the BOTTOM via a custom `tabBar`
+// renderer so the bar still feels like a phone bottom-nav bar but the
+// player can swipe Home → Career → Customize → etc by dragging the
+// screen sideways.
+const Tab = createMaterialTopTabNavigator();
 
-// Flux-generated tab icon pack — replaces the emoji set. See docs/ART_WORKFLOW.md
-// for how to regenerate. Source prompts in docs/ui-asset-manifest.json.
-//
-// 5-tab structure: Home / Career / Customize / Missions / Shop.
+// 5-tab structure: Missions | Career | Home | Customize | Shop.
 // Career promoted to a top-level tab so the 36-level campaign + city map
-// is one tap from anywhere (was Home → PLAY → ModePick → Career, two
-// taps and a needless decision screen). Career sits between Home and
-// Customize because Home → Career → equip → spend is the dominant
-// session loop. Profile accessed via the top-right portrait in TopBar.
+// is one tap from anywhere. Home is centered (position 3) — natural
+// thumb anchor. Profile accessed via the top-right portrait in TopBar.
 const TAB_ICON_SOURCES: Record<string, ImageSourcePropType> = {
   home: require('../assets/images/ui/tab-home.png'),
   career: require('../assets/images/ui/tab-career.png'),
@@ -85,68 +86,90 @@ function MissionsTabIcon({ focused }: { focused: boolean }) {
   return <TabIcon iconKey="missions" label="Missions" focused={focused} badgeCount={claimable} />;
 }
 
+// Maps a route name to its iconKey + label config. Keeps the per-tab
+// rendering logic out of the route definitions and centralizes "this
+// tab gets a custom MissionsTabIcon" branch.
+const TAB_META: Record<string, { iconKey: keyof typeof TAB_ICON_SOURCES; label: string; useReactiveBadge?: boolean }> = {
+  Missions:  { iconKey: 'missions',  label: 'Missions',  useReactiveBadge: true },
+  Career:    { iconKey: 'career',    label: 'Career' },
+  Home:      { iconKey: 'home',      label: 'Home' },
+  Customize: { iconKey: 'customize', label: 'Customize' },
+  Shop:      { iconKey: 'shop',      label: 'Shop' },
+};
+
+// Custom bottom-positioned tab bar. The Material Top Tabs navigator
+// hands us the navigation state + a function to switch tabs; we render
+// the same TabIcon UI as the old createBottomTabNavigator did. The
+// difference vs the previous bottom-tabs setup is that swipe gestures
+// across the SCREEN content now drive the tab change too — that's
+// built in to the underlying tab-view, not something we wired here.
+function BottomTabBar({ state, navigation }: MaterialTopTabBarProps) {
+  return (
+    <View style={styles.tabBar} pointerEvents="box-none">
+      {state.routes.map((route, index) => {
+        const focused = state.index === index;
+        const meta = TAB_META[route.name];
+        const onPress = () => {
+          haptics.tap();
+          playSound('tab_switch');
+          if (!focused) {
+            navigation.navigate(route.name);
+          }
+        };
+        return (
+          <Pressable
+            key={route.key}
+            onPress={onPress}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: focused }}
+            accessibilityLabel={meta?.label ?? route.name}
+            style={styles.tabPressable}
+          >
+            {meta?.useReactiveBadge ? (
+              <MissionsTabIcon focused={focused} />
+            ) : (
+              <TabIcon
+                iconKey={meta?.iconKey ?? 'home'}
+                label={meta?.label ?? route.name}
+                focused={focused}
+              />
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function MainTabs() {
   return (
     <Tab.Navigator
       initialRouteName="Home"
+      tabBarPosition="bottom"
+      tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: colors.orange,
-        tabBarInactiveTintColor: colors.textMuted,
-      }}
-      screenListeners={{
-        tabPress: () => {
-          haptics.tap();
-          playSound('tab_switch');
-        },
+        // Swipe between tabs is enabled by default. lazy: false keeps
+        // every tab mounted so cross-tab state (character, store) is
+        // consistent and swipes don't show a loading flash.
+        lazy: false,
+        swipeEnabled: true,
+        animationEnabled: true,
       }}
     >
-      {/* Tab order per Devon: Missions | Career | Home | Customize | Shop.
-          Home is centered (position 3) so it's the thumb's natural anchor.
-          Missions far left, Customize to the right of Home, Shop far right. */}
-      <Tab.Screen
-        name="Missions"
-        component={MissionsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <MissionsTabIcon focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Career"
-        component={CareerMapScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="career" label="Career" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="home" label="Home" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Customize"
-        component={CustomizeScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="customize" label="Customize" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Shop"
-        component={ShopScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon iconKey="shop" label="Shop" focused={focused} />,
-        }}
-      />
+      {/* Tab order: Missions | Career | Home | Customize | Shop.
+          Home centered (position 3) — natural thumb anchor. */}
+      <Tab.Screen name="Missions" component={MissionsScreen} />
+      <Tab.Screen name="Career" component={CareerMapScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Customize" component={CustomizeScreen} />
+      <Tab.Screen name="Shop" component={ShopScreen} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
+    flexDirection: 'row',
     backgroundColor: 'rgba(8,10,30,0.85)',
     borderTopWidth: 1.5,
     // Warm gold top border — reads as premium, matches the card-rim
@@ -166,6 +189,11 @@ const styles = StyleSheet.create({
       // embossed-metal feel matching TopBar + mode cards.
       boxShadow: 'inset 0 1px 0 rgba(255,240,200,0.25), 0 -4px 16px rgba(0,0,0,0.5)',
     } as any : {}),
+  },
+  tabPressable: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabItem: {
     alignItems: 'center',
@@ -188,9 +216,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(2px)' } as any) : {}),
   },
-  // Flux-generated PNG tab icons replace the emoji set. Sized smaller than
-  // the emoji (28 vs 20px font) because the painted icons have built-in
-  // padding and read fine at this size.
   tabIconImg: {
     width: 30,
     height: 30,
