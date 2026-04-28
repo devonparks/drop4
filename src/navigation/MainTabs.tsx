@@ -10,6 +10,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { CustomizeScreen } from '../screens/CustomizeScreen';
 import { MissionsScreen } from '../screens/MissionsScreen';
+import { CareerMapScreen } from '../screens/CareerMapScreen';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -21,15 +22,15 @@ const Tab = createBottomTabNavigator();
 // Flux-generated tab icon pack — replaces the emoji set. See docs/ART_WORKFLOW.md
 // for how to regenerate. Source prompts in docs/ui-asset-manifest.json.
 //
-// 4-tab structure (BB Stars-style): Home / Customize / Missions / Shop.
-// Profile accessed via the top-right portrait in TopBar. Collection's content
-// migrated: Characters→Customize, Loot→Home chip, Awards→Missions/Milestones.
-// All 4 tab icons regenerated 2026-04-27 to match the locked-in chunky 3D
-// DROP4 logo aesthetic (white-cyan body face + warm orange-red 3D extrusion
-// + thick dark navy outline). Each tab now has its own dedicated PNG —
-// no more reusing shop-outfits or tab-challenges across roles.
+// 5-tab structure: Home / Career / Customize / Missions / Shop.
+// Career promoted to a top-level tab so the 36-level campaign + city map
+// is one tap from anywhere (was Home → PLAY → ModePick → Career, two
+// taps and a needless decision screen). Career sits between Home and
+// Customize because Home → Career → equip → spend is the dominant
+// session loop. Profile accessed via the top-right portrait in TopBar.
 const TAB_ICON_SOURCES: Record<string, ImageSourcePropType> = {
   home: require('../assets/images/ui/tab-home.png'),
+  career: require('../assets/images/ui/tab-career.png'),
   customize: require('../assets/images/ui/tab-customize.png'),
   missions: require('../assets/images/ui/tab-missions.png'),
   shop: require('../assets/images/ui/tab-shop.png'),
@@ -106,6 +107,13 @@ export function MainTabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon iconKey="home" label="Home" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Career"
+        component={CareerMapScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon iconKey="career" label="Career" focused={focused} />,
         }}
       />
       <Tab.Screen

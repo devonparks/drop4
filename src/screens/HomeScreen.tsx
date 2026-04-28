@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, Image, StyleSheet, Pressable, Animated, Platform, PanResponder } from 'react-native';
+import { View, Text, Image, ImageSourcePropType, StyleSheet, Pressable, Animated, Platform, PanResponder } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +16,7 @@ import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
+import { useChallengeStore } from '../stores/challengeStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useCareerStore } from '../stores/careerStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
@@ -123,6 +124,108 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
       animationLoop={!isEmote}
       rotationY={rotationY}
     />
+  );
+}
+
+// ═══ Loot Box Row — 4 reward slots between PLAY and the tab bar ═══
+// Basketball Stars-style row of reward chips. Each surfaces an existing
+// reward loop and opens its native UI when tapped.
+function LootBoxRow({
+  onSpinPress,
+  onCareerPress,
+  onMissionsPress,
+}: {
+  onSpinPress: () => void;
+  onCareerPress: () => void;
+  onMissionsPress: () => void;
+}) {
+  const lastSpinDate = useDailySpinStore((s) => s.lastSpinDate);
+  const challenges = useChallengeStore((s) => s.challenges);
+  const careerProgress = useCareerStore((s) => s.progress);
+  const matches = useMatchHistoryStore((s) => s.matches);
+
+  // Daily spin is once-per-day, keyed on YYYY-MM-DD string. Ready iff
+  // we have not yet spun today.
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+  const canSpin = lastSpinDate !== todayStr;
+
+  const totalWins = matches.filter((m) => m.result === 'win').length;
+  const winsTowardBox = totalWins % 3;
+  const winBoxReady = totalWins > 0 && winsTowardBox === 0;
+
+  const claimableMissions = challenges.filter(
+    (c) => c.progress >= c.target && !c.completed,
+  ).length;
+
+  const nextCareerLevel = ALL_CAREER_LEVELS.find(
+    (l) => !careerProgress[l.id]?.completed,
+  );
+
+  return (
+    <View style={styles.lootBoxRow}>
+      <LootCard
+        iconSrc={require('../assets/images/ui/free-spin-btn.png')}
+        label="SPIN"
+        status={canSpin ? 'READY!' : 'TOMORROW'}
+        ready={canSpin}
+        onPress={onSpinPress}
+      />
+      <LootCard
+        iconSrc={require('../assets/images/ui/loot-bronze.png')}
+        label="WIN BOX"
+        status={winBoxReady ? 'READY!' : `${winsTowardBox}/3`}
+        ready={winBoxReady}
+        onPress={onMissionsPress /* tapping for now goes to missions; box opens at next match */}
+      />
+      <LootCard
+        iconSrc={require('../assets/images/ui/challenge-bag.png')}
+        label="MISSIONS"
+        status={claimableMissions > 0 ? `${claimableMissions} READY` : 'IN PROGRESS'}
+        ready={claimableMissions > 0}
+        onPress={onMissionsPress}
+      />
+      <LootCard
+        iconSrc={require('../assets/images/ui/tab-career.png')}
+        label="CAREER"
+        status={nextCareerLevel ? `LVL ${nextCareerLevel.id}` : 'COMPLETE!'}
+        ready={false}
+        onPress={onCareerPress}
+      />
+    </View>
+  );
+}
+
+function LootCard({
+  iconSrc,
+  label,
+  status,
+  ready,
+  onPress,
+}: {
+  iconSrc: ImageSourcePropType;
+  label: string;
+  status: string;
+  ready: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={[styles.lootCard, ready && styles.lootCardReady]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} ${status}`}
+    >
+      <Image source={iconSrc} style={styles.lootCardIcon} resizeMode="contain" />
+      <Text style={styles.lootCardLabel}>{label}</Text>
+      <View style={[styles.lootCardStatusPill, ready && styles.lootCardStatusPillReady]}>
+        <Text style={[styles.lootCardStatusText, ready && styles.lootCardStatusTextReady]} numberOfLines={1}>
+          {status}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -573,23 +676,24 @@ export function HomeScreen() {
             Home is now: TopBar · Logo · Character · PLAY · TabBar. */}
 
         {/* ═══ MENU BUTTONS ═══
-            Devon's radical-simplification pass: only ONE button on Home.
-            Tap PLAY → ModePickScreen (sub-options: VS AI / Career /
-            Local Play).
+            PLAY now routes straight to PlayScreen (the AI difficulty
+            picker). Career got promoted to a top-level tab, so the old
+            ModePickScreen had only 2 options left (VS AI / Local Play)
+            which didn't deserve a whole screen. Local Play is now a
+            small pill at the bottom of PlayScreen for the rare 2-player
+            case. PLAY → drop a piece in 2 taps instead of 3.
 
             The PLAY button is Devon's hand-made GPT button (chunky 3D
             white "PLAY" letters on an orange/yellow gradient pill with
-            blue rim) — used directly as a tappable Image so the painted
-            "PLAY" text on the asset is the label. No GlossyButton wrapping
-            since the asset already has the styling baked in. */}
+            blue rim) — used directly as a tappable Image. */}
         <View style={styles.menuButtons}>
           <SlideReveal from="bottom" delay={0}>
             <Pressable
-              onPress={() => { haptics.tap(); playSound('click'); navigateTo('ModePick'); }}
+              onPress={() => { haptics.tap(); playSound('click'); navigateTo('Play'); }}
               style={styles.playBtn}
               accessibilityRole="button"
               accessibilityLabel="PLAY"
-              accessibilityHint="Choose a game mode"
+              accessibilityHint="Choose AI difficulty and start a quick match"
             >
               <Image
                 source={require('../assets/images/ui/btn-play.png')}
@@ -599,6 +703,22 @@ export function HomeScreen() {
             </Pressable>
           </SlideReveal>
         </View>
+
+        {/* ═══ LOOT BOX ROW ═══
+            4 reward slots between PLAY and the tab bar (Basketball Stars
+            pattern). Each slot surfaces an existing reward loop:
+              - Daily Spin  : useDailySpinStore (24h cooldown)
+              - Win Box     : every 3rd career/AI win earns a tier box
+              - Missions    : claimable challenges from useChallengeStore
+              - Career Lvl  : next uncompleted career level reward
+            States: "READY!" when ready to claim, progress text otherwise. */}
+        <SlideReveal from="bottom" delay={80}>
+        <LootBoxRow
+          onSpinPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
+          onCareerPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Career' } as any); }}
+          onMissionsPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Missions' } as any); }}
+        />
+        </SlideReveal>
 
         {/* Unified Animation Picker — Emotes + Idles in one modal */}
         <AnimationPicker
@@ -903,9 +1023,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 8,
-    // Cleveland overhaul: PLAY pushed lower, closer to the tab bar, so it
-    // reads as the hero CTA at the bottom of the hero shot. Was 32.
-    paddingBottom: 12,
+    // Loot box row sits below PLAY now — small gap separates them.
+    paddingBottom: 8,
     flexShrink: 0,
   },
   // Devon's hand-made chunky 3D PLAY button rendered as a tappable Image.
@@ -918,6 +1037,79 @@ const styles = StyleSheet.create({
     height: 150,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // ═══ Loot box row (Basketball Stars-pattern) ═══
+  // 4 cards across the screen between PLAY and the tab bar. Each card
+  // surfaces an existing reward loop (spin / win box / missions / career).
+  // 'ready' state lights the card up with a warm gold rim + green pill so
+  // claimable rewards visually pop.
+  lootBoxRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingTop: 0,
+    paddingBottom: 6,
+    alignItems: 'stretch',
+  },
+  lootCard: {
+    flex: 1,
+    minHeight: 88,
+    borderRadius: 12,
+    backgroundColor: 'rgba(14,18,42,0.85)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,120,0.25)',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lootCardReady: {
+    borderColor: 'rgba(255,200,80,0.85)',
+    backgroundColor: 'rgba(40,28,12,0.9)',
+    ...(Platform.OS === 'web'
+      ? ({
+          boxShadow: '0 0 12px 2px rgba(255,180,40,0.4), inset 0 1px 0 rgba(255,230,160,0.5)',
+        } as any)
+      : {
+          shadowColor: '#ff9040',
+          shadowOpacity: 0.7,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 0 },
+        }),
+  },
+  lootCardIcon: {
+    width: 42,
+    height: 42,
+  },
+  lootCardLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,210,140,0.9)',
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  lootCardStatusPill: {
+    minWidth: 50,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lootCardStatusPillReady: {
+    backgroundColor: '#27ae3d',
+  },
+  lootCardStatusText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.4,
+  },
+  lootCardStatusTextReady: {
+    color: '#ffffff',
   },
   playBtnImage: {
     width: '100%',

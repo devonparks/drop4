@@ -166,10 +166,15 @@ export function PlayScreen({ navigation }: Props) {
           </View>
           </StaggeredEntry>
 
-          {/* Secondary buttons — only show enabled features */}
+          {/* Secondary buttons — Learn + Local Play. Local Play used to
+              live on its own ModePickScreen tile, but with Career now a
+              top-level tab and ModePick deleted, Local Play moved here
+              as a pill since this is where the player decides "how to
+              play" — it shares context with the AI difficulty buttons. */}
           <StaggeredEntry index={4} delay={60}>
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
+            <GlossyButton label="LOCAL PLAY" variant="navy" icon="👥" small onPress={() => navigation.navigate('LocalPlay')} style={{ flex: 1 }} />
           </View>
           </StaggeredEntry>
         </View>

@@ -26,6 +26,14 @@
     },
     {
       "group": "tab-icons",
+      "id": "tab-career",
+      "filename": "tab-career.png",
+      "size": "1024x1024",
+      "prompt": "Drop4 mobile game tab bar icon for CAREER per VISUAL_DIRECTION_LOCKIN — chunky playful 3D dimensional aesthetic matching the DROP4 logo. Transparent background isolated, centered, ~12% padding. Single hero object: a stylized chunky 3D CROWN (5 points, jeweled, gold). The crown band face uses the Drop4 cool palette (pure white at top, cyan-blue in middle, deep cobalt navy at bottom) with small inset gem shapes (no rendered gems, just suggestion). Strong downward 3D EXTRUSION underneath the crown in a warm orange-to-deep-red gradient (peachy orange top of depth, deep crimson bottom) — same extrusion language as the other tab icons. Thick DARK NAVY OUTLINE (~4-5px) hugging the silhouette tightly. White rim highlight along the upper edges of the crown points. Designed to read clearly at 32-40px in a mobile tab bar. Mood: chunky, playful, premium, dimensional, regal — tied to Drop4's 'take the city' career theme. Brawl Stars / Coin Master / Subway Surfers icon language. NO text, NO numerals, NO photorealism, NO sleek thin styling, NO chrome, NO Connect 4 disc, NO basketball.",
+      "background": "transparent"
+    },
+    {
+      "group": "tab-icons",
       "id": "tab-shop",
       "filename": "tab-shop.png",
       "size": "1024x1024",
