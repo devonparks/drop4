@@ -864,9 +864,10 @@ export function ShopScreen() {
     // player never accidentally spends coins by tapping a shop card.
     if (coins < item.price) {
       haptics.error();
+      const shortBy = item.price - coins;
       setConfirmDialog({
         title: 'Not enough coins',
-        message: `This emote costs ${item.price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        message: `This emote costs ${item.price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
         confirmLabel: 'Got it',
         onConfirm: () => {},
         confirmOnly: true,
@@ -910,9 +911,10 @@ export function ShopScreen() {
     // Insufficient coins guard — same UX as AMG parts: error + bail.
     if (coins < pet.price) {
       haptics.error();
+      const shortBy = pet.price - coins;
       setConfirmDialog({
         title: 'Not enough coins',
-        message: `${pet.name} costs ${pet.price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        message: `${pet.name} costs ${pet.price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
         confirmLabel: 'Got it',
         onConfirm: () => {},
         confirmOnly: true,
