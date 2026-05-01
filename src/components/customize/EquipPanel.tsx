@@ -46,6 +46,27 @@ import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 
+// Painted pet icons for the EquipPanel grid. Keyed by petRegistry PetId
+// so the panel can render the actual breed photo instead of a 🐾 emoji.
+// dog_coyote has no PNG yet — falls back to the emoji thumbnail.
+const PET_ICONS: Record<string, ReturnType<typeof require>> = {
+  dog_dalmatian:        require('../../assets/images/characters/pets/dog_dalmatian_idle.png'),
+  dog_doberman:         require('../../assets/images/characters/pets/dog_doberman_idle.png'),
+  dog_fox:              require('../../assets/images/characters/pets/dog_fox_idle.png'),
+  dog_german_shepherd:  require('../../assets/images/characters/pets/dog_germanshepherd_idle.png'),
+  dog_golden_retrieve:  require('../../assets/images/characters/pets/dog_goldenretrieve_idle.png'),
+  dog_greyhound:        require('../../assets/images/characters/pets/dog_greyhound_idle.png'),
+  dog_hellhound:        require('../../assets/images/characters/pets/dog_hellhound_idle.png'),
+  dog_husky:            require('../../assets/images/characters/pets/dog_husky_idle.png'),
+  dog_labrador:         require('../../assets/images/characters/pets/dog_labrador_idle.png'),
+  dog_pointer:          require('../../assets/images/characters/pets/dog_pointer_idle.png'),
+  dog_ridgeback:        require('../../assets/images/characters/pets/dog_ridgeback_idle.png'),
+  dog_robot:            require('../../assets/images/characters/pets/dog_robot_idle.png'),
+  dog_scifi:            require('../../assets/images/characters/pets/dog_scifi_idle.png'),
+  dog_shiba:            require('../../assets/images/characters/pets/dog_shiba_idle.png'),
+  dog_wolf:             require('../../assets/images/characters/pets/dog_wolf_idle.png'),
+};
+
 const RARITY_COLORS: Record<string, string> = {
   common: '#7f8c8d',
   uncommon: '#2ecc71',
@@ -76,6 +97,8 @@ interface ItemView {
   rarity?: string;
   preview?: { boardColor?: string; p1Color?: string; p2Color?: string };
   thumbnail?: string; // optional emoji/text fallback
+  /** Painted PNG icon — when present, takes precedence over thumbnail. */
+  iconImage?: ReturnType<typeof require>;
   isOwned: boolean;
   isEquipped: boolean;
 }
@@ -157,6 +180,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         id: p.id,
         name: p.name,
         thumbnail: '🐾',
+        iconImage: PET_ICONS[p.id],
         isOwned: ownedPetsList.includes(p.id as any),
         isEquipped: activePet === p.id,
       }));
@@ -321,7 +345,17 @@ function ItemCard({ item, onPress }: { item: ItemView; onPress: () => void }) {
       accessibilityLabel={`${item.name}${item.isEquipped ? ', equipped' : item.isOwned ? '' : ', locked'}`}
     >
       <View style={[styles.cardPreview, { backgroundColor: previewColor }]}>
-        {item.thumbnail ? (
+        {item.iconImage ? (
+          // Painted breed icon — sits over the rarity-tinted backdrop so
+          // the EquipPanel pet grid reads as "real cosmetics" instead of
+          // 🐾 placeholder strings.
+          <Image
+            source={item.iconImage}
+            style={styles.cardIconImg}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+          />
+        ) : item.thumbnail ? (
           <Text style={styles.cardEmoji}>{item.thumbnail}</Text>
         ) : (
           <View style={[styles.previewDot, { backgroundColor: item.preview?.p1Color ?? '#e63946' }]} />
@@ -457,6 +491,10 @@ const styles = StyleSheet.create({
   },
   cardEmoji: {
     fontSize: 28,
+  },
+  cardIconImg: {
+    width: '100%',
+    height: '100%',
   },
   previewDot: {
     width: 28,
