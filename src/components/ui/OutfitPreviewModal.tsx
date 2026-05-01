@@ -108,8 +108,13 @@ export function OutfitPreviewModal({
 
           {/* Action buttons */}
           <View style={styles.actionRow}>
+            {/* containerStyle puts flex on the outer Pressable so the
+             *  row actually splits 1:2 (Close vs primary). Without
+             *  containerStyle, PressScale's outer Pressable has no flex
+             *  and both buttons collapse to their text width. */}
             <PressScale
               onPress={() => { haptics.tap(); onClose(); }}
+              containerStyle={styles.cancelBtnWrap}
               accessibilityLabel="Close outfit preview"
               accessibilityHint="Dismisses this preview without making changes"
             >
@@ -120,6 +125,7 @@ export function OutfitPreviewModal({
             {isEquipped ? null : isOwned ? (
               <PressScale
                 onPress={handleEquip}
+                containerStyle={styles.primaryBtnWrap}
                 accessibilityLabel={`Equip ${outfit.packLabel}`}
                 accessibilityHint="Equips this outfit on your character"
               >
@@ -130,6 +136,7 @@ export function OutfitPreviewModal({
             ) : (
               <PressScale
                 onPress={canAfford ? handleBuy : () => haptics.error()}
+                containerStyle={styles.primaryBtnWrap}
                 accessibilityLabel={canAfford ? `Buy ${outfit.packLabel} for ${price} coins` : 'Not enough coins'}
                 accessibilityHint={canAfford ? 'Spends coins to unlock this outfit' : 'Earn more coins to purchase'}
               >
@@ -184,8 +191,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 4, width: '100%' },
+  // Wrappers carry the flex split — applied to PressScale's outer
+  // Pressable via containerStyle. The cancelBtn / primaryBtn styles
+  // below now just describe the visual fill (rounded rect + paint).
+  cancelBtnWrap: { flex: 1 },
+  primaryBtnWrap: {
+    flex: 2,
+    shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+  },
   cancelBtn: {
-    flex: 1, borderRadius: 14, paddingVertical: 13, alignItems: 'center',
+    width: '100%',
+    borderRadius: 14, paddingVertical: 13, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -194,9 +211,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary, letterSpacing: 1,
   },
   primaryBtn: {
-    flex: 2, borderRadius: 14, paddingVertical: 13, alignItems: 'center',
-    shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+    width: '100%',
+    borderRadius: 14, paddingVertical: 13, alignItems: 'center',
   },
   primaryText: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 13,
