@@ -10,7 +10,7 @@ import {
 import { useCharacterStore } from '../stores/characterStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
-import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS } from '../data/amgPartPricing';
+import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS, RARITY_LABELS } from '../data/amgPartPricing';
 import { PACK_ICON } from '../data/cosmeticIcons';
 import { getPartThumb } from '../data/partThumbs';
 
@@ -170,9 +170,9 @@ export function CharacterCreatorScreen() {
     }
 
     setConfirmDialog({
-      title: 'Buy this part?',
-      message: `Unlock this ${rarity} item for ${price.toLocaleString()} coins?`,
-      confirmLabel: `Buy ${price}`,
+      title: `Buy this ${RARITY_LABELS[rarity]} part?`,
+      message: `Unlock for ${price.toLocaleString()} coins. You have ${coins.toLocaleString()}.`,
+      confirmLabel: `Buy · ${price.toLocaleString()} 🪙`,
       onConfirm: () => {
         const ok = useShopStore.getState().spendCoins(price);
         if (!ok) { haptics.error(); return; }
