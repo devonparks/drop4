@@ -12,6 +12,7 @@ import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS } from '../data/amgPartPricing';
 import { PACK_ICON } from '../data/cosmeticIcons';
+import { getPartThumb } from '../data/partThumbs';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CharacterCreatorScreen — Drop4's wiring for the shared AMG creator
@@ -217,6 +218,13 @@ export function CharacterCreatorScreen() {
         // the same gen-art icon language as the rest of the locked
         // VISUAL_DIRECTION lockup.
         randomizeIcon={require('../assets/images/ui/creator-dice.png')}
+        // Painted thumbnail per AMG part — replaces the placeholder
+        // hash-color swatch in PartGrid with the rendered Unity image
+        // for that part. partThumbs.ts has 2870 require()s, one per
+        // PNG in src/assets/images/parts/. Fall back to undefined for
+        // parts not yet rendered (e.g. broken APOC_ZOMB attachments)
+        // and PartGrid uses the hashColor swatch for those.
+        getPartThumb={getPartThumb}
         // BodyTab Looks gallery: replaces the per-look emoji glyph with
         // the painted chunky 3D pack cover. One image per Look — Casual /
         // Athletic / Tactical / Samurai / Knight / Pirate / etc. So the
