@@ -11,6 +11,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS } from '../data/amgPartPricing';
+import { PACK_ICON } from '../data/cosmeticIcons';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CharacterCreatorScreen — Drop4's wiring for the shared AMG creator
@@ -31,6 +32,27 @@ import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS } fr
 // back to local dev, change this to 'http://localhost:8080'.
 const CONTENT_SOURCE: ContentSource = {
   baseUrl: 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev',
+};
+
+// CHARACTER_LOOKS lives in @amg/character-creator's packs.ts. Each Look
+// targets a specific Sidekick pack; this map turns each look.id into
+// the chunky 3D pack cover image (cosmeticIcons.PACK_ICON). The Looks
+// gallery in BodyTab uses these instead of the look.emoji glyph.
+const LOOK_ICONS = {
+  // Human looks
+  casual:         PACK_ICON.MDRN_CIVL,
+  athletic:       PACK_ICON.MDRN_CIVL,
+  tactical:       PACK_ICON.MDRN_POLC,
+  samurai:        PACK_ICON.SAMR_WARR,
+  knight:         PACK_ICON.FANT_KNGT,
+  apocalypse:     PACK_ICON.APOC_OUTL,
+  cyberpunk:      PACK_ICON.SCFI_SOLD,
+  pirate:         PACK_ICON.PIRT_CAPT,
+  // Multi-species looks
+  elven_ranger:   PACK_ICON.ELVN_WARR,
+  goblin_brawler: PACK_ICON.GOBL_FIGT,
+  bone_knight:    PACK_ICON.FANT_SKTN,
+  undead_drifter: PACK_ICON.APOC_ZOMB,
 };
 
 export function CharacterCreatorScreen() {
@@ -190,6 +212,12 @@ export function CharacterCreatorScreen() {
       // the same gen-art icon language as the rest of the locked
       // VISUAL_DIRECTION lockup.
       randomizeIcon={require('../assets/images/ui/creator-dice.png')}
+      // BodyTab Looks gallery: replaces the per-look emoji glyph with
+      // the painted chunky 3D pack cover. One image per Look — Casual /
+      // Athletic / Tactical / Samurai / Knight / Pirate / etc. So the
+      // first thing a player sees in BODY tab reads as painted product
+      // art instead of OS-rendered emoji.
+      lookIcons={LOOK_ICONS}
     />
   );
 }
