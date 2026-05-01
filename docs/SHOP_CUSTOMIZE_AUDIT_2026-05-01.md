@@ -108,25 +108,39 @@ ed66cfd shop: outfit cards use chunky 3D pack covers (drop emoji glyphs)
 5d66100 shop: chunky 3D icon batch + per-part Unity thumbnails + customize fix-up
 ```
 
+### Follow-up polish pass (4-6pm)
+
+```
+39b25e8 animationpicker: Random tile dice glyph -> painted dice icon
+88fc1d8 shop: delete dead _LEGACY_PACK_ICON emoji map (19 lines)
+ef262ac customize: EquipPanel pets show painted breed icons (drop 🐾 fallback)
+```
+
+Matching amg-engine commits:
+```
+95d8646 creator: FaceTab "Random Face" inline dice glyph → painted icon
+1b05ed4 creator: PartGrid locked-part scrim — lock glyph reads vs painted thumb
+```
+
 Plus matching `amg-engine` commits for the shared character-creator
 package work (see that repo's log).
 
 ## What's left (optional polish)
 
-* **Random Face button** in FaceTab still uses 🎲 emoji glyph (small
-  inline button — could swap for the painted dice if desired)
 * **Effect/Win preview cards** still use emoji icons inside their
   animated EffectPreviewCard. Intentional — the emoji is part of the
   effect representation.
-* **Boxes tab loot box icons** (📦 🎁 ✨ 💎) — could be replaced with
-  chunky 3D box renders in a future AI batch.
-* **`_LEGACY_PACK_ICON`** dead-code map in ShopScreen.tsx — renamed for
-  clarity but can be deleted entirely once nothing else references it.
+* **Boxes tab loot box icons** (📦 🎁 ✨ 💎) — already swapped for the
+  rendered LootChest component (bronze/silver/gold/diamond tiers), no
+  emoji left in lootbox previews.
 * **TopBar "Open profile" press from Home** — sometimes doesn't navigate
   on first tap (intermittent web-preview repro; works via
   `window.__nav.navigate('Profile')` which suggests the route IS
   registered). Worth a closer look if the issue persists on real
   devices.
+* **dog_coyote pet icon** — petRegistry has the breed but the
+  `dog_coyote_idle.png` doesn't exist yet, so the EquipPanel falls back
+  to the 🐾 emoji for that one row. Run the Unity dog renderer to add.
 
 ## Testing
 
