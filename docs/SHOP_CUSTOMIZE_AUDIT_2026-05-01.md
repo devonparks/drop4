@@ -110,13 +110,27 @@ ed66cfd shop: outfit cards use chunky 3D pack covers (drop emoji glyphs)
 
 ### Follow-up polish pass (4-6pm)
 
+Visual / dead-code:
 ```
 39b25e8 animationpicker: Random tile dice glyph -> painted dice icon
 88fc1d8 shop: delete dead _LEGACY_PACK_ICON emoji map (19 lines)
 ef262ac customize: EquipPanel pets show painted breed icons (drop 🐾 fallback)
 ac15b47 animationpicker: now-playing 🎲 badge → painted dice + clean text
+```
+
+Layout bugs (PressScale + flex):
+```
 6477935 shop: AmgPartPreviewModal BUY button — 2:1 width ratio actually applies
 99d28b1 shop: OutfitPreviewModal action row — Close vs primary now actually 1:2
+```
+
+Buy-dialog UX (rarity label, balance, shortfall, after-balance):
+```
+8be95dd creator: inline buy dialog shows rarity label + coin balance
+43ee46d creator: not-enough-coins dialog calls out the shortfall amount
+a072ea0 shop: not-enough-coins dialogs surface the shortfall amount
+a4c1e52 shop: buy-confirm dialogs preview the post-purchase balance
+722be23 creator: inline buy dialog also shows post-purchase balance
 ```
 
 Matching amg-engine commits:
@@ -129,6 +143,16 @@ Layout bugs caught in 4-6pm pass: both preview modals had a PressScale
 + flex pattern that silently collapsed BUY to text-width. PressScale's
 `style` prop applies to its inner Animated.View, not the outer
 Pressable — flex split must go through `containerStyle`.
+
+Buy-dialog UX before/after:
+- Before: "This common item costs 80. You have 40."
+- After:  "This COMMON part costs 80. You have 40 — short by 40."
+- Before: "Costs 500 coins. You have 1500."
+- After:  "Costs 500 coins. You have 1500, will leave 1000."
+
+Three-flow consistency: emote buy, pet buy, and creator-part buy all
+read the same way — rarity label, balance call-out, shortfall on
+fail, after-balance on confirm.
 
 Plus matching `amg-engine` commits for the shared character-creator
 package work (see that repo's log).
