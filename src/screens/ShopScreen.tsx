@@ -887,8 +887,8 @@ export function ShopScreen() {
     };
     setConfirmDialog({
       title: 'Buy this emote?',
-      message: `Costs ${item.price} coins. You have ${coins.toLocaleString()}.`,
-      confirmLabel: `Buy ${item.price}`,
+      message: `Costs ${item.price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - item.price).toLocaleString()}.`,
+      confirmLabel: `Buy · ${item.price.toLocaleString()} 🪙`,
       onConfirm: doBuy,
     });
   };
@@ -932,8 +932,8 @@ export function ShopScreen() {
     };
     setConfirmDialog({
       title: 'Buy this pet?',
-      message: `${pet.name} costs ${pet.price.toLocaleString()} coins. You have ${coins.toLocaleString()}.`,
-      confirmLabel: `Buy ${pet.price}`,
+      message: `${pet.name} costs ${pet.price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - pet.price).toLocaleString()}.`,
+      confirmLabel: `Buy · ${pet.price.toLocaleString()} 🪙`,
       onConfirm: doBuy,
     });
   };
