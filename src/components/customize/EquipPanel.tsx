@@ -346,13 +346,35 @@ function ItemCard({ item, onPress }: { item: ItemView; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  // Backdrop fills the modal overlay (which absolute-fills to the
+  // closest positioned ancestor — usually a deep React Navigation
+  // screen-stack container with weird bounds). Using absolute positioning
+  // on both backdrop and sheet, anchored to bottom, makes the sheet
+  // dock to whatever container's bottom IS — and on web the closest
+  // positioned ancestor's bottom edge generally aligns with the
+  // PhoneFrame.screen bottom because the navigator screen height
+  // matches the visible area. The previous flex:1 + justifyContent:
+  // 'flex-end' approach inherited the parent's full height even when
+  // the parent extended above the viewport (e.g. y=-66, h=689).
   backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   sheet: {
-    height: '82%',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // Cap sheet height. The modal's parent (a React Navigation screen
+    // wrapper) extends above the visible phone screen by ~190px, so we
+    // need height ≤ 480 to keep the sheet's top edge inside the visible
+    // area. Without this cap the title + close button render behind
+    // the PhoneFrame bezel on web preview.
+    height: 480,
     overflow: 'hidden',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

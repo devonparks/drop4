@@ -148,6 +148,13 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     overflow: 'hidden',
+    // position: 'relative' so PreviewSafeModal's absoluteFillObject
+    // anchors HERE (not the outer phone, which would include the
+    // topBezel + statusBar). Without this, modal sheets render their
+    // header behind the bezel — the EquipPanel "BOARDS" title was
+    // landing at viewport y=74 (above the screen at y=126), so the
+    // panel looked like it had no header at all.
+    position: 'relative',
   },
   homeIndicatorWrap: {
     height: 20,

@@ -37,9 +37,12 @@ export function PreviewSafeModal({
 }: PreviewSafeModalProps) {
   if (Platform.OS === 'web') {
     if (!visible) return null;
-    // Inline overlay constrained to the PhoneFrame's screen container.
-    // zIndex 1000 keeps us above HomeScreen popups but under any future
-    // app-level toast stack (which uses zIndex >1000 by convention).
+    // Web preview: render an inline overlay anchored to the closest
+    // position:relative ancestor. PhoneFrame.screen is now relative
+    // (added in this commit) so the modal stays inside the simulated
+    // phone instead of escaping to a stale React Navigation screen
+    // ancestor. zIndex 1000 keeps us above HomeScreen popups but under
+    // any future app-level toast stack (which uses zIndex >1000).
     return (
       <View style={styles.webOverlay} pointerEvents="box-none">
         {children}
