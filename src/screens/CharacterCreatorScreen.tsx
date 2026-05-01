@@ -159,9 +159,10 @@ export function CharacterCreatorScreen() {
 
     if (coins < price) {
       haptics.error();
+      const shortBy = price - coins;
       setConfirmDialog({
         title: 'Not enough coins',
-        message: `This ${rarity} item costs ${price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        message: `This ${RARITY_LABELS[rarity]} part costs ${price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
         confirmLabel: 'Got it',
         onConfirm: () => {},
         confirmOnly: true,
