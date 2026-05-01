@@ -665,9 +665,13 @@ const styles = StyleSheet.create({
   },
 
   // ── Header ─────────────────────────────────────────────────────────
+  // paddingTop bumped from 12 → 48 to clear the floating SubTabSwitcher
+  // pill (position: absolute, top: insets.top + 6, ~36px tall) so the
+  // DAILY CHALLENGES title isn't sandwiched behind/over the DAILY tab
+  // selector. Visual audit caught the overlap.
   headerGradient: {
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 48,
     paddingBottom: 14,
     marginHorizontal: -16,
     paddingHorizontal: 16,
