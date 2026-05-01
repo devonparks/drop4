@@ -24,11 +24,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   Pressable,
   ScrollView,
   Image,
 } from 'react-native';
+import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useShopStore } from '../../stores/shopStore';
@@ -214,7 +214,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
   const showEmpty = totalCount === 0;
 
   return (
-    <Modal
+    <PreviewSafeModal
       visible={visible}
       transparent
       animationType="slide"
@@ -300,7 +300,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
           </LinearGradient>
         </Pressable>
       </Pressable>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlossyButton } from './GlossyButton';
@@ -82,7 +83,7 @@ export function CityCompletionCeremony() {
   };
 
   return (
-    <Modal transparent visible={!!pending} animationType="fade">
+    <PreviewSafeModal transparent visible={!!pending} animationType="fade">
       <View style={styles.overlay}>
         <LinearGradient
           colors={city.skyGradient as any}
@@ -170,7 +171,7 @@ export function CityCompletionCeremony() {
           </Animated.View>
         </View>
       </View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

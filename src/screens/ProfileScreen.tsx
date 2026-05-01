@@ -567,19 +567,32 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 100,
   },
+  // Hero banner around the portrait card. The previous header was a
+  // bare centered View; bumping in a subtle gradient + name shadow
+  // makes the player feel like the page belongs to THEM (Devon's
+  // "profile needs a visual overhaul" cue).
   profileHeader: {
     alignItems: 'center',
     paddingHorizontal: 24,
+    paddingTop: 12,
     marginBottom: 20,
+    backgroundColor: 'rgba(255,140,0,0.04)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,200,120,0.15)',
+    paddingBottom: 18,
   },
   avatarSection: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   playerName: {
     fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 28,
+    fontWeight: weight.black,
+    fontSize: 34,
     color: '#ffffff',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(255,200,80,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
   },
   playerTitleBadge: {
     marginTop: 2,
@@ -669,15 +682,22 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     fontWeight: '600',
   },
+  // Section headers — bumped weight + added a thin orange accent rule
+  // beneath via borderBottomWidth so each section feels like a proper
+  // dashboard module instead of plain stacked text.
   sectionTitle: {
     fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 12,
-    color: colors.textSecondary,
-    letterSpacing: 2,
+    fontWeight: weight.black,
+    fontSize: 13,
+    color: '#ffffff',
+    letterSpacing: 2.5,
     paddingHorizontal: 20,
-    marginBottom: 10,
-    marginTop: 4,
+    paddingBottom: 6,
+    marginBottom: 12,
+    marginTop: 18,
+    marginHorizontal: 16,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(255,140,0,0.35)',
   },
   statsGrid: {
     flexDirection: 'row',

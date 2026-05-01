@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Dimensions, TextInput, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -32,6 +32,9 @@ import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
 import { AmgPartCard } from '../components/ui/AmgPartCard';
 import { packMeta, sortPacksForShop } from '../data/amgPackMeta';
+import { getPackIcon, getEmoteIcon } from '../data/cosmeticIcons';
+import { filterAmgParts, groupAmgPartsByPack } from '../data/amgShopFilters';
+import { AmgPartPreviewModal } from '../components/ui/AmgPartPreviewModal';
 import { getPartPrice, isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
 import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -67,14 +70,44 @@ type AmgSpecies = 'All' | 'Human' | 'Goblin' | 'Elves' | 'Skeleton' | 'Zombie';
 /** Part slot buckets the Clothes tab exposes as a filter row. "All"
  *  shows every ALLOWED_SLOTS part; the other buckets group the slots
  *  the way a player thinks about an outfit ("I want to change my
- *  upper body"). Keep in sync with SLOT_BUCKETS below. */
-type AmgSlotBucket = 'All' | 'Upper Body' | 'Lower Body' | 'Face' | 'Accessories';
+ *  upper body"). Keep in sync with SLOT_BUCKETS below.
+ *
+ *  Coverage: every cosmetic-relevant Sidekick slot. Internal slots
+ *  (Teeth, Tongue) are not exposed because players don't shop for
+ *  them — they're fixed per head and color-tinted only. */
+type AmgSlotBucket = 'All' | 'Upper Body' | 'Lower Body' | 'Face' | 'Accessories' | 'Armor';
 
 const SLOT_BUCKETS: Record<Exclude<AmgSlotBucket, 'All'>, readonly string[]> = {
-  'Upper Body': ['Torso', 'ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight'],
+  'Upper Body': [
+    'Torso', 'ArmUpperLeft', 'ArmUpperRight',
+    'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight',
+  ],
   'Lower Body': ['Hips', 'LegLeft', 'LegRight', 'FootLeft', 'FootRight'],
-  'Face':       ['Head', 'Hair', 'FacialHair'],
-  'Accessories':['AttachmentHead', 'AttachmentFace', 'AttachmentBack'],
+  // Face: full set of swappable face parts. Different packs ship
+  // different eye / brow / nose shapes — players who want a goblin face
+  // on a human body, etc., browse here.
+  'Face': [
+    'Head', 'Hair', 'FacialHair',
+    'EyebrowLeft', 'EyebrowRight',
+    'EyeLeft', 'EyeRight',
+    'Nose',
+    'EarLeft', 'EarRight',
+  ],
+  // Accessories: hat / mask / backpack / cape — top-level wear-overs.
+  'Accessories': [
+    'AttachmentHead', 'AttachmentFace', 'AttachmentBack', 'Wrap',
+  ],
+  // Armor: every body-mounted attachment (hip plates, pauldrons, knee
+  // guards, etc). Sidekick ships dozens of these per warrior pack —
+  // surfacing them as their own bucket so players can build a knight
+  // or samurai look without scrolling past unrelated cosmetics.
+  'Armor': [
+    'AttachmentHipsFront', 'AttachmentHipsBack',
+    'AttachmentHipsLeft', 'AttachmentHipsRight',
+    'AttachmentShoulderLeft', 'AttachmentShoulderRight',
+    'AttachmentElbowLeft', 'AttachmentElbowRight',
+    'AttachmentKneeLeft', 'AttachmentKneeRight',
+  ],
 };
 
 // ─── Effect/Win/Frame preview configs ──────────────────────────
@@ -409,7 +442,25 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
         <View style={[s.itemCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}>
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.itemPreview}>
-          {outfitMeta ? (
+          {getEmoteIcon(item.id) ? (
+            // AMG emote (id like 'emote_dab', 'emote_bow') — show the
+            // chunky 3D emote icon over a rarity-tinted backdrop. Replaces
+            // the prior emoji placeholder so the emote shop reads as
+            // "real cosmetics" not "text strings."
+            <View style={{ width: 108, height: 64, borderRadius: 6, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+              {isPremium ? (
+                <AnimatedRarityBg rarity={item.rarity as any} width={108} height={64} style={StyleSheet.absoluteFill} />
+              ) : (
+                <LinearGradient colors={[rarityColor + '33', '#0e0e1a', '#060610']} style={StyleSheet.absoluteFill} />
+              )}
+              <Image
+                source={getEmoteIcon(item.id)!}
+                style={{ width: 60, height: 60, zIndex: 1 }}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+          ) : outfitMeta ? (
             // Outfit preview: rarity-tinted backdrop with a pack emoji +
             // large number overlay. 3D preview happens in the tap modal.
             // Variant tint: every outfit id hashes to a unique HSL hue so
@@ -587,9 +638,10 @@ export function ShopScreen() {
 
   // Outfits live in characterStore (separate from shopStore's board/piece owned set)
   const ownedOutfits = useCharacterStore(s => s.ownedOutfits);
-  const equippedOutfitId = useCharacterStore(s => s.customization.outfitId);
+  const equippedOutfitId = useCharacterStore(s => s.equippedOutfitId);
   const unlockOutfit = useCharacterStore(s => s.unlockOutfit);
-  const setEquippedOutfit = useCharacterStore(s => s.setOutfit);
+  const equipOutfitPack = useCharacterStore(s => s.equipOutfitPack);
+  const equipAmgPart = useCharacterStore(s => s.equipAmgPart);
   const unlockedSpecies = useCareerStore(s => s.unlockedSpecies);
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
   const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
@@ -610,6 +662,28 @@ export function ShopScreen() {
   const [amgManifest, setAmgManifest] = useState<AmgManifestPart[] | null>(null);
   const [amgSpecies, setAmgSpecies] = useState<AmgSpecies>('All');
   const [amgBucket, setAmgBucket] = useState<AmgSlotBucket>('All');
+  const [amgQuery, setAmgQuery] = useState('');
+  const [amgOwnedOnly, setAmgOwnedOnly] = useState(false);
+  // Brief equip toast — flashes when the player taps an owned card to
+  // equip in-place. Fades after 1.4 s. Lives on the shop instead of the
+  // creator because the equip happens here without navigating away.
+  const [equipToast, setEquipToast] = useState<{ label: string } | null>(null);
+  // Active part preview — when set, shows the AmgPartPreviewModal with
+  // the part rendered on the player's character before they decide to
+  // buy. Replaces the old "tap an unowned card → OS confirm dialog"
+  // flow that didn't actually show what was being bought.
+  const [partPreview, setPartPreview] = useState<{ name: string; slot: string } | null>(null);
+  useEffect(() => {
+    if (!equipToast) return;
+    const t = setTimeout(() => setEquipToast(null), 1400);
+    return () => clearTimeout(t);
+  }, [equipToast]);
+  // Collapsible pack sections — players see the catalog as a list of
+  // pack rows with counts, and tap a row to expand its parts grid. Cuts
+  // initial render from O(filtered-parts) to O(packs) for hundreds of
+  // SKUs. Search auto-expands any matching pack so the player sees
+  // results without manually clicking through.
+  const [amgExpandedPacks, setAmgExpandedPacks] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (activeTab !== 'clothes' || amgManifest) return;
     let canceled = false;
@@ -687,17 +761,42 @@ export function ShopScreen() {
     setOutfitPreview(item);
   };
 
+  // AMG part buy — runs after the player confirms the try-on preview.
+  // Spends coins, unlocks, auto-equips, and toasts. Lives at the top
+  // level (vs inside the clothes IIFE) so the AmgPartPreviewModal can
+  // call it directly when the player taps BUY.
+  const confirmPartPurchase = (partName: string) => {
+    const { price } = getPartPrice(partName);
+    if (coins < price) { haptics.error(); return; }
+    const ok = spendCoins(price);
+    if (!ok) { haptics.error(); return; }
+    haptics.win();
+    playSound('purchase');
+    unlockAmgPart(partName);
+    const entry = amgManifest?.find((p) => p.name === partName);
+    if (entry) {
+      equipAmgPart(entry.slot, partName);
+      setEquipToast({
+        label: `Bought + Equipped ${packMeta(packPrefixFromPartName(partName)).displayName} ${entry.slot}`,
+      });
+    }
+    setPartPreview(null);
+  };
+
   const handleOutfitBuy = () => {
     if (!outfitPreview) return;
     if (outfitPreview.price > 0 && !spendCoins(outfitPreview.price)) return;
+    // Unlock first so the AMG parts land in ownedAmgParts before equip
+    // reads them; equipOutfitPack swaps in the body slots and updates
+    // equippedOutfitId in one set call.
     unlockOutfit(outfitPreview.id);
-    setEquippedOutfit(outfitPreview.id as any);
+    equipOutfitPack(outfitPreview.id);
     setOutfitPreview(null);
   };
 
   const handleOutfitEquip = () => {
     if (!outfitPreview) return;
-    setEquippedOutfit(outfitPreview.id as any);
+    equipOutfitPack(outfitPreview.id);
     setOutfitPreview(null);
   };
 
@@ -726,13 +825,39 @@ export function ShopScreen() {
       return;
     }
 
-    const success = purchaseEmote(item.id, item.price);
-    if (success) {
-      haptics.win();
-      playSound('coin');
-      equipEmote(item.id);
+    // Buy flow with confirm — same UX as AMG parts + pets so the
+    // player never accidentally spends coins by tapping a shop card.
+    if (coins < item.price) {
+      haptics.error();
+      const msg = `Not enough coins — this emote costs ${item.price}. You have ${coins}.`;
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Not enough coins', msg);
+      return;
+    }
+    const doBuy = () => {
+      const success = purchaseEmote(item.id, item.price);
+      if (success) {
+        haptics.win();
+        playSound('coin');
+        equipEmote(item.id);
+      } else {
+        haptics.error();
+        playSound('error');
+      }
+    };
+    if (Platform.OS === 'web') {
+      const ok = window.confirm(`Buy emote for ${item.price} coins?`);
+      if (ok) doBuy();
+      else haptics.tap();
     } else {
-      haptics.error(); playSound('error');
+      Alert.alert(
+        'Buy this emote?',
+        `Costs ${item.price} coins. You have ${coins}.`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+          { text: `Buy ${item.price}`, onPress: doBuy },
+        ],
+      );
     }
   };
 
@@ -748,10 +873,39 @@ export function ShopScreen() {
       equipPet(pet.id);
       haptics.select();
       playSound('whoosh');
-    } else if (pet.price > 0) {
+      return;
+    }
+    if (pet.price <= 0) return;
+    // Insufficient coins guard — same UX as AMG parts: error + bail.
+    if (coins < pet.price) {
+      haptics.error();
+      const msg = `Not enough coins — ${pet.name} costs ${pet.price}. You have ${coins}.`;
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Not enough coins', msg);
+      return;
+    }
+    // Confirm before spending. Pets cost 200-2000 coins; tapping a card
+    // shouldn't auto-debit the player. Web uses window.confirm because
+    // RN-Web's Alert.alert silently no-ops multi-button configs; native
+    // gets a proper Alert.
+    const doBuy = () => {
       const success = purchasePet(pet.id, pet.price);
       if (success) { haptics.win(); playSound('coin'); equipPet(pet.id); }
       else { haptics.error(); playSound('error'); }
+    };
+    if (Platform.OS === 'web') {
+      const ok = window.confirm(`Buy ${pet.name} for ${pet.price} coins?`);
+      if (ok) doBuy();
+      else haptics.tap();
+    } else {
+      Alert.alert(
+        'Buy this pet?',
+        `${pet.name} costs ${pet.price} coins. You have ${coins}.`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
+          { text: `Buy ${pet.price}`, onPress: doBuy },
+        ],
+      );
     }
   };
 
@@ -839,7 +993,13 @@ export function ShopScreen() {
         </StaggeredEntry>
 
         {/* ── Main scrollable content ── */}
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+        {/* style={{ flex: 1 }} is required so the ScrollView claims the
+            remaining vertical space below the header. Without it the
+            ScrollView's own height defaults to its content's intrinsic
+            height — which is fine on tall screens but on a 390x844
+            phone the content extends below the visible area and the
+            player can't scroll all the way down (Devon's audit). */}
+        <ScrollView style={s.scrollFlex} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
           {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══ */}
           <StaggeredEntry index={1} delay={60}>
@@ -943,85 +1103,80 @@ export function ShopScreen() {
                   <Text style={s.comingSoonText}>Loading clothes library…</Text>
                 </Animated.View>
               ) : (() => {
-                const speciesOK = (p: AmgManifestPart) => amgSpecies === 'All' || p.species === amgSpecies;
-                // Only show slots that are visually equipable cosmetics —
-                // hide internal pieces like Teeth, Tongue, Eyes (those
-                // are fixed per head). Torso, Hair, Hips, Legs, Feet,
-                // Arms, Hands, Head, FacialHair, and Attachment* slots
-                // are the full wardrobe.
-                const ALLOWED_SLOTS = [
-                  'Head', 'Hair', 'FacialHair',
-                  'Torso', 'Hips',
-                  'ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight',
-                  'HandLeft', 'HandRight',
-                  'LegLeft', 'LegRight', 'FootLeft', 'FootRight',
-                  'AttachmentHead', 'AttachmentFace', 'AttachmentBack',
-                ];
-                const bucketOK = (p: AmgManifestPart) => {
-                  if (amgBucket === 'All') return ALLOWED_SLOTS.includes(p.slot);
-                  return SLOT_BUCKETS[amgBucket].includes(p.slot);
-                };
-                const filtered = amgManifest.filter(
-                  (p) => speciesOK(p) && bucketOK(p),
-                );
-                const byPack: Record<string, AmgManifestPart[]> = {};
-                for (const p of filtered) {
-                  const pack = packPrefixFromPartName(p.name);
-                  // Skip starter packs in the shop — they're already
-                  // owned by every player on first launch, so showing
-                  // them as "buy" would be confusing. Collection tab
-                  // will list them separately.
-                  if (isStarterPack(pack)) continue;
-                  (byPack[pack] ||= []).push(p);
-                }
+                // All filtering + grouping runs through the pure helper
+                // in amgShopFilters.ts so it stays unit-testable. The
+                // shop just hands its current state in and renders the
+                // grouped result.
+                const filtered = filterAmgParts(amgManifest, {
+                  species: amgSpecies,
+                  bucket: amgBucket,
+                  query: amgQuery,
+                  ownedOnly: amgOwnedOnly,
+                  isPartOwned: isAmgPartOwned,
+                  packDisplayName: (prefix) => packMeta(prefix).displayName,
+                  slotBuckets: SLOT_BUCKETS,
+                });
+                const byPack = groupAmgPartsByPack(filtered);
                 const packOrder = sortPacksForShop(Object.keys(byPack));
                 const handleBuy = (partName: string) => {
-                  const { price, rarity } = getPartPrice(partName);
-                  if (coins < price) {
-                    haptics.error();
-                    if (Platform.OS === 'web') {
-                      window.alert(`Not enough coins — this ${rarity} item costs ${price}. You have ${coins}.`);
-                    } else {
-                      Alert.alert('Not enough coins', `This ${rarity} item costs ${price}. You have ${coins}.`);
-                    }
-                    return;
-                  }
-                  // RN-Web's Alert.alert silently fails with multi-button
-                  // config, so the buy flow was a dead-end on web. Use
-                  // window.confirm on web (reliable) and Alert.alert on
-                  // native (proper native UI). Same end behavior: yes →
-                  // spend + unlock, no → cancel.
-                  const confirmed = Platform.OS === 'web'
-                    ? window.confirm(`Unlock this ${rarity} item for ${price} coins?`)
-                    : null;
-                  const doBuy = () => {
-                    const ok = spendCoins(price);
-                    if (!ok) { haptics.error(); return; }
-                    haptics.win();
-                    playSound('purchase');
-                    unlockAmgPart(partName);
-                  };
-                  if (Platform.OS === 'web') {
-                    if (confirmed) doBuy();
-                    else haptics.tap();
-                  } else {
-                    Alert.alert('Buy this part?', `Unlock this ${rarity} item for ${price} coins?`, [
-                      { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-                      { text: `Buy ${price}`, onPress: doBuy },
-                    ]);
-                  }
-                };
-                const handleEquip = (_partName: string) => {
+                  // Open the try-on preview modal so the player can see the
+                  // part on their character before committing to the buy.
+                  // The actual spendCoins + unlock + equip happens in
+                  // confirmPartPurchase below, fired from the modal's BUY.
                   haptics.tap();
-                  navigation.navigate('AmgCreator');
+                  const entry = amgManifest.find((p) => p.name === partName);
+                  if (!entry) { haptics.error(); return; }
+                  setPartPreview({ name: partName, slot: entry.slot });
+                };
+                const handleEquip = (partName: string) => {
+                  // Look up the part's slot from the manifest and equip
+                  // in-place — no need to bounce the player into the
+                  // creator just to swap a single part. Toast feedback
+                  // confirms the change without breaking flow.
+                  const entry = amgManifest.find((p) => p.name === partName);
+                  if (!entry) { haptics.error(); return; }
+                  haptics.win();
+                  playSound('click');
+                  equipAmgPart(entry.slot, partName);
+                  setEquipToast({
+                    label: `Equipped ${packMeta(packPrefixFromPartName(partName)).displayName} ${entry.slot}`,
+                  });
                 };
                 return (
                   <>
+                    {/* Search + Owned-only toggle. Search matches part
+                        names AND pack display names so "samurai" finds
+                        every Samurai Warriors part. Owned-only flips
+                        the grid into "what I have to mix" mode. */}
+                    <View style={s.amgSearchRow}>
+                      <TextInput
+                        style={s.amgSearchInput}
+                        placeholder="Search parts or packs…"
+                        placeholderTextColor="rgba(255,255,255,0.4)"
+                        value={amgQuery}
+                        onChangeText={setAmgQuery}
+                        clearButtonMode="while-editing"
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                      />
+                      <Pressable
+                        onPress={() => { haptics.tap(); setAmgOwnedOnly((v) => !v); }}
+                        style={[s.amgOwnedChip, amgOwnedOnly && s.amgOwnedChipActive]}
+                        accessibilityRole="switch"
+                        accessibilityState={{ checked: amgOwnedOnly }}
+                        accessibilityLabel="Filter to owned parts only"
+                      >
+                        <Text style={[s.amgOwnedChipText, amgOwnedOnly && s.amgOwnedChipTextActive]}>
+                          {amgOwnedOnly ? '✓ OWNED' : 'OWNED'}
+                        </Text>
+                      </Pressable>
+                    </View>
+
                     {/* Species filter chips */}
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 4, gap: 8 }}
+                      contentContainerStyle={{ paddingVertical: 6, paddingHorizontal: 4, gap: 8 }}
                     >
                       {(['All', 'Human', 'Goblin', 'Elves', 'Skeleton', 'Zombie'] as AmgSpecies[]).map((sp) => (
                         <FilterChip
@@ -1041,7 +1196,7 @@ export function ShopScreen() {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={{ paddingVertical: 4, paddingHorizontal: 4, gap: 8 }}
                     >
-                      {(['All', 'Upper Body', 'Lower Body', 'Face', 'Accessories'] as AmgSlotBucket[]).map((b) => (
+                      {(['All', 'Upper Body', 'Lower Body', 'Face', 'Accessories', 'Armor'] as AmgSlotBucket[]).map((b) => (
                         <FilterChip
                           key={b}
                           label={b}
@@ -1051,40 +1206,111 @@ export function ShopScreen() {
                       ))}
                     </ScrollView>
 
-                    {/* Pack sections */}
+                    {/* Pack sections — collapsible. With ~40 packs × dozens
+                        of parts each, the previous always-rendered grid
+                        scrolled forever. Now players see a list of pack
+                        rows with counts and expand the one(s) they want.
+                        Active search / owned-only force-expand matching
+                        packs so filters don't hide their results. */}
                     {packOrder.length === 0 ? (
                       <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
-                        <Text style={s.comingSoonText}>No parts for this species yet.</Text>
+                        <Text style={s.comingSoonText}>No parts match. Try a different filter or search.</Text>
                       </Animated.View>
-                    ) : packOrder.map((pack) => {
-                      const meta = packMeta(pack);
-                      const parts = byPack[pack];
-                      return (
-                        <View key={pack} style={{ marginTop: 12 }}>
-                          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', marginLeft: 8, marginBottom: 6, letterSpacing: 0.8 }}>
-                            {meta.emoji}  {meta.displayName}  <Text style={{ color: '#888', fontSize: 11, fontWeight: '600' }}>{parts.filter(p => isAmgPartOwned(p.name)).length}/{parts.length}</Text>
+                    ) : (
+                      <>
+                        {/* Expand-all / collapse-all helper — when a player
+                            does want to scroll the full catalog. Default
+                            stays collapsed because hundreds of cards lag
+                            mid-range mobiles. */}
+                        <View style={s.amgPackToolbar}>
+                          <Text style={s.amgPackCount}>
+                            {packOrder.length} {packOrder.length === 1 ? 'pack' : 'packs'} ·{' '}
+                            {Object.values(byPack).reduce((sum, ps) => sum + ps.length, 0)} parts
                           </Text>
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 }}>
-                            {parts.map((p) => {
-                              const unlockedAt = amgPartUnlockedAt[p.name];
-                              const isNew = unlockedAt !== undefined
-                                && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
-                              return (
-                                <AmgPartCard
-                                  key={p.name}
-                                  partName={p.name}
-                                  owned={isAmgPartOwned(p.name)}
-                                  onBuy={handleBuy}
-                                  onEquip={handleEquip}
-                                  size="compact"
-                                  isNew={isNew}
-                                />
-                              );
-                            })}
-                          </View>
+                          <Pressable
+                            onPress={() => {
+                              haptics.tap();
+                              setAmgExpandedPacks((prev) => {
+                                const allOpen = packOrder.every((p) => prev.has(p));
+                                return allOpen ? new Set() : new Set(packOrder);
+                              });
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Toggle all packs"
+                          >
+                            <Text style={s.amgPackToolbarBtn}>
+                              {packOrder.every((p) => amgExpandedPacks.has(p)) ? 'COLLAPSE ALL' : 'EXPAND ALL'}
+                            </Text>
+                          </Pressable>
                         </View>
-                      );
-                    })}
+                        {packOrder.map((pack) => {
+                          const meta = packMeta(pack);
+                          const parts = byPack[pack];
+                          // Force-expand under any active filter so the
+                          // player sees what they searched for / what
+                          // they own without an extra tap.
+                          const forceExpand = amgQuery.trim().length > 0 || amgOwnedOnly;
+                          const isOpen = forceExpand || amgExpandedPacks.has(pack);
+                          const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
+                          return (
+                            <View key={pack} style={s.amgPackSection}>
+                              <Pressable
+                                onPress={() => {
+                                  if (forceExpand) return; // can't manually toggle while filtered
+                                  haptics.tap();
+                                  setAmgExpandedPacks((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(pack)) next.delete(pack);
+                                    else next.add(pack);
+                                    return next;
+                                  });
+                                }}
+                                style={s.amgPackHeader}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${meta.displayName} pack, ${ownedCount} of ${parts.length} owned`}
+                                accessibilityState={{ expanded: isOpen }}
+                              >
+                                <Text style={s.amgPackChevron}>{isOpen ? '▾' : '▸'}</Text>
+                                {getPackIcon(pack) ? (
+                                  <Image
+                                    source={getPackIcon(pack)!}
+                                    style={s.amgPackIcon}
+                                    resizeMode="contain"
+                                    accessibilityIgnoresInvertColors
+                                  />
+                                ) : (
+                                  <Text style={s.amgPackEmoji}>{meta.emoji}</Text>
+                                )}
+                                <Text style={s.amgPackName}>{meta.displayName}</Text>
+                                <Text style={s.amgPackCounts}>
+                                  {ownedCount}/{parts.length}
+                                </Text>
+                              </Pressable>
+                              {isOpen && (
+                                <View style={s.amgPackGrid}>
+                                  {parts.map((p) => {
+                                    const unlockedAt = amgPartUnlockedAt[p.name];
+                                    const isNew = unlockedAt !== undefined
+                                      && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
+                                    return (
+                                      <AmgPartCard
+                                        key={p.name}
+                                        partName={p.name}
+                                        owned={isAmgPartOwned(p.name)}
+                                        onBuy={handleBuy}
+                                        onEquip={handleEquip}
+                                        size="compact"
+                                        isNew={isNew}
+                                      />
+                                    );
+                                  })}
+                                </View>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </>
+                    )}
                   </>
                 );
               })()
@@ -1317,6 +1543,32 @@ export function ShopScreen() {
         onBuy={handleOutfitBuy}
         onEquip={handleOutfitEquip}
       />
+
+      {/* AMG part try-on preview — opens when the player taps an
+          UNOWNED Clothes card. Shows the part rendered on their own
+          character, then BUY/CANCEL. Replaces the bare confirm dialog
+          that didn't actually let the player see the part. */}
+      <AmgPartPreviewModal
+        visible={partPreview !== null}
+        partName={partPreview?.name ?? null}
+        slot={partPreview?.slot ?? null}
+        canAfford={partPreview ? coins >= getPartPrice(partPreview.name).price : false}
+        onClose={() => setPartPreview(null)}
+        onBuy={confirmPartPurchase}
+      />
+
+      {/* In-place equip confirmation. Shows briefly when the player
+          taps an owned AMG part card so they get feedback without
+          having to navigate to the creator. */}
+      {equipToast && (
+        <Animated.View
+          entering={FadeIn.duration(160)}
+          style={s.equipToast}
+          pointerEvents="none"
+        >
+          <Text style={s.equipToastText}>{equipToast.label}</Text>
+        </Animated.View>
+      )}
     </ScreenBackground>
   );
 }
@@ -1357,6 +1609,7 @@ const s = StyleSheet.create({
   gemEmoji: { fontSize: 14 },
   gemValue: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: colors.gemGreen },
 
+  scrollFlex: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
 
   // ── Section Headers ──
@@ -1639,6 +1892,149 @@ const s = StyleSheet.create({
   boxItemCount: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
   boxItemPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
 
+  // Search + ownership filter row at the top of the Clothes tab.
+  amgSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  amgSearchInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    color: '#fff',
+    fontFamily: fonts.body,
+    fontSize: 13,
+  },
+  amgOwnedChip: {
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  amgOwnedChipActive: {
+    borderColor: colors.orange,
+    backgroundColor: 'rgba(255,140,0,0.18)',
+  },
+  amgOwnedChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 1.2,
+  },
+  amgOwnedChipTextActive: {
+    color: colors.orange,
+  },
+  // Pack list toolbar (count + expand-all toggle)
+  amgPackToolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  amgPackCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.8,
+  },
+  amgPackToolbarBtn: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.orange,
+    letterSpacing: 1.4,
+  },
+  // Collapsible pack section
+  amgPackSection: {
+    marginTop: 6,
+  },
+  amgPackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 8,
+  },
+  amgPackChevron: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    width: 14,
+    textAlign: 'center',
+  },
+  amgPackEmoji: {
+    fontSize: 18,
+  },
+  amgPackIcon: {
+    width: 36,
+    height: 36,
+    marginRight: 4,
+  },
+  amgPackName: {
+    flex: 1,
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  amgPackCounts: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  amgPackGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 4,
+    paddingTop: 6,
+    paddingBottom: 4,
+  },
+  // In-place equip confirmation toast. Floats above the bottom tab bar
+  // so it stays visible while the player keeps shopping.
+  equipToast: {
+    position: 'absolute',
+    bottom: 90,
+    alignSelf: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 22,
+    backgroundColor: 'rgba(20,30,52,0.95)',
+    borderWidth: 1.5,
+    borderColor: colors.orange,
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  equipToastText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.orange,
+    letterSpacing: 1.1,
+  },
   comingSoon: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   comingSoonIcon: { fontSize: 48, marginBottom: 12 },
   comingSoonText: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22, color: colors.textSecondary },

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
@@ -77,7 +78,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
   };
 
   return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
+    <PreviewSafeModal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       {/* Dark overlay — tap to close */}
       <Pressable
         style={styles.overlay}
@@ -189,7 +190,7 @@ export function FortniteEmoteWheel({ visible, equippedEmotes, onSelect, onClose 
           </View>
         </View>
       </Pressable>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

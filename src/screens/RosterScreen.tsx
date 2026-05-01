@@ -84,14 +84,18 @@ function getCardTier(rating: number, isBoss: boolean, isDarkLord: boolean): Card
 function RosterCardPreview({ characterId, size, isEquipped: _isEquipped }: {
   characterId: string; size: number; isEquipped: boolean;
 }) {
-  const playerCust = useCharacterStore((s) => s.customization);
+  const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as
+    Parameters<typeof CharacterSnapshot>[0]['customization'] | null;
   const custom = getRosterCustomization(characterId);
-  // Default (player) character uses the live customization so it reflects edits
+  // Default (player) card mirrors the player's amgCharacter so it reflects
+  // creator edits live (snapshot cache key includes the character hash).
+  const character = custom ?? playerCharacter;
+  if (!character) return null;
   return (
     <CharacterSnapshot
       width={size}
       height={size}
-      customization={custom ?? playerCust}
+      customization={character}
     />
   );
 }

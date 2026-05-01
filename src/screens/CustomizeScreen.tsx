@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
-import { Character3D } from '../components/3d/Character3D';
+import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { EquipPanel, type EquipCategory } from '../components/customize/EquipPanel';
 import { haptics } from '../services/haptics';
@@ -13,7 +13,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useCharacterStore } from '../stores/characterStore';
 import { usePetStore } from '../stores/petStore';
 import { OUTFITS } from '../data/outfitRegistry';
-import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
+import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { PETS as PETS_3D } from '../data/petRegistry';
 import {
   BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS,
@@ -39,7 +39,6 @@ import { fonts, weight } from '../theme/typography';
 type CategoryId =
   | 'character'
   | 'clothes'
-  | 'outfits'
   | 'emotes'
   | 'pets'
   | 'pieces'
@@ -56,11 +55,14 @@ type CategoryMeta = {
   shopTab?: string;
 };
 
-// Customize Overhaul 2026-04-27: 10 dedicated chunky 3D category icons
-// generated via GPT high (cat-*.png) matching the locked-in DROP4 logo
-// style — white-cyan body face + warm orange-red 3D extrusion + thick
-// dark navy outline. Replaces the old shop-* icon reuse where Character /
-// Clothes / Outfits all shared the same orange-shirt-on-hanger PNG.
+// Customize Overhaul 2026-04-30: dropped the redundant Outfits tile
+// (now covered by Clothes via the AMG migration — every part lives in
+// the per-pack Clothes catalog). Remaining 9 fit cleanly in a 3x3 grid
+// with no orphan card, which Devon flagged in the audit.
+//
+// Each tile uses a chunky 3D category icon (cat-*.png) generated to
+// match the locked-in DROP4 logo style — white-cyan body face + warm
+// orange-red 3D extrusion + thick dark navy outline.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
   { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png'),   shopTab: 'clothes' },
@@ -71,34 +73,17 @@ const CATEGORIES: CategoryMeta[] = [
   { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png'),   shopTab: 'dropEffects' },
   { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png'),      shopTab: 'winAnimations' },
   { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
-  { id: 'outfits',   label: 'Outfits',   icon: require('../assets/images/ui/cat-outfits.png'),   shopTab: 'outfits' },
 ];
 
-// 3D character presenter — simpler variant of HomeScreen's Character3DWrapper.
-// Always loops the default idle, no emote interaction (Customize is a stage,
-// not a tap-to-react toy).
+// 3D character presenter — Customize tab is a stage, not a tap-to-react toy,
+// so we just render the player's amgCharacter via Character3DPortrait at idle.
 function CustomizeCharacter() {
-  const cust = useCharacterStore((s) => s.customization);
-  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
-  const idleGlb = DEFAULT_HUMAN_IDLE?.glb;
   return (
-    <Character3D
+    <Character3DPortrait
       width={300}
       height={300}
-      bodyGlb={outfit.glb}
-      skinColor={cust.skinColor}
-      hairColor={cust.hairColor}
-      outfitColors={cust.outfitColors}
-      bodyType={cust.bodyType}
-      bodySize={cust.bodySize}
-      muscle={cust.muscle}
-      animationGlb={idleGlb}
-      animationLoop
-      // Calm-pass: hide Character3D's built-in dark disc + orange rim
-      // ring. The bg-profile painted scene already provides a warm gold
-      // spotlight at the lower third — the disc was a competing ground
-      // reference that read as a hard-edged orange platform, the thing
-      // Devon called out in the Customize audit (item #1).
+      // Calm-pass: hide the floor disc; the bg-profile painted scene already
+      // provides a warm gold spotlight at the lower third.
       showFloor={false}
     />
   );
@@ -136,7 +121,7 @@ export function CustomizeScreen() {
     // they're character-modifying. The legacy Shop redirect was a
     // placeholder. Route to the creator directly so the user picks parts
     // and sees the live preview composite without screen-hopping.
-    if (cat.id === 'clothes' || cat.id === 'outfits') {
+    if (cat.id === 'clothes') {
       navigation.navigate('AmgCreator' as never);
       return;
     }
@@ -174,7 +159,6 @@ export function CustomizeScreen() {
   const counts: Record<CategoryId, { owned: number; total: number }> = {
     character: { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
     clothes:   { owned: ownedAmgParts.length, total: 0 },
-    outfits:   { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
     emotes:    { owned: ownedEmotes.length,  total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },
     pieces:    { owned: owned.pieces.length, total: PIECE_THEMES.length },

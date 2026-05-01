@@ -87,7 +87,6 @@ function main() {
   lines.push('  pack: string;');
   lines.push('  packLabel: string;');
   lines.push('  index: number;');
-  lines.push('  glb: number;');
   lines.push('}');
   lines.push('');
   lines.push('export const OUTFITS: Record<OutfitId, OutfitMeta> = {');
@@ -95,7 +94,7 @@ function main() {
     const name = `${titleCase(o.pack)} ${String(o.idx).padStart(2, '0')}`;
     const packLabel = titleCase(o.pack);
     lines.push(
-      `  ${o.id}: { id: '${o.id}', name: '${name}', species: '${o.species}', pack: '${o.pack}', packLabel: '${packLabel}', index: ${o.idx}, glb: require('../assets/models/outfits/${o.file}') },`
+      `  ${o.id}: { id: '${o.id}', name: '${name}', species: '${o.species}', pack: '${o.pack}', packLabel: '${packLabel}', index: ${o.idx} },`
     );
   }
   lines.push('};');

@@ -6,10 +6,10 @@ import {
   Pressable,
   ScrollView,
   Animated,
-  Modal,
   Image,
   ImageSourcePropType,
 } from 'react-native';
+import { PreviewSafeModal } from '../components/ui/PreviewSafeModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -250,7 +250,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         </PressScale>
 
         <PressScale
-          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Character3DCreator'); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('AmgCreator'); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -627,7 +627,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
   const translateY = slide.interpolate({ inputRange: [0, 1], outputRange: [500, 0] });
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <PreviewSafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
         style={styles.modalBackdrop}
         onPress={() => { haptics.tap(); playSound('click'); onClose(); }}
@@ -695,7 +695,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
           </LinearGradient>
         </Animated.View>
       </Pressable>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

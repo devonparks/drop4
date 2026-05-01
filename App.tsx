@@ -10,9 +10,6 @@ import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
 import { scheduleDailyReminders } from './src/services/notifications';
-import { preloadGLBs } from './src/utils/glbLoader';
-import { OUTFITS } from './src/data/outfitRegistry';
-import { DEFAULT_HUMAN_IDLE } from './src/data/animationRegistry';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
 import { useRosterStore } from './src/stores/rosterStore';
@@ -30,6 +27,10 @@ import { useChallengeStore } from './src/stores/challengeStore';
 import { useDailySpinStore } from './src/stores/dailySpinStore';
 import { useTutorialStore } from './src/stores/tutorialStore';
 import { useCharacterStore } from './src/stores/characterStore';
+import { STARTER_HUMAN_CHARACTER, getManifest, partUrl, loadGlbFromUrl } from '@amg/character-runtime';
+import { seedAmgCharacter, mergeMissingFaceSlots } from './src/utils/characterMigration';
+import { buildAmgBodyForOutfit } from './src/data/npcCustomizations';
+import type { CharacterState } from '@amg/character-runtime';
 import { usePetStore } from './src/stores/petStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { MilestoneToast } from './src/components/ui/MilestoneToast';
@@ -73,6 +74,31 @@ export default function App() {
         await useDailySpinStore.getState().loadFromStorage();
         await useTutorialStore.getState().loadFromStorage();
         await useCharacterStore.getState().loadFromStorage();
+        // Migrate the persisted character into whatever the latest schema
+        // expects. Two paths handled by pure helpers in
+        // src/utils/characterMigration.ts:
+        //   · cold seed (no amgCharacter): build a starter with the
+        //     migrated equippedOutfitId's body so returning players keep
+        //     their last-equipped look across the Path-A schema flip.
+        //   · forward-migrate (existing amgCharacter): merge in any
+        //     starter face slot the save doesn't have so old saves don't
+        //     render with hollow eye sockets.
+        const charStore = useCharacterStore.getState();
+        if (charStore.amgCharacter == null) {
+          const seeded = seedAmgCharacter({
+            starter: STARTER_HUMAN_CHARACTER,
+            equippedOutfitId: charStore.equippedOutfitId,
+            starterOutfitId: 'human_modern_civilians_01',
+            buildBody: buildAmgBodyForOutfit,
+          });
+          charStore.setAmgCharacter(seeded as unknown as Record<string, unknown>);
+        } else {
+          const cur = charStore.amgCharacter as unknown as CharacterState;
+          const upgraded = mergeMissingFaceSlots(cur, STARTER_HUMAN_CHARACTER);
+          if (upgraded) {
+            charStore.setAmgCharacter(upgraded as unknown as Record<string, unknown>);
+          }
+        }
         await usePetStore.getState().hydrate();
         await useMilestoneStore.getState().loadFromStorage();
         // Auto-refresh daily challenges if stale
@@ -89,17 +115,39 @@ export default function App() {
         // Covers next 7 days — re-runs every app launch.
         scheduleDailyReminders().catch(() => { /* best-effort */ });
 
-        // Preload the player's current outfit + default idle so the home
-        // screen character mounts without a loading spinner. Other outfits
-        // load lazily when swapped in the creator.
-        try {
-          const cust = useCharacterStore.getState().customization;
-          const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['human_modern_civilians_01'];
-          const preloadList: number[] = [];
-          if (outfit?.glb != null) preloadList.push(outfit.glb);
-          if (DEFAULT_HUMAN_IDLE?.glb != null) preloadList.push(DEFAULT_HUMAN_IDLE.glb);
-          if (preloadList.length) await preloadGLBs(preloadList);
-        } catch { /* best-effort */ }
+        // Pre-warm the AMG manifest cache + the player's currently-equipped
+        // part GLBs (non-blocking). The first CompositeCharacter mount can
+        // then read everything from the dedup cache instead of paying ~5 s
+        // of network round-trips. Failure is recoverable — the runtime
+        // re-fetches on its own when the character mounts. Fire-and-forget.
+        const AMG_BASE_URL = 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev';
+        const amgSource = { baseUrl: AMG_BASE_URL };
+        (async () => {
+          try {
+            const manifest = await getManifest(amgSource);
+            const cur = useCharacterStore.getState().amgCharacter as unknown as { parts?: Record<string, string> } | null;
+            const partNames = cur?.parts ? Object.values(cur.parts) : [];
+            // Look up each equipped part's file path in the manifest and
+            // fire off concurrent fetches. The runtime cache dedups so
+            // CompositeCharacter's later loads are instant.
+            const filesByName = new Map(manifest.parts.map((p) => [p.name, p.file]));
+            await Promise.all(
+              partNames
+                .filter((n): n is string => typeof n === 'string')
+                .map((n) => filesByName.get(n))
+                .filter((f): f is string => !!f)
+                .map((file) => loadGlbFromUrl(partUrl(amgSource, file)).catch(() => null)),
+            );
+          } catch {
+            /* best-effort */
+          }
+        })();
+
+        // AMG `CompositeCharacter` handles its own fetch + dedup cache for
+        // the manifest, base skeleton, and per-slot part GLBs. First mount
+        // pays the network cost once; subsequent mounts hit the cache.
+        // No boot-time preload needed — the legacy single-GLB warmup is
+        // gone with the legacy renderer.
       } catch (e) {
         if (__DEV__) console.warn('Font loading error:', e);
       } finally {

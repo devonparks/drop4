@@ -371,24 +371,37 @@ async function generateViaOpenAI(item) {
     output_format: 'png',
   };
 
-  const res = await fetch(`${OPENAI_API_BASE}/images/generations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
+  // Retry-with-backoff for 429 (rate limit) and 5xx (transient server).
+  // OpenAI's gpt-image-1 rate limit is per-minute on tokens; bursts of
+  // ~5 fast images saturate it. Backoff 30s/60s/120s recovers cleanly.
+  const RETRY_DELAYS_MS = [30_000, 60_000, 120_000];
+  let lastErr;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    const res = await fetch(`${OPENAI_API_BASE}/images/generations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const b64 = json?.data?.[0]?.b64_json;
+      if (!b64) throw new Error('OpenAI response missing b64_json');
+      return Buffer.from(b64, 'base64');
+    }
     const errText = await res.text();
     const err = new Error(`OpenAI ${res.status}: ${errText.slice(0, 300)}`);
     err.status = res.status;
-    throw err;
+    lastErr = err;
+    const retriable = res.status === 429 || (res.status >= 500 && res.status < 600);
+    if (!retriable || attempt === RETRY_DELAYS_MS.length) throw err;
+    const wait = RETRY_DELAYS_MS[attempt];
+    process.stdout.write(` [${res.status} retry in ${wait / 1000}s]`);
+    await new Promise((r) => setTimeout(r, wait));
   }
-  const json = await res.json();
-  const b64 = json?.data?.[0]?.b64_json;
-  if (!b64) throw new Error('OpenAI response missing b64_json');
-  return Buffer.from(b64, 'base64');
+  throw lastErr;
 }
 
 // ── Backend dispatch ────────────────────────────────────────────────────

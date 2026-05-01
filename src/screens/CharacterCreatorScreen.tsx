@@ -183,6 +183,13 @@ export function CharacterCreatorScreen() {
       onLockedPart={handleLockedPart}
       getRarityColor={getRarityColor}
       getPriceLabel={getPriceLabel}
+      savedMessage="✓ SAVED"
+      // Painted chunky 3D dice for the RANDOMIZE action button. Per
+      // docs/CUSTOMIZE_AUDIT.md item #4 the raw 🎲 emoji was the last
+      // placeholder in an otherwise painted creator; this swaps it for
+      // the same gen-art icon language as the rest of the locked
+      // VISUAL_DIRECTION lockup.
+      randomizeIcon={require('../assets/images/ui/creator-dice.png')}
     />
   );
 }

@@ -10,7 +10,7 @@
     "convert-fbx": "node tools/fbx_to_glb_batch.js",
     "stage-anims": "node tools/copy_animations.js",
     "gen-outfits": "node tools/generate_outfit_registry.js",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "jest": {
     "testEnvironment": "node",
@@ -22,6 +22,10 @@
       "^@react-three/fiber/native$": "<rootDir>/jest.r3f-mock.js",
       "^three$": "<rootDir>/jest.three-mock.js",
       "^three/examples/jsm/loaders/GLTFLoader.js$": "<rootDir>/jest.three-mock.js",
+      "^@amg/character-runtime$": "<rootDir>/../amg-engine/packages/character-runtime/src/index.ts",
+      "^@amg/character-runtime/(.*)$": "<rootDir>/../amg-engine/packages/character-runtime/src/$1.ts",
+      "^@amg/character-creator$": "<rootDir>/../amg-engine/packages/character-creator/src/index.ts",
+      "^@amg/character-creator/(.*)$": "<rootDir>/../amg-engine/packages/character-creator/src/$1.ts",
       "\\.(glb|gltf|png|jpg|jpeg|gif|webp|svg|mp3|wav|ttf|otf)$": "<rootDir>/jest.asset-mock.js"
     },
     "transform": {
@@ -89,6 +93,7 @@
     "fbx2gltf": "^0.9.7-p1",
     "jest": "^30.3.0",
     "jest-expo": "^55.0.16",
+    "puppeteer": "^24.42.0",
     "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.2"
   },

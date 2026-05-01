@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -191,7 +192,7 @@ export function DailyRewardPopup() {
     reward.type === 'lootbox';
 
   return (
-    <Modal transparent visible={visible} animationType="none">
+    <PreviewSafeModal transparent visible={visible} animationType="none">
       <View
         style={styles.overlay}
         accessibilityViewIsModal
@@ -259,7 +260,7 @@ export function DailyRewardPopup() {
           </View>
         </Animated.View>
       </View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

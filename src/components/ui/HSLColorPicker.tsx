@@ -5,7 +5,8 @@
  * picker. Shows live preview, accepts hex input, and outputs hex on confirm.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { PressScale } from '../animations';
@@ -100,7 +101,7 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <PreviewSafeModal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
@@ -164,7 +165,7 @@ export function HSLColorPicker({ visible, initialColor, title = 'Pick a Color', 
           </View>
         </Animated.View>
       </Animated.View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

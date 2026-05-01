@@ -15,7 +15,8 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
@@ -146,7 +147,7 @@ export function MilestoneToast() {
   const showPet = isPetMilestone(active);
 
   return (
-    <Modal transparent visible animationType="none">
+    <PreviewSafeModal transparent visible animationType="none">
       {/* key by milestone id so confetti re-fires for each queued toast */}
       <ConfettiOverlay key={active.id} visible />
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
@@ -221,7 +222,7 @@ export function MilestoneToast() {
           </Pressable>
         </Animated.View>
       </Animated.View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

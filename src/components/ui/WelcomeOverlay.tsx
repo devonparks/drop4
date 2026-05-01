@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown, FadeIn, ZoomIn } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -131,7 +132,7 @@ export function WelcomeOverlay() {
   const isLast = page === PAGES.length - 1;
 
   return (
-    <Modal transparent visible={visible} animationType="none">
+    <PreviewSafeModal transparent visible={visible} animationType="none">
       <View
         style={styles.overlay}
         accessibilityViewIsModal
@@ -187,7 +188,7 @@ export function WelcomeOverlay() {
           />
         </Animated.View>
       </View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

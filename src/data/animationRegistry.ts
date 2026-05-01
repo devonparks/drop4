@@ -14,58 +14,61 @@ type AnimationId = string;
 export interface AnimationMeta {
   id: AnimationId;
   name: string;
-  glb: number;
+  /** Bundled GLB asset id. Only populated for entries that the legacy
+   *  single-GLB renderer still consumes (currently DOG_* via Pet3D).
+   *  Human emote/idle clips are streamed by CompositeCharacter from the
+   *  AMG content CDN — no bundled require() needed. */
+  glb?: number;
   loop: boolean;
   category: 'idle' | 'emote' | 'dance' | 'taunt' | 'greet' | 'dog_idle' | 'dog_action';
   price?: number;
 }
 
 // ── Humans: Idles (loops) ──
-// "idle_base" is first (= default). It's the clean forward-facing idle
-// with arms at sides and subtle breathing/weight shift. Once the skeleton
-// rebinding fix is in place (commit 67c3d97) this renders correctly
-// without the T-pose regression that looked broken pre-fix.
+// AMG runtime streams these from the content CDN — no bundled require()
+// needed. The id maps to a relative path under animations/idles/ via
+// CompositeCharacter's idleList prop or state.animation field.
 export const HUMAN_IDLES: AnimationMeta[] = [
-  { id: 'idle_base',                 name: 'Base',          glb: require('../assets/models/animations/idles/idle_base.glb'),                 loop: true, category: 'idle' },
-  { id: 'idle_hands_on_hips',        name: 'Hands On Hips', glb: require('../assets/models/animations/idles/idle_hands_on_hips.glb'),        loop: true, category: 'idle' },
-  { id: 'idle_arms_folded',          name: 'Arms Folded',   glb: require('../assets/models/animations/idles/idle_arms_folded.glb'),          loop: true, category: 'idle' },
-  { id: 'idle_hands_on_hips_grumpy', name: 'Grumpy',        glb: require('../assets/models/animations/idles/idle_hands_on_hips_grumpy.glb'), loop: true, category: 'idle' },
-  { id: 'idle_base_femn',            name: 'Base (F)',      glb: require('../assets/models/animations/idles/idle_base_femn.glb'),            loop: true, category: 'idle' },
-  { id: 'idle_hands_on_hips_femn',   name: 'Hands On Hips (F)', glb: require('../assets/models/animations/idles/idle_hands_on_hips_femn.glb'), loop: true, category: 'idle' },
-  { id: 'idle_arms_folded_femn',     name: 'Arms Folded (F)', glb: require('../assets/models/animations/idles/idle_arms_folded_femn.glb'),   loop: true, category: 'idle' },
+  { id: 'idle_base',                 name: 'Base',              loop: true, category: 'idle' },
+  { id: 'idle_hands_on_hips',        name: 'Hands On Hips',     loop: true, category: 'idle' },
+  { id: 'idle_arms_folded',          name: 'Arms Folded',       loop: true, category: 'idle' },
+  { id: 'idle_hands_on_hips_grumpy', name: 'Grumpy',            loop: true, category: 'idle' },
+  { id: 'idle_base_femn',            name: 'Base (F)',          loop: true, category: 'idle' },
+  { id: 'idle_hands_on_hips_femn',   name: 'Hands On Hips (F)', loop: true, category: 'idle' },
+  { id: 'idle_arms_folded_femn',     name: 'Arms Folded (F)',   loop: true, category: 'idle' },
 ];
 
 // ── Humans: Idle one-shots ──
 const HUMAN_IDLE_ACTIONS: AnimationMeta[] = [
-  { id: 'idle_bored_foot_tap',   name: 'Foot Tap',    glb: require('../assets/models/animations/idles/idle_bored_foot_tap.glb'),   loop: false, category: 'idle' },
-  { id: 'idle_bored_swing_arms', name: 'Swing Arms',  glb: require('../assets/models/animations/idles/idle_bored_swing_arms.glb'), loop: false, category: 'idle' },
-  { id: 'idle_bored_slump',      name: 'Slump',       glb: require('../assets/models/animations/idles/idle_bored_slump.glb'),      loop: false, category: 'idle' },
-  { id: 'idle_check_watch',      name: 'Check Watch', glb: require('../assets/models/animations/idles/idle_check_watch.glb'),      loop: false, category: 'idle' },
+  { id: 'idle_bored_foot_tap',   name: 'Foot Tap',    loop: false, category: 'idle' },
+  { id: 'idle_bored_swing_arms', name: 'Swing Arms',  loop: false, category: 'idle' },
+  { id: 'idle_bored_slump',      name: 'Slump',       loop: false, category: 'idle' },
+  { id: 'idle_check_watch',      name: 'Check Watch', loop: false, category: 'idle' },
 ];
 
 // ── Humans: Emotes ──
 export const HUMAN_EMOTES: AnimationMeta[] = [
-  { id: 'emote_dab',              name: 'Dab',              glb: require('../assets/models/animations/emotes/emote_dab.glb'),              loop: false, category: 'dance', price: 0 },
-  { id: 'emote_dance_twist',      name: 'Twist',            glb: require('../assets/models/animations/emotes/emote_dance_twist.glb'),      loop: false, category: 'dance', price: 500 },
-  { id: 'emote_dance_spin_slick', name: 'Slick Spin',       glb: require('../assets/models/animations/emotes/emote_dance_spin_slick.glb'), loop: false, category: 'dance', price: 750 },
-  { id: 'emote_dance_greased',    name: 'Greased Lightnin', glb: require('../assets/models/animations/emotes/emote_dance_greased.glb'),    loop: false, category: 'dance', price: 1000 },
-  { id: 'emote_dance_chest_pump', name: 'Chest Pump',       glb: require('../assets/models/animations/emotes/emote_dance_chest_pump.glb'), loop: false, category: 'dance', price: 500 },
-  { id: 'emote_dance_running_step', name: 'Running Step',   glb: require('../assets/models/animations/emotes/emote_dance_running_step.glb'), loop: false, category: 'dance', price: 500 },
-  { id: 'emote_air_guitar',       name: 'Air Guitar',       glb: require('../assets/models/animations/emotes/emote_air_guitar.glb'),       loop: false, category: 'dance', price: 500 },
-  { id: 'emote_bow',              name: 'Bow',              glb: require('../assets/models/animations/emotes/emote_bow.glb'),              loop: false, category: 'greet', price: 0 },
-  { id: 'emote_clap',             name: 'Clap',             glb: require('../assets/models/animations/emotes/emote_clap.glb'),             loop: false, category: 'greet', price: 0 },
-  { id: 'emote_beckon',           name: 'Come Here',        glb: require('../assets/models/animations/emotes/emote_beckon.glb'),           loop: false, category: 'greet', price: 250 },
-  { id: 'emote_menacing_fists',   name: 'Menacing Fists',   glb: require('../assets/models/animations/emotes/emote_menacing_fists.glb'),   loop: false, category: 'taunt', price: 750 },
-  { id: 'emote_shake_fist',       name: 'Shake Fist',       glb: require('../assets/models/animations/emotes/emote_shake_fist.glb'),       loop: false, category: 'taunt', price: 500 },
-  { id: 'emote_thumbs_down',      name: 'Thumbs Down',      glb: require('../assets/models/animations/emotes/emote_thumbs_down.glb'),      loop: false, category: 'taunt', price: 500 },
-  { id: 'emote_tantrum',          name: 'Tantrum',          glb: require('../assets/models/animations/emotes/emote_tantrum.glb'),          loop: false, category: 'taunt', price: 1000 },
-  { id: 'emote_finger_guns',      name: 'Finger Guns',      glb: require('../assets/models/animations/emotes/emote_finger_guns.glb'),      loop: false, category: 'emote', price: 250 },
-  { id: 'emote_beat_chest',       name: 'Beat Chest',       glb: require('../assets/models/animations/emotes/emote_beat_chest.glb'),       loop: false, category: 'emote', price: 500 },
-  { id: 'emote_dust_shoulder',    name: 'Dust Shoulder',    glb: require('../assets/models/animations/emotes/emote_dust_shoulder.glb'),    loop: false, category: 'emote', price: 500 },
-  { id: 'emote_hand_on_heart',    name: 'Hand On Heart',    glb: require('../assets/models/animations/emotes/emote_hand_on_heart.glb'),    loop: false, category: 'emote', price: 250 },
-  { id: 'emote_blow_kiss',        name: 'Blow Kiss',        glb: require('../assets/models/animations/emotes/emote_blow_kiss.glb'),        loop: false, category: 'emote', price: 500 },
-  { id: 'emote_heart_hands',      name: 'Heart Hands',      glb: require('../assets/models/animations/emotes/emote_heart_hands.glb'),      loop: false, category: 'emote', price: 500 },
-  { id: 'emote_finger_heart',     name: 'Finger Heart',     glb: require('../assets/models/animations/emotes/emote_finger_heart.glb'),     loop: false, category: 'emote', price: 250 },
+  { id: 'emote_dab',                name: 'Dab',               loop: false, category: 'dance', price: 0 },
+  { id: 'emote_dance_twist',        name: 'Twist',             loop: false, category: 'dance', price: 500 },
+  { id: 'emote_dance_spin_slick',   name: 'Slick Spin',        loop: false, category: 'dance', price: 750 },
+  { id: 'emote_dance_greased',      name: 'Greased Lightnin',  loop: false, category: 'dance', price: 1000 },
+  { id: 'emote_dance_chest_pump',   name: 'Chest Pump',        loop: false, category: 'dance', price: 500 },
+  { id: 'emote_dance_running_step', name: 'Running Step',      loop: false, category: 'dance', price: 500 },
+  { id: 'emote_air_guitar',         name: 'Air Guitar',        loop: false, category: 'dance', price: 500 },
+  { id: 'emote_bow',                name: 'Bow',               loop: false, category: 'greet', price: 0 },
+  { id: 'emote_clap',               name: 'Clap',              loop: false, category: 'greet', price: 0 },
+  { id: 'emote_beckon',             name: 'Come Here',         loop: false, category: 'greet', price: 250 },
+  { id: 'emote_menacing_fists',     name: 'Menacing Fists',    loop: false, category: 'taunt', price: 750 },
+  { id: 'emote_shake_fist',         name: 'Shake Fist',        loop: false, category: 'taunt', price: 500 },
+  { id: 'emote_thumbs_down',        name: 'Thumbs Down',       loop: false, category: 'taunt', price: 500 },
+  { id: 'emote_tantrum',            name: 'Tantrum',           loop: false, category: 'taunt', price: 1000 },
+  { id: 'emote_finger_guns',        name: 'Finger Guns',       loop: false, category: 'emote', price: 250 },
+  { id: 'emote_beat_chest',         name: 'Beat Chest',        loop: false, category: 'emote', price: 500 },
+  { id: 'emote_dust_shoulder',      name: 'Dust Shoulder',     loop: false, category: 'emote', price: 500 },
+  { id: 'emote_hand_on_heart',      name: 'Hand On Heart',     loop: false, category: 'emote', price: 250 },
+  { id: 'emote_blow_kiss',          name: 'Blow Kiss',         loop: false, category: 'emote', price: 500 },
+  { id: 'emote_heart_hands',        name: 'Heart Hands',       loop: false, category: 'emote', price: 500 },
+  { id: 'emote_finger_heart',       name: 'Finger Heart',      loop: false, category: 'emote', price: 250 },
 ];
 
 // ── Dogs: Idles ──

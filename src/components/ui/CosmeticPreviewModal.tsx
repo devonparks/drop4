@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { ShopItem, RARITY_COLORS } from '../../data/shopCatalog';
@@ -165,7 +166,7 @@ export function CosmeticPreviewModal({
   const previewPiecesId = category === 'pieces' ? item.id : equippedPieces;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <PreviewSafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(200)} style={s.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
@@ -267,7 +268,7 @@ export function CosmeticPreviewModal({
           </View>
         </Animated.View>
       </Animated.View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

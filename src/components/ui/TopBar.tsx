@@ -123,7 +123,7 @@ export function TopBar({
             <Character3DPortrait width={34} height={34} showFloor={false} />
           </View>
         </LinearGradient>
-        <View style={styles.levelBadge}>
+        <View style={[styles.levelBadge, { backgroundColor: tierInfo.color }]}>
           <Text style={styles.levelText}>{level}</Text>
         </View>
         <Text style={[styles.rankLabel, { color: tierInfo.color }]} numberOfLines={1}>{rankLabel}</Text>
@@ -346,6 +346,10 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+    // Background is now overridden inline with tierInfo.color so the
+    // badge matches the avatar's rank ring instead of reading as a
+    // red notification dot (Devon's audit: red dot = "tap me, you
+    // have a notification" UX, but this is just a level number).
     backgroundColor: colors.red,
     alignItems: 'center',
     justifyContent: 'center',

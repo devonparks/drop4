@@ -23,13 +23,18 @@ import { fonts, weight } from '../../theme/typography';
  */
 /** 3D snapshot for the unlock preview — uses cached PNG like RosterScreen. */
 function UnlockPreview3D({ characterId }: { characterId: string }) {
-  const playerCust = useCharacterStore((s) => s.customization);
+  const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as
+    Parameters<typeof CharacterSnapshot>[0]['customization'] | null;
   const custom = getRosterCustomization(characterId);
+  // Player save hasn't hydrated yet — drop the snapshot for this frame.
+  // App.tsx seeds amgCharacter on boot so this is rare.
+  const character = custom ?? playerCharacter;
+  if (!character) return null;
   return (
     <CharacterSnapshot
       width={64}
       height={64}
-      customization={custom ?? playerCust}
+      customization={character}
     />
   );
 }

@@ -1,92 +1,187 @@
 /**
- * Character3DPortrait — the standard player portrait component.
+ * Character3DPortrait — the standard player/NPC portrait component.
  *
- * Reads the current player's customization from characterStore and renders
- * a Character3D at the given size.
+ * Renders an AMG CompositeCharacter at the given size. By default it
+ * pulls the player's amgCharacter from characterStore; pass an explicit
+ * `customization` (CharacterState) to render an NPC instead.
  *
  * Usage:
  *   <Character3DPortrait width={120} height={160} />
- *
- * For NPC opponents (not the local player), pass an explicit
- * customization object via the `customization` prop.
+ *   <Character3DPortrait width={120} height={160} customization={getNpcCustomization('rookie ron')} />
+ *   <Character3DPortrait width={120} height={160} animationId="emote_dab" />
  */
 
-import React from 'react';
-import { Character3D } from './Character3D';
-import { useCharacterStore, type CharacterCustomization } from '../../stores/characterStore';
-import { OUTFITS } from '../../data/outfitRegistry';
-import { DEFAULT_HUMAN_IDLE, HUMAN_IDLES, findAnimation } from '../../data/animationRegistry';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { View, ViewStyle, StyleSheet, ActivityIndicator, Text, Animated } from 'react-native';
+import { Canvas, useFrame } from '@react-three/fiber/native';
+import * as THREE from 'three';
+import { CompositeCharacter, type CharacterState, type ContentSource } from '@amg/character-runtime';
+import { useCharacterStore } from '../../stores/characterStore';
+import { colors as themeColors } from '../../theme/colors';
+import { fonts, weight } from '../../theme/typography';
 
-/**
- * Pick a stable idle for a given character. Rather than everyone doing the
- * same "base" idle, we hash the outfit + body type to a looping idle so each
- * NPC has a distinctive default pose (arms folded, hands on hips, etc).
- * The player still gets the base idle for legibility on their own character.
- */
-function pickDefaultIdle(outfitId: string, bodyType: number) {
-  const loopingIdles = HUMAN_IDLES.filter((i) => i.loop);
-  if (loopingIdles.length === 0) return DEFAULT_HUMAN_IDLE;
-  // Simple sum hash — stable per customization, spreads across all idles
-  let h = bodyType | 0;
-  for (let i = 0; i < outfitId.length; i++) h = (h + outfitId.charCodeAt(i)) & 0xffff;
-  return loopingIdles[h % loopingIdles.length];
+// CDN base URL — same source as HomeScreen / CharacterCreatorScreen.
+const CONTENT_SOURCE: ContentSource = {
+  baseUrl: 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev',
+};
+
+// Default idle pool: the runtime crossfades between these every 8–15s
+// when state.animation is null, so the same NPC doesn't lock to a single
+// pose. Three loops gives variety without overlapping the dance category.
+const DEFAULT_IDLE_LIST: string[] = [
+  'idles/idle_base.glb',
+  'idles/idle_hands_on_hips.glb',
+  'idles/idle_arms_folded.glb',
+];
+
+/** Translate the legacy animationId convention ('emote_dab', 'idle_base')
+ *  into a CompositeCharacter-friendly relative path. Falls through to
+ *  null (idle cycling) when the id is empty / unparseable. */
+function animationPathFromId(id: string | null | undefined): string | null {
+  if (!id) return null;
+  if (id.startsWith('emote_')) return `emotes/${id}.glb`;
+  if (id.startsWith('idle_'))  return `idles/${id}.glb`;
+  // Unknown prefix — assume the caller passed a relative path already.
+  return id.endsWith('.glb') ? id : null;
+}
+
+function TurntableGroup({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (!ref.current || !enabled) return;
+    ref.current.rotation.y += delta * 0.2;
+  });
+  return <group ref={ref}>{children}</group>;
 }
 
 export interface Character3DPortraitProps {
   width: number;
   height: number;
-  /** Override customization — omit to use local player's. */
-  customization?: CharacterCustomization;
-  /** Play a specific animation id (e.g. 'emote_dab'). Defaults to base idle. */
+  /** Override character — omit to use local player's amgCharacter. */
+  customization?: CharacterState;
+  /** Play a specific animation id (e.g. 'emote_dab', 'idle_base'). When
+   *  null/undefined the runtime cycles through DEFAULT_IDLE_LIST. */
   animationId?: string | null;
-  /** False = play once, true = loop (default true for idles, false for emotes). */
+  /** Reserved for legacy parity; currently a no-op (the runtime always
+   *  loops). The animation finishes on its own and the runtime crossfades
+   *  back to an idle when state.animation is cleared by the caller. */
   animationLoop?: boolean;
   mode?: 'display' | 'creator';
   autoRotate?: boolean;
   showFloor?: boolean;
   onTap?: () => void;
+  style?: ViewStyle;
 }
 
 export function Character3DPortrait({
   width, height, customization,
-  animationId, animationLoop,
-  mode = 'display', autoRotate, showFloor = true, onTap,
+  animationId,
+  mode = 'display', autoRotate, showFloor = true, onTap, style,
 }: Character3DPortraitProps) {
-  const playerCustom = useCharacterStore((s) => s.customization);
-  const c = customization ?? playerCustom;
+  const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
+  const base = customization ?? playerCharacter;
 
-  const outfit = OUTFITS[c.outfitId];
-  // Fallback: if the requested outfit id isn't in the registry (legacy save),
-  // use the first available human outfit so we never crash on a missing GLB.
-  const glb = outfit?.glb ?? OUTFITS['human_modern_civilians_01']?.glb ?? OUTFITS[Object.keys(OUTFITS)[0]]?.glb;
-  if (glb == null) return null;
+  const [loaded, setLoaded] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!loaded) return;
+    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+  }, [loaded, fadeAnim]);
 
-  // Pick animation: explicit id → registry lookup → hashed default idle →
-  // registry fallback. NPCs get varied idles (arms-folded, hands-on-hips,
-  // grumpy, base) based on their customization hash so the world feels alive.
-  const animMeta = animationId
-    ? findAnimation(animationId)
-    : pickDefaultIdle(c.outfitId, c.bodyType);
-  const animGlb = animMeta?.glb;
-  const loop = animationLoop ?? animMeta?.loop ?? true;
+  const stateForRender = useMemo<CharacterState | null>(() => {
+    if (!base) return null;
+    return { ...base, animation: animationPathFromId(animationId) };
+  }, [base, animationId]);
+
+  const shouldRotate = autoRotate ?? (mode === 'creator');
+
+  if (!stateForRender) {
+    // Player save hasn't hydrated yet (App.tsx seeds amgCharacter on
+    // boot, but the Portrait can mount during that gap). Show the same
+    // loading affordance as before so layout doesn't shift.
+    return (
+      <View style={[{ width, height }, style, styles.loadingOverlay]}>
+        <ActivityIndicator color={themeColors.orange} size="small" />
+      </View>
+    );
+  }
 
   return (
-    <Character3D
-      width={width}
-      height={height}
-      bodyGlb={glb}
-      skinColor={c.skinColor}
-      hairColor={c.hairColor}
-      outfitColors={c.outfitColors}
-      bodyType={c.bodyType}
-      bodySize={c.bodySize}
-      muscle={c.muscle}
-      mode={mode}
-      autoRotate={autoRotate}
-      showFloor={showFloor}
-      animationGlb={animGlb}
-      animationLoop={loop}
-      onTap={onTap}
-    />
+    <View
+      style={[{ width, height }, style]}
+      onTouchEnd={onTap ? () => onTap() : undefined}
+    >
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
+        <Canvas
+          frameloop="always"
+          gl={{ antialias: true, alpha: true } as any}
+          shadows
+          camera={{ position: [0, 1.1, 3.2], fov: 42, near: 0.01, far: 1000 }}
+          onCreated={(s: any) => { s.camera.lookAt(0, 0.95, 0); }}
+          style={StyleSheet.absoluteFill as any}
+        >
+          {/* Three-point lighting matches the AAA legacy look. */}
+          <ambientLight intensity={0.55} color="#c0ccf0" />
+          <directionalLight
+            position={[2.5, 4, 3]}
+            intensity={1.3}
+            color="#fff4e0"
+            castShadow
+            shadow-mapSize-width={512}
+            shadow-mapSize-height={512}
+            shadow-camera-near={0.1}
+            shadow-camera-far={20}
+            shadow-camera-left={-2}
+            shadow-camera-right={2}
+            shadow-camera-top={2}
+            shadow-camera-bottom={-1}
+            shadow-bias={-0.0005}
+          />
+          <directionalLight position={[-2, 2, 1.5]} intensity={0.6} color="#a8c8f0" />
+          <directionalLight position={[0, 3, -3]} intensity={1.4} color="#ff9a5a" />
+          <hemisphereLight args={['#6080a0', '#1a1820', 0.5]} />
+
+          <TurntableGroup enabled={shouldRotate}>
+            <CompositeCharacter
+              source={CONTENT_SOURCE}
+              state={stateForRender}
+              targetHeightMeters={1.8}
+              idleList={DEFAULT_IDLE_LIST}
+              onReady={() => setLoaded(true)}
+            />
+          </TurntableGroup>
+
+          {showFloor && (
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
+              <circleGeometry args={[1.5, 48]} />
+              <shadowMaterial transparent opacity={0.4} />
+            </mesh>
+          )}
+        </Canvas>
+      </Animated.View>
+
+      {!loaded && (
+        <View style={styles.loadingOverlay} pointerEvents="none">
+          <ActivityIndicator color={themeColors.orange} size="large" />
+          <Text style={styles.loadingText}>Loading character…</Text>
+        </View>
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: themeColors.textSecondary,
+    letterSpacing: 1,
+  },
+});

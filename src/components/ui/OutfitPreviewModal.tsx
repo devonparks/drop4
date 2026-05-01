@@ -6,13 +6,16 @@
  * or Buy to purchase with coins.
  */
 import React from 'react';
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { Character3DPortrait } from '../3d/Character3DPortrait';
 import { PressScale } from '../animations';
 import { useCharacterStore } from '../../stores/characterStore';
 import { OUTFITS } from '../../data/outfitRegistry';
+import { buildAmgCharacterForOutfit } from '../../data/npcCustomizations';
+import type { CharacterState } from '@amg/character-runtime';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
@@ -34,17 +37,23 @@ export function OutfitPreviewModal({
   visible, outfitId, price, isOwned, isEquipped, canAfford,
   onClose, onBuy, onEquip,
 }: Props) {
-  const playerCust = useCharacterStore((s) => s.customization);
+  const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const outfit = outfitId ? OUTFITS[outfitId] : null;
 
   if (!outfit) return null;
 
-  // Inject the preview outfit into a cloned customization so the 3D portrait
-  // shows THIS outfit, not whatever the player is currently wearing.
-  const previewCustomization = {
-    ...playerCust,
-    outfitId: outfit.id,
-  };
+  // Build the preview character: outfit-derived body parts (Torso, Hips,
+  // arms, legs, feet, hair from the previewed pack), with the player's
+  // colors and body sliders applied on top so it reads as "what would I
+  // look like in this?" rather than a generic mannequin.
+  const previewBase = buildAmgCharacterForOutfit(outfit.id);
+  const previewCharacter: CharacterState = playerCharacter
+    ? {
+        ...previewBase,
+        colors: { ...previewBase.colors, ...playerCharacter.colors },
+        blendshapes: playerCharacter.blendshapes,
+      }
+    : previewBase;
 
   const handleBuy = () => {
     haptics.win();
@@ -58,7 +67,7 @@ export function OutfitPreviewModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <PreviewSafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.overlay}>
         <Pressable
           style={StyleSheet.absoluteFill}
@@ -74,7 +83,7 @@ export function OutfitPreviewModal({
           <View style={styles.previewWrap}>
             <Character3DPortrait
               width={220} height={300}
-              customization={previewCustomization}
+              customization={previewCharacter}
               showFloor
               autoRotate
             />
@@ -135,7 +144,7 @@ export function OutfitPreviewModal({
           </View>
         </Animated.View>
       </Animated.View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

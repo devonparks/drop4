@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Modal } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -105,7 +106,7 @@ export function WelcomeBackPopup() {
   const daysAwayLabel = daysAway > 30 ? `${Math.floor(daysAway / 7)} weeks` : `${daysAway} days`;
 
   return (
-    <Modal transparent visible={visible} animationType="fade">
+    <PreviewSafeModal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
         <LinearGradient
           colors={['rgba(40,28,80,0.92)', 'rgba(20,14,45,0.96)']}
@@ -156,7 +157,7 @@ export function WelcomeBackPopup() {
           </Animated.View>
         </Animated.View>
       </View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

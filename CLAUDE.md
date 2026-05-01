@@ -18,24 +18,27 @@ Premium Connect 4 mobile game built with React Native + Expo. First game in the 
 
 ## Architecture
 
-### 3D Character System
-- **react-three-fiber** for real-time 3D characters (NOT sprite sheets anymore)
-- **GLB models** from Synty Studios Sidekick Character Creator, exported via Unity pipeline
-- **152 outfits** across 12 packs (human, elf, goblin, skeleton, zombie species)
-- **16 pets** (Polygon Dogs), each with baked textures
-- **48 animations** (emotes + idles), Mixamo-retargeted to Synty Humanoid rigs
-- **Runtime material swaps** for skin color, hair color, outfit colors — tiny app, infinite combos
-- **Skeleton rebinding + track path stripping** in Character3D.tsx — do NOT regress this (commit 67c3d97 fixed T-pose)
+### 3D Character System (AMG-native)
+- **AMG Engine** (`@amg/character-runtime` + `@amg/character-creator`) is the single source of truth for character rendering across every screen.
+- `CompositeCharacter` from `@amg/character-runtime` is the only renderer. Per-slot Sidekick part GLBs are streamed from the R2 CDN (`https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev`); the manifest + ~17 parts are dedup-cached by `loader/glb.ts`.
+- Every character is a `CharacterState` — species + per-slot equipped part names + colors + blendshapes. The store field is `characterStore.amgCharacter`.
+- Runtime material swaps for `Skin 01` / `Hair 01` / `Outfit 01 Primary/Secondary/Tertiary` SidekickColorProperty names.
+- **Animation:** `state.animation` is a relative path under `animations/` (e.g. `emotes/emote_dab.glb`). Paths starting with `emotes/` play once and clamp; everything else loops. Idles cycle through `DEFAULT_IDLE_LIST` when `state.animation` is null.
+- **Skeleton rebinding + track path stripping** lives in `packages/character-runtime/src/scene/skeleton.ts` and `animation.ts` — do NOT regress this. The Synty Humanoid bone names are load-bearing.
 
-### Character3D Golden Rules
-- ALWAYS pass `animationGlb` — never `undefined`. Use `DEFAULT_HUMAN_IDLE.glb` as fallback.
-- GLB files are gitignored. `require('../assets/models/...')` calls are valid — Metro resolves them at build time.
-- Character3DPortrait reads the player's customization from characterStore automatically.
+### Character data flow
+1. `App.tsx` boots → `useCharacterStore.loadFromStorage()` hydrates the save → if `amgCharacter` is null, seeds `STARTER_HUMAN_CHARACTER`.
+2. `App.tsx` pre-warms the AMG manifest (non-blocking).
+3. `HomeScreen` renders the player's `amgCharacter` via `Character3DWrapper` → `CompositeCharacter`.
+4. `Character3DPortrait` is the standard portrait wrapper used by Matchup / Game / Profile / Customize / shop preview. With no `customization` prop it auto-reads `amgCharacter`; pass an explicit `CharacterState` (e.g. `getNpcCustomization('rookie ron')`) to render an NPC.
+5. The creator (`AmgCreator` route → `CharacterCreatorScreen`) wraps `@amg/character-creator`'s `CharacterCreator` and persists via `setAmgCharacter` on Save.
+6. The shop's "buy outfit pack" flow calls `unlockOutfit(id)` which auto-unlocks the underlying AMG parts via `unlockAmgPart`, then `equipOutfitPack(id)` swaps the body slots into `amgCharacter` (Head / Eyebrows preserved).
+7. NPC variety is hand-authored in `src/data/npcCustomizations.ts` via the `make()` translator — outfit id + sliders → `CharacterState` with manifest-validated fallback chain (`pack-variant → pack 01 → species base`).
 
 ### Navigation
 - React Navigation 7 (native stack + bottom tabs)
 - 5 bottom tabs: Home, Challenges, Collection, Profile, Shop
-- Stack screens: Play, Matchup, Game, Career, CareerMap, CareerCity, Settings, Learn, Character3DCreator, Legal, BoardEditor, MatchHistory, Stats, CustomGame, LocalPlay
+- Stack screens: Play, Matchup, Game, Career, CareerMap, CareerCity, Settings, Learn, AmgCreator, Legal, BoardEditor, MatchHistory, Stats, CustomGame, LocalPlay
 
 ### State Management
 - Zustand (21 stores, AsyncStorage auto-save via `saveState`/`loadState`)

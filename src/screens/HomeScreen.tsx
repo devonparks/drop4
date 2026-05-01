@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, Image, ImageSourcePropType, StyleSheet, Pressable, Animated, Platform, PanResponder } from 'react-native';
+import { View, Text, Image, ImageSourcePropType, StyleSheet, Pressable, Animated, Platform, PanResponder, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { Character3D } from '../components/3d/Character3D';
-import { Canvas } from '@react-three/fiber/native';
-import { CompositeCharacter, NEUTRAL_CHARACTER, type CharacterState } from '@amg/character-runtime';
+import { Canvas, useFrame } from '@react-three/fiber/native';
+import * as THREE from 'three';
+import { CompositeCharacter, type CharacterState, type ContentSource } from '@amg/character-runtime';
 import { LiveBackground3D } from '../components/3d/LiveBackground3D';
 import { useCharacterStore } from '../stores/characterStore';
-import { OUTFITS } from '../data/outfitRegistry';
-import { HUMAN_EMOTES, DEFAULT_HUMAN_IDLE } from '../data/animationRegistry';
+import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
@@ -100,37 +99,196 @@ function StageSparkles() {
   );
 }
 
+// CDN base URL for AMG part GLBs and animations. Same source the
+// CharacterCreatorScreen uses; both must agree so the home and the
+// creator render the same character from the same content set.
+const CONTENT_SOURCE: ContentSource = {
+  baseUrl: 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev',
+};
+
+// Idle pool shared with the creator (CREATOR_IDLE_LIST). The runtime
+// crossfades between these every 8–15 s so the home character isn't
+// locked to a single pose — same vibe as Sims/Avakin lobbies.
+//
+// "Random" pool when the player hasn't pinned a specific idle in the
+// AnimationPicker. We expanded from the 3 calm-loop idles to all 7
+// unique poses (3 loop + 4 one-shots) so Random feels alive — Devon's
+// spec says "do a random idle every ~10 seconds." When the player picks
+// a SPECIFIC idle this list is replaced with `[that one idle]` so the
+// runtime stops cycling and just plays the chosen pose forever.
+const HOME_IDLE_RANDOM_POOL: string[] = [
+  'idles/idle_base.glb',
+  'idles/idle_hands_on_hips.glb',
+  'idles/idle_arms_folded.glb',
+  'idles/idle_bored_foot_tap.glb',
+  'idles/idle_bored_swing_arms.glb',
+  'idles/idle_bored_slump.glb',
+  'idles/idle_check_watch.glb',
+];
+
+// Drag-rotation rig: parents the composed character so the home's pan
+// gesture controls Y rotation independently of any animation playing.
+// Lerps toward the target so the character doesn't snap when the caller
+// jumps from 0 to ±2π in one drag.
+function RotatingGroup({ rotationY, children }: { rotationY: number; children: React.ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+    const current = ref.current.rotation.y;
+    ref.current.rotation.y = current + (rotationY - current) * Math.min(delta * 12, 1);
+  });
+  return <group ref={ref}>{children}</group>;
+}
+
 function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: string | null; rotationY: number }) {
-  // Reverted to legacy Character3D — CompositeCharacter's manifest-fetch
-  // gate was preventing the canvas from ever mounting on a fresh page
-  // load (5 instances stuck in 'Loading character…' even after 8s).
-  // The legacy single-GLB path is reliable. Unification with AMG happens
-  // via a sync in CharacterCreatorScreen.onSave that mirrors AMG state
-  // into customization fields, so creator edits still flow to home.
-  // Size kept at 520x620 (the bigger size Devon asked for).
-  const cust = useCharacterStore((s) => s.customization);
-  const outfit = OUTFITS[cust.outfitId] ?? OUTFITS['modern_civilians_01'];
-  const emoteMeta = activeEmoteId
-    ? HUMAN_EMOTES.find((e) => e.id === activeEmoteId) ?? null
-    : null;
-  const defaultIdle = DEFAULT_HUMAN_IDLE;
-  const animGlb = emoteMeta?.glb ?? defaultIdle?.glb;
-  const isEmote = !!emoteMeta;
+  // Source of truth: amgCharacter (multi-GLB CompositeCharacter). The
+  // App.tsx boot seed guarantees this is populated by the time the home
+  // mounts, so a null check is just defensive.
+  const amgCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
+
+  // Player's pinned idle from the AnimationPicker. null = Random (cycle
+  // through the full pool every ~10 s). A specific id = play just that
+  // one pose forever — pass a single-entry list so CompositeCharacter
+  // has nothing to rotate to.
+  const equippedIdle = useShopStore((s) => s.equippedIdle);
+  const idleList = useMemo(
+    () => (equippedIdle ? [`idles/${equippedIdle}.glb`] : HOME_IDLE_RANDOM_POOL),
+    [equippedIdle],
+  );
+  const [loaded, setLoaded] = useState(false);
+  // Stalled state — flips on if the character hasn't finished loading
+  // after 15 s, or if CompositeCharacter surfaces an error. Shows a
+  // tappable retry instead of an infinite spinner so the player isn't
+  // staring at a blank stage when R2 is slow / the network drops.
+  const [stalled, setStalled] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!loaded) return;
+    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+  }, [loaded, fadeAnim]);
+
+  // 15 s safety timeout — if onReady hasn't fired by then, surface the
+  // retry chip. Resets every reload attempt.
+  useEffect(() => {
+    if (loaded) return;
+    const t = setTimeout(() => setStalled(true), 15_000);
+    return () => clearTimeout(t);
+  }, [loaded, reloadKey]);
+
+  const retry = () => {
+    setStalled(false);
+    setLoaded(false);
+    setReloadKey((k) => k + 1);
+  };
+
+  const stateForRender = useMemo<CharacterState | null>(() => {
+    if (!amgCharacter) return null;
+    // Map the home's emote id (e.g. 'emote_dab') to a relative animation
+    // path the runtime can fetch directly. Full path form bypasses the
+    // runtime's automatic 'emote_' prefix injection so we never end up
+    // with 'emote_emote_dab.glb'.
+    const animation = activeEmoteId ? `emotes/${activeEmoteId}.glb` : null;
+    return { ...amgCharacter, animation };
+  }, [amgCharacter, activeEmoteId]);
+
+  if (!stateForRender) return null;
+
   return (
-    <Character3D
-      width={520}
-      height={620}
-      bodyGlb={outfit.glb}
-      skinColor={cust.skinColor}
-      hairColor={cust.hairColor}
-      outfitColors={cust.outfitColors}
-      bodyType={cust.bodyType}
-      bodySize={cust.bodySize}
-      muscle={cust.muscle}
-      animationGlb={animGlb}
-      animationLoop={!isEmote}
-      rotationY={rotationY}
-    />
+    <View style={{ width: 520, height: 620 }}>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
+        <Canvas
+          frameloop="always"
+          gl={{ antialias: true, alpha: true } as any}
+          shadows
+          camera={{ position: [0, 1.1, 3.2], fov: 42, near: 0.01, far: 1000 }}
+          // lookAt y at 1.1 — frames a 1.8 m character so feet sit
+          // ~3 % from the canvas bottom (right above PLAY) and the
+          // head extends into the logo area for the depth Devon
+          // wanted. Was 0.95 (head far from logo) and 1.15 (way too
+          // low). 1.1 is the sweet spot.
+          onCreated={(canvasState: any) => { canvasState.camera.lookAt(0, 1.1, 0); }}
+          style={StyleSheet.absoluteFill as any}
+        >
+          {/* Three-point lighting matches the legacy Character3D so the
+              premium silhouette read carries over to the AMG path. */}
+          <ambientLight intensity={0.55} color="#c0ccf0" />
+          <directionalLight
+            position={[2.5, 4, 3]}
+            intensity={1.3}
+            color="#fff4e0"
+            castShadow
+            shadow-mapSize-width={512}
+            shadow-mapSize-height={512}
+            shadow-camera-near={0.1}
+            shadow-camera-far={20}
+            shadow-camera-left={-2}
+            shadow-camera-right={2}
+            shadow-camera-top={2}
+            shadow-camera-bottom={-1}
+            shadow-bias={-0.0005}
+          />
+          <directionalLight position={[-2, 2, 1.5]} intensity={0.6} color="#a8c8f0" />
+          <directionalLight position={[0, 3, -3]} intensity={1.4} color="#ff9a5a" />
+          <hemisphereLight args={['#6080a0', '#1a1820', 0.5]} />
+
+          <RotatingGroup rotationY={rotationY}>
+            <CompositeCharacter
+              key={reloadKey}
+              source={CONTENT_SOURCE}
+              state={stateForRender}
+              // Devon-tuned: back to 1.8 m so the character feels
+              // hero-sized and the head crashes into the DROP4 logo
+              // for depth. Feet visibility is handled by raising the
+              // camera's lookAt (see onCreated above) and tightening
+              // the canvas-to-PLAY padding (characterStage paddingBottom + menuButtons paddingTop).
+              targetHeightMeters={1.8}
+              idleList={idleList}
+              onReady={() => { setLoaded(true); setStalled(false); }}
+              onError={() => setStalled(true)}
+            />
+          </RotatingGroup>
+
+          {/* Floor plate — invisible shadow-receiver so the directional
+              key light has somewhere to drop the character's shadow. */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
+            <circleGeometry args={[1.5, 48]} />
+            <shadowMaterial transparent opacity={0.4} />
+          </mesh>
+        </Canvas>
+      </Animated.View>
+
+      {/* Loading overlay — first home mount fetches the manifest + base
+          skeleton + ~17 part GLBs from the AMG CDN. The spinner gives the
+          player something to look at instead of a blank stage during
+          that ~3-5 s window. Cached on subsequent mounts. */}
+      {!loaded && !stalled && (
+        <View style={styles.characterLoadingOverlay} pointerEvents="none">
+          <ActivityIndicator color={colors.orange} size="large" />
+        </View>
+      )}
+
+      {/* Stalled-load retry — surfaced after a 15 s timeout or when
+          CompositeCharacter raises onError. Without this the player
+          sees an infinite spinner if R2 is slow / down. Tapping rebuilds
+          the CompositeCharacter via a key bump so all the fetches re-fire. */}
+      {stalled && !loaded && (
+        <View style={styles.characterStalledOverlay}>
+          <Text style={styles.characterStalledText}>
+            Couldn't load your character{'\n'}— check your connection
+          </Text>
+          <Pressable
+            onPress={() => { haptics.tap(); retry(); }}
+            style={styles.characterRetryBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading character"
+          >
+            <Text style={styles.characterRetryText}>↻ RETRY</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -542,18 +700,37 @@ export function HomeScreen() {
     setShowTapHint(false);
     tapHintOpacity.setValue(0);
 
-    // Tapping the character plays a random owned emote directly.
-    // The Emotes/Idles side buttons open the full AnimationPicker for browsing.
-    const ownedEmoteIds = useShopStore.getState().ownedEmotes;
-    const pool = HUMAN_EMOTES.filter(
-      (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
+    // Resolve which emote to play from the player's AnimationPicker
+    // selection. Three states:
+    //   • homeEmoteRandomMode === true  → pick a random OWNED emote
+    //   • specific selectedHomeEmote    → play that one (validate it's
+    //                                     still owned in case the save
+    //                                     references a stale legacy id)
+    //   • neither (fresh save / cleared)→ fall through to random
+    // Random pool is owned + free starters; the picker filters the
+    // same way so the two stay in sync.
+    const { selectedHomeEmote, homeEmoteRandomMode, ownedEmotes } = useShopStore.getState();
+    const ownedPool = HUMAN_EMOTES.filter(
+      (e) => ownedEmotes.includes(e.id) || (e.price ?? 0) === 0,
     );
-    if (pool.length > 0) {
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      haptics.win();
-      playSound('click');
-      setActive3DEmote(pick.id);
+    if (ownedPool.length === 0) return;
+
+    const wantsRandom = homeEmoteRandomMode || !selectedHomeEmote;
+    let pickId: string;
+    if (wantsRandom) {
+      pickId = ownedPool[Math.floor(Math.random() * ownedPool.length)].id;
+    } else {
+      // Specific pick. If the saved id isn't in the AMG-owned pool
+      // (e.g. the save predates the picker rewrite and has a legacy
+      // id like 'dab'), fall back to random so the player always sees
+      // an animation play instead of nothing.
+      const isOwned = ownedPool.some((e) => e.id === selectedHomeEmote);
+      pickId = isOwned ? selectedHomeEmote : ownedPool[Math.floor(Math.random() * ownedPool.length)].id;
     }
+
+    haptics.win();
+    playSound('click');
+    setActive3DEmote(pickId);
   };
 
   const navigateTo = (screen: string) => {
@@ -594,7 +771,7 @@ export function HomeScreen() {
       )}
       <DriftingWatermark />
       <View style={styles.container}>
-        <View>
+        <View style={styles.topBarWrap}>
           <TopBar
             coins={coins} gems={gems} level={level}
             onProfilePress={() => navigateTo('Profile')}
@@ -690,9 +867,10 @@ export function HomeScreen() {
             <BreathingView intensity={0.015} speed={4000}>
             <Pressable
               onPress={handleCharacterTap}
+              style={styles.characterTapArea}
               accessibilityRole="button"
               accessibilityLabel="Player character"
-              accessibilityHint="Double-tap to open the emote picker, long-press to play a random owned emote"
+              accessibilityHint="Tap to play your selected emote. Open the Emotes button to change it."
               onPressIn={() => {
                 // Instant-feedback scale pinch so the tap feels responsive
                 // (emote animation doesn't fire for ~200ms after tap).
@@ -711,18 +889,11 @@ export function HomeScreen() {
                   bounciness: 8,
                 }).start();
               }}
-              onLongPress={() => {
-                // Long-press: play a random OWNED emote instantly (no modal).
-                const ownedEmoteIds = useShopStore.getState().ownedEmotes;
-                const pool = HUMAN_EMOTES.filter(
-                  (e) => ownedEmoteIds.includes(e.id) || (e.price ?? 0) === 0,
-                );
-                if (pool.length === 0) return;
-                const pick = pool[Math.floor(Math.random() * pool.length)];
-                haptics.win();
-                setActive3DEmote(pick.id);
-              }}
-              delayLongPress={450}
+              // No onLongPress override — both tap and long-press should
+              // honor the player's AnimationPicker selection (a specific
+              // emote, or random if that's chosen). Devon's spec: "once
+              // you select [an emote], every time you press the character
+              // it will do that emote." Single source of truth.
             >
               {showTapHint && (
                 <Animated.View style={[styles.tapHintBubble, { opacity: tapHintOpacity }]}>
@@ -887,6 +1058,13 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Wrap the TopBar in its own View with high zIndex so the character
+  // canvas can never absorb taps meant for the Profile / Settings /
+  // coin / gem buttons. Belt-and-braces alongside characterStage's
+  // `overflow: 'hidden'`.
+  topBarWrap: {
+    zIndex: 100,
+  },
   container: {
     flex: 1,
     // React Navigation's Tab.Navigator already reserves space for the tab bar
@@ -1040,6 +1218,12 @@ const styles = StyleSheet.create({
   sideBtn: {
     alignItems: 'center',
     gap: 5,
+    // The character canvas is 520x620 — bigger than the lobbyArea's
+    // middle column on a 390-wide phone, so it overflows and covers
+    // the Emotes button (rendered first in JSX). zIndex bumps both
+    // side buttons above the character so taps reach the right
+    // handler. Was Devon's "emotes button doesn't work" bug.
+    zIndex: 10,
   },
   sideBtnCircle: {
     width: 58,
@@ -1074,12 +1258,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    // Devon nudge: character pushed down slightly via paddingTop, BUT
-    // paddingBottom lifts the character off the menuButtons row so the
-    // FEET are visible (Devon: "i want to be able to see the character's
-    // feet"). paddingBottom acts as a floor margin between feet and PLAY.
     paddingTop: 28,
-    paddingBottom: 18,
+    // paddingBottom dropped 18 → 4: with the camera-tuned framing
+    // (lookAt 1.1) the feet land ~3 % from the canvas bottom, so the
+    // bigger 18 px buffer was just extra empty stage between the
+    // feet and the PLAY button. 4 px keeps a hair of breathing room
+    // without the gap Devon flagged.
+    paddingBottom: 4,
+    // Note: overflow stays `visible` so the spotlight + foot-glow can
+    // extend past the stage column (they're intentionally wider than
+    // the column). Tap-area containment is handled lower down on the
+    // Pressable itself — see characterTapArea.
+  },
+  // Constrains the character Pressable's hit area so the 520-wide
+  // Character3DWrapper canvas inside doesn't bleed taps onto the
+  // TopBar / side buttons. The canvas paints OVER the wrapper bounds
+  // (transparent margins) but the tap region stays within ~280 px,
+  // matching the visible stage column. Spotlight + foot-glow render
+  // on a sibling layer in characterStage so they're unaffected.
+  characterTapArea: {
+    width: 280,
+    height: 620,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Warm radial spotlight behind the character — lobby UX that survives
   // any future bg theme. Centered on character body, soft falloff, low
@@ -1174,10 +1376,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 8,
-    // Trimmed paddingTop (was 16, now 8) so PLAY isn't pulling INTO the
-    // character zone — combined with characterStage paddingBottom this
-    // gives the character's feet room to clear above PLAY.
-    paddingTop: 8,
+    // paddingTop trimmed back to 10 — with the bigger character (1.8 m)
+    // + camera at lookAt 1.1, the feet end up right at the canvas
+    // bottom edge, so PLAY only needs a small breathing gap before it
+    // starts. Devon: "feet right above the play button."
+    paddingTop: 10,
     paddingBottom: 6,
     flexShrink: 0,
   },
@@ -1347,6 +1550,42 @@ const styles = StyleSheet.create({
     textShadowRadius: 12,
     zIndex: 20,
     letterSpacing: 1,
+  },
+  characterLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  characterStalledOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    paddingHorizontal: 30,
+  },
+  characterStalledText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: 'rgba(255,200,180,0.9)',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  characterRetryBtn: {
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: colors.orange,
+    backgroundColor: 'rgba(255,140,0,0.18)',
+  },
+  characterRetryText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.orange,
+    letterSpacing: 1.4,
   },
   // Level Up celebration
   levelUpOverlay: {

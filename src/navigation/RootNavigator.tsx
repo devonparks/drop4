@@ -10,7 +10,6 @@ import { CareerScreen } from '../screens/CareerScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { LearnScreen } from '../screens/LearnScreen';
 import { SeasonPassScreen } from '../screens/SeasonPassScreen';
-import { Character3DCreatorScreen } from '../screens/Character3DCreatorScreen';
 import { RosterScreen } from '../screens/RosterScreen';
 import { CareerMapScreen } from '../screens/CareerMapScreen';
 import { CareerCityScreen } from '../screens/CareerCityScreen';
@@ -82,7 +81,6 @@ export type RootStackParamList = {
   Settings: undefined;
   Learn: undefined;
   SeasonPass: undefined;
-  Character3DCreator: undefined;
   Roster: undefined;
   CareerMap: undefined;
   CareerCity: { cityId: string };
@@ -131,11 +129,6 @@ export function RootNavigator() {
       <Stack.Screen
         name="SeasonPass"
         component={SeasonPassScreen}
-        options={{ animation: 'fade_from_bottom' }}
-      />
-      <Stack.Screen
-        name="Character3DCreator"
-        component={Character3DCreatorScreen}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

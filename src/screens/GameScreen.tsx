@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Modal, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
+import { PreviewSafeModal } from '../components/ui/PreviewSafeModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   FadeIn,
@@ -1298,7 +1299,7 @@ export function GameScreen({ navigation }: Props) {
         )}
 
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
-        <Modal visible={status === 'won' || status === 'draw'} transparent animationType="none">
+        <PreviewSafeModal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
             {/* Painted hero trophy — Flux-generated gold cup with sunburst.
                 Sits behind the celebration banner, zooms in from center
@@ -1834,7 +1835,7 @@ export function GameScreen({ navigation }: Props) {
             </Animated.View>
             </SlideReveal>
           </Animated.View>
-        </Modal>
+        </PreviewSafeModal>
 
         {/* Tutorial tooltip */}
         <TutorialTooltip

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   Pressable,
   Animated,
   Easing,
   Dimensions,
 } from 'react-native';
+import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDailySpinStore, SPIN_SEGMENTS, SpinSegment } from '../../stores/dailySpinStore';
 import { useShopStore } from '../../stores/shopStore';
@@ -288,7 +288,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
   });
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+    <PreviewSafeModal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={st.overlay}>
         {/* Purple starburst background */}
         <View style={st.starburstContainer}>
@@ -521,7 +521,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
           )}
         </View>
       </View>
-    </Modal>
+    </PreviewSafeModal>
   );
 }
 

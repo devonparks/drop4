@@ -1,264 +1,177 @@
 /**
- * Character Customization Store
+ * Character Store (AMG-native)
  *
- * Tracks the player's 3D character customization:
- * - Which outfit GLB to load (Modern Civilians 01-12)
- * - Skin color (any hex)
- * - Hair color (free basics + unlockable premium colors)
- * - Outfit color overrides per part (free + premium colorways)
- * - Body shape sliders (masculine↔feminine, skinny↔heavy, lean↔buff)
- * - Gender (affects body blendshape)
+ * Tracks the player's character entirely as an AMG `CharacterState`:
+ *  - species + per-slot equipped part names + colors + blendshapes
+ *  - which AMG parts the player owns (drives lock chips in the creator)
+ *  - which outfit packs / cards are owned (drives shop/collection state)
+ *  - the currently-equipped outfit pack id (legacy concept; mirrors the
+ *    Torso part swap performed by `equipOutfitPack`)
  *
- * Color packs are unlocked via the shop (coins).
- * Body sliders are 0-100 values that map to Synty's blendshapes.
+ * The legacy single-GLB `CharacterCustomization` shape (outfitId + skin /
+ * hair / outfit colors / body sliders) was retired in the Path A migration
+ * — every renderer reads `amgCharacter` and every editor writes it.
  */
 
 import { create } from 'zustand';
+// Import from the runtime's submodules instead of the package index so
+// the test runner can load this without dragging in CompositeCharacter
+// (which pulls React + R3F). The runtime ships its data/types from leaf
+// modules, so this is safe and matches npcCustomizations.ts.
+import type { CharacterState } from '@amg/character-runtime/types';
+import { STARTER_HUMAN_CHARACTER } from '@amg/character-runtime/types';
 import { saveState, loadState } from '../services/storage';
 import { isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
+import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
 
-// ── Types ──────────────────────────────────────────────────────
-
-// OutfitId is now an open string — any `<species>_<pack>_NN` id produced by
-// the generator is valid. See src/data/outfitRegistry.ts for the live list.
-export type OutfitId = string;
-
-export interface CharacterCustomization {
-  outfitId: OutfitId;
-  // Body shape sliders (0-100 each)
-  bodyType: number;    // 0=masculine, 100=feminine
-  bodySize: number;    // 0=skinny, 50=neutral, 100=heavy
-  muscle: number;      // 0=lean, 100=buff
-  // Colors (hex strings)
-  skinColor: string;
-  hairColor: string;
-  // Outfit color overrides — maps part code ("10TORS", "18LEGL", etc.) to hex
-  outfitColors: Record<string, string>;
-}
-
-// ── Free vs premium unlockables ─────────────────────────────────
-
-export const FREE_HAIR_COLORS: string[] = [
-  '#0a0606', // jet black
-  '#3d2817', // dark brown
-  '#7a5230', // medium brown
-  '#c9a16a', // blonde
-];
-
-export const PREMIUM_HAIR_COLORS: { id: string; hex: string; name: string; price: number }[] = [
-  { id: 'platinum', hex: '#e8e8e8', name: 'Platinum', price: 500 },
-  { id: 'silver',   hex: '#b0b0b8', name: 'Silver', price: 500 },
-  { id: 'red',      hex: '#c73838', name: 'Fire Red', price: 750 },
-  { id: 'auburn',   hex: '#8a3520', name: 'Auburn', price: 500 },
-  { id: 'pink',     hex: '#e874a8', name: 'Hot Pink', price: 1000 },
-  { id: 'rose',     hex: '#c9677a', name: 'Rose Gold', price: 1000 },
-  { id: 'blue',     hex: '#3870c7', name: 'Electric Blue', price: 1000 },
-  { id: 'teal',     hex: '#2aa8a8', name: 'Teal', price: 1000 },
-  { id: 'green',    hex: '#3aa83a', name: 'Emerald', price: 1000 },
-  { id: 'purple',   hex: '#8a3ac7', name: 'Purple', price: 1000 },
-  { id: 'white',    hex: '#f8f8fa', name: 'Snow White', price: 1500 },
-  { id: 'rainbow',  hex: '#ff00ff', name: 'Rainbow', price: 2500 },
-];
-
-// Outfit colorway packs (each pack applies a preset color scheme to the outfit)
-interface OutfitColorPack {
-  id: string;
-  name: string;
-  price: number;
-  // Maps part code to hex color
-  colors: Record<string, string>;
-}
-
-export const FREE_OUTFIT_PACKS: OutfitColorPack[] = [
-  { id: 'default', name: 'Default', price: 0, colors: {} }, // empty = use Synty defaults
-  { id: 'street',  name: 'Street', price: 0, colors: {
-    '10TORS': '#2c2c30', '11AUPL': '#2c2c30', '12AUPR': '#2c2c30',
-    '13ALWL': '#2c2c30', '14ALWR': '#2c2c30',
-    '17HIPS': '#1a1a20', '18LEGL': '#242830', '19LEGR': '#242830',
-    '20FOTL': '#0a0a10', '21FOTR': '#0a0a10',
-  }},
-  { id: 'sunset', name: 'Sunset', price: 0, colors: {
-    '10TORS': '#d4613a', '11AUPL': '#d4613a', '12AUPR': '#d4613a',
-    '13ALWL': '#d4613a', '14ALWR': '#d4613a',
-    '17HIPS': '#8a3520', '18LEGL': '#b04830', '19LEGR': '#b04830',
-    '20FOTL': '#3a1a10', '21FOTR': '#3a1a10',
-  }},
-];
-
-export const PREMIUM_OUTFIT_PACKS: OutfitColorPack[] = [
-  { id: 'neon', name: 'Neon Pack', price: 1500, colors: {
-    '10TORS': '#00e5ff', '11AUPL': '#00e5ff', '12AUPR': '#00e5ff',
-    '13ALWL': '#00e5ff', '14ALWR': '#00e5ff',
-    '17HIPS': '#ff00c8', '18LEGL': '#ff00c8', '19LEGR': '#ff00c8',
-    '20FOTL': '#1a0020', '21FOTR': '#1a0020',
-  }},
-  { id: 'gold', name: 'Gold Plated', price: 2500, colors: {
-    '10TORS': '#f4d05c', '11AUPL': '#f4d05c', '12AUPR': '#f4d05c',
-    '13ALWL': '#f4d05c', '14ALWR': '#f4d05c',
-    '17HIPS': '#c09434', '18LEGL': '#d4a848', '19LEGR': '#d4a848',
-    '20FOTL': '#4a3820', '21FOTR': '#4a3820',
-  }},
-  { id: 'pastel', name: 'Pastel Dream', price: 1200, colors: {
-    '10TORS': '#f4a8c8', '11AUPL': '#f4a8c8', '12AUPR': '#f4a8c8',
-    '13ALWL': '#f4a8c8', '14ALWR': '#f4a8c8',
-    '17HIPS': '#a8c8f4', '18LEGL': '#b8d4f8', '19LEGR': '#b8d4f8',
-    '20FOTL': '#f8f4e8', '21FOTR': '#f8f4e8',
-  }},
-  { id: 'mono', name: 'Monochrome', price: 800, colors: {
-    '10TORS': '#f8f8fa', '11AUPL': '#f8f8fa', '12AUPR': '#f8f8fa',
-    '13ALWL': '#f8f8fa', '14ALWR': '#f8f8fa',
-    '17HIPS': '#1a1a20', '18LEGL': '#1a1a20', '19LEGR': '#1a1a20',
-    '20FOTL': '#0a0a10', '21FOTR': '#0a0a10',
-  }},
-];
-
-// ── Default customization ──────────────────────────────────────
-
-const DEFAULT_CUSTOMIZATION: CharacterCustomization = {
-  outfitId: 'modern_civilians_01',
-  bodyType: 30,   // slightly masculine
-  bodySize: 50,   // neutral
-  muscle: 55,     // slightly toned
-  skinColor: '#dcb088',
-  hairColor: '#3d2817',
-  outfitColors: {},
-};
-
-// ── Store ──────────────────────────────────────────────────────
-
-// New AMG CharacterState shape from @amg/character-runtime. Kept loosely
-// typed here (Record<string, unknown>) to avoid coupling the store to
-// the runtime package — the runtime still owns the canonical type.
+// AMG character state in the store stays loosely typed (Record<string,
+// unknown>) so the store doesn't take a hard import dep on the runtime
+// type at construction time. We cast at API boundaries.
 type AmgCharacterState = Record<string, unknown>;
 
-interface CharacterState {
-  customization: CharacterCustomization;
-  // Unlocks
-  unlockedHairColors: string[];     // PREMIUM_HAIR_COLORS ids
-  unlockedOutfitPacks: string[];    // PREMIUM_OUTFIT_PACKS ids (color packs)
-  ownedOutfits: string[];           // outfit IDs from outfitRegistry
-  // GTA-meets-Sims AMG part ownership. Every Sidekick part the player has
-  // bought (by exact part name like 'SK_SAMR_WARR_03_10TORS_HU01').
-  // STARTER_PACKS are treated as owned for free — isAmgPartOwned() reads
-  // this set plus the starter override. The shop adds to it, the creator
-  // reads from it via the `ownedParts` prop to render lock overlays.
+// ── Store shape ────────────────────────────────────────────────────────
+
+interface CharacterStoreState {
+  /** Source of truth for what the player looks like. Seeded at boot in
+   *  App.tsx if the store hydrated to null. */
+  amgCharacter: AmgCharacterState | null;
+
+  /** Outfit-pack ownership. Players own these packs by purchasing them
+   *  in the shop or earning them via career/loot rewards. Starter packs
+   *  count as owned via STARTER_OUTFITS even when not enumerated here. */
+  ownedOutfits: string[];
+
+  /** Currently-equipped outfit pack id (e.g. 'human_modern_civilians_03').
+   *  Mirrors the Torso slot in amgCharacter — kept as a top-level field so
+   *  the shop's "EQUIPPED" badge can do an O(1) check without parsing
+   *  part names. Updated by `equipOutfitPack`. */
+  equippedOutfitId: string;
+
+  /** GTA-meets-Sims AMG part ownership. Every Sidekick part the player
+   *  has bought (by exact part name like 'SK_SAMR_WARR_03_10TORS_HU01').
+   *  STARTER_PACKS are treated as owned for free — `isAmgPartOwned()`
+   *  reads this set plus the starter override. */
   ownedAmgParts: string[];
+
   /** Unlock timestamps for AMG parts — `partName → epoch millis` at
-   *  purchase time. The Shop reads this to show a "NEW" badge for
-   *  parts unlocked in the last 7 days. Legacy ownedAmgParts entries
-   *  (pre-timestamp-tracking) don't appear in this map and simply
-   *  don't get the badge, which is fine. */
+   *  purchase time. The Shop reads this to show a "NEW" badge for parts
+   *  unlocked in the last 7 days. */
   amgPartUnlockedAt: Record<string, number>;
+
   /** True after the player has seen the "starter wardrobe unlocked"
    *  toast. Gates CharacterCreatorScreen's first-open ceremony so the
    *  toast doesn't fire every time they open the creator. */
   amgStarterSeen: boolean;
-  // New: AMG Studios character state (from the Sims-tier creator).
-  // When present, this is the source of truth for the player's avatar
-  // across every AMG game. Legacy `customization` stays for the existing
-  // single-GLB renderer until all screens migrate.
-  amgCharacter: AmgCharacterState | null;
-  // Actions
-  setOutfit: (id: OutfitId) => void;
-  setSkinColor: (hex: string) => void;
-  setHairColor: (hex: string) => void;
-  setOutfitColors: (colors: Record<string, string>) => void;
-  setBodyType: (v: number) => void;
-  setBodySize: (v: number) => void;
-  setMuscle: (v: number) => void;
+
+  // ── Actions ──
   setAmgCharacter: (next: AmgCharacterState) => void;
-  unlockHairColor: (id: string) => void;
-  unlockOutfitPack: (id: string) => void;
+  /** Equip a single AMG part (Torso, Hair, AttachmentBack, etc.) into
+   *  the named slot without touching anything else. Lets the shop equip
+   *  in-place after a buy without bouncing the player to the creator. */
+  equipAmgPart: (slot: string, partName: string) => void;
+  /** Equip an outfit pack: swaps the body slots (Hair, Torso, Hips, arms,
+   *  hands, legs, feet) into amgCharacter without touching the player's
+   *  Head / Eyebrows. Also sets equippedOutfitId. */
+  equipOutfitPack: (outfitId: string) => void;
+  /** Unlock an outfit pack: tracks ownership AND unlocks the underlying
+   *  AMG parts so they're available in the creator's pickers. */
   unlockOutfit: (id: string) => void;
   unlockAmgPart: (name: string) => void;
   markAmgStarterSeen: () => void;
   isOutfitOwned: (id: string) => boolean;
-  isHairColorUnlocked: (hex: string) => boolean;
-  isOutfitPackUnlocked: (id: string) => boolean;
   isAmgPartOwned: (name: string) => boolean;
-  resetCustomization: () => void;
   loadFromStorage: () => Promise<void>;
 }
 
 const STORAGE_KEY = 'drop4_character';
 
 interface PersistedCharacter {
-  customization: CharacterCustomization;
-  unlockedHairColors: string[];
-  unlockedOutfitPacks: string[];
+  amgCharacter?: AmgCharacterState | null;
   ownedOutfits?: string[];
+  equippedOutfitId?: string;
   ownedAmgParts?: string[];
   amgPartUnlockedAt?: Record<string, number>;
   amgStarterSeen?: boolean;
-  amgCharacter?: AmgCharacterState | null;
+  /** Legacy field — pre-Path-A migration. Read once on load to recover the
+   *  player's last-equipped outfit; never written. After the first load
+   *  the migrated value lives in `equippedOutfitId`. */
+  customization?: { outfitId?: string };
 }
 
-// Starter outfits every player owns for free (one per species).
+// Starter outfits every player owns for free (one per species). These
+// IDs come from `outfitRegistry.ts` — adding more here grants free
+// access to additional packs at boot for new and returning users.
 const STARTER_OUTFITS = [
   'human_modern_civilians_01',
   'human_modern_civilians_02',
-  'modern_civilians_01', // legacy filename, same asset
 ];
 
-export const useCharacterStore = create<CharacterState>((set, get) => ({
-  customization: { ...DEFAULT_CUSTOMIZATION },
-  unlockedHairColors: [],
-  unlockedOutfitPacks: [],
+const DEFAULT_EQUIPPED_OUTFIT = 'human_modern_civilians_01';
+
+// ── Store ──────────────────────────────────────────────────────────────
+
+export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
+  amgCharacter: null,
   ownedOutfits: [...STARTER_OUTFITS],
-  // Empty by default — isAmgPartOwned() treats STARTER_PACKS parts as
-  // owned automatically, so a fresh player can already equip base
-  // heads/hair + MDRN_CIVL outfits without any purchases.
+  equippedOutfitId: DEFAULT_EQUIPPED_OUTFIT,
   ownedAmgParts: [],
   amgPartUnlockedAt: {},
   amgStarterSeen: false,
-  amgCharacter: null,
 
-  setOutfit: (id) => set((s) => ({
-    customization: { ...s.customization, outfitId: id },
-  })),
-  setSkinColor: (hex) => set((s) => ({
-    customization: { ...s.customization, skinColor: hex },
-  })),
-  setHairColor: (hex) => set((s) => ({
-    customization: { ...s.customization, hairColor: hex },
-  })),
-  setOutfitColors: (colors) => set((s) => ({
-    customization: { ...s.customization, outfitColors: { ...colors } },
-  })),
-  setBodyType: (v) => set((s) => ({
-    customization: { ...s.customization, bodyType: Math.max(0, Math.min(100, v)) },
-  })),
-  setBodySize: (v) => set((s) => ({
-    customization: { ...s.customization, bodySize: Math.max(0, Math.min(100, v)) },
-  })),
-  setMuscle: (v) => set((s) => ({
-    customization: { ...s.customization, muscle: Math.max(0, Math.min(100, v)) },
-  })),
-
-  // Persist the full AMG character blob from @amg/character-creator.
-  // Written whenever the player taps Save in the new creator; consumed
-  // by CharacterCreatorScreen's `initial` prop on next open, and
-  // (eventually) by in-game renderers once they migrate off the legacy
-  // single-GLB Character3D.
   setAmgCharacter: (next) => set({ amgCharacter: next }),
 
-  unlockHairColor: (id) => set((s) => ({
-    unlockedHairColors: s.unlockedHairColors.includes(id) ? s.unlockedHairColors : [...s.unlockedHairColors, id],
-  })),
-  unlockOutfitPack: (id) => set((s) => ({
-    unlockedOutfitPacks: s.unlockedOutfitPacks.includes(id) ? s.unlockedOutfitPacks : [...s.unlockedOutfitPacks, id],
-  })),
-  unlockOutfit: (id) => set((s) => ({
-    ownedOutfits: s.ownedOutfits.includes(id) ? s.ownedOutfits : [...s.ownedOutfits, id],
-  })),
+  equipAmgPart: (slot, partName) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    const baseChar = current ?? STARTER_HUMAN_CHARACTER;
+    return {
+      amgCharacter: {
+        ...baseChar,
+        parts: { ...baseChar.parts, [slot]: partName },
+      } as unknown as AmgCharacterState,
+    };
+  }),
+
+  equipOutfitPack: (outfitId) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    const bodyParts = buildAmgBodyForOutfit(outfitId);
+    const nextCharacter: CharacterState = current
+      ? { ...current, parts: { ...current.parts, ...bodyParts } }
+      : { ...STARTER_HUMAN_CHARACTER, parts: { ...STARTER_HUMAN_CHARACTER.parts, ...bodyParts } };
+    return {
+      amgCharacter: nextCharacter as unknown as AmgCharacterState,
+      equippedOutfitId: outfitId,
+    };
+  }),
+
+  unlockOutfit: (id) => set((s) => {
+    if (s.ownedOutfits.includes(id)) return s;
+    // Auto-unlock the underlying AMG parts so the player can mix-and-match
+    // them in the creator immediately after purchase.
+    const partNames = Object.values(buildAmgBodyForOutfit(id)).filter(
+      (n): n is string => typeof n === 'string',
+    );
+    const nextOwnedParts = [...s.ownedAmgParts];
+    const nextUnlockedAt = { ...s.amgPartUnlockedAt };
+    const now = Date.now();
+    for (const name of partNames) {
+      if (!nextOwnedParts.includes(name)) {
+        nextOwnedParts.push(name);
+        nextUnlockedAt[name] = now;
+      }
+    }
+    return {
+      ownedOutfits: [...s.ownedOutfits, id],
+      ownedAmgParts: nextOwnedParts,
+      amgPartUnlockedAt: nextUnlockedAt,
+    };
+  }),
+
   isOutfitOwned: (id) => get().ownedOutfits.includes(id) || STARTER_OUTFITS.includes(id),
 
   // AMG part unlocks. Called from the shop after a successful purchase;
   // the creator reads ownership via isAmgPartOwned() to decide whether
   // to show a lock overlay / buy prompt on a part grid thumbnail.
   unlockAmgPart: (name) => set((s) => {
-    // No-op if already owned so repeated taps don't refresh the NEW
-    // badge timestamp. Timestamps are only written for fresh unlocks.
     if (s.ownedAmgParts.includes(name)) return s;
     return {
       ownedAmgParts: [...s.ownedAmgParts, name],
@@ -266,38 +179,31 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
     };
   }),
   isAmgPartOwned: (name) => {
-    // Fast path: starter packs are owned for free.
     if (isStarterPack(packPrefixFromPartName(name))) return true;
     return get().ownedAmgParts.includes(name);
   },
   markAmgStarterSeen: () => set({ amgStarterSeen: true }),
 
-  isHairColorUnlocked: (hex) => {
-    if (FREE_HAIR_COLORS.includes(hex)) return true;
-    const premium = PREMIUM_HAIR_COLORS.find((c) => c.hex === hex);
-    return premium ? get().unlockedHairColors.includes(premium.id) : false;
-  },
-  isOutfitPackUnlocked: (id) => {
-    if (FREE_OUTFIT_PACKS.some((p) => p.id === id)) return true;
-    return get().unlockedOutfitPacks.includes(id);
-  },
-
-  resetCustomization: () => set({ customization: { ...DEFAULT_CUSTOMIZATION } }),
-
   loadFromStorage: async () => {
     const saved = await loadState<PersistedCharacter>(STORAGE_KEY);
     if (saved) {
       const owned = saved.ownedOutfits ?? [];
+      // Migration: pre-Path-A saves stored the equipped outfit under
+      // `customization.outfitId`. Recover that on first load post-upgrade
+      // so returning players don't lose their last-equipped pack on the
+      // schema flip. The new `equippedOutfitId` field takes precedence
+      // once present.
+      const legacyOutfit = saved.customization?.outfitId;
+      const equipped = saved.equippedOutfitId
+        ?? (legacyOutfit && legacyOutfit !== '' ? legacyOutfit : DEFAULT_EQUIPPED_OUTFIT);
       set({
-        customization: { ...DEFAULT_CUSTOMIZATION, ...saved.customization },
-        unlockedHairColors: saved.unlockedHairColors || [],
-        unlockedOutfitPacks: saved.unlockedOutfitPacks || [],
+        amgCharacter: saved.amgCharacter ?? null,
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
+        equippedOutfitId: equipped,
         ownedAmgParts: saved.ownedAmgParts ?? [],
         amgPartUnlockedAt: saved.amgPartUnlockedAt ?? {},
         amgStarterSeen: saved.amgStarterSeen ?? false,
-        amgCharacter: saved.amgCharacter ?? null,
       });
     }
   },
@@ -306,13 +212,11 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
 // Auto-save on any change
 useCharacterStore.subscribe((state) => {
   saveState(STORAGE_KEY, {
-    customization: state.customization,
-    unlockedHairColors: state.unlockedHairColors,
-    unlockedOutfitPacks: state.unlockedOutfitPacks,
+    amgCharacter: state.amgCharacter,
     ownedOutfits: state.ownedOutfits,
+    equippedOutfitId: state.equippedOutfitId,
     ownedAmgParts: state.ownedAmgParts,
     amgPartUnlockedAt: state.amgPartUnlockedAt,
     amgStarterSeen: state.amgStarterSeen,
-    amgCharacter: state.amgCharacter,
   });
 });

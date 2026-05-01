@@ -20,30 +20,46 @@ interface AmgPackMeta {
   description: string;
 }
 
+// Verified against content/sidekick/manifest.json — every pack prefix
+// shipped on the live R2 manifest gets a humanized entry. Without these
+// the shop's pack header falls through to `pack.replace(/_/g, ' ')` and
+// the player sees raw Synty names like "ELVN WARR" — Devon's audit
+// flagged that as confusing, so this catches all 17 known packs.
 const AMG_PACK_META: Record<string, AmgPackMeta> = {
-  // Starter — always owned
-  HUMN_BASE: { emoji: '🧑', displayName: 'Human Base', description: 'Essential human heads, hair, and anatomy.' },
-  GOBL_BASE: { emoji: '👺', displayName: 'Goblin Base', description: 'Essential goblin heads and features.' },
-  ELVS_BASE: { emoji: '🧝', displayName: 'Elf Base', description: 'Essential elven heads and features.' },
-  SKEL_BASE: { emoji: '💀', displayName: 'Skeleton Base', description: 'Essential skeleton heads and bones.' },
-  ZOMB_BASE: { emoji: '🧟', displayName: 'Zombie Base', description: 'Essential zombie heads and features.' },
+  // ── Species base packs (always owned) ──
+  HUMN_BASE: { emoji: '🧑', displayName: 'Human Base',   description: 'Essential human heads, hair, and anatomy.' },
+  ELVN_BASE: { emoji: '🧝', displayName: 'Elf Base',     description: 'Essential elven heads and features.' },
+  GOBL_BASE: { emoji: '👺', displayName: 'Goblin Base',  description: 'Essential goblin heads and features.' },
+  SKTN_BASE: { emoji: '💀', displayName: 'Skeleton Base', description: 'Essential skeleton heads and bones.' },
+  ZOMB_BASE: { emoji: '🧟', displayName: 'Zombie Base',  description: 'Essential zombie heads and features.' },
 
-  // Common — modern civilian fits
-  MDRN_CIVL: { emoji: '👖', displayName: 'Modern Civilians', description: 'Everyday jeans, tees, and hoodies for a grounded look.' },
-  MDRN_CASH: { emoji: '🧥', displayName: 'Modern Casuals', description: 'Relaxed modern streetwear for days off.' },
+  // ── Modern (civilian + tactical) ──
+  MDRN_CIVL: { emoji: '👖', displayName: 'Modern Civilians', description: 'Everyday jeans, tees, and hoodies.' },
+  MDRN_POLC: { emoji: '👮', displayName: 'Modern Police',    description: 'Tactical uniforms and badge gear.' },
 
-  // Uncommon — themed modern fits
-  MDRN_POLC: { emoji: '👮', displayName: 'Modern Police', description: 'Tactical uniforms and badge-carrying gear.' },
-  SCFI_CIVL: { emoji: '👨‍🚀', displayName: 'Sci-Fi Civilians', description: 'Clean future-casual fits with subtle tech panels.' },
+  // ── Sci-fi ──
+  SCFI_CIVL: { emoji: '🚀', displayName: 'Sci-Fi Civilians', description: 'Clean future-casual fits with tech panels.' },
+  SCFI_SOLD: { emoji: '🤖', displayName: 'Sci-Fi Soldiers',  description: 'Hard-armor exo-suits for far-future ops.' },
 
-  // Rare — combat-ready sets
-  MDRN_FIGT: { emoji: '🥊', displayName: 'Modern Fighters', description: 'Street-brawl-ready tracksuits and fight gear.' },
-  GOBL_FIGT: { emoji: '🗡️', displayName: 'Goblin Fighters', description: 'Goblin mob-boss fits with studded leather.' },
-  ELVS_WARR: { emoji: '🏹', displayName: 'Elven Warriors', description: 'Forest-bound elves built for long-range combat.' },
+  // ── Fantasy ──
+  FANT_KNGT: { emoji: '⚔️', displayName: 'Fantasy Knights',  description: 'Plate armor and royal-guard fits.' },
+  FANT_VILL: { emoji: '🏘️', displayName: 'Fantasy Villagers', description: 'Townsfolk tunics and peasant garb.' },
+  FANT_SKTN: { emoji: '☠️', displayName: 'Fantasy Skeletons', description: 'Bone-warrior armor for the undead.' },
 
-  // Epic — top-tier themed sets
-  SAMR_WARR: { emoji: '🗾', displayName: 'Samurai Warriors', description: 'Feudal warlord-tier samurai armor.' },
+  // ── Cultural / themed warriors ──
+  SAMR_WARR: { emoji: '🗾', displayName: 'Samurai Warriors',  description: 'Feudal warlord-tier samurai armor.' },
+  VIKG_WARR: { emoji: '🪓', displayName: 'Viking Warriors',   description: 'Northern raider furs and ironwork.' },
+  ELVN_WARR: { emoji: '🏹', displayName: 'Elven Warriors',    description: 'Forest-bound elves built for ranged combat.' },
+  GOBL_FIGT: { emoji: '🗡️', displayName: 'Goblin Fighters',   description: 'Goblin mob-boss fits with studded leather.' },
+
+  // ── Apocalypse / horror ──
   APOC_OUTL: { emoji: '☢️', displayName: 'Apocalypse Outlaws', description: 'Wasteland raider fits for the end of the world.' },
+  APOC_SURV: { emoji: '🥾', displayName: 'Apocalypse Survivors', description: 'Practical wasteland-survival fits.' },
+  APOC_ZOMB: { emoji: '🧟', displayName: 'Apocalypse Zombies', description: 'Tattered remnants of the undead.' },
+  HORR_VILN: { emoji: '🎭', displayName: 'Horror Villains',   description: 'Slasher and creature-feature looks.' },
+
+  // ── Pirates ──
+  PIRT_CAPT: { emoji: '🏴‍☠️', displayName: 'Pirate Captains', description: 'High-seas captains with brass and brocade.' },
 };
 
 /** Display metadata for a pack prefix. Returns a generic fallback for
@@ -131,16 +147,23 @@ export function slotEmoji(partName: string, packEmoji: string): string {
  *  their live list of packs and get an ordered copy. */
 export function sortPacksForShop(packs: string[]): string[] {
   const TIER: Record<string, number> = {
-    HUMN_BASE: 0, GOBL_BASE: 0, ELVS_BASE: 0, SKEL_BASE: 0, ZOMB_BASE: 0,
-    MDRN_CIVL: 1, MDRN_CASH: 1,
-    MDRN_POLC: 2, SCFI_CIVL: 2,
-    MDRN_FIGT: 3, GOBL_FIGT: 3, ELVS_WARR: 3,
-    SAMR_WARR: 4, APOC_OUTL: 4,
+    // Tier 0 — species starters (always owned, hidden in shop anyway)
+    HUMN_BASE: 0, ELVN_BASE: 0, GOBL_BASE: 0, SKTN_BASE: 0, ZOMB_BASE: 0,
+    // Tier 1 — common modern
+    MDRN_CIVL: 1, FANT_VILL: 1,
+    // Tier 2 — uncommon themed
+    MDRN_POLC: 2, SCFI_CIVL: 2, APOC_SURV: 2,
+    // Tier 3 — rare combat
+    GOBL_FIGT: 3, ELVN_WARR: 3, FANT_KNGT: 3, VIKG_WARR: 3,
+    // Tier 4 — epic top-tier
+    SAMR_WARR: 4, APOC_OUTL: 4, PIRT_CAPT: 4, SCFI_SOLD: 4,
+    // Tier 5 — undead / horror
+    APOC_ZOMB: 5, FANT_SKTN: 5, HORR_VILN: 5,
   };
   const unique = Array.from(new Set(packs));
   return unique.sort((a, b) => {
-    const ta = TIER[a] ?? 5;
-    const tb = TIER[b] ?? 5;
+    const ta = TIER[a] ?? 9;
+    const tb = TIER[b] ?? 9;
     if (ta !== tb) return ta - tb;
     return a.localeCompare(b);
   });

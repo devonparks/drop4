@@ -369,19 +369,26 @@ export const BOARD_ACCESSORIES: ShopItem[] = [
   { id: 'darkmatter_frame', name: 'Dark Matter Frame', price: 0, rarity: 'darkmatter', preview: {}, collection: 'Mythic Collection', animated: true, description: 'The frame bleeds dark energy' },
 ];
 
-// ─── EMOTES (unchanged) ─────────────────────────────────────────────────────
-
-export const EMOTES: ShopItem[] = [
-  { id: 'laugh', name: 'Laugh', price: 0, rarity: 'common', preview: {} },
-  { id: 'clap', name: 'Clap', price: 0, rarity: 'common', preview: {} },
-  { id: 'shrug', name: 'Shrug', price: 300, rarity: 'common', preview: {} },
-  { id: 'flex', name: 'Flex', price: 500, rarity: 'rare', preview: {} },
-  { id: 'dance', name: 'Dance', price: 1000, rarity: 'rare', preview: {} },
-  { id: 'backflip', name: 'Backflip', price: 2000, rarity: 'epic', preview: {} },
-  { id: 'crown_pose', name: 'Crown Pose', price: 3000, rarity: 'epic', preview: {} },
-  { id: 'mic_drop', name: 'Mic Drop', price: 5000, rarity: 'legendary', preview: {} },
-  { id: 'griddy', name: 'Griddy', price: 0, rarity: 'darkmatter', preview: {} },
-];
+// ─── EMOTES (legacy, drained) ──────────────────────────────────────────────
+//
+// The 9 entries here (Laugh / Clap / Shrug / Flex / Dance / Backflip /
+// Crown Pose / Mic Drop / Griddy) were placeholder shop tiles from the
+// pre-AMG era. They never had GLB animations attached — tapping one in
+// the shop was just a coin sink with no payoff. Worse, they rendered as
+// the generic Connect-4-board placeholder thumbnail next to the new
+// chunky 3D AMG emote icons (Dab, Bow, Twist, etc.), which made the
+// emote shop look broken.
+//
+// The replacement is `EMOTE_SHOP_ITEMS` in cosmeticsShopCatalog.ts,
+// generated from `HUMAN_EMOTES` in animationRegistry.ts (the 21 real
+// AMG emotes that actually animate). ShopScreen + CustomizeScreen both
+// already iterate that list — emptying this array drops the dead
+// inventory without touching any other imports.
+//
+// The export stays as `[]` so any straggler consumer (build artifacts,
+// snapshot tests, etc.) compiles. Migrate them off and delete this when
+// time permits.
+export const EMOTES: ShopItem[] = [];
 
 // ─── RARITY SYSTEM ──────────────────────────────────────────────────────────
 

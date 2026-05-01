@@ -13,17 +13,55 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Platform, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { PressScale } from '../animations';
 import {
   getPartPrice,
   RARITY_COLORS,
   RARITY_LABELS,
 } from '../../data/amgPartPricing';
-import { packMeta, slotEmoji } from '../../data/amgPackMeta';
+import { packMeta } from '../../data/amgPackMeta';
+import { getPackIcon } from '../../data/cosmeticIcons';
+import { getPartThumb } from '../../data/partThumbs';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
+
+/** Translate a Sidekick slot code → human-readable label that sells what
+ *  the player is actually equipping. The previous card relied on a tiny
+ *  emoji for slot identity — Devon called this out as unreadable. The
+ *  short label fits in 6-7 chars and reads at a glance even at 96px. */
+const SLOT_LABEL: Record<string, string> = {
+  '01HEAD': 'HEAD',
+  '02HAIR': 'HAIR',
+  '03EBRL': 'BROW L', '04EBRR': 'BROW R',
+  '05EYEL': 'EYE L',  '06EYER': 'EYE R',
+  '07EARL': 'EAR L',  '08EARR': 'EAR R',
+  '09FCHR': 'BEARD',
+  '10TORS': 'TORSO',
+  '11AUPL': 'ARM UL', '12AUPR': 'ARM UR',
+  '13ALWL': 'ARM LL', '14ALWR': 'ARM LR',
+  '15HNDL': 'HAND L', '16HNDR': 'HAND R',
+  '17HIPS': 'HIPS',
+  '18LEGL': 'LEG L',  '19LEGR': 'LEG R',
+  '20FOTL': 'FOOT L', '21FOTR': 'FOOT R',
+  '22AHED': 'HELM',   '23AFAC': 'MASK',
+  '24ABAC': 'BACK',
+  '25AHPF': 'HIP F',  '26AHPB': 'HIP B',
+  '27AHPL': 'HIP SL', '28AHPR': 'HIP SR',
+  '29ASHL': 'PAULDRN', '30ASHR': 'PAULDRN',
+  '31ELOL': 'ELBOW',  '32ELOR': 'ELBOW',
+  '33AKNL': 'KNEE',
+  '35NOSE': 'NOSE',
+  '36TETH': 'TEETH',
+  '37TONG': 'TONGUE',
+};
+function slotLabel(partName: string): string {
+  const m = partName.match(/_(\d{2}[A-Z]+)_/);
+  const code = m?.[1];
+  return (code && SLOT_LABEL[code]) || 'PART';
+}
 
 interface AmgPartCardProps {
   /** Full Sidekick part name, e.g. 'SK_MDRN_CIVL_01_10TORS_HU01'. */
@@ -118,16 +156,43 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
       accessibilityRole="button"
       accessibilityLabel={owned ? `Equip ${meta.displayName} ${variant}` : `Buy ${meta.displayName} ${variant} for ${price} coins`}
     >
-      <Animated.View style={[styles.card, { borderColor: rarityColor, width: dim, height: dim + 32 }, glowStyle]}>
-        {/* Pack emoji block — SLOT-aware. The hero emoji now reflects
-            the BODY REGION (shirt/pants/hat/shoes) so a grid of police
-            parts reads as "shirt, shirt, pants, shoes" at a glance
-            instead of "cop-head x6." The small pack emoji in the
-            corner preserves the fashion brand identity. */}
-        <View style={[styles.swatch, { backgroundColor: rarityColor + '22' }]}>
-          <Text style={styles.emoji}>{slotEmoji(partName, meta.emoji)}</Text>
-          <Text style={styles.packBadge}>{meta.emoji} #{variant}</Text>
-        </View>
+      <Animated.View style={[styles.card, { borderColor: rarityColor, width: dim, height: dim + 50 }, glowStyle]}>
+        {/* Hero swatch — pack-themed gradient with the slot emoji as the
+            visual anchor. Devon's audit said "can't tell what you're
+            buying" with the prior layout (small emoji on a flat tinted
+            box). New treatment: bigger emoji + a clear SLOT label
+            below it (TORSO / HAIR / etc.) so the player gets
+            "this is a torso" at a glance, even before they read the
+            pack name. */}
+        <LinearGradient
+          colors={[rarityColor + '40', rarityColor + '12']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.swatch}
+        >
+          {/* Hero image cascade — three tiers, picked in order:
+              1. Per-part Unity render (the WYSIWYG ideal — the EXACT part
+                 you'd be buying, framed by slot category). 2886 of these
+                 from the Synty Character Creator headless export.
+              2. Pack-cover icon (chunky 3D AI-generated mascot). Used
+                 when the part isn't in partThumbs.ts (e.g. brand-new
+                 pack added since the last Unity batch).
+              3. Default human civvie pack icon — last-resort fallback so
+                 nothing renders blank.
+              The slot label underneath the image differentiates parts
+              within the same pack regardless of which tier hits. */}
+          <Image
+            source={
+              getPartThumb(partName) ??
+              getPackIcon(pack) ??
+              require('../../assets/images/ui/pack-humn-base.png')
+            }
+            style={[styles.heroImage, { width: dim - 24, height: dim - 30 }]}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+          />
+          <Text style={[styles.slotLabel, { color: rarityColor }]}>{slotLabel(partName)}</Text>
+        </LinearGradient>
 
         {/* NEW ribbon — shows for parts unlocked in the last 7 days.
             Subtly wobbles so the player's eye catches fresh unlocks. */}
@@ -141,6 +206,14 @@ export function AmgPartCard({ partName, owned, onBuy, onEquip, size = 'comfortab
             <Text style={styles.newText}>NEW</Text>
           </Animated.View>
         ) : null}
+
+        {/* Pack identity strip — truncated display name + variant. The
+            pack cover hero image already conveys pack identity, so the
+            small emoji is gone — text-only here keeps the strip clean. */}
+        <View style={styles.packStrip}>
+          <Text style={styles.packName} numberOfLines={1}>{meta.displayName}</Text>
+          <Text style={styles.packVariant}>·{variant}</Text>
+        </View>
 
         {/* Footer: rarity/price or OWNED chip */}
         <View style={styles.footer}>
@@ -172,27 +245,49 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 4,
+    paddingBottom: 2,
   },
-  emoji: {
-    fontSize: 36,
+  heroImage: {
+    // Sized inline by `dim` so the cover scales with compact / comfortable.
   },
-  variant: {
+  // Big slot type label sitting under the slot emoji. Tells the player
+  // exactly which body part they're buying without needing to decode
+  // the emoji. Color matches the rarity for visual cohesion.
+  slotLabel: {
     marginTop: 2,
-    fontSize: 9,
-    color: colors.textMuted,
+    fontSize: 11,
     fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    letterSpacing: 1,
+    fontWeight: weight.bold,
+    letterSpacing: 1.4,
   },
-  // Tiny pack-emoji + variant tag underneath the big slot emoji.
-  // Keeps the pack brand visible without making the card noisy.
-  packBadge: {
-    marginTop: 4,
-    fontSize: 10,
-    color: colors.textMuted,
+  // Pack-identity strip between the swatch and the footer. Pack emoji
+  // + display name + variant — the "from where" line.
+  packStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceBorder,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  packName: {
+    flexShrink: 1,
     fontFamily: fonts.body,
-    fontWeight: weight.medium,
-    letterSpacing: 0.6,
+    fontWeight: weight.semibold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.78)',
+    letterSpacing: 0.3,
+  },
+  packVariant: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.5,
   },
   footer: {
     height: 28,

@@ -1,60 +1,58 @@
 /**
- * CharacterSnapshot — one-time snapshot of Character3D cached as a PNG.
+ * CharacterSnapshot — one-time snapshot of an AMG character cached as a PNG.
  *
  * Why: Collection + Roster grids display 20-40 characters simultaneously. A
  * live <Canvas> per card is a memory + GPU disaster. We render each unique
- * customization ONCE offscreen, capture it to PNG via react-native-view-shot,
+ * character ONCE offscreen, capture it to PNG via react-native-view-shot,
  * stuff the base64 data URI into AsyncStorage, and serve <Image> from the
  * cache on every subsequent mount.
  *
- * Cache key = short hash of customization + outfit ID + size bucket. If the
- * player recolors their hair, the key changes and a fresh snapshot is taken.
+ * Cache key = short hash of the CharacterState (parts + colors + blendshapes)
+ * + size bucket. If the player swaps any slot, the key changes and a fresh
+ * snapshot is taken.
  *
  * Fallbacks:
- *   - On the first render we show a small ActivityIndicator + a transparent
- *     box at the requested size
- *   - If view-shot fails (e.g. web), we render a full live Character3D
- *     instead. Grids pay the perf cost; correctness wins over perf on web.
+ *   - Web doesn't support view-shot reliably with GLContext canvases —
+ *     we render Character3DPortrait live instead. Grids pay the perf cost;
+ *     correctness wins over perf on web.
+ *   - On capture failure (e.g. timing) we also fall through to live.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Character3D } from './Character3D';
-import type { CharacterCustomization } from '../../stores/characterStore';
-import { OUTFITS } from '../../data/outfitRegistry';
+import { Character3DPortrait } from './Character3DPortrait';
+import type { CharacterState } from '@amg/character-runtime';
 import { colors } from '../../theme/colors';
 
 interface Props {
   width: number;
   height: number;
-  customization: CharacterCustomization;
+  customization: CharacterState;
   /** If true, re-snapshot on every mount (useful for debugging). */
   bypassCache?: boolean;
   style?: any;
 }
 
-// ── Fast stable hash for a customization + size bucket ──
-function cacheKey(c: CharacterCustomization, size: number): string {
-  const color = (c.outfitColors && Object.keys(c.outfitColors).sort()
-    .map((k) => `${k}:${c.outfitColors[k]}`).join(',')) || '';
-  const payload = [
-    c.outfitId,
-    Math.round(c.bodyType),
-    Math.round(c.bodySize),
-    Math.round(c.muscle),
-    c.skinColor,
-    c.hairColor,
-    color,
-    size,
-  ].join('|');
-  // FNV-1a 32-bit — short stable hex hash, good enough for collision-free cache keys
+// ── Fast stable hash for a CharacterState + size bucket ──
+function cacheKey(c: CharacterState, size: number): string {
+  const parts = Object.entries(c.parts as Record<string, string>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([slot, name]) => `${slot}=${name}`)
+    .join(',');
+  const colors = Object.entries(c.colors as Record<string, string>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([prop, hex]) => `${prop}=${hex}`)
+    .join(',');
+  const blend = `${(c.blendshapes.feminine ?? 0).toFixed(2)}|${(c.blendshapes.weight ?? 0).toFixed(2)}|${(c.blendshapes.muscle ?? 0).toFixed(2)}`;
+  const payload = [c.species, parts, colors, blend, size].join('||');
+  // FNV-1a 32-bit — short stable hex hash, good enough for collision-free keys
   let h = 0x811c9dc5;
   for (let i = 0; i < payload.length; i++) {
     h ^= payload.charCodeAt(i);
     h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
   }
-  return `char3d_snap_v1_${h.toString(16)}`;
+  return `char3d_snap_v2_${h.toString(16)}`;
 }
 
 export function CharacterSnapshot({ width, height, customization, bypassCache, style }: Props) {
@@ -83,8 +81,11 @@ export function CharacterSnapshot({ width, height, customization, bypassCache, s
     return () => { cancelled = true; };
   }, [key, bypassCache, fallbackToLive]);
 
-  // Take the snapshot after the offscreen 3D canvas has had a moment to render.
-  // 600 ms is empirically long enough for GLTF parse + three-point lighting.
+  // Take the snapshot after the offscreen Composite character has had time
+  // to fetch + graft its part GLBs. AMG composition is more network-heavy
+  // than the legacy single-GLB path, so 1500 ms is a safer floor before
+  // capture. On a warm cache (subsequent snapshots) the parts resolve
+  // synchronously and the timer is just dead air — acceptable trade-off.
   useEffect(() => {
     if (snapshotDone || fallbackToLive) return;
     const t = setTimeout(async () => {
@@ -105,28 +106,18 @@ export function CharacterSnapshot({ width, height, customization, bypassCache, s
       } finally {
         setSnapshotDone(true);
       }
-    }, 600);
+    }, 1500);
     return () => clearTimeout(t);
   }, [key, snapshotDone, fallbackToLive]);
 
-  const outfit = OUTFITS[customization.outfitId] ?? OUTFITS[Object.keys(OUTFITS)[0]];
-  if (!outfit) return <View style={[{ width, height }, style]} />;
-
-  // If snapshotting failed (web or capture error), just render live. Worse
-  // perf but correct output.
+  // Fallback live render — wraps Character3DPortrait at the requested size.
   if (fallbackToLive) {
     return (
       <View style={[{ width, height }, style]}>
-        <Character3D
+        <Character3DPortrait
           width={width}
           height={height}
-          bodyGlb={outfit.glb}
-          skinColor={customization.skinColor}
-          hairColor={customization.hairColor}
-          outfitColors={customization.outfitColors}
-          bodyType={customization.bodyType}
-          bodySize={customization.bodySize}
-          muscle={customization.muscle}
+          customization={customization}
           showFloor={false}
         />
       </View>
@@ -144,7 +135,7 @@ export function CharacterSnapshot({ width, height, customization, bypassCache, s
     );
   }
 
-  // Still snapshotting: render Character3D inside ViewShot, plus a spinner
+  // Still snapshotting: render the portrait inside ViewShot, plus a spinner
   // overlay so the grid doesn't pop.
   return (
     <View style={[{ width, height }, style]}>
@@ -153,16 +144,10 @@ export function CharacterSnapshot({ width, height, customization, bypassCache, s
         style={{ width, height }}
         options={{ format: 'png', quality: 0.92, result: 'data-uri' }}
       >
-        <Character3D
+        <Character3DPortrait
           width={width}
           height={height}
-          bodyGlb={outfit.glb}
-          skinColor={customization.skinColor}
-          hairColor={customization.hairColor}
-          outfitColors={customization.outfitColors}
-          bodyType={customization.bodyType}
-          bodySize={customization.bodySize}
-          muscle={customization.muscle}
+          customization={customization}
           showFloor={false}
         />
       </ViewShot>
