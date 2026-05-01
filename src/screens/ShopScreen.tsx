@@ -692,13 +692,17 @@ export function ShopScreen() {
   const [activeTab, setActiveTab] = useState<ShopTab>('clothes');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
   // In-app styled confirm modal — replaces window.confirm() for pet +
-  // emote purchases. The native browser dialog froze the web preview
-  // (Claude headless can't dismiss) AND looked off-brand.
+  // emote purchases AND the "not enough coins" terminal alert. The
+  // native browser dialog froze the web preview (Claude headless can't
+  // dismiss) AND looked off-brand.
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     message: string;
     confirmLabel: string;
     onConfirm: () => void;
+    /** Single-button mode — no Cancel. Used for terminal alerts like
+     *  "not enough coins" where the player just acknowledges. */
+    confirmOnly?: boolean;
   } | null>(null);
   const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
   const [outfitPreview, setOutfitPreview] = useState<ShopItem | null>(null);
@@ -881,9 +885,13 @@ export function ShopScreen() {
     // player never accidentally spends coins by tapping a shop card.
     if (coins < item.price) {
       haptics.error();
-      const msg = `Not enough coins — this emote costs ${item.price}. You have ${coins}.`;
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Not enough coins', msg);
+      setConfirmDialog({
+        title: 'Not enough coins',
+        message: `This emote costs ${item.price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        confirmLabel: 'Got it',
+        onConfirm: () => {},
+        confirmOnly: true,
+      });
       return;
     }
     const doBuy = () => {
@@ -923,9 +931,13 @@ export function ShopScreen() {
     // Insufficient coins guard — same UX as AMG parts: error + bail.
     if (coins < pet.price) {
       haptics.error();
-      const msg = `Not enough coins — ${pet.name} costs ${pet.price}. You have ${coins}.`;
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Not enough coins', msg);
+      setConfirmDialog({
+        title: 'Not enough coins',
+        message: `${pet.name} costs ${pet.price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        confirmLabel: 'Got it',
+        onConfirm: () => {},
+        confirmOnly: true,
+      });
       return;
     }
     // Confirm before spending. Pets cost 200-2000 coins; tapping a card
@@ -1601,6 +1613,7 @@ export function ShopScreen() {
         title={confirmDialog?.title ?? ''}
         message={confirmDialog?.message}
         confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        confirmOnly={confirmDialog?.confirmOnly}
         onConfirm={() => {
           confirmDialog?.onConfirm();
           setConfirmDialog(null);

@@ -42,6 +42,10 @@ export interface ConfirmDialogProps {
    *  Set false for destructive actions (e.g. unequip / delete) — those
    *  use a softer red border instead of an attention-grabbing fill. */
   primary?: boolean;
+  /** When true, hide the cancel button — the dialog becomes a single-
+   *  button alert. Used for terminal "not enough coins" / "error"
+   *  messages where the player just needs to acknowledge. */
+  confirmOnly?: boolean;
 }
 
 export function ConfirmDialog({
@@ -53,6 +57,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   primary = true,
+  confirmOnly = false,
 }: ConfirmDialogProps) {
   return (
     <PreviewSafeModal transparent visible={visible} animationType="fade" onRequestClose={onCancel}>
@@ -68,19 +73,22 @@ export function ConfirmDialog({
             {message ? <Text style={styles.message}>{message}</Text> : null}
 
             <View style={styles.btnRow}>
-              <Pressable
-                onPress={() => { haptics.tap(); playSound('click'); onCancel(); }}
-                style={styles.btnCancel}
-                accessibilityRole="button"
-                accessibilityLabel={cancelLabel}
-              >
-                <Text style={styles.btnCancelText}>{cancelLabel}</Text>
-              </Pressable>
+              {!confirmOnly && (
+                <Pressable
+                  onPress={() => { haptics.tap(); playSound('click'); onCancel(); }}
+                  style={styles.btnCancel}
+                  accessibilityRole="button"
+                  accessibilityLabel={cancelLabel}
+                >
+                  <Text style={styles.btnCancelText}>{cancelLabel}</Text>
+                </Pressable>
+              )}
               <Pressable
                 onPress={() => { haptics.win(); playSound('coin'); onConfirm(); }}
                 style={[
                   styles.btnConfirm,
                   primary && { backgroundColor: colors.coinGold },
+                  confirmOnly && { flex: 1 },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={confirmLabel}

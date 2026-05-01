@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Alert, Platform } from 'react-native';
 import { CharacterCreator } from '@amg/character-creator';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   NEUTRAL_CHARACTER,
   type CharacterState,
@@ -57,6 +57,16 @@ const LOOK_ICONS = {
 
 export function CharacterCreatorScreen() {
   const navigation = useNavigation<any>();
+  // Styled in-app confirm dialog state — replaces the old window.confirm
+  // / window.alert blocking pair when the player taps a locked AMG part
+  // and is asked to spend coins (or told they can't afford it).
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+    confirmOnly?: boolean;
+  } | null>(null);
 
   // characterStore now has a dedicated amgCharacter slot persisted to
   // AsyncStorage alongside the legacy single-GLB customization. First
@@ -82,14 +92,15 @@ export function CharacterCreatorScreen() {
     if (amgStarterSeen) return;
     const timer = setTimeout(() => {
       haptics.win();
-      Alert.alert(
-        '🎁 Starter Wardrobe Unlocked',
-        "You already own 5 base character heads/hair (one per species) " +
-        "and 12 Modern Civilian outfit variants. Browse the Shop's Clothes " +
-        "tab to buy more packs (Samurai, Apocalypse, Fighters, and more).",
-        [{ text: "Let's go", onPress: () => markAmgStarterSeen() }],
-        { cancelable: false },
-      );
+      setConfirmDialog({
+        title: '🎁 Starter Wardrobe Unlocked',
+        message: "You already own 5 base character heads/hair (one per species) " +
+          "and 12 Modern Civilian outfit variants. Browse the Shop's Clothes " +
+          "tab to buy more packs (Samurai, Apocalypse, Fighters, and more).",
+        confirmLabel: "Let's go",
+        confirmOnly: true,
+        onConfirm: () => markAmgStarterSeen(),
+      });
     }, 600);
     return () => clearTimeout(timer);
   }, [amgStarterSeen, markAmgStarterSeen]);
@@ -147,34 +158,27 @@ export function CharacterCreatorScreen() {
 
     if (coins < price) {
       haptics.error();
-      const msg = `Not enough coins — this ${rarity} item costs ${price}. You have ${coins}.`;
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Not enough coins', msg);
+      setConfirmDialog({
+        title: 'Not enough coins',
+        message: `This ${rarity} item costs ${price.toLocaleString()}. You have ${coins.toLocaleString()}.`,
+        confirmLabel: 'Got it',
+        onConfirm: () => {},
+        confirmOnly: true,
+      });
       return;
     }
 
-    // RN-Web's Alert.alert silently swallows multi-button configs, so
-    // we branch: native gets a proper Alert, web uses window.confirm.
-    const doBuy = () => {
-      const ok = useShopStore.getState().spendCoins(price);
-      if (!ok) { haptics.error(); return; }
-      haptics.win();
-      unlockAmgPart(partName);
-    };
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(`Unlock this ${rarity} item for ${price} coins?`);
-      if (confirmed) doBuy();
-      else haptics.tap();
-    } else {
-      Alert.alert(
-        'Buy this part?',
-        `Unlock this ${rarity} item for ${price} coins?`,
-        [
-          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-          { text: `Buy ${price}`, style: 'default', onPress: doBuy },
-        ],
-      );
-    }
+    setConfirmDialog({
+      title: 'Buy this part?',
+      message: `Unlock this ${rarity} item for ${price.toLocaleString()} coins?`,
+      confirmLabel: `Buy ${price}`,
+      onConfirm: () => {
+        const ok = useShopStore.getState().spendCoins(price);
+        if (!ok) { haptics.error(); return; }
+        haptics.win();
+        unlockAmgPart(partName);
+      },
+    });
   }
 
   // Creator visual callbacks: rarity tint on every part thumbnail + a
@@ -195,29 +199,46 @@ export function CharacterCreatorScreen() {
   }
 
   return (
-    <CharacterCreator
-      source={CONTENT_SOURCE}
-      initial={initial}
-      ownedParts={ownedParts}
-      isPartOwned={isPartOwned}
-      onSave={handleSave}
-      onCancel={handleCancel}
-      onLockedPart={handleLockedPart}
-      getRarityColor={getRarityColor}
-      getPriceLabel={getPriceLabel}
-      savedMessage="✓ SAVED"
-      // Painted chunky 3D dice for the RANDOMIZE action button. Per
-      // docs/CUSTOMIZE_AUDIT.md item #4 the raw 🎲 emoji was the last
-      // placeholder in an otherwise painted creator; this swaps it for
-      // the same gen-art icon language as the rest of the locked
-      // VISUAL_DIRECTION lockup.
-      randomizeIcon={require('../assets/images/ui/creator-dice.png')}
-      // BodyTab Looks gallery: replaces the per-look emoji glyph with
-      // the painted chunky 3D pack cover. One image per Look — Casual /
-      // Athletic / Tactical / Samurai / Knight / Pirate / etc. So the
-      // first thing a player sees in BODY tab reads as painted product
-      // art instead of OS-rendered emoji.
-      lookIcons={LOOK_ICONS}
-    />
+    <>
+      <CharacterCreator
+        source={CONTENT_SOURCE}
+        initial={initial}
+        ownedParts={ownedParts}
+        isPartOwned={isPartOwned}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onLockedPart={handleLockedPart}
+        getRarityColor={getRarityColor}
+        getPriceLabel={getPriceLabel}
+        savedMessage="✓ SAVED"
+        // Painted chunky 3D dice for the RANDOMIZE action button. Per
+        // docs/CUSTOMIZE_AUDIT.md item #4 the raw 🎲 emoji was the last
+        // placeholder in an otherwise painted creator; this swaps it for
+        // the same gen-art icon language as the rest of the locked
+        // VISUAL_DIRECTION lockup.
+        randomizeIcon={require('../assets/images/ui/creator-dice.png')}
+        // BodyTab Looks gallery: replaces the per-look emoji glyph with
+        // the painted chunky 3D pack cover. One image per Look — Casual /
+        // Athletic / Tactical / Samurai / Knight / Pirate / etc. So the
+        // first thing a player sees in BODY tab reads as painted product
+        // art instead of OS-rendered emoji.
+        lookIcons={LOOK_ICONS}
+      />
+      {/* Styled buy-confirm dialog for inline AMG part purchases (when
+          a locked part is tapped in the creator). Replaces the prior
+          window.confirm/alert calls that froze the web preview. */}
+      <ConfirmDialog
+        visible={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message}
+        confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        confirmOnly={confirmDialog?.confirmOnly}
+        onConfirm={() => {
+          confirmDialog?.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+      />
+    </>
   );
 }
