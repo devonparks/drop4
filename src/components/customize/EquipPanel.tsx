@@ -370,11 +370,12 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     // Cap sheet height. The modal's parent (a React Navigation screen
-    // wrapper) extends above the visible phone screen by ~190px, so we
-    // need height ≤ 480 to keep the sheet's top edge inside the visible
-    // area. Without this cap the title + close button render behind
-    // the PhoneFrame bezel on web preview.
-    height: 480,
+    // wrapper) extends above the visible phone screen by anywhere from
+    // 66 to 200px depending on the active tab's content. We need the
+    // sheet's top edge to stay inside the PhoneFrame's visible screen
+    // (y ≥ 126.5 of viewport). Conservative 400px cap keeps the sheet
+    // visible across every customize-tab context.
+    height: 400,
     overflow: 'hidden',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
