@@ -384,8 +384,30 @@ function PremiumPiece({ color }: { color: string }) {
 }
 
 // ─── Shop Item Card (existing, improved) ───────────────────────
-// Pack slug → emoji icon mapping for outfit card previews. Pure decoration;
-// real 3D preview shows in the OutfitPreviewModal on tap.
+// outfitRegistry pack-slug (lowercase snake_case) → Sidekick pack-code
+// (UPPERCASE) translator. Outfit cards use this to look up their
+// chunky 3D pack cover via getPackIcon() so the Outfits tab matches
+// the Character/Clothes tab visual treatment.
+const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
+  modern_civilians:    'MDRN_CIVL',
+  modern_police:       'MDRN_POLC',
+  apocalypse_outlaws:  'APOC_OUTL',
+  apocalypse_survivor: 'APOC_SURV',
+  apocalypse_zombies:  'APOC_ZOMB',
+  fantasy_villagers:   'FANT_VILL',
+  fantasy_knights:     'FANT_KNGT',
+  fantasy_skeletons:   'FANT_SKTN',
+  elven_warriors:      'ELVN_WARR',
+  goblin_fighters:     'GOBL_FIGT',
+  pirate_captains:     'PIRT_CAPT',
+  samurai_warriors:    'SAMR_WARR',
+  viking_warriors:     'VIKG_WARR',
+  sci_fi_civilians:    'SCFI_CIVL',
+  sci_fi_soldiers:     'SCFI_SOLD',
+};
+
+// Legacy emoji map kept for the OutfitPreviewModal which still
+// renders inline emojis at small sizes; can be migrated later.
 const PACK_ICON: Record<string, string> = {
   modern_civilians: '\u{1F455}',      // shirt
   modern_police: '\u{1F46E}',          // police officer
@@ -484,7 +506,26 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
-                  <Text style={{ fontSize: 30, zIndex: 1 }}>{PACK_ICON[outfitMeta.pack] ?? '\u{1F455}'}</Text>
+                  {(() => {
+                    // Outfit cards now show the chunky 3D pack cover
+                    // (matching what the Character/Clothes tab shows in
+                    // its pack section headers) instead of an emoji
+                    // glyph. Translates the lowercase outfit pack-slug
+                    // to the Sidekick prefix used by cosmeticIcons.
+                    const sidekickKey = OUTFIT_PACK_TO_SIDEKICK[outfitMeta.pack];
+                    const cover = sidekickKey ? getPackIcon(sidekickKey) : undefined;
+                    if (cover) {
+                      return (
+                        <Image
+                          source={cover}
+                          style={{ width: 60, height: 60, zIndex: 1 }}
+                          resizeMode="contain"
+                          accessibilityIgnoresInvertColors
+                        />
+                      );
+                    }
+                    return <Text style={{ fontSize: 30, zIndex: 1 }}>{'\u{1F455}'}</Text>;
+                  })()}
                   {/* Rarity corner chip (top-left) to keep tier legible */}
                   <View style={{ position: 'absolute', top: 3, left: 3, zIndex: 2, width: 7, height: 7, borderRadius: 4, backgroundColor: rarityColor }} />
                   <Text style={{
