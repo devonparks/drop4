@@ -172,7 +172,7 @@ export function CharacterCreatorScreen() {
 
     setConfirmDialog({
       title: `Buy this ${RARITY_LABELS[rarity]} part?`,
-      message: `Unlock for ${price.toLocaleString()} coins. You have ${coins.toLocaleString()}.`,
+      message: `Unlock for ${price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - price).toLocaleString()}.`,
       confirmLabel: `Buy · ${price.toLocaleString()} 🪙`,
       onConfirm: () => {
         const ok = useShopStore.getState().spendCoins(price);
