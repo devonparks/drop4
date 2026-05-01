@@ -152,6 +152,12 @@ export function AmgPartPreviewModal({
                 if (!canAfford) { haptics.error(); playSound('error'); return; }
                 onBuy(partName);
               }}
+              // Wrapping Pressable needs flex:2 — the LinearGradient
+              // inside can't expand past its parent's intrinsic width,
+              // so without flex here the BUY button collapses to its
+              // text width while CANCEL (flex:1) eats the rest of the
+              // action row.
+              style={styles.buyBtnWrap}
               accessibilityRole="button"
               accessibilityLabel={canAfford ? `Buy for ${price} coins` : 'Not enough coins'}
               accessibilityState={{ disabled: !canAfford }}
@@ -234,10 +240,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12,
     color: colors.textSecondary, letterSpacing: 1,
   },
-  buyBtn: {
-    flex: 2, borderRadius: 14, paddingVertical: 12, alignItems: 'center',
+  buyBtnWrap: {
+    flex: 2,
     shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+  },
+  buyBtn: {
+    borderRadius: 14, paddingVertical: 12, alignItems: 'center',
   },
   buyText: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 14,
