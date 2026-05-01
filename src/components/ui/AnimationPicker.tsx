@@ -150,13 +150,17 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
   const selectedEmoteMeta = selectedHomeEmote ? HUMAN_EMOTES.find((e) => e.id === selectedHomeEmote) : null;
   const selectedIdleMeta = equippedIdle ? IDLE_POSES.find((i) => i.id === equippedIdle) : null;
 
+  const isNowPlayingRandom = activeTab === 'emotes'
+    ? (homeEmoteRandomMode || !selectedEmoteMeta)
+    : !selectedIdleMeta;
+
   const nowPlayingLabel = activeTab === 'emotes'
     ? (homeEmoteRandomMode || !selectedEmoteMeta
-        ? '🎲 Random Emote'
+        ? 'Random Emote'
         : selectedEmoteMeta.name)
     : (selectedIdleMeta
         ? selectedIdleMeta.name
-        : '🎲 Random Idle');
+        : 'Random Idle');
 
   return (
     <PreviewSafeModal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -203,6 +207,14 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
             autoRotate={false}
           />
           <View style={styles.nowPlaying}>
+            {isNowPlayingRandom && (
+              <Image
+                source={require('../../assets/images/ui/creator-dice.png')}
+                style={styles.nowPlayingDie}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
+            )}
             <Text style={styles.nowPlayingText}>{nowPlayingLabel}</Text>
           </View>
         </View>
@@ -410,7 +422,14 @@ const styles = StyleSheet.create({
 
   // Preview
   previewArea: { alignItems: 'center', height: 160, justifyContent: 'center', marginTop: 4 },
-  nowPlaying: { position: 'absolute', bottom: 0, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' },
+  nowPlaying: {
+    position: 'absolute', bottom: 0,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(255,140,0,0.15)',
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4,
+    borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)',
+  },
+  nowPlayingDie: { width: 14, height: 14 },
   nowPlayingText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.orange, letterSpacing: 0.5 },
 
   // Scroll
