@@ -226,7 +226,14 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                     accessibilityLabel="Random emote on tap"
                     accessibilityState={{ selected: homeEmoteRandomMode }}
                   >
-                    <View style={styles.randomDie}><Text style={styles.randomDieText}>🎲</Text></View>
+                    <View style={styles.randomDie}>
+                      <Image
+                        source={require('../../assets/images/ui/creator-dice.png')}
+                        style={styles.randomDieImg}
+                        resizeMode="contain"
+                        accessibilityIgnoresInvertColors
+                      />
+                    </View>
                     <Text style={[styles.gridCardName, homeEmoteRandomMode && { color: colors.orange }]}>
                       Random
                     </Text>
@@ -310,7 +317,14 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                     accessibilityLabel="Random idle, rotates every ~10 seconds"
                     accessibilityState={{ selected: !equippedIdle }}
                   >
-                    <View style={styles.randomDie}><Text style={styles.randomDieText}>🎲</Text></View>
+                    <View style={styles.randomDie}>
+                      <Image
+                        source={require('../../assets/images/ui/creator-dice.png')}
+                        style={styles.randomDieImg}
+                        resizeMode="contain"
+                        accessibilityIgnoresInvertColors
+                      />
+                    </View>
                     <Text style={[styles.gridCardName, !equippedIdle && { color: colors.orange }]}>
                       Random
                     </Text>
@@ -444,6 +458,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   randomDieText: { fontSize: 32 },
+  randomDieImg: { width: 56, height: 56 },
 
   // Buy-more CTA
   buyMoreCta: { borderRadius: 14, overflow: 'hidden', marginTop: 6, marginHorizontal: 4 },
