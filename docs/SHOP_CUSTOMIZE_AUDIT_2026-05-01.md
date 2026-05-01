@@ -114,6 +114,9 @@ ed66cfd shop: outfit cards use chunky 3D pack covers (drop emoji glyphs)
 39b25e8 animationpicker: Random tile dice glyph -> painted dice icon
 88fc1d8 shop: delete dead _LEGACY_PACK_ICON emoji map (19 lines)
 ef262ac customize: EquipPanel pets show painted breed icons (drop 🐾 fallback)
+ac15b47 animationpicker: now-playing 🎲 badge → painted dice + clean text
+6477935 shop: AmgPartPreviewModal BUY button — 2:1 width ratio actually applies
+99d28b1 shop: OutfitPreviewModal action row — Close vs primary now actually 1:2
 ```
 
 Matching amg-engine commits:
@@ -121,6 +124,11 @@ Matching amg-engine commits:
 95d8646 creator: FaceTab "Random Face" inline dice glyph → painted icon
 1b05ed4 creator: PartGrid locked-part scrim — lock glyph reads vs painted thumb
 ```
+
+Layout bugs caught in 4-6pm pass: both preview modals had a PressScale
++ flex pattern that silently collapsed BUY to text-width. PressScale's
+`style` prop applies to its inner Animated.View, not the outer
+Pressable — flex split must go through `containerStyle`.
 
 Plus matching `amg-engine` commits for the shared character-creator
 package work (see that repo's log).
