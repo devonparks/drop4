@@ -1784,7 +1784,13 @@ const s = StyleSheet.create({
   // ── Bundles ──
   bundlesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10, justifyContent: 'center' },
   bundleCard: {
-    width: '47%',
+    // Was width: '47%' which on web didn't compute correctly through the
+    // PressScale wrapper — the bundle cards rendered all 4 in one row,
+    // clipping the leftmost + rightmost behind the PhoneFrame edges.
+    // Fixed pixel width fits 2 cards per row at the 390-wide phone:
+    // 390 - 32 padding - 10 gap = 348 / 2 = 174 max. 168 leaves a tiny
+    // breathing room.
+    width: 168,
     borderRadius: 16, overflow: 'hidden',
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
     shadowColor: '#000',
