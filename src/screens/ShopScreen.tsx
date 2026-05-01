@@ -407,27 +407,6 @@ const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
   sci_fi_soldiers:     'SCFI_SOLD',
 };
 
-// Dead emoji map (kept commented for reference of the legacy pack-slug
-// shape — outfit cards now use OUTFIT_PACK_TO_SIDEKICK + getPackIcon).
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _LEGACY_PACK_ICON: Record<string, string> = {
-  modern_civilians: '\u{1F455}',      // shirt
-  modern_police: '\u{1F46E}',          // police officer
-  apocalypse_outlaws: '\u{1F3F4}',     // black flag
-  apocalypse_survivor: '\u{1F9EA}',    // test tube
-  apocalypse_zombies: '\u{1F9DF}',     // zombie
-  fantasy_villagers: '\u{1F33E}',      // sheaf of rice
-  fantasy_knights: '\u{1F6E1}',        // shield
-  fantasy_skeletons: '\u{1F480}',      // skull
-  elven_warriors: '\u{1F3F9}',         // bow and arrow
-  goblin_fighters: '\u{1F47A}',        // goblin
-  pirate_captains: '\u{1F3F4}\u200D\u2620\uFE0F', // pirate flag
-  samurai_warriors: '\u{1F5E1}',       // dagger
-  viking_warriors: '\u{2694}\uFE0F',   // crossed swords
-  sci_fi_civilians: '\u{1F680}',       // rocket
-  sci_fi_soldiers: '\u{1F52B}',        // pistol
-};
-
 // Deterministic hue from an outfit id. Used to tint each outfit card a
 // different color so Elven Warriors 01/02/03 look distinct without needing
 // pre-rendered thumbnails. Returns 0–359 (HSL hue degrees).
