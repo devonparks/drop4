@@ -148,13 +148,12 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     overflow: 'hidden',
-    // position: 'relative' so PreviewSafeModal's absoluteFillObject
-    // anchors HERE (not the outer phone, which would include the
-    // topBezel + statusBar). Without this, modal sheets render their
-    // header behind the bezel — the EquipPanel "BOARDS" title was
-    // landing at viewport y=74 (above the screen at y=126), so the
-    // panel looked like it had no header at all.
-    position: 'relative',
+    // (Removed `position: 'relative'` — it wasn't actually anchoring the
+    // modal because closer Navigation containers were already relative,
+    // AND it was disrupting the customize dashboard's flex layout —
+    // TopBar + CUSTOMIZE title were not rendering. EquipPanel modal
+    // positioning is now handled by the absolute backdrop + 400px sheet
+    // cap inside EquipPanel itself.)
   },
   homeIndicatorWrap: {
     height: 20,
