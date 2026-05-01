@@ -406,9 +406,10 @@ const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
   sci_fi_soldiers:     'SCFI_SOLD',
 };
 
-// Legacy emoji map kept for the OutfitPreviewModal which still
-// renders inline emojis at small sizes; can be migrated later.
-const PACK_ICON: Record<string, string> = {
+// Dead emoji map (kept commented for reference of the legacy pack-slug
+// shape — outfit cards now use OUTFIT_PACK_TO_SIDEKICK + getPackIcon).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _LEGACY_PACK_ICON: Record<string, string> = {
   modern_civilians: '\u{1F455}',      // shirt
   modern_police: '\u{1F46E}',          // police officer
   apocalypse_outlaws: '\u{1F3F4}',     // black flag
