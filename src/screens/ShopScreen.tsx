@@ -35,6 +35,7 @@ import { packMeta, sortPacksForShop } from '../data/amgPackMeta';
 import { getPackIcon, getEmoteIcon } from '../data/cosmeticIcons';
 import { filterAmgParts, groupAmgPartsByPack } from '../data/amgShopFilters';
 import { AmgPartPreviewModal } from '../components/ui/AmgPartPreviewModal';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { getPartPrice, isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
 import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -690,6 +691,15 @@ export function ShopScreen() {
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('clothes');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
+  // In-app styled confirm modal — replaces window.confirm() for pet +
+  // emote purchases. The native browser dialog froze the web preview
+  // (Claude headless can't dismiss) AND looked off-brand.
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  } | null>(null);
   const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
   const [outfitPreview, setOutfitPreview] = useState<ShopItem | null>(null);
 
@@ -887,20 +897,12 @@ export function ShopScreen() {
         playSound('error');
       }
     };
-    if (Platform.OS === 'web') {
-      const ok = window.confirm(`Buy emote for ${item.price} coins?`);
-      if (ok) doBuy();
-      else haptics.tap();
-    } else {
-      Alert.alert(
-        'Buy this emote?',
-        `Costs ${item.price} coins. You have ${coins}.`,
-        [
-          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-          { text: `Buy ${item.price}`, onPress: doBuy },
-        ],
-      );
-    }
+    setConfirmDialog({
+      title: 'Buy this emote?',
+      message: `Costs ${item.price} coins. You have ${coins.toLocaleString()}.`,
+      confirmLabel: `Buy ${item.price}`,
+      onConfirm: doBuy,
+    });
   };
 
   const handlePetPress = (pet: Pet) => {
@@ -935,20 +937,12 @@ export function ShopScreen() {
       if (success) { haptics.win(); playSound('coin'); equipPet(pet.id); }
       else { haptics.error(); playSound('error'); }
     };
-    if (Platform.OS === 'web') {
-      const ok = window.confirm(`Buy ${pet.name} for ${pet.price} coins?`);
-      if (ok) doBuy();
-      else haptics.tap();
-    } else {
-      Alert.alert(
-        'Buy this pet?',
-        `${pet.name} costs ${pet.price} coins. You have ${coins}.`,
-        [
-          { text: 'Cancel', style: 'cancel', onPress: () => haptics.tap() },
-          { text: `Buy ${pet.price}`, onPress: doBuy },
-        ],
-      );
-    }
+    setConfirmDialog({
+      title: 'Buy this pet?',
+      message: `${pet.name} costs ${pet.price.toLocaleString()} coins. You have ${coins.toLocaleString()}.`,
+      confirmLabel: `Buy ${pet.price}`,
+      onConfirm: doBuy,
+    });
   };
 
   const handleDailyCollect = () => {
@@ -1597,6 +1591,24 @@ export function ShopScreen() {
         canAfford={partPreview ? coins >= getPartPrice(partPreview.name).price : false}
         onClose={() => setPartPreview(null)}
         onBuy={confirmPartPurchase}
+      />
+
+      {/* Styled buy-confirm dialog for pet + emote purchases. Replaces
+          the blocking native window.confirm() / multi-button Alert.alert
+          which froze the web preview AND looked off-brand. */}
+      <ConfirmDialog
+        visible={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message}
+        confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        onConfirm={() => {
+          confirmDialog?.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => {
+          haptics.tap();
+          setConfirmDialog(null);
+        }}
       />
 
       {/* In-place equip confirmation. Shows briefly when the player
