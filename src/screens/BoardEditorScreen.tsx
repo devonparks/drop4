@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useBoardEditorStore } from '../stores/boardEditorStore';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Cell } from '../stores/gameStore';
@@ -31,6 +32,14 @@ export function BoardEditorScreen({ navigation }: Props) {
 
   const [boardName, setBoardName] = useState('');
   const [showSave, setShowSave] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // Count placed pieces — if the board is empty, CLEAR is a no-op so
+  // skip the confirm dialog. Only ask when there's actual work to lose.
+  const placedCount = editorBoard.reduce(
+    (sum, col) => sum + col.filter((c: Cell) => c !== 0).length,
+    0,
+  );
 
   const CELL_SIZE = Math.min(320 / editorCols, 50);
 
@@ -142,7 +151,16 @@ export function BoardEditorScreen({ navigation }: Props) {
         {/* Action buttons */}
         <StaggeredEntry index={3} delay={60}>
         <View style={styles.actions}>
-          <GlossyButton label="CLEAR" variant="navy" small onPress={() => { haptics.tap(); clearBoard(); }} />
+          <GlossyButton
+            label="CLEAR"
+            variant="navy"
+            small
+            onPress={() => {
+              haptics.tap();
+              if (placedCount === 0) return; // nothing to clear
+              setShowClearConfirm(true);
+            }}
+          />
           <GlossyButton label="SAVE" variant="green" small onPress={() => setShowSave(true)} />
           <GlossyButton label="PLAY" variant="orange" small onPress={handlePlayBoard} />
         </View>
@@ -192,6 +210,20 @@ export function BoardEditorScreen({ navigation }: Props) {
           </StaggeredEntry>
         )}
       </View>
+      <ConfirmDialog
+        visible={showClearConfirm}
+        title="Clear the board?"
+        message={`${placedCount} placed piece${placedCount === 1 ? '' : 's'} will be removed. Save first if you want to keep this layout.`}
+        cancelLabel="Keep editing"
+        confirmLabel="Clear"
+        primary={false}
+        onCancel={() => setShowClearConfirm(false)}
+        onConfirm={() => {
+          haptics.tap();
+          clearBoard();
+          setShowClearConfirm(false);
+        }}
+      />
     </ScreenBackground>
   );
 }
