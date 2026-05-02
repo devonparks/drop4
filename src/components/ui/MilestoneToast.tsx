@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Platform } from 'react-native';
 import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -210,6 +210,9 @@ export function MilestoneToast() {
 
           <Pressable
             onPress={handleClaim}
+            {...(Platform.OS === 'web'
+              ? ({ onClick: handleClaim } as any)
+              : {})}
             style={styles.button}
             accessibilityRole="button"
             accessibilityLabel={`Claim ${active.reward.name}`}
