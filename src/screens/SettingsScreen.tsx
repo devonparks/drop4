@@ -5,6 +5,7 @@ import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useShopStore } from '../stores/shopStore';
 import { useRankedStore } from '../stores/rankedStore';
 import { useGameStore } from '../stores/gameStore';
@@ -86,6 +87,12 @@ export function SettingsScreen({ navigation }: Props) {
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
+  // Reset-progress confirm dialog state. The previous Alert.alert
+  // multi-button config silently no-opped on RN-Web, which meant the
+  // most destructive button in the app could be tapped without ever
+  // showing a confirm. Switched to the styled ConfirmDialog so the
+  // confirm renders consistently across web + native.
+  const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
 
   return (
     <ScreenBackground>
@@ -273,71 +280,7 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.dangerSection}>
           <Pressable onPress={() => {
             haptics.error();
-            Alert.alert(
-              'Reset All Progress',
-              'This will erase all your coins, gems, levels, career progress, ranked stats, and game data. This cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Reset Everything',
-                  style: 'destructive',
-                  onPress: () => {
-                    // Shop — reset to defaults
-                    useShopStore.setState({
-                      coins: 500, gems: 0, level: 1, xp: 0,
-                      playerName: 'Player',
-                      equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic', boardAccessory: 'none' },
-                      owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'], boardAccessories: ['none'] },
-                    });
-                    // Ranked — full wipe (not resetSeason which adds history)
-                    useRankedStore.setState({
-                      elo: 500, tier: 'bronze', division: 1,
-                      rankedWins: 0, rankedLosses: 0, rankedGames: 0,
-                      seasonHighElo: 500, currentSeason: 0, seasonHistory: [],
-                    });
-                    // Game scores + streaks
-                    useGameStore.setState({ scores: { player1: 0, player2: 0 }, winStreak: 0, bestStreak: 0 });
-                    // Career progress
-                    useCareerStore.setState({ progress: {}, currentChapter: 1 });
-                    // Achievements
-                    useAchievementStore.setState({
-                      achievements: useAchievementStore.getState().achievements.map(a => ({ ...a, unlocked: false })),
-                    });
-                    // Match history
-                    useMatchHistoryStore.setState({ matches: [] });
-                    // Replays
-                    useReplayStore.setState({ replays: [], currentMoves: [], isRecording: false });
-                    // Daily rewards
-                    useDailyRewardStore.setState({ currentStreak: 0, lastClaimDate: null });
-                    // Loot boxes
-                    useLootBoxStore.setState({ ownedBoxes: [], openHistory: [] });
-                    // Season pass
-                    useSeasonStore.setState({ currentTier: 0, xp: 0, hasPremium: false });
-                    // Board editor
-                    useBoardEditorStore.setState({ myBoards: [] });
-                    // Challenges
-                    useChallengeStore.getState().refreshChallenges();
-                    // Daily spin
-                    useDailySpinStore.setState({ lastSpinDate: '' });
-                    // Tutorial tips + lesson mastery
-                    useTutorialStore.setState({ seenTips: [], completionAwarded: false, viewedLessons: [] });
-                    // Roster (new character-locked emotes + unlocks)
-                    try { useRosterStore?.setState?.({
-                      equippedCharacterId: 'default_player',
-                      unlockedCharacterIds: ['default_player'],
-                      pendingUnlocks: [],
-                    }); } catch (e) { /* roster store optional */ }
-                    // Welcome overlay — nuke the async storage flag so a fresh
-                    // onboarding fires on next launch (used to bypass drop4_ prefix).
-                    AsyncStorage.removeItem('drop4_welcome_dismissed').catch(() => {});
-                    // Legacy key from older builds — clean up if it exists.
-                    AsyncStorage.removeItem('welcome_dismissed').catch(() => {});
-
-                    haptics.tap();
-                  },
-                },
-              ],
-            );
+            setResetConfirmVisible(true);
           }}
           style={styles.dangerRow}
           accessibilityRole="button"
@@ -361,6 +304,70 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
         </ScrollView>
       </View>
+      <ConfirmDialog
+        visible={resetConfirmVisible}
+        title="Reset all progress?"
+        message="This will erase all your coins, gems, levels, career progress, ranked stats, and game data. This cannot be undone."
+        cancelLabel="Cancel"
+        confirmLabel="Reset everything"
+        primary={false}
+        onConfirm={() => {
+          setResetConfirmVisible(false);
+          // Shop — reset to defaults
+          useShopStore.setState({
+            coins: 500, gems: 0, level: 1, xp: 0,
+            playerName: 'Player',
+            equipped: { board: 'default', pieces: 'classic', dropEffect: 'none', winAnimation: 'basic', boardAccessory: 'none' },
+            owned: { boards: ['default'], pieces: ['classic'], dropEffects: ['none'], winAnimations: ['basic'], boardAccessories: ['none'] },
+          });
+          // Ranked — full wipe (not resetSeason which adds history)
+          useRankedStore.setState({
+            elo: 500, tier: 'bronze', division: 1,
+            rankedWins: 0, rankedLosses: 0, rankedGames: 0,
+            seasonHighElo: 500, currentSeason: 0, seasonHistory: [],
+          });
+          // Game scores + streaks
+          useGameStore.setState({ scores: { player1: 0, player2: 0 }, winStreak: 0, bestStreak: 0 });
+          // Career progress
+          useCareerStore.setState({ progress: {}, currentChapter: 1 });
+          // Achievements
+          useAchievementStore.setState({
+            achievements: useAchievementStore.getState().achievements.map(a => ({ ...a, unlocked: false })),
+          });
+          // Match history
+          useMatchHistoryStore.setState({ matches: [] });
+          // Replays
+          useReplayStore.setState({ replays: [], currentMoves: [], isRecording: false });
+          // Daily rewards
+          useDailyRewardStore.setState({ currentStreak: 0, lastClaimDate: null });
+          // Loot boxes
+          useLootBoxStore.setState({ ownedBoxes: [], openHistory: [] });
+          // Season pass
+          useSeasonStore.setState({ currentTier: 0, xp: 0, hasPremium: false });
+          // Board editor
+          useBoardEditorStore.setState({ myBoards: [] });
+          // Challenges
+          useChallengeStore.getState().refreshChallenges();
+          // Daily spin
+          useDailySpinStore.setState({ lastSpinDate: '' });
+          // Tutorial tips + lesson mastery
+          useTutorialStore.setState({ seenTips: [], completionAwarded: false, viewedLessons: [] });
+          // Roster (new character-locked emotes + unlocks)
+          try { useRosterStore?.setState?.({
+            equippedCharacterId: 'default_player',
+            unlockedCharacterIds: ['default_player'],
+            pendingUnlocks: [],
+          }); } catch (e) { /* roster store optional */ }
+          // Welcome overlay — nuke the async storage flag so a fresh
+          // onboarding fires on next launch (used to bypass drop4_ prefix).
+          AsyncStorage.removeItem('drop4_welcome_dismissed').catch(() => {});
+          // Legacy key from older builds — clean up if it exists.
+          AsyncStorage.removeItem('welcome_dismissed').catch(() => {});
+
+          haptics.tap();
+        }}
+        onCancel={() => setResetConfirmVisible(false)}
+      />
     </ScreenBackground>
   );
 }
