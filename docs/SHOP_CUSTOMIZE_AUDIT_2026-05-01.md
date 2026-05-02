@@ -133,6 +133,19 @@ a4c1e52 shop: buy-confirm dialogs preview the post-purchase balance
 722be23 creator: inline buy dialog also shows post-purchase balance
 ```
 
+Web event-handling fixes:
+```
+3f344fe topbar: avatar onClick fallback fixes intermittent profile open on web
+deb4c00 topbar: CurrencyPill "+" button onClick fallback for reliable web taps
+```
+
+Alert.alert → ConfirmDialog migration (multi-button no-op on RN-Web):
+```
+f96f868 seasonpass: Premium upgrade dialogs use ConfirmDialog
+2318105 game: quit-match prompt uses ConfirmDialog
+d775bbe settings: Reset All Progress confirm uses ConfirmDialog
+```
+
 Matching amg-engine commits:
 ```
 95d8646 creator: FaceTab "Random Face" inline dice glyph → painted icon
@@ -143,6 +156,16 @@ Layout bugs caught in 4-6pm pass: both preview modals had a PressScale
 + flex pattern that silently collapsed BUY to text-width. PressScale's
 `style` prop applies to its inner Animated.View, not the outer
 Pressable — flex split must go through `containerStyle`.
+
+RN-Web Alert.alert gotcha: multi-button configs (Cancel + Confirm)
+silently no-op — the dialog never renders, so the destructive action
+is one tap away with zero confirmation. Single-button alerts work
+fine. Migrated three of the most-used multi-button sites:
+- Premium Pass upgrade (was 2-step Alert chain)
+- Mid-match quit (was Quit Match? Cancel/Quit)
+- Reset All Progress (was the most destructive button in the app —
+  arguably a safety bug since players could nuke their save without
+  ever seeing a confirm on web).
 
 Buy-dialog UX before/after:
 - Before: "This common item costs 80. You have 40."
