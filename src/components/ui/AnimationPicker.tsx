@@ -26,6 +26,7 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { PreviewSafeModal } from './PreviewSafeModal';
@@ -302,6 +303,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                   as a shortcut to the emotes shop tab. */}
               <Pressable
                 onPress={handleBuyMore}
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: handleBuyMore } as any)
+                  : {})}
                 style={styles.buyMoreCta}
                 accessibilityRole="button"
                 accessibilityLabel="Buy more emotes in the shop"
@@ -391,6 +395,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
         <View style={[styles.closeArea, { paddingBottom: Math.max(16, insets.bottom + 12) }]}>
           <Pressable
             onPress={() => { playSound('modal_out'); onClose(); }}
+            {...(Platform.OS === 'web'
+              ? ({ onClick: () => { playSound('modal_out'); onClose(); } } as any)
+              : {})}
             style={styles.closeBtn}
             accessibilityRole="button"
             accessibilityLabel="Close animation picker"
