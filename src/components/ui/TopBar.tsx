@@ -166,6 +166,13 @@ function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextCol
   const plus = onPlusPress ? (
     <Pressable
       onPress={() => { haptics.tap(); onPlusPress(); }}
+      // Web onClick fallback — LinearGradient inside Pressable can
+      // swallow pointer events on web (same gotcha as TopBar's avatar
+      // and GlossyButton). Without this, the green "+" sometimes
+      // no-ops on the first tap.
+      {...(Platform.OS === 'web'
+        ? ({ onClick: () => { haptics.tap(); onPlusPress(); } } as any)
+        : {})}
       accessibilityLabel={plusLabel}
       accessibilityRole="button"
     >
