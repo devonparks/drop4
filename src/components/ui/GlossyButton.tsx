@@ -141,7 +141,7 @@ export function GlossyButton({
         )}
         <View style={styles.content}>
           {iconImage ? (
-            <Image source={iconImage} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" />
+            <Image source={iconImage} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" accessibilityIgnoresInvertColors />
           ) : icon ? (
             <Text style={[styles.icon, small && { fontSize: 20 }]}>{icon}</Text>
           ) : null}
@@ -150,7 +150,7 @@ export function GlossyButton({
             {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
           {iconImageRight ? (
-            <Image source={iconImageRight} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" />
+            <Image source={iconImageRight} style={small ? styles.iconImgSmall : styles.iconImg} resizeMode="contain" accessibilityIgnoresInvertColors />
           ) : iconRight ? (
             <Text style={[styles.iconRight, small && { fontSize: 18 }]}>{iconRight}</Text>
           ) : null}

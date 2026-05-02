@@ -162,7 +162,7 @@ function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextCol
       accessibilityLabel={label}
       accessibilityRole={onPress ? 'button' : 'text'}
     >
-      <Image source={iconSource} style={styles.pillIcon} resizeMode="contain" />
+      <Image source={iconSource} style={styles.pillIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
       {animatedTextColor ? (
         <Animated.Text style={[styles.pillValue, { color: animatedTextColor }]}>{value}</Animated.Text>
       ) : (
