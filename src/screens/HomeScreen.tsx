@@ -384,10 +384,12 @@ function LootBoxRow({
   onSpinPress,
   onCareerPress,
   onMissionsPress,
+  onLootBoxPress,
 }: {
   onSpinPress: () => void;
   onCareerPress: () => void;
   onMissionsPress: () => void;
+  onLootBoxPress: () => void;
 }) {
   const lastSpinDate = useDailySpinStore((s) => s.lastSpinDate);
   const challenges = useChallengeStore((s) => s.challenges);
@@ -428,7 +430,7 @@ function LootBoxRow({
         label="WIN BOX"
         status={winBoxReady ? 'READY!' : `${winsTowardBox}/3`}
         ready={winBoxReady}
-        onPress={onMissionsPress /* tapping for now goes to missions; box opens at next match */}
+        onPress={onLootBoxPress}
       />
       <LootCard
         iconSrc={require('../assets/images/ui/challenge-bag.png')}
@@ -1009,6 +1011,13 @@ export function HomeScreen() {
           onSpinPress={() => { haptics.tap(); playSound('click'); setSpinWheelOpen(true); }}
           onCareerPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Career' } as any); }}
           onMissionsPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Missions' } as any); }}
+          // WIN BOX tap routes to LootBoxScreen so the player can actually
+          // open the boxes their wins have been accumulating in
+          // ownedBoxes. Previously routed to Missions with a "box opens at
+          // next match" comment — but boxes never auto-opened, they just
+          // piled up unreachable. (See lootBoxStore.addBox callers in
+          // GameScreen, DailyRewardPopup, DailySpinWheel.)
+          onLootBoxPress={() => { haptics.tap(); playSound('click'); navigation.navigate('LootBox' as any); }}
         />
         </SlideReveal>
 
