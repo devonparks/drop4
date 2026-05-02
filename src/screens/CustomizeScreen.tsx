@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
@@ -77,15 +78,35 @@ const CATEGORIES: CategoryMeta[] = [
 
 // 3D character presenter — Customize tab is a stage, not a tap-to-react toy,
 // so we just render the player's amgCharacter via Character3DPortrait at idle.
+//
+// AAA pass 2026-05-02:
+//   - Layered radial spotlight glow underneath the character so it feels
+//     "presented" instead of floating in space (like the Sims hero stage).
+//   - Painted floor disc for grounding (subtle elliptical shadow).
+//   - Character bumped 300→320 so it dominates the upper screen without
+//     pushing the category grid below the bottom tab bar.
 function CustomizeCharacter() {
   return (
-    <Character3DPortrait
-      width={300}
-      height={300}
-      // Calm-pass: hide the floor disc; the bg-profile painted scene already
-      // provides a warm gold spotlight at the lower third.
-      showFloor={false}
-    />
+    <View style={styles.charStageInner} pointerEvents="none">
+      {/* Back-glow — large warm orange aura so the silhouette pops out
+          of the dark navy background. Layered behind the character. */}
+      <View style={styles.charGlow} />
+      {/* Floor disc — soft elliptical shadow under the feet for grounding. */}
+      <LinearGradient
+        colors={['rgba(255,140,0,0.22)', 'rgba(255,140,0,0)']}
+        style={styles.charFloorDisc}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <Character3DPortrait
+        width={320}
+        height={320}
+        // Painted scene already supplies warm-amber backdrop; we own the
+        // floor disc + spotlight stack here so the look is consistent
+        // even if the bg theme is swapped per-screen later.
+        showFloor={false}
+      />
+    </View>
   );
 }
 
@@ -99,6 +120,21 @@ export function CustomizeScreen() {
   const ownedEmotes = useShopStore((s) => s.ownedEmotes);
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
   const ownedPets = usePetStore((s) => s.ownedPets);
+
+  // Equipped readouts for the summary chip below the character. Three
+  // primitive selectors (no method calls) so Zustand re-renders only on
+  // the tiny relevant slices, not every store mutation.
+  const equippedBoardId = useShopStore((s) => s.equipped.board);
+  const equippedPiecesId = useShopStore((s) => s.equipped.pieces);
+  const equippedPetId = usePetStore((s) => s.activePetId);
+  const summary = useMemo(() => {
+    const boardName = BOARD_THEMES.find((b) => b.id === equippedBoardId)?.name;
+    const piecesName = PIECE_THEMES.find((p) => p.id === equippedPiecesId)?.name;
+    const petMeta = equippedPetId
+      ? (PETS_3D as Record<string, { name?: string }>)[equippedPetId]
+      : null;
+    return { boardName, piecesName, petName: petMeta?.name ?? null };
+  }, [equippedBoardId, equippedPiecesId, equippedPetId]);
 
   // Customize-tab equip panel state. Replaces the previous "tap card →
   // jump to Shop tab" behavior for non-character categories. Tapping a
@@ -181,31 +217,75 @@ export function CustomizeScreen() {
           onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as never)}
           onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as never)}
         />
-        <Text style={styles.title} accessibilityRole="header">CUSTOMIZE</Text>
+        {/* AAA pass: title row also carries an inline subtitle pill so the
+            screen reads as "your locker" not just a generic dashboard. */}
+        <View style={styles.titleRow}>
+          <Text style={styles.title} accessibilityRole="header">CUSTOMIZE</Text>
+          <Text style={styles.titleSub}>YOUR LOCKER</Text>
+        </View>
 
-        {/* 3D character stage. Centered, no floor, shows whatever outfit
-            the player has equipped. Will live-update when they change
-            gear via the category cards below (once drawers are wired). */}
+        {/* 3D character stage. Centered with spotlight aura + floor disc.
+            Live-updates when the player changes gear via the category
+            cards / EquipPanel sheets below. */}
         <View style={styles.charStage}>
           <CustomizeCharacter />
         </View>
 
-        {/* 3x3 grid of category cards. All 9 visible without scrolling on
-            an iPhone-standard viewport. Taps jump to Shop (interim) or
-            the Creator (Character card). */}
+        {/* Equipped summary chip — quick "what am I wearing right now"
+            so the player sees their loadout without tapping into the
+            creator. Lists the three at-a-glance slots: Board · Pieces ·
+            Pet. Tap to jump to the AMG creator for full character edit. */}
+        <PressScale
+          onPress={() => {
+            haptics.tap();
+            playSound('click');
+            navigation.navigate('AmgCreator' as never);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Open character creator"
+          accessibilityHint="Edit body, face, hair, and outfit"
+        >
+          <View style={styles.equippedChip}>
+            <Text style={styles.equippedChipIcon}>{'\u{1F3AF}'}</Text>
+            <Text style={styles.equippedChipText} numberOfLines={1}>
+              {summary.boardName ?? 'Classic'}
+              {' · '}
+              {summary.piecesName ?? 'Classic'}
+              {summary.petName ? `  ·  ${summary.petName}` : ''}
+            </Text>
+            <Text style={styles.equippedChipChevron}>{'›'}</Text>
+          </View>
+        </PressScale>
+
+        {/* Category grid. AAA pass: CHARACTER is broken out as a
+            full-width hero card so the player's primary action — open the
+            creator — is the obvious next tap. Remaining 8 categories sit
+            in a 4x2 / 2x4 grid below. */}
         <ScrollView
           contentContainerStyle={styles.gridWrap}
           showsVerticalScrollIndicator={false}
         >
+          <StaggeredEntry index={0} delay={35}>
+            <HeroCharacterCard
+              cat={CATEGORIES[0]}
+              onPress={() => handleCategoryTap(CATEGORIES[0])}
+            />
+          </StaggeredEntry>
           <View style={styles.grid}>
-            {CATEGORIES.map((cat, i) => {
+            {CATEGORIES.slice(1).map((cat, i) => {
               const c = counts[cat.id];
+              // "NEW" badge: when the player owns 0 of a category that
+              // has content available, surface a small accent so the
+              // category reads as "go explore." Suppressed for character
+              // (multi-attribute) and frames (no registry yet).
+              const hasNew = c.total > 0 && c.owned === 0;
               return (
-                <StaggeredEntry key={cat.id} index={i} delay={35}>
+                <StaggeredEntry key={cat.id} index={i + 1} delay={35}>
                   <CategoryCard
                     cat={cat}
                     owned={c.owned}
                     total={c.total}
+                    hasNew={hasNew}
                     onPress={() => handleCategoryTap(cat)}
                   />
                 </StaggeredEntry>
@@ -229,60 +309,242 @@ export function CustomizeScreen() {
 }
 
 function CategoryCard({
-  cat, owned, total, onPress,
+  cat, owned, total, hasNew, onPress,
 }: {
-  cat: CategoryMeta; owned: number; total: number; onPress: () => void;
+  cat: CategoryMeta; owned: number; total: number; hasNew?: boolean; onPress: () => void;
 }) {
-  // Highlight cards that have brand-new content the player hasn't tried
-  // yet by showing total > owned (i.e. there's something to go equip or
-  // buy in this category). Character card never shows a count — it's a
-  // multi-attribute editor, not a count-based owned/total.
+  // Show count only when category is count-based (not Character, not the
+  // unregistered Frames). Character is a multi-attribute editor.
   const showCount = cat.id !== 'character' && total > 0;
   return (
     <PressScale
       onPress={onPress}
       scaleTo={0.95}
       accessibilityRole="button"
-      accessibilityLabel={`${cat.label}${showCount ? `, ${owned} of ${total} owned` : ''}`}
+      accessibilityLabel={`${cat.label}${showCount ? `, ${owned} of ${total} owned` : ''}${hasNew ? ', new content available' : ''}`}
     >
       <View style={styles.card}>
-        <Image source={cat.icon} style={styles.cardIcon} resizeMode="contain" />
+        <Image source={cat.icon} style={styles.cardIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
         <Text style={styles.cardLabel} numberOfLines={1}>{cat.label.toUpperCase()}</Text>
         {showCount && (
           <Text style={styles.cardCount}>{owned}/{total}</Text>
+        )}
+        {hasNew && (
+          // Tiny accent pill in the top-right corner — surfaces "you
+          // have not equipped anything in this category yet." Helps the
+          // player discover content they own but haven't tried.
+          <View style={styles.newBadge}>
+            <Text style={styles.newBadgeText}>NEW</Text>
+          </View>
         )}
       </View>
     </PressScale>
   );
 }
 
+// Hero CHARACTER card — full-width, painted icon left, copy stack right
+// + chevron. The screen's primary CTA so it owns visual weight that the
+// 8 grid cards below collectively share.
+function HeroCharacterCard({
+  cat, onPress,
+}: {
+  cat: CategoryMeta; onPress: () => void;
+}) {
+  return (
+    <PressScale
+      onPress={onPress}
+      scaleTo={0.97}
+      accessibilityRole="button"
+      accessibilityLabel="Open character creator"
+      accessibilityHint="Edit body, face, hair, outfit, and color"
+    >
+      <LinearGradient
+        colors={['rgba(255,140,0,0.22)', 'rgba(255,80,0,0.08)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.heroCard}
+      >
+        <View style={styles.heroIconWrap}>
+          <Image source={cat.icon} style={styles.heroIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
+        </View>
+        <View style={styles.heroTextWrap}>
+          <Text style={styles.heroTitle}>EDIT CHARACTER</Text>
+          <Text style={styles.heroSub}>Body · Face · Hair · Outfit · Color</Text>
+        </View>
+        <Text style={styles.heroChevron}>{'›'}</Text>
+      </LinearGradient>
+    </PressScale>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
+  // Title row — primary "CUSTOMIZE" + secondary "YOUR LOCKER" pill so
+  // the screen identity reads at a glance instead of a single bare word.
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 2,
+  },
   title: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 22,
+    fontSize: 24,
     color: '#ffffff',
-    letterSpacing: 2,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 4,
+    letterSpacing: 2.4,
+  },
+  titleSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,180,90,0.85)',
+    letterSpacing: 1.6,
+    paddingTop: 2,
   },
 
-  // Stage for the 3D character. Centered, transparent bg so the painted
-  // profile scene reads through. Height sized so the 3x3 grid below still
-  // fits above the bottom tab bar without scrolling.
+  // Character stage with layered backdrop:
+  //   1. charGlow — large diffuse aura behind the silhouette
+  //   2. charFloorDisc — soft warm gradient under the feet
+  //   3. Character3DPortrait — the actual rendered hero
   charStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 280,
-    marginBottom: 4,
+    height: 300,
+    marginBottom: 2,
+  },
+  charStageInner: {
+    width: 320,
+    height: 320,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  charGlow: {
+    position: 'absolute',
+    top: 30,
+    left: 30,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(255,140,0,0.10)',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 60,
+    elevation: 0,
+  },
+  charFloorDisc: {
+    position: 'absolute',
+    bottom: 30,
+    width: 220,
+    height: 28,
+    borderRadius: 110,
+    transform: [{ scaleY: 0.5 }],
+  },
+
+  // Equipped summary chip — quick "what's on me right now" + tap-to-edit.
+  // Sits between character stage and category grid as a connective tissue
+  // pill (no border-shouting, just a subtle warm-amber outline).
+  equippedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.4)',
+    backgroundColor: 'rgba(10,14,32,0.55)',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    maxWidth: 360,
+  },
+  equippedChipIcon: {
+    fontSize: 13,
+  },
+  equippedChipText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.4,
+  },
+  equippedChipChevron: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: 'rgba(255,180,90,0.85)',
+    lineHeight: 18,
   },
 
   gridWrap: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingBottom: 16,
   },
+
+  // Hero CHARACTER card — full-width, painted icon left, label stack
+  // right, chevron tail. Owns the screen's primary action visual weight.
+  heroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.6)',
+    marginBottom: 10,
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  heroIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  heroIcon: {
+    width: 46,
+    height: 46,
+  },
+  heroTextWrap: {
+    flex: 1,
+  },
+  heroTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 15,
+    color: '#ffffff',
+    letterSpacing: 1.4,
+  },
+  heroSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.4,
+    marginTop: 2,
+  },
+  heroChevron: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 26,
+    color: '#ffffff',
+    marginLeft: 6,
+    marginRight: 4,
+    lineHeight: 26,
+  },
+
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -290,41 +552,62 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
+  // Category cards (8 in a 4-col layout). Smaller than the previous 3-col
+  // layout to make room for the hero CHARACTER card above. Width tuned
+  // so 4 fit per row on a 390px-wide phone with 12px outer padding +
+  // 8px gaps.
   card: {
-    width: 108,
-    height: 98,
-    borderRadius: 14,
+    width: 80,
+    height: 92,
+    borderRadius: 12,
     backgroundColor: 'rgba(10,14,32,0.6)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     paddingVertical: 8,
     shadowColor: 'rgba(0,0,0,0.6)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
   },
   cardIcon: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     marginBottom: 2,
   },
   cardLabel: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
+    fontSize: 9,
     color: '#ffffff',
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
     textAlign: 'center',
   },
   cardCount: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
+    fontSize: 9,
     color: colors.orange,
     marginTop: 2,
+  },
+  newBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+    backgroundColor: '#ff8c00',
+  },
+  newBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 8,
+    color: '#0a0e27',
+    letterSpacing: 0.5,
   },
 });
