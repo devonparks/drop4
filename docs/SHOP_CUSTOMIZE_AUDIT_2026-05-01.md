@@ -141,6 +141,10 @@ deb4c00 topbar: CurrencyPill "+" button onClick fallback for reliable web taps
 51117d7 challenges: weekly CLAIM buttons get the same web onClick fallback
 8baa63e lootbox: opening tap surface gets web onClick fallback
 bc4cc6e topbar: BACK chevron onClick fallback for reliable web taps
+7ca5412 shop: AmgPartPreviewModal BUY button onClick fallback for web
+016ca45 animationpicker: BUY MORE + DONE buttons get web onClick fallback
+bb024bd dailyspin: SPIN / GOLDEN SPIN / COLLECT buttons get web onClick fallback
+a6a3910 milestone: CLAIM button web onClick fallback
 ```
 
 The pattern: any Pressable whose direct child is a LinearGradient can
