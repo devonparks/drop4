@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated as RNAnimated, ScrollView, Platform, Share, Image } from 'react-native';
 import { PreviewSafeModal } from '../components/ui/PreviewSafeModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
 import { AnimatedStarRating } from '../components/effects/AnimatedStarRating';
 import { PlayerHUD } from '../components/ui/PlayerHUD';
@@ -54,6 +55,12 @@ type Props = {
 export function GameScreen({ navigation }: Props) {
   const route = useRoute<RouteProp<RootStackParamList, 'Game'>>();
   const params = (route.params || {}) as GameParams;
+
+  // Quit-match confirm dialog state. Replaces a blocking
+  // Alert.alert that silently no-opped on RN-Web (multi-button
+  // configs don't render). Now uses the same styled ConfirmDialog
+  // as every other confirm in Drop4.
+  const [quitConfirmVisible, setQuitConfirmVisible] = useState(false);
 
   const board = useGameStore(s => s.board);
   const currentPlayer = useGameStore(s => s.currentPlayer);
@@ -817,18 +824,7 @@ export function GameScreen({ navigation }: Props) {
     // the match with zero feedback, which players (and App Store reviewers)
     // universally hate. If the game is already over, skip the confirm.
     if (status === 'playing' && moveCount > 0) {
-      Alert.alert(
-        'Quit Match?',
-        'Your progress in this match will be lost.',
-        [
-          { text: 'Keep Playing', style: 'cancel' },
-          {
-            text: 'Quit',
-            style: 'destructive',
-            onPress: () => navigation.goBack(),
-          },
-        ],
-      );
+      setQuitConfirmVisible(true);
       return;
     }
     navigation.goBack();
@@ -1844,6 +1840,22 @@ export function GameScreen({ navigation }: Props) {
           onDismiss={() => setShowGameTutorial(false)}
         />
       </View>
+      {/* Quit confirm — replaces blocking Alert.alert that didn't render
+          on RN-Web. Cancel keeps the player in the match; Confirm
+          navigates back to the previous screen. */}
+      <ConfirmDialog
+        visible={quitConfirmVisible}
+        title="Quit match?"
+        message="Your progress in this match will be lost."
+        cancelLabel="Keep playing"
+        confirmLabel="Quit"
+        primary={false}
+        onConfirm={() => {
+          setQuitConfirmVisible(false);
+          navigation.goBack();
+        }}
+        onCancel={() => setQuitConfirmVisible(false)}
+      />
     </ScreenBackground>
   );
 }
