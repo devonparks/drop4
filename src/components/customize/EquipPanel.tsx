@@ -289,6 +289,9 @@ export function EquipPanel({ visible, category, onClose }: Props) {
                     onClose();
                     navigation.navigate('MainTabs', { screen: 'Shop' } as never);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Visit shop"
+                  accessibilityHint="Closes this panel and opens the shop"
                 >
                   <Text style={styles.emptyShopBtnText}>VISIT SHOP ›</Text>
                 </Pressable>
@@ -314,6 +317,9 @@ export function EquipPanel({ visible, category, onClose }: Props) {
                     onClose();
                     navigation.navigate('MainTabs', { screen: 'Shop' } as never);
                   }}
+                  accessibilityRole="link"
+                  accessibilityLabel="Get more in the Shop"
+                  accessibilityHint="Closes this panel and opens the shop"
                 >
                   <Text style={styles.footerShopText}>
                     Get more in the Shop ›

@@ -264,7 +264,10 @@ export function SettingsScreen({ navigation }: Props) {
         <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ACCOUNT</Text>
         <View style={styles.section}>
-          <SettingLink label="Sign In with Google" icon="🔑" onPress={() => haptics.tap()} />
+          {/* Removed dead "Sign In with Google" button — Drop4 v1 ships
+              single-player only (Firebase services killed per CLAUDE.md),
+              so the button had no real handler attached. Bring back when
+              cloud-save / cross-device account sync ships in v1.1+. */}
           <View style={styles.playerIdRow}>
             <Text style={styles.settingIcon}>🆔</Text>
             <Text style={styles.settingLabel}>Player ID</Text>
