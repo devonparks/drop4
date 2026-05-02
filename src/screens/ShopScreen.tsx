@@ -1023,11 +1023,16 @@ export function ShopScreen() {
             player can't scroll all the way down (Devon's audit). */}
         <ScrollView style={s.scrollFlex} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
-          {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══ */}
+          {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══
+              AAA pass: dropped the giant ITEM SHOP gradient banner —
+              the painted tab strip below is already a clear section
+              divider (it visually separates "category navigation" from
+              "scrolling content above") and the gradient bar competed
+              with the SHOP title in the header for attention. Other
+              sections (Loot Bags, Get More Coins, Get More Gems) keep
+              their headers since they're below the fold. */}
           <StaggeredEntry index={1} delay={60}>
           <View style={s.itemShopSection}>
-            <SectionHeader title="ITEM SHOP" gradientColors={['#ff8c00', '#cc5500']} />
-
             {/* Category tabs (with right fade-edge to indicate scrollability) */}
             <View style={s.tabScrollWrap}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
@@ -1826,13 +1831,24 @@ const s = StyleSheet.create({
   },
   tab: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 3, paddingVertical: 9, paddingHorizontal: 9, borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'transparent',
+    gap: 4, paddingVertical: 9, paddingHorizontal: 11, borderRadius: 12,
+    backgroundColor: 'rgba(10,14,32,0.55)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.08)',
   },
-  tabActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.4)' },
+  // AAA pass: active tab gets a stronger amber outline + a touch of
+  // glow shadow so the player can scan the row from the opposite side
+  // of the screen and immediately see which category they're in.
+  tabActive: {
+    backgroundColor: 'rgba(255,140,0,0.22)',
+    borderColor: 'rgba(255,180,90,0.85)',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
+    elevation: 4,
+  },
   tabIconImg: { width: 22, height: 22 },
-  tabLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary },
-  tabLabelActive: { color: colors.orange },
+  tabLabel: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: colors.textSecondary, letterSpacing: 0.4 },
+  tabLabelActive: { color: '#ffffff', letterSpacing: 0.6 },
 
   collectionRow: { paddingHorizontal: 16, gap: 6, marginBottom: 10 },
 
