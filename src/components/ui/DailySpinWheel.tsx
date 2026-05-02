@@ -7,6 +7,7 @@ import {
   Animated,
   Easing,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -411,6 +412,9 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
           {!showGoldenSpin && isSpinAvailable && !showResult ? (
             <Pressable
               onPress={handleSpin}
+              {...(Platform.OS === 'web' && !spinning
+                ? ({ onClick: handleSpin } as any)
+                : {})}
               disabled={spinning}
               style={[st.spinBtn, spinning && { opacity: 0.5 }]}
               accessibilityRole="button"
@@ -451,6 +455,9 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
                   <Pressable
                     style={[st.goldenBtn, gems < 50 && { opacity: 0.5 }]}
                     onPress={handleGoldenSpin}
+                    {...(Platform.OS === 'web'
+                      ? ({ onClick: handleGoldenSpin } as any)
+                      : {})}
                     accessibilityRole="button"
                     accessibilityLabel="Golden spin for 50 gems"
                     accessibilityState={{ disabled: gems < 50 }}
@@ -509,6 +516,9 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
               }]}>{getRarityLabel(resultSegment.rarity)}</Text>
               <Pressable
                 onPress={handleCollect}
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: handleCollect } as any)
+                  : {})}
                 style={st.collectBtn}
                 accessibilityRole="button"
                 accessibilityLabel={`Collect ${resultSegment.label}`}
