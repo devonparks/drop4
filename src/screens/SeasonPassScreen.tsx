@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useSeasonStore, SeasonReward } from '../stores/seasonStore';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
@@ -211,6 +212,18 @@ export function SeasonPassScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+
+  // Replaces the prior Alert.alert + Alert.alert chain for the
+  // Premium Pass upgrade. Same pattern Drop4 uses everywhere else
+  // (shop pet/emote, creator inline buy) — styled in-app modal that
+  // doesn't freeze the headless web preview.
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+    confirmOnly?: boolean;
+  } | null>(null);
   const progressPct = (xp / xpPerTier) * 100;
 
   // Estimate ~30 day seasons — show days remaining
@@ -284,25 +297,31 @@ export function SeasonPassScreen() {
                     small
                     onPress={() => {
                       haptics.tap();
-                      Alert.alert(
-                        'Upgrade to Premium',
-                        `Spend 100 💎 gems to unlock the Premium Season Pass?\n\nYou have ${gems} gems.`,
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Upgrade',
-                            onPress: () => {
-                              const success = purchasePremium();
-                              if (success) {
-                                haptics.win();
-                                playSound('level_up');
-                              } else {
-                                Alert.alert('Not Enough Gems', `You need 100 💎 gems to upgrade.\n\nYou have ${gems} gems.`);
-                              }
-                            },
-                          },
-                        ]
-                      );
+                      if (gems < 100) {
+                        const shortBy = 100 - gems;
+                        setConfirmDialog({
+                          title: 'Not enough gems',
+                          message: `Premium Pass costs 100 💎 gems. You have ${gems} — short by ${shortBy}.`,
+                          confirmLabel: 'Got it',
+                          confirmOnly: true,
+                          onConfirm: () => {},
+                        });
+                        return;
+                      }
+                      setConfirmDialog({
+                        title: 'Upgrade to Premium?',
+                        message: `Spend 100 💎 gems to unlock the Premium Season Pass. You have ${gems}, will leave ${gems - 100}.`,
+                        confirmLabel: 'Upgrade · 100 💎',
+                        onConfirm: () => {
+                          const success = purchasePremium();
+                          if (success) {
+                            haptics.win();
+                            playSound('level_up');
+                          } else {
+                            haptics.error();
+                          }
+                        },
+                      });
                     }}
                   />
                 </View>
@@ -339,6 +358,18 @@ export function SeasonPassScreen() {
         </View>
         </StaggeredEntry>
       </ScrollView>
+      <ConfirmDialog
+        visible={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message}
+        confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        confirmOnly={confirmDialog?.confirmOnly}
+        onConfirm={() => {
+          confirmDialog?.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </ScreenBackground>
   );
 }
