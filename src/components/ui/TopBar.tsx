@@ -108,9 +108,16 @@ export function TopBar({
         <CurrencyPill iconSource={require('../../assets/images/ui/icon-gem.png')} value={formatNum(gems)} onPress={onGemPress} label={`${gems} gems`} />
       </LinearGradient>
 
-      {/* Right: Profile avatar + rank */}
+      {/* Right: Profile avatar + rank.
+          Web onClick fallback handles the case where LinearGradient inside
+          a Pressable swallows pointer events (per CLAUDE.md and the same
+          fix used in GlossyButton). Without the fallback, the first tap
+          on the avatar from Home sometimes silently no-ops. */}
       <Pressable
         onPress={() => { haptics.tap(); onProfilePress?.(); }}
+        {...(Platform.OS === 'web'
+          ? ({ onClick: () => { haptics.tap(); onProfilePress?.(); } } as any)
+          : {})}
         style={styles.avatarWrap}
         accessibilityLabel={`Open profile, level ${level}, ${rankLabel}`}
         accessibilityRole="button"
