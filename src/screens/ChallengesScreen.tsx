@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ScrollView, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView, Image, ImageSourcePropType, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { useChallengeStore, Challenge } from '../stores/challengeStore';
@@ -434,6 +434,11 @@ export function ChallengesScreen() {
             <PulseGlow color="#27ae3d" size={50} active>
             <Pressable
               onPress={() => { haptics.tap(); playSound('click'); handleClaimBonus(); }}
+              // Web onClick fallback — LinearGradient inside Pressable
+              // can swallow pointer events on web (same gotcha as TopBar).
+              {...(Platform.OS === 'web'
+                ? ({ onClick: () => { haptics.tap(); playSound('click'); handleClaimBonus(); } } as any)
+                : {})}
               style={styles.claimBagBtn}
               accessibilityRole="button"
               accessibilityLabel="Claim daily reward bag, 200 coins"
