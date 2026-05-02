@@ -523,6 +523,9 @@ export function ChallengesScreen() {
                     {canClaim ? (
                       <Pressable
                         onPress={() => handleClaimWeekly('wins20', 1000)}
+                        {...(Platform.OS === 'web'
+                          ? ({ onClick: () => handleClaimWeekly('wins20', 1000) } as any)
+                          : {})}
                         style={styles.claimBtnSmall}
                         accessibilityRole="button"
                         accessibilityLabel="Claim weekly reward, 1000 coins for winning 20 games"
@@ -585,6 +588,9 @@ export function ChallengesScreen() {
                     {canClaim ? (
                       <Pressable
                         onPress={() => handleClaimWeekly('career5', 2000)}
+                        {...(Platform.OS === 'web'
+                          ? ({ onClick: () => handleClaimWeekly('career5', 2000) } as any)
+                          : {})}
                         style={styles.claimBtnSmall}
                         accessibilityRole="button"
                         accessibilityLabel="Claim weekly reward, 2000 coins for completing 5 career levels"
