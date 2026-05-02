@@ -71,6 +71,14 @@ export function TopBar({
         {showBack ? (
           <Pressable
             onPress={() => { haptics.tap(); playSound('back'); onBackPress?.(); }}
+            // Web onClick fallback — LinearGradient inside Pressable
+            // can swallow pointer events on web (same gotcha as the
+            // avatar fix in 3f344fe). The orange BACK chevron is the
+            // primary "leave this screen" affordance, missing taps
+            // here is especially bad UX.
+            {...(Platform.OS === 'web'
+              ? ({ onClick: () => { haptics.tap(); playSound('back'); onBackPress?.(); } } as any)
+              : {})}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
