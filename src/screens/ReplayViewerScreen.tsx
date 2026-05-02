@@ -7,6 +7,7 @@ import { StaggeredEntry } from '../components/animations/StaggeredEntry';
 import { TopBar } from '../components/ui/TopBar';
 import { useReplayStore, Replay, ReplayMove } from '../stores/replayStore';
 import { useShopStore } from '../stores/shopStore';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
@@ -112,6 +113,10 @@ export function ReplayViewerScreen() {
   const toggleStar = useReplayStore(s => s.toggleStar);
   const deleteReplay = useReplayStore(s => s.deleteReplay);
   const [watching, setWatching] = useState<Replay | null>(null);
+  // Pending delete state — replay queued for confirm. Trash-can taps used
+  // to fire deleteReplay() instantly with no confirmation, which made it
+  // trivially easy to lose a starred replay by mistapping the row.
+  const [pendingDelete, setPendingDelete] = useState<Replay | null>(null);
   const [board, setBoard] = useState<Cell[][]>([]);
   const [moveIndex, setMoveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -283,13 +288,31 @@ export function ReplayViewerScreen() {
                 replay={replay}
                 onWatch={() => startWatching(replay)}
                 onToggleStar={() => { haptics.tap(); toggleStar(replay.id); }}
-                onDelete={() => { haptics.tap(); deleteReplay(replay.id); }}
+                onDelete={() => { haptics.tap(); setPendingDelete(replay); }}
               />
             ))}
           </ScrollView>
           </StaggeredEntry>
         )}
       </View>
+      <ConfirmDialog
+        visible={pendingDelete !== null}
+        title="Delete this replay?"
+        message={pendingDelete
+          ? `vs ${pendingDelete.opponent} · ${pendingDelete.totalMoves} moves. This can't be undone.`
+          : ''}
+        cancelLabel="Keep"
+        confirmLabel="Delete"
+        primary={false}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) {
+            haptics.win();
+            deleteReplay(pendingDelete.id);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </ScreenBackground>
   );
 }
