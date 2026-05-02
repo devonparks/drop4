@@ -133,11 +133,21 @@ a4c1e52 shop: buy-confirm dialogs preview the post-purchase balance
 722be23 creator: inline buy dialog also shows post-purchase balance
 ```
 
-Web event-handling fixes:
+Web event-handling fixes (Pressable + LinearGradient gotcha):
 ```
 3f344fe topbar: avatar onClick fallback fixes intermittent profile open on web
 deb4c00 topbar: CurrencyPill "+" button onClick fallback for reliable web taps
+2d9d531 challenges: CLAIM REWARD BAG button onClick fallback for web
+51117d7 challenges: weekly CLAIM buttons get the same web onClick fallback
+8baa63e lootbox: opening tap surface gets web onClick fallback
+bc4cc6e topbar: BACK chevron onClick fallback for reliable web taps
 ```
+
+The pattern: any Pressable whose direct child is a LinearGradient can
+silently drop pointer events on web. CLAUDE.md notes this for
+GlossyButton, but the same trap was repeated across TopBar, Challenges
+claim CTAs, and the loot-box opening surface. Standard fix is the
+Platform-gated onClick mirror that's now applied at every site.
 
 Alert.alert → ConfirmDialog migration (multi-button no-op on RN-Web):
 ```
