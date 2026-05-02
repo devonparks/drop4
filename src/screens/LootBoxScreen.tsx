@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Animated as RNAnimated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { StaggeredEntry } from '../components/animations';
@@ -117,6 +117,12 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
     <Pressable
       style={st.openingOverlay}
       onPress={handleTap}
+      // Web onClick fallback — LinearGradient inside Pressable can
+      // swallow pointer events on web. The whole loot-box-opening
+      // gesture is "tap 3 times" so dropped taps are especially bad.
+      {...(Platform.OS === 'web'
+        ? ({ onClick: handleTap } as any)
+        : {})}
       accessibilityRole="button"
       accessibilityLabel={`Tap to open ${box.name}`}
       accessibilityHint="Tap three times to reveal the reward"
