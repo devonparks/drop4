@@ -14,7 +14,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { PreviewSafeModal } from './PreviewSafeModal';
@@ -152,6 +152,14 @@ export function AmgPartPreviewModal({
                 if (!canAfford) { haptics.error(); playSound('error'); return; }
                 onBuy(partName);
               }}
+              // Web onClick fallback — LinearGradient inside Pressable
+              // swallows pointer events on web (same gotcha as TopBar).
+              {...(Platform.OS === 'web'
+                ? ({ onClick: () => {
+                    if (!canAfford) { haptics.error(); playSound('error'); return; }
+                    onBuy(partName);
+                  } } as any)
+                : {})}
               // Wrapping Pressable needs flex:2 — the LinearGradient
               // inside can't expand past its parent's intrinsic width,
               // so without flex here the BUY button collapses to its
