@@ -422,27 +422,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Soft warm halo behind the character — diffuse, no hard edge. Reads
+  // as "warm light from above" rather than a circle on stage. We layer
+  // a tighter inner disc on top to add depth.
   charGlow: {
     position: 'absolute',
-    top: 30,
-    left: 30,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(255,140,0,0.10)',
-    shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 60,
-    elevation: 0,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255,140,0,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.10)',
   },
+  // Floor shadow — squashed ellipse under the feet. Lower opacity than
+  // before so it doesn't compete with the character silhouette as the
+  // dominant orange element on screen.
   charFloorDisc: {
     position: 'absolute',
-    bottom: 30,
-    width: 220,
-    height: 28,
-    borderRadius: 110,
+    bottom: 38,
+    width: 200,
+    height: 22,
+    borderRadius: 100,
     transform: [{ scaleY: 0.5 }],
+    opacity: 0.6,
   },
 
   // Equipped summary chip — quick "what's on me right now" + tap-to-edit.

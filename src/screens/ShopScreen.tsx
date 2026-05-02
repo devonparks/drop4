@@ -750,9 +750,6 @@ export function ShopScreen() {
     useChallengeStore.getState().updateProgress('shop_visit', 1);
   }, []);
 
-  const equippedBoardName = BOARD_THEMES.find(b => b.id === equipped.board)?.name || 'Classic Blue';
-  const equippedPieceName = PIECE_THEMES.find(p => p.id === equipped.pieces)?.name || 'Classic';
-
   // Open cosmetic preview modal instead of buying directly
   const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item: ShopItem) => {
     haptics.tap();
@@ -996,13 +993,9 @@ export function ShopScreen() {
         {/* ── Header ── */}
         <StaggeredEntry index={0} delay={60}>
         <View style={s.header}>
-          <View>
+          <View style={s.titleStack}>
             <Text style={s.title} accessibilityRole="header">SHOP</Text>
-            <View style={s.equippedRow}>
-              <Text style={s.equippedLabel}>{'\u{1F3AF}'} {equippedBoardName}</Text>
-              <Text style={s.equippedDot}>{'\u2022'}</Text>
-              <Text style={s.equippedLabel}>{'\u{1F534}'} {equippedPieceName}</Text>
-            </View>
+            <Text style={s.titleSub}>DAILY ROTATION  ·  PREMIUM DROPS</Text>
           </View>
           <View style={s.currencyRow}>
             <Shimmer color="rgba(255,215,0,0.15)" duration={3000}>
@@ -1632,13 +1625,18 @@ const s = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, marginBottom: 12,
   },
+  titleStack: { gap: 2 },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 28,
     color: '#ffffff', letterSpacing: 2,
   },
-  equippedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  equippedLabel: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 11, color: colors.textSecondary },
-  equippedDot: { fontFamily: fonts.body, fontSize: 8, color: colors.textMuted },
+  // AAA pass: replaces the equipped emoji row with a daily-rotation
+  // promise — ties Shop's identity to the freshness loop (FOMO without
+  // shouting). Warm-amber 9pt to read as a system label.
+  titleSub: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9,
+    color: 'rgba(255,180,90,0.85)', letterSpacing: 1.4, marginTop: 1,
+  },
   currencyRow: { flexDirection: 'column', gap: 4 },
   coinDisplay: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
