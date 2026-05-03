@@ -18,7 +18,7 @@
 //   • equippedIdle (string | null) — null means random
 // ═══════════════════════════════════════════════════════════════════════
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -93,22 +93,25 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
   const setEquippedIdle = useShopStore((s) => s.setEquippedIdle);
   const ownedEmotes = useShopStore((s) => s.ownedEmotes);
 
-  // Owned-emote filter: an emote is available if it's a free starter
-  // (price === 0) OR the player has unlocked it via the shop.
-  const ownedEmoteList = useMemo(() => {
-    return HUMAN_EMOTES.filter(
-      (e) => ownedEmotes.includes(e.id) || (e.price ?? 0) === 0,
-    );
+  // Owned-emote filter — used to decide which tiles are tappable
+  // ("equip this") vs locked ("🔒 IN BAGS").
+  const isOwned = useCallback((id: string, price: number | undefined) => {
+    return ownedEmotes.includes(id) || (price ?? 0) === 0;
   }, [ownedEmotes]);
 
-  const ownedByCategory = useMemo(() => {
+  // 2026-05-03 catalog pivot: AnimationPicker now shows ALL emotes
+  // grouped by category (was: only owned). Locked emotes get a
+  // padlock badge + tap-routes-to-LootBox so the picker doubles as
+  // the catalog view for emotes — matches the new "Customize is the
+  // catalog" model.
+  const allByCategory = useMemo(() => {
     const map: Record<string, typeof HUMAN_EMOTES> = {};
-    for (const e of ownedEmoteList) {
+    for (const e of HUMAN_EMOTES) {
       if (!map[e.category]) map[e.category] = [];
       map[e.category].push(e);
     }
     return map;
-  }, [ownedEmoteList]);
+  }, []);
 
   if (!visible) return null;
 
@@ -136,10 +139,20 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
     haptics.tap();
     playSound('click');
     onClose();
-    // Navigate to Shop tab with emotes selected. Drop4's Shop opens to
-    // its last-active sub-tab; we don't have a deep-link param wired,
-    // but landing on Shop is enough — the player taps Emotes from there.
-    navigation.dispatch(CommonActions.navigate({ name: 'Shop' }));
+    // After 2026-05-03 Shop pivot: route to LootBox screen (the bags
+    // acquisition flow). The previous Shop > Emotes tab no longer
+    // exists — Customize is the catalog now and bags are the source.
+    navigation.dispatch(CommonActions.navigate({ name: 'LootBox' }));
+  };
+
+  // Locked-emote tap: route to bags screen so the player can roll for
+  // the missing emote. Closes the picker so the player isn't trapped
+  // behind two modals.
+  const handleLockedTap = () => {
+    haptics.tap();
+    playSound('click');
+    onClose();
+    navigation.dispatch(CommonActions.navigate({ name: 'LootBox' }));
   };
 
   // ── Now-playing label ──
@@ -254,30 +267,39 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                 </View>
               </View>
 
-              {/* Owned emotes grouped by category */}
+              {/* All emotes grouped by category — owned tiles tap to
+                  equip, locked tiles dim + show 🔒 IN BAGS and tap-route
+                  to the LootBox screen. Picker now doubles as the
+                  catalog view for emotes (matches 2026-05-03 pivot:
+                  Customize is the catalog, bags are the acquisition). */}
               {EMOTE_CATEGORY_ORDER.map((cat) => {
-                const list = ownedByCategory[cat.key] ?? [];
+                const list = allByCategory[cat.key] ?? [];
                 if (list.length === 0) return null;
                 return (
                   <View key={cat.key} style={styles.catSection}>
                     <Text style={styles.catTitle}>{cat.label.toUpperCase()}</Text>
                     <View style={styles.catGrid}>
                       {list.map((e) => {
-                        const selected = !homeEmoteRandomMode && selectedHomeEmote === e.id;
+                        const owned = isOwned(e.id, e.price);
+                        const selected = owned && !homeEmoteRandomMode && selectedHomeEmote === e.id;
                         const icon = EMOTE_ICON[e.id];
                         return (
                           <Pressable
                             key={e.id}
-                            onPress={() => handleSelectEmote(e.id)}
-                            style={[styles.gridCard, selected && styles.gridCardSelected]}
+                            onPress={() => owned ? handleSelectEmote(e.id) : handleLockedTap()}
+                            style={[
+                              styles.gridCard,
+                              selected && styles.gridCardSelected,
+                              !owned && styles.gridCardLocked,
+                            ]}
                             accessibilityRole="button"
-                            accessibilityLabel={`Select ${e.name} emote`}
+                            accessibilityLabel={owned ? `Select ${e.name} emote` : `${e.name} emote, locked, in bags`}
                             accessibilityState={{ selected }}
                           >
                             {icon ? (
                               <Image
                                 source={icon}
-                                style={styles.gridCardIcon}
+                                style={[styles.gridCardIcon, !owned && styles.gridCardIconLocked]}
                                 resizeMode="contain"
                                 accessibilityIgnoresInvertColors
                               />
@@ -285,11 +307,20 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                               <View style={styles.gridCardIconFallback} />
                             )}
                             <Text
-                              style={[styles.gridCardName, selected && { color: colors.orange }]}
+                              style={[
+                                styles.gridCardName,
+                                selected && { color: colors.orange },
+                                !owned && styles.gridCardNameLocked,
+                              ]}
                               numberOfLines={1}
                             >
                               {e.name}
                             </Text>
+                            {!owned && (
+                              <View style={styles.lockBadge}>
+                                <Text style={styles.lockBadgeText}>🔒 IN BAGS</Text>
+                              </View>
+                            )}
                           </Pressable>
                         );
                       })}
@@ -298,9 +329,9 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                 );
               })}
 
-              {/* "Buy more emotes" CTA — visible regardless of how many
-                  the player owns. If they have everything it still works
-                  as a shortcut to the emotes shop tab. */}
+              {/* "Open bags" CTA — bags are the new acquisition path
+                  for any locked emote. Routes to LootBoxScreen so the
+                  player can roll for missing animations. */}
               <Pressable
                 onPress={handleBuyMore}
                 {...(Platform.OS === 'web'
@@ -308,7 +339,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                   : {})}
                 style={styles.buyMoreCta}
                 accessibilityRole="button"
-                accessibilityLabel="Buy more emotes in the shop"
+                accessibilityLabel="Open bags to find more emotes"
               >
                 <LinearGradient
                   colors={['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.18)']}
@@ -316,7 +347,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                   end={{ x: 1, y: 1 }}
                   style={styles.buyMoreGradient}
                 >
-                  <Text style={styles.buyMoreText}>BUY MORE EMOTES</Text>
+                  <Text style={styles.buyMoreText}>OPEN BAGS FOR MORE</Text>
                   <Text style={styles.buyMoreArrow}>→</Text>
                 </LinearGradient>
               </Pressable>
@@ -464,9 +495,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gridCardSelected: { borderColor: 'rgba(255,140,0,0.6)', backgroundColor: 'rgba(255,140,0,0.12)' },
+  // Locked emote/idle tile — dimmed icon, dimmed name, lock badge
+  // pinned bottom-right. Tapping fires handleLockedTap which routes
+  // to the LootBox screen so the player can roll for the missing
+  // animation.
+  gridCardLocked: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
   gridCardIcon: { width: 64, height: 64, marginBottom: 2 },
+  gridCardIconLocked: { opacity: 0.35 },
   gridCardIconFallback: { width: 64, height: 64, marginBottom: 2, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)' },
   gridCardName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: 'rgba(255,255,255,0.9)', marginTop: 2, textAlign: 'center' },
+  gridCardNameLocked: { color: 'rgba(255,255,255,0.45)' },
+  // Lock badge — small pill in the bottom-right corner of locked
+  // tiles. "🔒 IN BAGS" tells the player exactly where to find this
+  // animation. Warm-amber so it ties to the bag art.
+  lockBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.4)',
+  },
+  lockBadgeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 7,
+    color: 'rgba(255,180,90,0.95)',
+    letterSpacing: 0.4,
+  },
 
   // Random tile — slightly more prominent so the player knows it's the
   // "I want surprise" toggle, not just another emote pick.
