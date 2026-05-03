@@ -8,6 +8,7 @@ import { TopBar } from '../components/ui/TopBar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { EquipPanel, type EquipCategory } from '../components/customize/EquipPanel';
+import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useShopStore } from '../stores/shopStore';
@@ -142,30 +143,46 @@ export function CustomizeScreen() {
   // never leaves the tab to equip what they own.
   const [equipPanelCategory, setEquipPanelCategory] = useState<EquipCategory | null>(null);
 
+  // EMOTES card now opens the in-app AnimationPicker modal (same one
+  // used by Home's emote/idle side buttons) instead of bouncing the
+  // player to Shop > Emotes. The picker shows owned emotes/idles and
+  // lets the player select one as their pinned emote/idle in two
+  // taps without leaving the Customize tab.
+  const [animPickerOpen, setAnimPickerOpen] = useState(false);
+  const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
+
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
 
+  // Each card has a clear, distinct destination per Devon's "make it
+  // make sense" pass:
+  //   • CHARACTER — opens the AMG creator (multi-attribute editor)
+  //   • CLOTHES   — jumps to Shop > Clothes (visual pack-card grid for
+  //                 BUYING new parts, distinct from CHARACTER which is
+  //                 for EDITING what you already own)
+  //   • EMOTES    — opens the in-app AnimationPicker modal in-place
+  //                 (no Shop detour — the picker shows owned emotes
+  //                  for one-tap selection)
+  //   • PETS / PIECES / BOARDS / EFFECTS / WINS / FRAMES — slide-up
+  //     EquipPanel sheet stays inside the Customize tab.
   const handleCategoryTap = (cat: CategoryMeta) => {
     haptics.tap();
     playSound('click');
     if (cat.id === 'character') {
-      // The Sims-tier AMG creator — @amg/character-creator wired via
-      // Drop4's CharacterCreatorScreen.
       navigation.navigate('AmgCreator' as never);
       return;
     }
-    // CLOTHES + OUTFITS also live in the AMG creator (Outfit tab) since
-    // they're character-modifying. The legacy Shop redirect was a
-    // placeholder. Route to the creator directly so the user picks parts
-    // and sees the live preview composite without screen-hopping.
     if (cat.id === 'clothes') {
-      navigation.navigate('AmgCreator' as never);
+      // Jump to Shop > Clothes (the visual pack-card grid where the
+      // player browses + buys individual parts). Distinct from
+      // CHARACTER which is the "edit what you already own" path.
+      navigation.navigate('MainTabs', { screen: 'Shop' } as never);
       return;
     }
-    // EMOTES has its own dedicated picker (the AnimationPicker modal that
-    // the home screen also uses). Open the Shop's emotes tab for now —
-    // a future pass can mount the picker inline here.
     if (cat.id === 'emotes') {
-      navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+      // In-app AnimationPicker — owned emotes selectable in two taps
+      // without leaving the tab.
+      setAnimPickerTab('emotes');
+      setAnimPickerOpen(true);
       return;
     }
     // Pets / Boards / Pieces / Effects / Wins / Frames → open the
@@ -231,31 +248,26 @@ export function CustomizeScreen() {
           <CustomizeCharacter />
         </View>
 
-        {/* Equipped summary chip — quick "what am I wearing right now"
-            so the player sees their loadout without tapping into the
-            creator. Lists the three at-a-glance slots: Board · Pieces ·
-            Pet. Tap to jump to the AMG creator for full character edit. */}
-        <PressScale
-          onPress={() => {
-            haptics.tap();
-            playSound('click');
-            navigation.navigate('AmgCreator' as never);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Open character creator"
-          accessibilityHint="Edit body, face, hair, and outfit"
+        {/* Equipped summary readout — passive at-a-glance label of what
+            the player has on right now (Board · Pieces · Pet). NOT a
+            button anymore — the EDIT CHARACTER hero card below is the
+            single clear entry to the creator, so tapping the readout
+            here was redundant + confusing (two distinct affordances
+            opening the same destination). The readout pairs with the
+            character above as "this is who you are right now." */}
+        <View
+          style={styles.equippedChip}
+          accessibilityRole="text"
+          accessibilityLabel={`Currently equipped: ${summary.boardName ?? 'Classic'} board, ${summary.piecesName ?? 'Classic'} pieces${summary.petName ? `, ${summary.petName} pet` : ''}`}
         >
-          <View style={styles.equippedChip}>
-            <Text style={styles.equippedChipIcon}>{'\u{1F3AF}'}</Text>
-            <Text style={styles.equippedChipText} numberOfLines={1}>
-              {summary.boardName ?? 'Classic'}
-              {' · '}
-              {summary.piecesName ?? 'Classic'}
-              {summary.petName ? `  ·  ${summary.petName}` : ''}
-            </Text>
-            <Text style={styles.equippedChipChevron}>{'›'}</Text>
-          </View>
-        </PressScale>
+          <Text style={styles.equippedChipIcon}>{'\u{1F3AF}'}</Text>
+          <Text style={styles.equippedChipText} numberOfLines={1}>
+            {summary.boardName ?? 'Classic'}
+            {' · '}
+            {summary.piecesName ?? 'Classic'}
+            {summary.petName ? `  ·  ${summary.petName}` : ''}
+          </Text>
+        </View>
 
         {/* Category grid. AAA pass: CHARACTER is broken out as a
             full-width hero card so the player's primary action — open the
@@ -303,6 +315,15 @@ export function CustomizeScreen() {
         visible={equipPanelCategory !== null}
         category={equipPanelCategory}
         onClose={() => setEquipPanelCategory(null)}
+      />
+      {/* AnimationPicker — full-screen emote/idle picker modal. Same
+          one used by Home's emote/idle side buttons. Mounted here so
+          tapping the EMOTES category card opens it in-place instead
+          of bouncing the player to Shop > Emotes. */}
+      <AnimationPicker
+        visible={animPickerOpen}
+        onClose={() => setAnimPickerOpen(false)}
+        initialTab={animPickerTab}
       />
     </ScreenBackground>
   );
@@ -475,13 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,255,255,0.85)',
     letterSpacing: 0.4,
-  },
-  equippedChipChevron: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 18,
-    color: 'rgba(255,180,90,0.85)',
-    lineHeight: 18,
   },
 
   gridWrap: {
