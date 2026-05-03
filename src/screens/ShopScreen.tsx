@@ -1987,9 +1987,14 @@ const s = StyleSheet.create({
   itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   piecePreviewBackdrop: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
   piecePreviewRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
+  // Outfit names like "ELVEN WARRIORS" / "FANTASY VILLAGERS" need to fit
+  // a 108px card without truncating to "ELVEN WARR..." Drop fontSize
+  // 12→11 and tighten letter-spacing so the longest pack labels still
+  // read clearly. Also shifted to bold (was semibold) so the smaller
+  // size still has presence at glance distance.
   itemName: {
-    fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, color: '#ffffff',
-    textAlign: 'center', marginTop: 6, paddingHorizontal: 6,
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: '#ffffff',
+    letterSpacing: 0.3, textAlign: 'center', marginTop: 6, paddingHorizontal: 4,
   },
   // Centering wrap for the painted RarityChip inside the 108px item card.
   // The chip itself has no outer spacing, so we center it + give it breathing
