@@ -546,7 +546,14 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
             <PremiumBoardThumbnail themeId={item.id} width={108} height={64} />
           )}
         </View>
-        <Text style={s.itemName} numberOfLines={1}>{item.name}</Text>
+        {/* Outfits put the variant index in a corner badge above, so the
+         *  name line drops the trailing " 03" and just shows the pack
+         *  label uppercase ("ELVEN WARRIORS"). Stops the 108px-wide
+         *  card from truncating to "Elven Warriors..." which lost the
+         *  variant info entirely. */}
+        <Text style={s.itemName} numberOfLines={1}>
+          {outfitMeta ? outfitMeta.packLabel.toUpperCase() : item.name}
+        </Text>
         <View style={s.rarityChipWrap}>
           <RarityChip rarity={item.rarity as Rarity} size="sm" width={84} />
         </View>
