@@ -562,10 +562,13 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
         </View>
         {/* Outfits put the variant index in a corner badge above, so the
          *  name line drops the trailing " 03" and just shows the pack
-         *  label uppercase ("ELVEN WARRIORS"). Stops the 108px-wide
-         *  card from truncating to "Elven Warriors..." which lost the
-         *  variant info entirely. */}
-        <Text style={s.itemName} numberOfLines={1}>
+         *  label uppercase. Allowed to wrap to 2 lines since some pack
+         *  labels (APOCALYPSE OUTLAWS, FANTASY VILLAGERS) are too long
+         *  to fit a 108px card on one line at any readable size — wrap
+         *  beats truncating to "APOCALYPSE OUTLA..." which loses the
+         *  pack identity. Non-outfit cards stay single-line since
+         *  their names are uniformly short ("Wooden", "Chrome", etc). */}
+        <Text style={s.itemName} numberOfLines={outfitMeta ? 2 : 1}>
           {outfitMeta ? outfitMeta.packLabel.toUpperCase() : item.name}
         </Text>
         <View style={s.rarityChipWrap}>
@@ -2024,15 +2027,16 @@ const s = StyleSheet.create({
   itemPreview: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   piecePreviewBackdrop: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
   piecePreviewRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
-  // Outfit names need to fit a 108px card without truncating. The
-  // longest pack labels (APOCALYPSE OUTLAWS, FANTASY VILLAGERS,
-  // SCI-FI CIVILIANS) are 17-18 chars uppercase. At 9pt bold + zero
-  // letter-spacing they all fit on one line. Painted icons above
-  // already communicate pack identity visually, so the name is the
-  // text confirmation rather than the primary read.
+  // Outfit names: 9pt bold, allowed to wrap to 2 lines via the
+  // numberOfLines={outfitMeta ? 2 : 1} prop on the Text. Some pack
+  // labels (APOCALYPSE OUTLAWS = 18 chars) can't fit one line at any
+  // readable size in a 108px card, so wrap beats truncating to
+  // "APOCALYPSE OUTLA..." which loses the pack identity word.
+  // Bumped to 10pt now that wrapping handles overflow. Tight 11px
+  // line-height keeps the wrapped names from inflating card height.
   itemName: {
-    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 9, color: '#ffffff',
-    letterSpacing: 0, textAlign: 'center', marginTop: 6, paddingHorizontal: 2,
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: '#ffffff',
+    letterSpacing: 0, lineHeight: 11.5, textAlign: 'center', marginTop: 6, paddingHorizontal: 2,
   },
   // Centering wrap for the painted RarityChip inside the 108px item card.
   // The chip itself has no outer spacing, so we center it + give it breathing
