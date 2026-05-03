@@ -326,24 +326,33 @@ export function CustomizeScreen() {
         </View>
 
         {/* Equipped summary readout — passive at-a-glance label of what
-            the player has on right now (Board · Pieces · Pet). NOT a
-            button anymore — the EDIT CHARACTER hero card below is the
-            single clear entry to the creator, so tapping the readout
-            here was redundant + confusing (two distinct affordances
-            opening the same destination). The readout pairs with the
-            character above as "this is who you are right now." */}
+            the player has on right now. Per-slot icons (board / pieces /
+            pet) make the chip self-documenting: each value sits next to
+            an indicator of WHICH cosmetic slot it represents, instead
+            of a single generic 🎯 anchor. */}
         <View
           style={styles.equippedChip}
           accessibilityRole="text"
           accessibilityLabel={`Currently equipped: ${summary.boardName ?? 'Classic'} board, ${summary.piecesName ?? 'Classic'} pieces${summary.petName ? `, ${summary.petName} pet` : ''}`}
         >
-          <Text style={styles.equippedChipIcon}>{'\u{1F3AF}'}</Text>
+          <Text style={styles.equippedChipSlotIcon}>{'\u{1F3B2}'}</Text>
           <Text style={styles.equippedChipText} numberOfLines={1}>
             {summary.boardName ?? 'Classic'}
-            {' · '}
-            {summary.piecesName ?? 'Classic'}
-            {summary.petName ? `  ·  ${summary.petName}` : ''}
           </Text>
+          <Text style={styles.equippedChipDot}>{'·'}</Text>
+          <Text style={styles.equippedChipSlotIcon}>{'\u{1F534}'}</Text>
+          <Text style={styles.equippedChipText} numberOfLines={1}>
+            {summary.piecesName ?? 'Classic'}
+          </Text>
+          {summary.petName && (
+            <>
+              <Text style={styles.equippedChipDot}>{'·'}</Text>
+              <Text style={styles.equippedChipSlotIcon}>{'\u{1F436}'}</Text>
+              <Text style={styles.equippedChipText} numberOfLines={1}>
+                {summary.petName}
+              </Text>
+            </>
+          )}
         </View>
 
         {/* Category grid. AAA pass: CHARACTER is broken out as a
@@ -574,9 +583,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    flexWrap: 'nowrap',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,180,90,0.4)',
@@ -585,11 +595,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     maxWidth: 360,
   },
-  equippedChipIcon: {
-    fontSize: 13,
+  // Per-slot indicator (board / pieces / pet). Sits to the LEFT of
+  // each equipped name so the chip is self-documenting at a glance.
+  equippedChipSlotIcon: {
+    fontSize: 11,
+    marginRight: 1,
+  },
+  // Subtle dot separator between (slot + value) groups. Lower opacity
+  // than the values so the eye reads "icon + name" as one unit.
+  equippedChipDot: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    marginHorizontal: 2,
   },
   equippedChipText: {
-    flex: 1,
     fontFamily: fonts.body,
     fontWeight: weight.semibold,
     fontSize: 11,
