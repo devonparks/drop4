@@ -277,11 +277,23 @@ export function EquipPanel({ visible, category, onClose }: Props) {
             {/* Item grid OR empty state */}
             {showEmpty ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>Coming soon</Text>
+                {/* Frame mockup — a stylized rounded square with a
+                 *  question-mark glyph inside hints at what's coming.
+                 *  Dashed warm-amber outline reads as "placeholder /
+                 *  coming soon" without any icon-pack dependency. */}
+                <View style={styles.emptyFrameMock}>
+                  <View style={styles.emptyFrameMockInner}>
+                    <Text style={styles.emptyFrameMockGlyph}>?</Text>
+                  </View>
+                </View>
+                <Text style={styles.emptyKicker}>COMING SOON</Text>
+                <Text style={styles.emptyTitle}>
+                  {category === 'frames' ? 'Profile Frames' : 'New cosmetics'}
+                </Text>
                 <Text style={styles.emptyBody}>
                   {category === 'frames'
-                    ? 'Profile frames are unlocked in season passes and tournaments. Check the shop for current rotation.'
-                    : 'No items in this category yet.'}
+                    ? 'Unlock profile frames through Season Pass tiers and tournament wins. New frames rotate in the Shop weekly.'
+                    : 'No items in this category yet — check back after a content drop.'}
                 </Text>
                 <Pressable
                   style={styles.emptyShopBtn}
@@ -568,21 +580,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
+    paddingVertical: 12,
+  },
+  // Frame mockup: stylized rounded square with a question mark inside.
+  // Reads as "placeholder / coming soon" with zero asset dependency.
+  // Warm-amber dashed outline so it doesn't compete with real items.
+  emptyFrameMock: {
+    width: 96,
+    height: 96,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255,180,90,0.55)',
+    backgroundColor: 'rgba(255,140,0,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  emptyFrameMockInner: {
+    width: 70,
+    height: 70,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyFrameMockGlyph: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 36,
+    color: 'rgba(255,180,90,0.7)',
+    lineHeight: 40,
+  },
+  // Kicker — small caps label above the title for "COMING SOON" /
+  // "NEW IN v1.1" framing.
+  emptyKicker: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 10,
+    letterSpacing: 1.6,
+    color: 'rgba(255,180,90,0.85)',
+    marginBottom: 4,
   },
   emptyTitle: {
     fontFamily: fonts.heading,
-    fontWeight: weight.bold,
-    fontSize: 18,
+    fontWeight: weight.black,
+    fontSize: 20,
     color: '#ffffff',
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   emptyBody: {
     fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 19,
+    marginBottom: 18,
+    lineHeight: 17,
   },
   emptyShopBtn: {
     paddingHorizontal: 22,
