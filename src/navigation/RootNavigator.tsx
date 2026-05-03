@@ -98,7 +98,7 @@ export type RootStackParamList = {
   // Lives in @amg/character-creator and replaces Character3DCreator
   // across every AMG game. Character state persists to
   // characterStore.amgCharacter.
-  AmgCreator: undefined;
+  AmgCreator: { initialTab?: 'body' | 'face' | 'hair' | 'outfit' | 'color' } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

@@ -53,8 +53,6 @@ type CategoryMeta = {
   id: CategoryId;
   label: string;
   icon: ImageSourcePropType;
-  /** Shop tab key to jump to when tapped; `character` opens the creator. */
-  shopTab?: string;
 };
 
 // Customize Overhaul 2026-04-30: dropped the redundant Outfits tile
@@ -66,9 +64,8 @@ type CategoryMeta = {
 // match the locked-in DROP4 logo style — white-cyan body face + warm
 // orange-red 3D extrusion + thick dark navy outline.
 // Category order matters — at 4 cards per row, two visual rows naturally
-// group themselves by row position. AAA pass 2026-05-02 reorders the
-// 8 grid cards (character is the hero card above and not in this list)
-// so each row reads as a coherent group:
+// group themselves by row position. Now 8 cards in the grid (character is
+// the hero card above and not in this list):
 //
 //   Row 1 — AVATAR / IDENTITY
 //     CLOTHES (parts you wear) · EMOTES (poses you perform) ·
@@ -78,21 +75,26 @@ type CategoryMeta = {
 //     PIECES (in-match) · BOARDS (in-match) ·
 //     EFFECTS (drop FX) · WINS (victory FX)
 //
-// Players don't need to read section headers to feel the grouping —
-// the row position does the work. The previous order mixed PIECES
-// (gameplay) into row 1 with the avatar items, which read as random.
+// Players don't need section headers to feel the grouping — the row
+// position does the work.
+//
+// CLOTHES routes to the AMG creator on its 'outfit' tab (the parts
+// catalog that shows owned + locked + tap-to-buy). OUTFITS-as-bundle
+// is currently folded INTO the Clothes catalog because the creator's
+// Outfit tab handles both individual parts AND full pack swaps via
+// PresetBar. If we later split them, add a separate OUTFITS card.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
   // Row 1 — avatar / identity
-  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png'),   shopTab: 'clothes' },
-  { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png'),    shopTab: 'emotes' },
-  { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png'),      shopTab: 'pets' },
-  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
+  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png') },
+  { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png') },
+  { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png') },
+  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png') },
   // Row 2 — gameplay cosmetics
-  { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/cat-pieces.png'),    shopTab: 'pieces' },
-  { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/cat-boards.png'),    shopTab: 'boards' },
-  { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png'),   shopTab: 'dropEffects' },
-  { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png'),      shopTab: 'winAnimations' },
+  { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/cat-pieces.png') },
+  { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/cat-boards.png') },
+  { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png') },
+  { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png') },
 ];
 
 // 3D character presenter — Customize tab is a stage AND a tap-to-react
@@ -216,15 +218,15 @@ export function CustomizeScreen() {
 
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
 
-  // Each card has a clear, distinct destination per Devon's "make it
-  // make sense" pass:
-  //   • CHARACTER — opens the AMG creator (multi-attribute editor)
-  //   • CLOTHES   — jumps to Shop > Clothes (visual pack-card grid for
-  //                 BUYING new parts, distinct from CHARACTER which is
-  //                 for EDITING what you already own)
-  //   • EMOTES    — opens the in-app AnimationPicker modal in-place
-  //                 (no Shop detour — the picker shows owned emotes
-  //                  for one-tap selection)
+  // After 2026-05-03 Shop pivot, every card destination lives WITHIN
+  // Drop4 (no more "jump to Shop > Clothes"). Each card has a clear,
+  // distinct destination:
+  //   • CHARACTER (hero) — AMG creator on Body tab (default tab)
+  //   • CLOTHES — AMG creator on Outfit tab (the catalog of parts —
+  //               shows owned + locked + tap-to-buy via creator's
+  //               existing PartGrid). This IS the Synty parts catalog
+  //               now that Shop's Clothes tab is gone.
+  //   • EMOTES — in-app AnimationPicker modal (one-tap selection)
   //   • PETS / PIECES / BOARDS / EFFECTS / WINS / FRAMES — slide-up
   //     EquipPanel sheet stays inside the Customize tab.
   const handleCategoryTap = (cat: CategoryMeta) => {
@@ -235,10 +237,9 @@ export function CustomizeScreen() {
       return;
     }
     if (cat.id === 'clothes') {
-      // Jump to Shop > Clothes (the visual pack-card grid where the
-      // player browses + buys individual parts). Distinct from
-      // CHARACTER which is the "edit what you already own" path.
-      navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+      // Open the creator on the Outfit tab — that's where the parts
+      // catalog (PartGrid with owned + locked + tap-to-buy) lives.
+      navigation.navigate('AmgCreator' as never, { initialTab: 'outfit' } as never);
       return;
     }
     if (cat.id === 'emotes') {
@@ -263,8 +264,6 @@ export function CustomizeScreen() {
       setEquipPanelCategory(panelCategory);
       return;
     }
-    // Fallback: if we hit an unknown category, send to Shop.
-    navigation.navigate('MainTabs', { screen: 'Shop' } as never);
   };
 
   // Clothes (AMG parts) owned count — no canonical total yet because the

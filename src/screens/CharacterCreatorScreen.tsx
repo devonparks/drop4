@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { CharacterCreator } from '@amg/character-creator';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
@@ -58,6 +58,11 @@ const LOOK_ICONS = {
 
 export function CharacterCreatorScreen() {
   const navigation = useNavigation<any>();
+  // Route params: optional initialTab so callers (like Customize) can
+  // deep-link into a specific creator tab instead of the default
+  // 'body'. Customize CLOTHES → initialTab='outfit', etc.
+  const route = useRoute<any>();
+  const initialTab = (route.params?.initialTab ?? 'body') as 'body' | 'face' | 'hair' | 'outfit' | 'color';
   // Styled in-app confirm dialog state — replaces the old window.confirm
   // / window.alert blocking pair when the player taps a locked AMG part
   // and is asked to spend coins (or told they can't afford it).
@@ -213,6 +218,9 @@ export function CharacterCreatorScreen() {
         getRarityColor={getRarityColor}
         getPriceLabel={getPriceLabel}
         savedMessage="✓ SAVED"
+        // Deep-link initial tab — Customize CLOTHES routes to 'outfit',
+        // OUTFITS routes to 'outfit', everything else lands on default 'body'.
+        initialTab={initialTab}
         // Painted chunky 3D dice for the RANDOMIZE action button. Per
         // docs/CUSTOMIZE_AUDIT.md item #4 the raw 🎲 emoji was the last
         // placeholder in an otherwise painted creator; this swaps it for
