@@ -42,8 +42,10 @@ import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { PETS as PETS_3D } from '../data/petRegistry';
-import { DOG_IDLES } from '../data/animationRegistry';
-import { Pet3D } from '../components/3d/Pet3D';
+// Pet3D / DOG_IDLES no longer imported here — shop pet cards use the
+// painted idleImage PNG instead of the live 3D render. Pet3D's camera
+// framing is tuned for larger contexts (Home stage, EquipPanel preview)
+// and renders cropped at the 90×90 shop card size.
 import { useCareerStore } from '../stores/careerStore';
 import { PremiumBoardThumbnail } from '../components/ui/PremiumBoardThumbnail';
 import { colors } from '../theme/colors';
@@ -606,32 +608,6 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
 
 type CollectionFilter = 'All' | 'OG Collection' | 'Season 0' | 'Neon Pack' | 'Mythic Collection';
 
-// data/pets.ts uses lowercase compressed IDs (`labrador`, `goldenretrieve`)
-// while petRegistry uses `dog_<breed>` IDs (`dog_labrador`,
-// `dog_golden_retrieve`). The previous `(PETS_3D as any)[pet.id]` lookup
-// always missed → Pet3D rendering never fired → every shop pet card
-// fell back to the static idleImage PNG. This map closes the gap so
-// shop pets show LIVE 3D dog renders matching what the equipped pet
-// looks like on the Home stage.
-const PETS_SHOP_TO_REGISTRY: Record<string, string> = {
-  labrador:        'dog_labrador',
-  goldenretrieve:  'dog_golden_retrieve',
-  shiba:           'dog_shiba',
-  dalmatian:       'dog_dalmatian',
-  husky:           'dog_husky',
-  germanshepherd:  'dog_german_shepherd',
-  doberman:        'dog_doberman',
-  pointer:         'dog_pointer',
-  ridgeback:       'dog_ridgeback',
-  greyhound:       'dog_greyhound',
-  fox:             'dog_fox',
-  coyote:          'dog_coyote',
-  wolf:            'dog_wolf',
-  hellhound:       'dog_hellhound',
-  robot:           'dog_robot',
-  scifi:           'dog_scifi',
-};
-
 // ─── Pet Card ─────────────────────────────────────────────────
 function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   pet: Pet; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number;
@@ -639,10 +615,12 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   const rarityColor = PET_RARITY_COLORS[pet.rarity];
   const isEarnOnly = pet.price === 0;
 
-  // Look up the 3D pet registry entry for this shop pet via the
-  // shop-id → registry-id translator above.
-  const registryId = PETS_SHOP_TO_REGISTRY[pet.id];
-  const pet3D = registryId ? (PETS_3D as any)[registryId] : null;
+  // Pet preview uses the painted idle PNG (pet.idleImage). Pet3D
+  // exists in petRegistry but its camera framing is tuned for the
+  // larger Home stage / EquipPanel contexts (140-200px) — at the
+  // 90×90 shop card size the 3D dogs render cropped awkwardly. The
+  // painted PNG portraits read cleaner at small sizes and are
+  // already in the asset pipeline.
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -656,16 +634,7 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
         <View style={[s.petCard, isEquipped && { borderColor: colors.green, borderWidth: 2 }]}>
         <View style={[s.rarityStrip, { backgroundColor: rarityColor }]} />
         <View style={s.petPreview}>
-          {pet3D?.glb ? (
-            <Pet3D
-              width={90} height={90}
-              petGlb={pet3D.glb}
-              animationGlb={DOG_IDLES[1]?.glb}
-              animationLoop
-            />
-          ) : (
-            <Image source={pet.idleImage} style={s.petPreviewImage} resizeMode="contain" />
-          )}
+          <Image source={pet.idleImage} style={s.petPreviewImage} resizeMode="contain" accessibilityIgnoresInvertColors />
         </View>
         <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
         <Text style={s.petBreed} numberOfLines={1}>{pet.breed}</Text>
