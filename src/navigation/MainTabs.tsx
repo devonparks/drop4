@@ -148,11 +148,18 @@ export function MainTabs() {
       tabBarPosition="bottom"
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
-        // Swipe between tabs is enabled by default. lazy: false keeps
-        // every tab mounted so cross-tab state (character, store) is
-        // consistent and swipes don't show a loading flash.
+        // lazy: false keeps every tab mounted so cross-tab state
+        // (character, store) is consistent and swipes don't show a
+        // loading flash.
         lazy: false,
-        swipeEnabled: true,
+        // Horizontal swipe-between-tabs only on touch devices. On web
+        // the pager-view's pan gesture handler grabs the mouse wheel
+        // and prevents vertical scroll inside any screen content —
+        // Devon's repro: "I can't scroll on PC so I can't even
+        // explore all of [the Shop]." Keeping swipe on native because
+        // touch users get a clean horizontal swipe between tabs that
+        // doesn't conflict with vertical scroll.
+        swipeEnabled: Platform.OS !== 'web',
         animationEnabled: true,
       }}
     >
