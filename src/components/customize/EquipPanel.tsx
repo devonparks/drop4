@@ -427,13 +427,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    // Cap sheet height. The modal's parent (a React Navigation screen
-    // wrapper) extends above the visible phone screen by anywhere from
-    // 66 to 200px depending on the active tab's content. We need the
-    // sheet's top edge to stay inside the PhoneFrame's visible screen
-    // (y ≥ 126.5 of viewport). Conservative 400px cap keeps the sheet
-    // visible across every customize-tab context.
-    height: 400,
+    // Sheet height cap. Bumped 400→620 in the catalog pivot
+    // (2026-05-03) — locked items now visible in the panel, so the
+    // grid is much longer (up to 16 pets, 12 effects, etc) and the
+    // 400px cap forced the player to scroll past the X to see most
+    // of the catalog. 620px fits ~9 cards on screen at once across
+    // 3 columns, still leaves the top edge inside the PhoneFrame's
+    // visible screen on every Customize-tab context (header + chip +
+    // hero + first row of cards remain visible behind the sheet's
+    // dimmed scrim).
+    height: 620,
     overflow: 'hidden',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
