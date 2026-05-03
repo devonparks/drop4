@@ -1045,509 +1045,24 @@ export function ShopScreen() {
             player can't scroll all the way down (Devon's audit). */}
         <ScrollView style={s.scrollFlex} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
-          {/* ═══ 1. ITEM SHOP — cosmetics first, they're the soul ═══
-              AAA pass: dropped the giant ITEM SHOP gradient banner —
-              the painted tab strip below is already a clear section
-              divider (it visually separates "category navigation" from
-              "scrolling content above") and the gradient bar competed
-              with the SHOP title in the header for attention. Other
-              sections (Loot Bags, Get More Coins, Get More Gems) keep
-              their headers since they're below the fold. */}
-          <StaggeredEntry index={1} delay={60}>
-          <View style={s.itemShopSection}>
-            {/* Category tabs (with right fade-edge to indicate scrollability) */}
-            <View style={s.tabScrollWrap}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>
-                {tabs.map(tab => (
-                  <PressScale
-                    key={tab.key}
-                    onPress={() => { setActiveTab(tab.key); setCollectionFilter('All'); haptics.tap(); playSound('click'); }}
-                    scaleTo={0.94}
-                    accessibilityRole="tab"
-                    accessibilityLabel={`${tab.label} tab`}
-                    accessibilityState={{ selected: activeTab === tab.key }}
-                  >
-                    <View style={[s.tab, activeTab === tab.key && s.tabActive]}>
-                      <Image source={tab.iconSource} style={s.tabIconImg} resizeMode="contain" />
-                      <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>{tab.label}</Text>
-                    </View>
-                  </PressScale>
-                ))}
-              </ScrollView>
-              <LinearGradient
-                pointerEvents="none"
-                colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={s.scrollFadeRight}
-              />
-            </View>
+          {/* ═══ 1. ITEM-SHOP TABS — REMOVED 2026-05-03 ═══
+              All cosmetic browse tabs (Clothes / Outfits / Boards /
+              Pieces / Effects / Wins / Frames / Emotes / Pets) moved
+              to the Customize tab per Devon: "all the content in the
+              customize tab and then the shop can be slimmed down."
+              Matches Basketball Stars structure: Shop is the
+              acquisition funnel (deals + bags + IAP), Customize is
+              the catalog (browse + equip + see-locked).
 
-            {/* Outfits-only: Species super-filter */}
-            {activeTab === 'outfits' && (
-              <View style={s.tabScrollWrap}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
-                  {([
-                    { id: 'All', label: 'All', icon: '\u{1F465}' },
-                    { id: 'human', label: 'Human', icon: '\u{1F464}' },
-                    { id: 'elves', label: 'Elf', icon: '\u{1F9DD}' },
-                    { id: 'goblin', label: 'Goblin', icon: '\u{1F47A}' },
-                    { id: 'skeleton', label: 'Skeleton', icon: '\u{1F480}' },
-                    { id: 'zombie', label: 'Zombie', icon: '\u{1F9DF}' },
-                  ] as const).map((sp) => {
-                    const isLocked = sp.id !== 'All' && !unlockedSpecies.includes(sp.id);
-                    return (
-                      <FilterChip
-                        key={sp.id}
-                        label={sp.label}
-                        icon={sp.icon}
-                        active={outfitSpecies === sp.id}
-                        locked={isLocked}
-                        onPress={() => { setOutfitSpecies(sp.id as any); setCollectionFilter('All'); }}
-                      />
-                    );
-                  })}
-                </ScrollView>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={s.scrollFadeRight}
-                />
-              </View>
-            )}
+              Buy flows (AmgPartPreviewModal / OutfitPreviewModal /
+              ConfirmDialog) still exist and fire from Customize-side
+              catalog screens. The DAILY DEALS section below also
+              still routes its taps through them.
 
-            {/* Collection filters */}
-            {activeTab !== 'boxes' && activeTab !== 'pets' && (
-              <View style={s.tabScrollWrap}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.collectionRow}>
-                  {collectionFilters.map(cf => (
-                    <FilterChip
-                      key={cf}
-                      label={cf}
-                      active={collectionFilter === cf}
-                      onPress={() => setCollectionFilter(cf)}
-                    />
-                  ))}
-                </ScrollView>
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={['rgba(10,14,39,0)', 'rgba(10,14,39,0.95)']}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={s.scrollFadeRight}
-                />
-              </View>
-            )}
-
-            {/* Items */}
-            {activeTab === 'clothes' ? (
-              // AMG parts grid — manifest-driven, grouped by pack prefix.
-              // Species filter applies across every pack. Each card is an
-              // AmgPartCard that dispatches buy / equip through the
-              // shared handler below.
-              amgManifest === null ? (
-                <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
-                  <Text style={s.comingSoonText}>Loading clothes library…</Text>
-                </Animated.View>
-              ) : (() => {
-                // All filtering + grouping runs through the pure helper
-                // in amgShopFilters.ts so it stays unit-testable. The
-                // shop just hands its current state in and renders the
-                // grouped result.
-                const filtered = filterAmgParts(amgManifest, {
-                  species: amgSpecies,
-                  bucket: amgBucket,
-                  query: amgQuery,
-                  ownedOnly: amgOwnedOnly,
-                  isPartOwned: isAmgPartOwned,
-                  packDisplayName: (prefix) => packMeta(prefix).displayName,
-                  slotBuckets: SLOT_BUCKETS,
-                });
-                const byPack = groupAmgPartsByPack(filtered);
-                const packOrder = sortPacksForShop(Object.keys(byPack));
-                const handleBuy = (partName: string) => {
-                  // Open the try-on preview modal so the player can see the
-                  // part on their character before committing to the buy.
-                  // The actual spendCoins + unlock + equip happens in
-                  // confirmPartPurchase below, fired from the modal's BUY.
-                  haptics.tap();
-                  const entry = amgManifest.find((p) => p.name === partName);
-                  if (!entry) { haptics.error(); return; }
-                  setPartPreview({ name: partName, slot: entry.slot });
-                };
-                const handleEquip = (partName: string) => {
-                  // Look up the part's slot from the manifest and equip
-                  // in-place — no need to bounce the player into the
-                  // creator just to swap a single part. Toast feedback
-                  // confirms the change without breaking flow.
-                  const entry = amgManifest.find((p) => p.name === partName);
-                  if (!entry) { haptics.error(); return; }
-                  haptics.win();
-                  playSound('click');
-                  equipAmgPart(entry.slot, partName);
-                  setEquipToast({
-                    label: `Equipped ${packMeta(packPrefixFromPartName(partName)).displayName} ${entry.slot}`,
-                  });
-                };
-                return (
-                  <>
-                    {/* Intent banner — Devon repro: "no clear difference
-                        in what you are buying." This explicitly tells
-                        the player Clothes = mix & match individual parts
-                        and points them to OUTFITS for full looks. */}
-                    <View style={s.intentBanner}>
-                      <Text style={s.intentBannerTitle}>MIX & MATCH PARTS</Text>
-                      <Text style={s.intentBannerBody}>
-                        Buy individual heads, hair, and outfit pieces to build a custom look. Want a full pre-made set instead? Tap{' '}
-                        <Text
-                          style={s.intentBannerLink}
-                          onPress={() => { haptics.tap(); playSound('click'); setActiveTab('outfits'); setCollectionFilter('All'); }}
-                        >
-                          OUTFITS
-                        </Text>.
-                      </Text>
-                    </View>
-
-                    {/* Search + Owned-only toggle. Search matches part
-                        names AND pack display names so "samurai" finds
-                        every Samurai Warriors part. Owned-only flips
-                        the grid into "what I have to mix" mode. */}
-                    <View style={s.amgSearchRow}>
-                      <TextInput
-                        style={s.amgSearchInput}
-                        placeholder="Search parts or packs…"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        value={amgQuery}
-                        onChangeText={setAmgQuery}
-                        clearButtonMode="while-editing"
-                        autoCorrect={false}
-                        autoCapitalize="none"
-                      />
-                      <Pressable
-                        onPress={() => { haptics.tap(); setAmgOwnedOnly((v) => !v); }}
-                        style={[s.amgOwnedChip, amgOwnedOnly && s.amgOwnedChipActive]}
-                        accessibilityRole="switch"
-                        accessibilityState={{ checked: amgOwnedOnly }}
-                        accessibilityLabel="Filter to owned parts only"
-                      >
-                        <Text style={[s.amgOwnedChipText, amgOwnedOnly && s.amgOwnedChipTextActive]}>
-                          {amgOwnedOnly ? '✓ OWNED' : 'OWNED'}
-                        </Text>
-                      </Pressable>
-                    </View>
-
-                    {/* Species filter chips. Body-region filter dropped
-                        per Devon's audit — three rows of filters before
-                        the catalog was decision fatigue. Players who
-                        want body-region scoping can still use search
-                        ("torso", "arm", etc) which matches part names. */}
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ paddingVertical: 6, paddingHorizontal: 4, gap: 8 }}
-                    >
-                      {(['All', 'Human', 'Goblin', 'Elves', 'Skeleton', 'Zombie'] as AmgSpecies[]).map((sp) => (
-                        <FilterChip
-                          key={sp}
-                          label={sp}
-                          active={amgSpecies === sp}
-                          onPress={() => setAmgSpecies(sp)}
-                        />
-                      ))}
-                    </ScrollView>
-
-                    {/* AAA pack-grid redesign (2026-05-02): replaced the
-                        linear pack rows with a 2-col VISUAL card grid.
-                        Each card shows the chunky 3D pack cover so the
-                        player can scan "this is the apocalypse pack"
-                        instantly instead of decoding pack name text.
-                        Tapping a card opens the full pack below (single
-                        open at a time) with the parts grid. Active
-                        search / owned-only auto-flatten the grid into a
-                        single combined parts grid so filters don't
-                        require a second tap to dig in. */}
-                    {packOrder.length === 0 ? (
-                      <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
-                        <Text style={s.comingSoonText}>No parts match. Try a different filter or search.</Text>
-                      </Animated.View>
-                    ) : (() => {
-                      const isFiltering = amgQuery.trim().length > 0 || amgOwnedOnly;
-                      // Active search / owned-only flattens to a combined
-                      // grid — packs become irrelevant when the player
-                      // is hunting a specific part. Otherwise show the
-                      // pack-card grid + selected pack's parts.
-                      if (isFiltering) {
-                        const allParts = packOrder.flatMap((p) => byPack[p]);
-                        return (
-                          <>
-                            <View style={s.amgPackToolbar}>
-                              <Text style={s.amgPackCount}>
-                                {allParts.length} matching part{allParts.length === 1 ? '' : 's'}
-                              </Text>
-                            </View>
-                            <View style={s.amgPackGrid}>
-                              {allParts.map((p) => {
-                                const unlockedAt = amgPartUnlockedAt[p.name];
-                                const isNew = unlockedAt !== undefined
-                                  && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
-                                return (
-                                  <AmgPartCard
-                                    key={p.name}
-                                    partName={p.name}
-                                    owned={isAmgPartOwned(p.name)}
-                                    onBuy={handleBuy}
-                                    onEquip={handleEquip}
-                                    size="compact"
-                                    isNew={isNew}
-                                  />
-                                );
-                              })}
-                            </View>
-                          </>
-                        );
-                      }
-                      // Default: pack-card grid + active pack drill-in.
-                      // Single open at a time (Set still used to keep
-                      // the same store API; we just only render one).
-                      const openPack = packOrder.find((p) => amgExpandedPacks.has(p));
-                      return (
-                        <>
-                          <View style={s.amgPackToolbar}>
-                            <Text style={s.amgPackCount}>
-                              {packOrder.length} {packOrder.length === 1 ? 'pack' : 'packs'} ·{' '}
-                              {Object.values(byPack).reduce((sum, ps) => sum + ps.length, 0)} parts
-                            </Text>
-                            {openPack && (
-                              <Pressable
-                                onPress={() => { haptics.tap(); setAmgExpandedPacks(new Set()); }}
-                                accessibilityRole="button"
-                                accessibilityLabel="Close pack and return to all packs"
-                              >
-                                <Text style={s.amgPackToolbarBtn}>{'← ALL PACKS'}</Text>
-                              </Pressable>
-                            )}
-                          </View>
-                          <View style={s.packCardGrid}>
-                            {packOrder.map((pack) => {
-                              const meta = packMeta(pack);
-                              const parts = byPack[pack];
-                              const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
-                              const isOpen = openPack === pack;
-                              const cover = getPackIcon(pack);
-                              return (
-                                <PressScale
-                                  key={pack}
-                                  scaleTo={0.96}
-                                  onPress={() => {
-                                    haptics.tap();
-                                    playSound('click');
-                                    setAmgExpandedPacks((prev) => {
-                                      // Single-open: clicking the open
-                                      // pack closes it; clicking any
-                                      // other pack switches to it.
-                                      if (prev.has(pack)) return new Set();
-                                      return new Set([pack]);
-                                    });
-                                  }}
-                                  accessibilityRole="button"
-                                  accessibilityLabel={`${meta.displayName} pack, ${ownedCount} of ${parts.length} owned${isOpen ? ', currently open' : ''}`}
-                                  accessibilityState={{ selected: isOpen }}
-                                >
-                                  <View style={[s.packCard, isOpen && s.packCardActive]}>
-                                    <View style={s.packCardCover}>
-                                      {cover ? (
-                                        <Image
-                                          source={cover}
-                                          style={s.packCardCoverImg}
-                                          resizeMode="contain"
-                                          accessibilityIgnoresInvertColors
-                                        />
-                                      ) : (
-                                        <Text style={s.packCardCoverEmoji}>{meta.emoji}</Text>
-                                      )}
-                                    </View>
-                                    <Text style={s.packCardName} numberOfLines={1}>
-                                      {meta.displayName}
-                                    </Text>
-                                    <View style={s.packCardCountRow}>
-                                      <Text style={[
-                                        s.packCardCount,
-                                        ownedCount > 0 && { color: colors.green },
-                                      ]}>
-                                        {ownedCount}/{parts.length}
-                                      </Text>
-                                      <Text style={s.packCardCountLabel}>OWNED</Text>
-                                    </View>
-                                  </View>
-                                </PressScale>
-                              );
-                            })}
-                          </View>
-                          {/* Selected pack drill-in: shown beneath the
-                              grid with a clear header so the player
-                              knows what they're browsing. */}
-                          {openPack && (() => {
-                            const meta = packMeta(openPack);
-                            const parts = byPack[openPack];
-                            const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
-                            return (
-                              <Animated.View entering={FadeIn.duration(200)} style={s.packDrillIn}>
-                                <View style={s.packDrillHeader}>
-                                  {getPackIcon(openPack) ? (
-                                    <Image
-                                      source={getPackIcon(openPack)!}
-                                      style={s.packDrillIcon}
-                                      resizeMode="contain"
-                                      accessibilityIgnoresInvertColors
-                                    />
-                                  ) : (
-                                    <Text style={s.amgPackEmoji}>{meta.emoji}</Text>
-                                  )}
-                                  <View style={{ flex: 1 }}>
-                                    <Text style={s.packDrillName}>{meta.displayName.toUpperCase()}</Text>
-                                    <Text style={s.packDrillSub}>
-                                      {ownedCount}/{parts.length} owned · {parts.length} part{parts.length === 1 ? '' : 's'}
-                                    </Text>
-                                  </View>
-                                </View>
-                                <View style={s.amgPackGrid}>
-                                  {parts.map((p) => {
-                                    const unlockedAt = amgPartUnlockedAt[p.name];
-                                    const isNew = unlockedAt !== undefined
-                                      && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
-                                    return (
-                                      <AmgPartCard
-                                        key={p.name}
-                                        partName={p.name}
-                                        owned={isAmgPartOwned(p.name)}
-                                        onBuy={handleBuy}
-                                        onEquip={handleEquip}
-                                        size="compact"
-                                        isNew={isNew}
-                                      />
-                                    );
-                                  })}
-                                </View>
-                              </Animated.View>
-                            );
-                          })()}
-                        </>
-                      );
-                    })()}
-                  </>
-                );
-              })()
-            ) : activeTab === 'pets' ? (
-              <View style={s.grid}>
-                {PETS.map((pet, i) => (
-                  <PetCard
-                    key={pet.id}
-                    pet={pet}
-                    isOwned={ownedPets.includes(pet.id)}
-                    isEquipped={equippedPet === pet.id}
-                    onPress={() => handlePetPress(pet)}
-                    index={i}
-                  />
-                ))}
-              </View>
-            ) : activeTab === 'boxes' ? (
-              // AAA Boxes-tab redesign: rows now use the rendered
-              // LootChest component (bronze/silver/gold/diamond tiers)
-              // instead of emoji icons, AND each row is tappable \u2014
-              // routes the player to the dedicated LootBoxScreen where
-              // the buy + open + reveal flow lives. Previously this
-              // tab was a static View with no buy CTA, which left
-              // owned boxes piling up unreachable AND surfaced the
-              // emoji glyph as the box visual (off-brand vs the
-              // chunky 3D Drop4 art language everywhere else).
-              <View style={s.boxList}>
-                <Text style={s.boxListIntro}>
-                  Earn boxes from wins or buy them here. Tap a box to manage your inventory.
-                </Text>
-                {LOOT_BOXES.map(box => {
-                  const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
-                  return (
-                    <PressScale
-                      key={box.id}
-                      scaleTo={0.97}
-                      onPress={() => {
-                        haptics.tap();
-                        playSound('click');
-                        navigation.navigate('LootBox' as never);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${box.name}, ${count} owned${box.cost > 0 ? `, costs ${box.cost} coins` : ', earn-only'}`}
-                    >
-                      <View style={s.boxItem}>
-                        <View style={s.boxItemChestSlot}>
-                          <LootChest tier={box.tier} size={56} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={s.boxItemName}>{box.name}</Text>
-                          <Text style={s.boxItemCount}>
-                            {count > 0 ? `${'\u00D7'}${count} owned` : 'None owned yet'}
-                          </Text>
-                        </View>
-                        <View style={s.boxItemRight}>
-                          {box.cost > 0 ? (
-                            <View style={s.boxItemPriceRow}>
-                              <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
-                              <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
-                            </View>
-                          ) : (
-                            <View style={s.boxEarnPill}>
-                              <Text style={s.boxEarnPillText}>EARN</Text>
-                            </View>
-                          )}
-                          <Text style={s.boxItemChevron}>{'\u203A'}</Text>
-                        </View>
-                      </View>
-                    </PressScale>
-                  );
-                })}
-              </View>
-            ) : items.length > 0 ? (
-              <View style={s.grid}>
-                {items.map((item, i) => (
-                  <ShopItemCard
-                    key={item.id}
-                    item={item}
-                    isOwned={activeTab === 'outfits'
-                      ? ownedOutfits.includes(item.id)
-                      : category === 'emotes'
-                      ? (ownedEmotes.includes(item.id) || item.price === 0)
-                      : (owned[category]?.includes(item.id) ?? false)}
-                    isEquipped={activeTab === 'outfits'
-                      ? equippedOutfitId === item.id
-                      : category === 'emotes'
-                      ? equippedEmotes.includes(item.id)
-                      : equipped[
-                          category === 'boards' ? 'board'
-                          : category === 'pieces' ? 'pieces'
-                          : category === 'dropEffects' ? 'dropEffect'
-                          : category === 'boardAccessories' ? 'boardAccessory'
-                          : 'winAnimation'
-                        ] === item.id}
-                    onPress={() => activeTab === 'outfits'
-                      ? handleOutfitPress(item)
-                      : category === 'emotes'
-                      ? handleEmotePress(item)
-                      : handleItemPress(category as 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item)}
-                    index={i}
-                    playerCoins={coins}
-                  />
-                ))}
-              </View>
-            ) : (
-              <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
-                <Text style={s.comingSoonIcon}>{'\u{1F6A7}'}</Text>
-                <Text style={s.comingSoonText}>No items match this filter</Text>
-              </Animated.View>
-            )}
-          </View>
-          </StaggeredEntry>
+              To restore: paste the tab strip + per-tab content from
+              git history (this commit -1). The `tabs` array, filter
+              state, and helper components are kept so restoration is
+              a one-paste operation. */}
 
           {/* ═══ 2. DAILY DEALS ═══ */}
           <StaggeredEntry index={2} delay={60}>
@@ -1640,6 +1155,63 @@ export function ShopScreen() {
             </View>
           </StaggeredEntry>
 
+          {/* ═══ 2. BOXES — primary acquisition (BS-style) ═══
+              Bags are the new front door for cosmetics. Every
+              tier drops a curated random pull of the part / outfit
+              / pet / piece library. Tappable rows → LootBoxScreen
+              for the open-and-reveal flow. */}
+          <StaggeredEntry index={2} delay={60}>
+          <View style={s.boxesSectionWrap}>
+            <SectionHeader title="BAGS" gradientColors={['#8e44ad', '#9b59b6']} />
+            <View style={s.boxList}>
+              <Text style={s.boxListIntro}>
+                Bags drop random cosmetics — outfits, parts, pets, board themes,
+                pieces, effects. Higher tier = better odds on rare items.
+              </Text>
+              {LOOT_BOXES.map(box => {
+                const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
+                return (
+                  <PressScale
+                    key={box.id}
+                    scaleTo={0.97}
+                    onPress={() => {
+                      haptics.tap();
+                      playSound('click');
+                      navigation.navigate('LootBox' as never);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${box.name}, ${count} owned${box.cost > 0 ? `, costs ${box.cost} coins` : ', earn-only'}`}
+                  >
+                    <View style={s.boxItem}>
+                      <View style={s.boxItemChestSlot}>
+                        <LootChest tier={box.tier} size={56} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.boxItemName}>{box.name}</Text>
+                        <Text style={s.boxItemCount}>
+                          {count > 0 ? `${'\u00D7'}${count} owned` : 'None owned yet'}
+                        </Text>
+                      </View>
+                      <View style={s.boxItemRight}>
+                        {box.cost > 0 ? (
+                          <View style={s.boxItemPriceRow}>
+                            <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
+                            <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
+                          </View>
+                        ) : (
+                          <View style={s.boxEarnPill}>
+                            <Text style={s.boxEarnPillText}>EARN</Text>
+                          </View>
+                        )}
+                        <Text style={s.boxItemChevron}>{'\u203A'}</Text>
+                      </View>
+                    </View>
+                  </PressScale>
+                );
+              })}
+            </View>
+          </View>
+          </StaggeredEntry>
           {/* ═══ 2. LOOT BAGS ═══
               REMOVED 2026-05-02 (Devon's AAA polish pass): the section
               was a non-functional mockup. Every card's onPress was a
@@ -2028,6 +1600,13 @@ const s = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 8,
+  },
+  // BOXES is the new primary acquisition section after gutting the
+  // 10-tab cosmetic browse from Shop (2026-05-03). Same wrap treatment
+  // as the deals section so they read as siblings.
+  boxesSectionWrap: {
+    position: 'relative',
+    marginBottom: 12,
   },
   dealsBannerBg: {
     ...StyleSheet.absoluteFillObject,
