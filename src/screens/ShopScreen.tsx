@@ -1643,58 +1643,34 @@ export function ShopScreen() {
             </View>
           </StaggeredEntry>
 
-          {/* ═══ 2. LOOT BAGS ═══ */}
-          <StaggeredEntry index={3} delay={60}>
-            <SectionHeader title="LOOT BAGS" gradientColors={['#8e44ad', '#9b59b6']} />
-            <View style={s.bagsRow}>
-              <LootBagCard
-                tier="standard"
-                icon={'\u{1F4E6}'}
-                name="Standard"
-                price="12 Gems"
-                color={['rgba(39,174,61,0.2)', 'rgba(39,174,61,0.05)']}
-                borderCol="rgba(39,174,61,0.4)"
-                onPress={() => haptics.tap()}
-              />
-              <LootBagCard
-                tier="premium"
-                icon={'\u{1F381}'}
-                name="Premium"
-                price="30 Gems"
-                color={['rgba(192,192,192,0.2)', 'rgba(192,192,192,0.05)']}
-                borderCol="rgba(192,192,192,0.4)"
-                onPress={() => haptics.tap()}
-              />
-              <LootBagCard
-                tier="vip"
-                icon={'\u2728'}
-                name="VIP"
-                price="60 Gems"
-                color={['rgba(241,196,15,0.25)', 'rgba(241,196,15,0.05)']}
-                borderCol="rgba(241,196,15,0.5)"
-                onPress={() => haptics.tap()}
-              />
-            </View>
-          </StaggeredEntry>
+          {/* ═══ 2. LOOT BAGS ═══
+              REMOVED 2026-05-02 (Devon's AAA polish pass): the section
+              was a non-functional mockup. Every card's onPress was a
+              bare `() => haptics.tap()` with no store, no purchase
+              flow, no reveal. The cards LOOKED tappable AND showed
+              prices, but tapping did nothing beyond a haptic blip —
+              worst kind of broken affordance for a shipping product.
+              Restore this block when a real gem-based loot-bag store +
+              reveal flow ships (separate from the existing coin-based
+              Loot Boxes — gems vs coins is the intended differentiator).
+              The Loot Boxes flow lives at LootBoxScreen and is fully
+              wired (tap WIN BOX on Home or the Boxes tab in Shop). */}
 
-          {/* ═══ 3. COIN & GEM BUNDLES ═══ */}
-          <StaggeredEntry index={4} delay={60}>
-            <SectionHeader title="GET MORE COINS" gradientColors={['#d4ac0d', '#f1c40f']} />
-            <View style={s.bundlesGrid}>
-              <BundleCard icon={'\u{1FA99}'} amount="500" price="Free Daily" color={['rgba(39,174,61,0.25)', 'rgba(39,174,61,0.08)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="2,500" bonus="x2" price="$0.99" color={['rgba(255,209,102,0.2)', 'rgba(255,209,102,0.06)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="10,000" bonus="x2" price="$4.99" color={['rgba(255,209,102,0.25)', 'rgba(255,209,102,0.08)']} highlight onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1FA99}'} amount="50,000" bonus="BEST" price="$9.99" color={['rgba(255,140,0,0.3)', 'rgba(255,140,0,0.1)']} onPress={() => haptics.tap()} />
-            </View>
+          {/* ═══ 3. COIN & GEM BUNDLES ═══
+              REMOVED 2026-05-02 (Devon's AAA polish pass): 8 bundle
+              cards displayed real dollar prices ($0.99 / $4.99 / $9.99
+              / $19.99) for coin and gem packs, but every onPress was
+              `() => haptics.tap()` — there is no IAP code in the
+              project (no expo-in-app-purchases, no RevenueCat, no
+              ExpoIAP integration). Apple WILL reject the app for
+              showing dollar-priced "buy" buttons that fire nothing —
+              Guideline 3.1.1 covers this exactly.
 
-            <SectionHeader title="GET MORE GEMS" gradientColors={['#1abc9c', '#2dd4ad']} />
-            <View style={s.bundlesGrid}>
-              <BundleCard icon={'\u{1F48E}'} amount="10" price="$0.99" color={['rgba(46,204,113,0.2)', 'rgba(46,204,113,0.06)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="50" bonus="x2" price="$4.99" color={['rgba(46,204,113,0.25)', 'rgba(46,204,113,0.08)']} onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="150" bonus="x2" price="$9.99" color={['rgba(26,188,156,0.3)', 'rgba(26,188,156,0.08)']} highlight onPress={() => haptics.tap()} />
-              <BundleCard icon={'\u{1F48E}'} amount="500" bonus="BEST" price="$19.99" color={['rgba(26,188,156,0.35)', 'rgba(26,188,156,0.12)']} onPress={() => haptics.tap()} />
-            </View>
-          </StaggeredEntry>
+              Restore this block when real IAP ships: each card needs
+              an actual product ID, the price label must come from
+              the IAP SDK (so it localizes), and onPress must trigger
+              the platform purchase flow. Daily free coin claim still
+              lives in TODAY'S DEALS at the top of the Shop. */}
 
           {/* Item shop is now rendered first (above deals) */}
         </ScrollView>
