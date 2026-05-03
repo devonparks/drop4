@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Dimensions, TextInput, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Dimensions, TextInput, Pressable, ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -218,8 +218,13 @@ function SectionHeader({ title, gradientColors, rightText }: { title: string; gr
 }
 
 // ─── Daily Deal Card ───────────────────────────────────────────
-function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge, pulseBadge, onPress }: {
-  icon: string; title: string; subtitle: string; buttonLabel: string;
+function DailyDealCard({ icon, iconImage, title, subtitle, buttonLabel, buttonColor, badge, pulseBadge, onPress }: {
+  icon: string;
+  // Optional painted icon — preferred over the emoji icon when supplied.
+  // Lets featured outfit / pet / emote deals show their actual painted
+  // pack cover instead of a generic '👗' / '🐶' / '💃' glyph.
+  iconImage?: ImageSourcePropType;
+  title: string; subtitle: string; buttonLabel: string;
   buttonColor: [string, string]; badge?: string; pulseBadge?: boolean; onPress: () => void;
 }) {
   // "Outfit of the Day" (and other hot deals) get a pulse/glow on the badge
@@ -255,7 +260,16 @@ function DailyDealCard({ icon, title, subtitle, buttonLabel, buttonColor, badge,
               <Text style={s.dealBadgeText}>{badge}</Text>
             </Animated.View>
           )}
-          <Text style={s.dealIcon}>{icon}</Text>
+          {iconImage ? (
+            <Image
+              source={iconImage}
+              style={s.dealIconImg}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <Text style={s.dealIcon}>{icon}</Text>
+          )}
           <Text style={s.dealTitle} numberOfLines={1}>{title}</Text>
           <Text style={s.dealSub} numberOfLines={1}>{subtitle}</Text>
           <LinearGradient colors={buttonColor} style={s.dealBtn}>
@@ -1573,20 +1587,39 @@ export function ShopScreen() {
               />
               {/* Featured Today — 4 deterministic picks that rotate at midnight.
                   See src/data/shopRotation.ts for the seeded selection logic. */}
+              {/* AAA pass: featured outfit deals show the painted PACK_ICON
+                  (chunky 3D pack cover) and emote deals show their EMOTE_ICON
+                  instead of generic 👗 / 💃 emoji glyphs. Pets fall back to
+                  emoji because Shop pets use the lowercase pets.ts ID
+                  scheme that doesn't map cleanly to a single icon source. */}
               {(() => {
                 const featured = getDailyFeatured();
                 return featured.deals.map((deal) => {
                   const isOutfit = deal.category === 'outfit';
                   const isOwned = isOutfit && ownedOutfits.includes(deal.item.id);
                   const iconByCategory: Record<string, string> = {
-                    outfit: '\u{1F455}',
-                    pet: '\u{1F436}',
-                    emote: '\u{1F483}',
+                    outfit: '👕',
+                    pet: '🐶',
+                    emote: '💃',
                   };
+                  // Painted icon resolution per category. Falls back to
+                  // undefined (and then to the emoji glyph) when the
+                  // deal item doesn't have a painted source available.
+                  let painted: ImageSourcePropType | undefined;
+                  if (isOutfit) {
+                    const outfitMeta = OUTFITS[deal.item.id];
+                    if (outfitMeta) {
+                      const sk = OUTFIT_PACK_TO_SIDEKICK[outfitMeta.pack];
+                      painted = sk ? getPackIcon(sk) : undefined;
+                    }
+                  } else if (deal.category === 'emote') {
+                    painted = getEmoteIcon(deal.item.id);
+                  }
                   return (
                     <DailyDealCard
                       key={deal.item.id}
-                      icon={iconByCategory[deal.category] ?? '\u2728'}
+                      icon={iconByCategory[deal.category] ?? '✨'}
+                      iconImage={painted}
                       title={deal.item.name}
                       subtitle={`${deal.discountedPrice}🪙 (was ${deal.originalPrice})`}
                       buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
@@ -1838,6 +1871,10 @@ const s = StyleSheet.create({
   },
   dealBadgeText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 8, color: '#fff', letterSpacing: 0.5 },
   dealIcon: { fontSize: 32, marginBottom: 4 },
+  // Painted icon variant — sized to match the emoji glyph's visual
+  // weight at 32pt so swapping between emoji + painted doesn't shift
+  // the deal-card layout.
+  dealIconImg: { width: 44, height: 44, marginBottom: 4 },
   dealTitle: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 12, color: '#ffffff', textAlign: 'center' },
   dealSub: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 10, color: colors.textSecondary, textAlign: 'center', marginTop: 1 },
   dealBtn: {
