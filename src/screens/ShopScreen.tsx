@@ -2025,13 +2025,14 @@ const s = StyleSheet.create({
   piecePreviewBackdrop: { width: '100%', height: 64, alignItems: 'center', justifyContent: 'center' },
   piecePreviewRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
   // Outfit names like "ELVEN WARRIORS" / "FANTASY VILLAGERS" need to fit
-  // a 108px card without truncating to "ELVEN WARR..." Drop fontSize
-  // 12→11 and tighten letter-spacing so the longest pack labels still
-  // read clearly. Also shifted to bold (was semibold) so the smaller
-  // size still has presence at glance distance.
+  // a 108px card without truncating. After dropping 12→11 the longest
+  // labels still showed "ELVEN WARRIO..." — went one more point to 10
+  // and zero letter-spacing, which clears even "APOCALYPSE OUTLAWS"
+  // (the longest pack label in the registry). Bold weight + uppercase
+  // keeps presence at small size.
   itemName: {
-    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11, color: '#ffffff',
-    letterSpacing: 0.3, textAlign: 'center', marginTop: 6, paddingHorizontal: 4,
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: '#ffffff',
+    letterSpacing: 0, textAlign: 'center', marginTop: 6, paddingHorizontal: 2,
   },
   // Centering wrap for the painted RarityChip inside the 108px item card.
   // The chip itself has no outer spacing, so we center it + give it breathing
