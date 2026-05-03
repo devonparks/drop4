@@ -24,6 +24,7 @@ import { AnimatedRarityBg } from '../components/effects/AnimatedRarityBg';
 
 const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
 import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
+import { LootChest } from '../components/ui/LootChest';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
 import { OUTFIT_SHOP_ITEMS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
@@ -1431,18 +1432,58 @@ export function ShopScreen() {
                 ))}
               </View>
             ) : activeTab === 'boxes' ? (
+              // AAA Boxes-tab redesign: rows now use the rendered
+              // LootChest component (bronze/silver/gold/diamond tiers)
+              // instead of emoji icons, AND each row is tappable \u2014
+              // routes the player to the dedicated LootBoxScreen where
+              // the buy + open + reveal flow lives. Previously this
+              // tab was a static View with no buy CTA, which left
+              // owned boxes piling up unreachable AND surfaced the
+              // emoji glyph as the box visual (off-brand vs the
+              // chunky 3D Drop4 art language everywhere else).
               <View style={s.boxList}>
+                <Text style={s.boxListIntro}>
+                  Earn boxes from wins or buy them here. Tap a box to manage your inventory.
+                </Text>
                 {LOOT_BOXES.map(box => {
                   const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
                   return (
-                    <View key={box.id} style={s.boxItem}>
-                      <Text style={s.boxItemIcon}>{box.icon}</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={s.boxItemName}>{box.name}</Text>
-                        <Text style={s.boxItemCount}>{'\u00D7'}{count} owned</Text>
+                    <PressScale
+                      key={box.id}
+                      scaleTo={0.97}
+                      onPress={() => {
+                        haptics.tap();
+                        playSound('click');
+                        navigation.navigate('LootBox' as never);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${box.name}, ${count} owned${box.cost > 0 ? `, costs ${box.cost} coins` : ', earn-only'}`}
+                    >
+                      <View style={s.boxItem}>
+                        <View style={s.boxItemChestSlot}>
+                          <LootChest tier={box.tier} size={56} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.boxItemName}>{box.name}</Text>
+                          <Text style={s.boxItemCount}>
+                            {count > 0 ? `${'\u00D7'}${count} owned` : 'None owned yet'}
+                          </Text>
+                        </View>
+                        <View style={s.boxItemRight}>
+                          {box.cost > 0 ? (
+                            <View style={s.boxItemPriceRow}>
+                              <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
+                              <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
+                            </View>
+                          ) : (
+                            <View style={s.boxEarnPill}>
+                              <Text style={s.boxEarnPillText}>EARN</Text>
+                            </View>
+                          )}
+                          <Text style={s.boxItemChevron}>{'\u203A'}</Text>
+                        </View>
                       </View>
-                      {box.cost > 0 && <Text style={s.boxItemPrice}>{'\u{1FA99}'} {box.cost}</Text>}
-                    </View>
+                    </PressScale>
                   );
                 })}
               </View>
@@ -2026,15 +2067,40 @@ const s = StyleSheet.create({
 
   // ── Box list (inside tab) ──
   boxList: { gap: 8, paddingHorizontal: 16 },
-  boxItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  boxListIntro: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginBottom: 6,
+    paddingHorizontal: 4,
+    lineHeight: 15,
   },
-  boxItemIcon: { fontSize: 32 },
-  boxItemName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 14, color: '#ffffff' },
-  boxItemCount: { fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 11, color: colors.textSecondary },
-  boxItemPrice: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: colors.coinGold },
+  boxItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(10,14,32,0.65)', borderRadius: 14, padding: 12,
+    borderWidth: 1.5, borderColor: 'rgba(255,180,90,0.25)',
+  },
+  // Chest slot — fixed-height slot that hosts the LootChest render so
+  // every row aligns regardless of internal chest dimensions.
+  boxItemChestSlot: {
+    width: 56, height: 56, alignItems: 'center', justifyContent: 'center',
+  },
+  boxItemName: { fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 14, color: '#ffffff', letterSpacing: 1 },
+  boxItemCount: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  boxItemRight: { alignItems: 'center', flexDirection: 'row', gap: 6 },
+  boxItemPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  boxItemPriceEmoji: { fontSize: 13 },
+  boxItemPrice: { fontFamily: fonts.body, fontWeight: weight.black, fontSize: 14, color: colors.coinGold },
+  boxItemChevron: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 22, color: 'rgba(255,180,90,0.7)', marginLeft: 4, lineHeight: 22 },
+  boxEarnPill: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(46,204,113,0.18)',
+    borderWidth: 1, borderColor: 'rgba(46,204,113,0.5)',
+  },
+  boxEarnPillText: { fontFamily: fonts.body, fontWeight: weight.black, fontSize: 9, color: colors.gemGreen, letterSpacing: 0.8 },
 
   // Search + ownership filter row at the top of the Clothes tab.
   amgSearchRow: {
