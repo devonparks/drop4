@@ -172,6 +172,11 @@ export function CustomizeScreen() {
   // the AnimationPicker modal. Reads ownedEmotes from the shared
   // selector defined above.
   const [activeEmote, setActiveEmote] = useState<string | null>(null);
+  // Tracks whether the player has tapped the character at least once
+  // this mount. Drives the "TAP TO PREVIEW" affordance below the
+  // character — visible until first interaction, then hidden so the
+  // hint doesn't compete with the chip / hero card visually.
+  const [hasTappedChar, setHasTappedChar] = useState(false);
   useEffect(() => {
     if (!activeEmote) return;
     const t = setTimeout(() => setActiveEmote(null), 3000);
@@ -188,6 +193,7 @@ export function CustomizeScreen() {
     haptics.win();
     playSound('click');
     setActiveEmote(pick);
+    setHasTappedChar(true);
   };
 
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
@@ -290,6 +296,15 @@ export function CustomizeScreen() {
             animationId={activeEmote}
             onTap={handleCharacterTap}
           />
+          {/* Tap-to-preview affordance — only visible until the player
+              has tapped the character at least once this mount. Fades
+              automatically after first interaction so it doesn't
+              compete with the chip / hero card visually. */}
+          {!hasTappedChar && (
+            <View pointerEvents="none" style={styles.charTapHint}>
+              <Text style={styles.charTapHintText}>TAP TO PREVIEW EMOTES</Text>
+            </View>
+          )}
         </View>
 
         {/* Equipped summary readout — passive at-a-glance label of what
@@ -480,6 +495,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 300,
     marginBottom: 2,
+    position: 'relative',
+  },
+  // First-visit hint that the character is tappable. Hides after the
+  // first tap (tracked by hasTappedChar). Positioned at the bottom of
+  // the stage so it sits between the character's feet and the chip
+  // below — reads as "tap me" without overlapping the silhouette.
+  charTapHint: {
+    position: 'absolute',
+    bottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(10,14,32,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.35)',
+  },
+  charTapHintText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,180,90,0.85)',
+    letterSpacing: 1.4,
   },
   charStageInner: {
     width: 320,
