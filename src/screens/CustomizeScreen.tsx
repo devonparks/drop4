@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -77,8 +77,10 @@ const CATEGORIES: CategoryMeta[] = [
   { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
 ];
 
-// 3D character presenter — Customize tab is a stage, not a tap-to-react toy,
-// so we just render the player's amgCharacter via Character3DPortrait at idle.
+// 3D character presenter — Customize tab is a stage AND a tap-to-react
+// toy. Tapping the character plays a random owned emote so the player
+// can preview their cosmetics without leaving the tab. Same pattern
+// Home uses (handleCharacterTap) — adapted for the locker context.
 //
 // AAA pass 2026-05-02:
 //   - Layered radial spotlight glow underneath the character so it feels
@@ -86,14 +88,24 @@ const CATEGORIES: CategoryMeta[] = [
 //   - Painted floor disc for grounding (subtle elliptical shadow).
 //   - Character bumped 300→320 so it dominates the upper screen without
 //     pushing the category grid below the bottom tab bar.
-function CustomizeCharacter() {
+//   - tap-to-emote interaction (2026-05-02 round 2) — the spotlight is
+//     no longer just decorative; tapping the character previews an
+//     owned emote and shows off the player's cosmetics in motion.
+function CustomizeCharacter({
+  animationId,
+  onTap,
+}: {
+  animationId: string | null;
+  onTap: () => void;
+}) {
   return (
-    <View style={styles.charStageInner} pointerEvents="none">
+    <View style={styles.charStageInner}>
       {/* Back-glow — large warm orange aura so the silhouette pops out
           of the dark navy background. Layered behind the character. */}
-      <View style={styles.charGlow} />
+      <View pointerEvents="none" style={styles.charGlow} />
       {/* Floor disc — soft elliptical shadow under the feet for grounding. */}
       <LinearGradient
+        pointerEvents="none"
         colors={['rgba(255,140,0,0.22)', 'rgba(255,140,0,0)']}
         style={styles.charFloorDisc}
         start={{ x: 0.5, y: 0 }}
@@ -102,6 +114,8 @@ function CustomizeCharacter() {
       <Character3DPortrait
         width={320}
         height={320}
+        animationId={animationId}
+        onTap={onTap}
         // Painted scene already supplies warm-amber backdrop; we own the
         // floor disc + spotlight stack here so the look is consistent
         // even if the bg theme is swapped per-screen later.
@@ -150,6 +164,31 @@ export function CustomizeScreen() {
   // taps without leaving the Customize tab.
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
+
+  // Tap-to-preview emote on the 3D character. Same pattern as Home's
+  // handleCharacterTap — picks a random owned emote, plays it for 3
+  // seconds, then crossfades back to idle. Lets the player preview
+  // their emote collection without committing to "pin this one" via
+  // the AnimationPicker modal. Reads ownedEmotes from the shared
+  // selector defined above.
+  const [activeEmote, setActiveEmote] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeEmote) return;
+    const t = setTimeout(() => setActiveEmote(null), 3000);
+    return () => clearTimeout(t);
+  }, [activeEmote]);
+  const handleCharacterTap = () => {
+    // Free + owned pool, same filter the AnimationPicker uses so the
+    // tap-preview never plays an emote the player can't actually equip.
+    const pool = HUMAN_EMOTES.filter(
+      (e) => ownedEmotes.includes(e.id) || (e.price ?? 0) === 0,
+    );
+    if (pool.length === 0) return;
+    const pick = pool[Math.floor(Math.random() * pool.length)].id;
+    haptics.win();
+    playSound('click');
+    setActiveEmote(pick);
+  };
 
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
 
@@ -242,10 +281,15 @@ export function CustomizeScreen() {
         </View>
 
         {/* 3D character stage. Centered with spotlight aura + floor disc.
+            Tappable — fires a random owned emote preview so the player
+            can show off their cosmetics without leaving the tab.
             Live-updates when the player changes gear via the category
             cards / EquipPanel sheets below. */}
         <View style={styles.charStage}>
-          <CustomizeCharacter />
+          <CustomizeCharacter
+            animationId={activeEmote}
+            onTap={handleCharacterTap}
+          />
         </View>
 
         {/* Equipped summary readout — passive at-a-glance label of what
