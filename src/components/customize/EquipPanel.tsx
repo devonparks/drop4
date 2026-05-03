@@ -204,11 +204,13 @@ export function EquipPanel({ visible, category, onClose }: Props) {
   function handleItemPress(item: ItemView) {
     if (!category) return;
     if (!item.isOwned) {
-      // Not owned — bounce to Shop with a haptic. Future: per-shop-tab
-      // deep link so we land on the right sub-tab.
-      haptics.error?.();
+      // Not owned — route the player to the LootBox screen where they
+      // can open bags. After the 2026-05-03 Shop pivot, bags are the
+      // primary acquisition path for cosmetics. Tap a locked item →
+      // open bags → maybe roll the item.
+      haptics.tap();
       onClose();
-      navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+      navigation.navigate('LootBox' as never);
       return;
     }
     if (item.isEquipped) {
@@ -299,13 +301,13 @@ export function EquipPanel({ visible, category, onClose }: Props) {
                   style={styles.emptyShopBtn}
                   onPress={() => {
                     onClose();
-                    navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+                    navigation.navigate('LootBox' as never);
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel="Visit shop"
-                  accessibilityHint="Closes this panel and opens the shop"
+                  accessibilityLabel="Open bags"
+                  accessibilityHint="Closes this panel and opens the bags screen"
                 >
-                  <Text style={styles.emptyShopBtnText}>VISIT SHOP ›</Text>
+                  <Text style={styles.emptyShopBtnText}>OPEN BAGS ›</Text>
                 </Pressable>
               </View>
             ) : (
@@ -322,19 +324,21 @@ export function EquipPanel({ visible, category, onClose }: Props) {
                     />
                   ))}
                 </View>
-                {/* Footer hint pointing to Shop for unowned items */}
+                {/* Footer hint — bags are the new primary acquisition
+                 *  path for any locked items in this category. Tap to
+                 *  open the LootBox screen and roll for new cosmetics. */}
                 <Pressable
                   style={styles.footerShopLink}
                   onPress={() => {
                     onClose();
-                    navigation.navigate('MainTabs', { screen: 'Shop' } as never);
+                    navigation.navigate('LootBox' as never);
                   }}
                   accessibilityRole="link"
-                  accessibilityLabel="Get more in the Shop"
-                  accessibilityHint="Closes this panel and opens the shop"
+                  accessibilityLabel="Open bags"
+                  accessibilityHint="Closes this panel and opens the bags screen"
                 >
                   <Text style={styles.footerShopText}>
-                    Get more in the Shop ›
+                    Open bags to get more ›
                   </Text>
                 </Pressable>
               </ScrollView>
@@ -390,7 +394,9 @@ function ItemCard({ item, onPress }: { item: ItemView; onPress: () => void }) {
         ) : item.isOwned ? (
           <Text style={[styles.equipText, { color: rarityColor }]}>EQUIP</Text>
         ) : (
-          <Text style={styles.lockedText}>🔒 LOCKED</Text>
+          // Locked items point at the new acquisition source: BAGS.
+          // Tap a locked item → handleItemPress routes to LootBox.
+          <Text style={styles.lockedText}>🔒 IN BAGS</Text>
         )}
       </View>
     </Pressable>
