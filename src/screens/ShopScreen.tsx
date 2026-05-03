@@ -606,6 +606,32 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
 
 type CollectionFilter = 'All' | 'OG Collection' | 'Season 0' | 'Neon Pack' | 'Mythic Collection';
 
+// data/pets.ts uses lowercase compressed IDs (`labrador`, `goldenretrieve`)
+// while petRegistry uses `dog_<breed>` IDs (`dog_labrador`,
+// `dog_golden_retrieve`). The previous `(PETS_3D as any)[pet.id]` lookup
+// always missed → Pet3D rendering never fired → every shop pet card
+// fell back to the static idleImage PNG. This map closes the gap so
+// shop pets show LIVE 3D dog renders matching what the equipped pet
+// looks like on the Home stage.
+const PETS_SHOP_TO_REGISTRY: Record<string, string> = {
+  labrador:        'dog_labrador',
+  goldenretrieve:  'dog_golden_retrieve',
+  shiba:           'dog_shiba',
+  dalmatian:       'dog_dalmatian',
+  husky:           'dog_husky',
+  germanshepherd:  'dog_german_shepherd',
+  doberman:        'dog_doberman',
+  pointer:         'dog_pointer',
+  ridgeback:       'dog_ridgeback',
+  greyhound:       'dog_greyhound',
+  fox:             'dog_fox',
+  coyote:          'dog_coyote',
+  wolf:            'dog_wolf',
+  hellhound:       'dog_hellhound',
+  robot:           'dog_robot',
+  scifi:           'dog_scifi',
+};
+
 // ─── Pet Card ─────────────────────────────────────────────────
 function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   pet: Pet; isOwned: boolean; isEquipped: boolean; onPress: () => void; index: number;
@@ -613,8 +639,10 @@ function PetCard({ pet, isOwned, isEquipped, onPress, index }: {
   const rarityColor = PET_RARITY_COLORS[pet.rarity];
   const isEarnOnly = pet.price === 0;
 
-  // Look up the 3D pet registry entry for this shop pet (same ID scheme)
-  const pet3D = (PETS_3D as any)[pet.id];
+  // Look up the 3D pet registry entry for this shop pet via the
+  // shop-id → registry-id translator above.
+  const registryId = PETS_SHOP_TO_REGISTRY[pet.id];
+  const pet3D = registryId ? (PETS_3D as any)[registryId] : null;
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
