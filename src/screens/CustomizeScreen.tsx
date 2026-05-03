@@ -65,16 +65,34 @@ type CategoryMeta = {
 // Each tile uses a chunky 3D category icon (cat-*.png) generated to
 // match the locked-in DROP4 logo style — white-cyan body face + warm
 // orange-red 3D extrusion + thick dark navy outline.
+// Category order matters — at 4 cards per row, two visual rows naturally
+// group themselves by row position. AAA pass 2026-05-02 reorders the
+// 8 grid cards (character is the hero card above and not in this list)
+// so each row reads as a coherent group:
+//
+//   Row 1 — AVATAR / IDENTITY
+//     CLOTHES (parts you wear) · EMOTES (poses you perform) ·
+//     PETS (companions you bring) · FRAMES (your profile chrome)
+//
+//   Row 2 — GAMEPLAY COSMETICS
+//     PIECES (in-match) · BOARDS (in-match) ·
+//     EFFECTS (drop FX) · WINS (victory FX)
+//
+// Players don't need to read section headers to feel the grouping —
+// the row position does the work. The previous order mixed PIECES
+// (gameplay) into row 1 with the avatar items, which read as random.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
+  // Row 1 — avatar / identity
   { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png'),   shopTab: 'clothes' },
   { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png'),    shopTab: 'emotes' },
   { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png'),      shopTab: 'pets' },
+  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
+  // Row 2 — gameplay cosmetics
   { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/cat-pieces.png'),    shopTab: 'pieces' },
   { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/cat-boards.png'),    shopTab: 'boards' },
   { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png'),   shopTab: 'dropEffects' },
   { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png'),      shopTab: 'winAnimations' },
-  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png'),    shopTab: 'frames' },
 ];
 
 // 3D character presenter — Customize tab is a stage AND a tap-to-react
