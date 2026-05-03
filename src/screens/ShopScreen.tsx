@@ -1171,6 +1171,23 @@ export function ShopScreen() {
                 };
                 return (
                   <>
+                    {/* Intent banner — Devon repro: "no clear difference
+                        in what you are buying." This explicitly tells
+                        the player Clothes = mix & match individual parts
+                        and points them to OUTFITS for full looks. */}
+                    <View style={s.intentBanner}>
+                      <Text style={s.intentBannerTitle}>MIX & MATCH PARTS</Text>
+                      <Text style={s.intentBannerBody}>
+                        Buy individual heads, hair, and outfit pieces to build a custom look. Want a full pre-made set instead? Tap{' '}
+                        <Text
+                          style={s.intentBannerLink}
+                          onPress={() => { haptics.tap(); playSound('click'); setActiveTab('outfits'); setCollectionFilter('All'); }}
+                        >
+                          OUTFITS
+                        </Text>.
+                      </Text>
+                    </View>
+
                     {/* Search + Owned-only toggle. Search matches part
                         names AND pack display names so "samurai" finds
                         every Samurai Warriors part. Owned-only flips
@@ -1199,7 +1216,11 @@ export function ShopScreen() {
                       </Pressable>
                     </View>
 
-                    {/* Species filter chips */}
+                    {/* Species filter chips. Body-region filter dropped
+                        per Devon's audit — three rows of filters before
+                        the catalog was decision fatigue. Players who
+                        want body-region scoping can still use search
+                        ("torso", "arm", etc) which matches part names. */}
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -1215,105 +1236,160 @@ export function ShopScreen() {
                       ))}
                     </ScrollView>
 
-                    {/* Slot-bucket filter chips: lets players narrow the
-                        grid to a body region instead of scrolling past
-                        unrelated packs. Bucket + species combine as AND. */}
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ paddingVertical: 4, paddingHorizontal: 4, gap: 8 }}
-                    >
-                      {(['All', 'Upper Body', 'Lower Body', 'Face', 'Accessories', 'Armor'] as AmgSlotBucket[]).map((b) => (
-                        <FilterChip
-                          key={b}
-                          label={b}
-                          active={amgBucket === b}
-                          onPress={() => setAmgBucket(b)}
-                        />
-                      ))}
-                    </ScrollView>
-
-                    {/* Pack sections — collapsible. With ~40 packs × dozens
-                        of parts each, the previous always-rendered grid
-                        scrolled forever. Now players see a list of pack
-                        rows with counts and expand the one(s) they want.
-                        Active search / owned-only force-expand matching
-                        packs so filters don't hide their results. */}
+                    {/* AAA pack-grid redesign (2026-05-02): replaced the
+                        linear pack rows with a 2-col VISUAL card grid.
+                        Each card shows the chunky 3D pack cover so the
+                        player can scan "this is the apocalypse pack"
+                        instantly instead of decoding pack name text.
+                        Tapping a card opens the full pack below (single
+                        open at a time) with the parts grid. Active
+                        search / owned-only auto-flatten the grid into a
+                        single combined parts grid so filters don't
+                        require a second tap to dig in. */}
                     {packOrder.length === 0 ? (
                       <Animated.View entering={FadeIn.duration(280)} style={s.comingSoon}>
                         <Text style={s.comingSoonText}>No parts match. Try a different filter or search.</Text>
                       </Animated.View>
-                    ) : (
-                      <>
-                        {/* Expand-all / collapse-all helper — when a player
-                            does want to scroll the full catalog. Default
-                            stays collapsed because hundreds of cards lag
-                            mid-range mobiles. */}
-                        <View style={s.amgPackToolbar}>
-                          <Text style={s.amgPackCount}>
-                            {packOrder.length} {packOrder.length === 1 ? 'pack' : 'packs'} ·{' '}
-                            {Object.values(byPack).reduce((sum, ps) => sum + ps.length, 0)} parts
-                          </Text>
-                          <Pressable
-                            onPress={() => {
-                              haptics.tap();
-                              setAmgExpandedPacks((prev) => {
-                                const allOpen = packOrder.every((p) => prev.has(p));
-                                return allOpen ? new Set() : new Set(packOrder);
-                              });
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Toggle all packs"
-                          >
-                            <Text style={s.amgPackToolbarBtn}>
-                              {packOrder.every((p) => amgExpandedPacks.has(p)) ? 'COLLAPSE ALL' : 'EXPAND ALL'}
-                            </Text>
-                          </Pressable>
-                        </View>
-                        {packOrder.map((pack) => {
-                          const meta = packMeta(pack);
-                          const parts = byPack[pack];
-                          // Force-expand under any active filter so the
-                          // player sees what they searched for / what
-                          // they own without an extra tap.
-                          const forceExpand = amgQuery.trim().length > 0 || amgOwnedOnly;
-                          const isOpen = forceExpand || amgExpandedPacks.has(pack);
-                          const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
-                          return (
-                            <View key={pack} style={s.amgPackSection}>
-                              <Pressable
-                                onPress={() => {
-                                  if (forceExpand) return; // can't manually toggle while filtered
-                                  haptics.tap();
-                                  setAmgExpandedPacks((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(pack)) next.delete(pack);
-                                    else next.add(pack);
-                                    return next;
-                                  });
-                                }}
-                                style={s.amgPackHeader}
-                                accessibilityRole="button"
-                                accessibilityLabel={`${meta.displayName} pack, ${ownedCount} of ${parts.length} owned`}
-                                accessibilityState={{ expanded: isOpen }}
-                              >
-                                <Text style={s.amgPackChevron}>{isOpen ? '▾' : '▸'}</Text>
-                                {getPackIcon(pack) ? (
-                                  <Image
-                                    source={getPackIcon(pack)!}
-                                    style={s.amgPackIcon}
-                                    resizeMode="contain"
-                                    accessibilityIgnoresInvertColors
+                    ) : (() => {
+                      const isFiltering = amgQuery.trim().length > 0 || amgOwnedOnly;
+                      // Active search / owned-only flattens to a combined
+                      // grid — packs become irrelevant when the player
+                      // is hunting a specific part. Otherwise show the
+                      // pack-card grid + selected pack's parts.
+                      if (isFiltering) {
+                        const allParts = packOrder.flatMap((p) => byPack[p]);
+                        return (
+                          <>
+                            <View style={s.amgPackToolbar}>
+                              <Text style={s.amgPackCount}>
+                                {allParts.length} matching part{allParts.length === 1 ? '' : 's'}
+                              </Text>
+                            </View>
+                            <View style={s.amgPackGrid}>
+                              {allParts.map((p) => {
+                                const unlockedAt = amgPartUnlockedAt[p.name];
+                                const isNew = unlockedAt !== undefined
+                                  && Date.now() - unlockedAt < 7 * 24 * 60 * 60 * 1000;
+                                return (
+                                  <AmgPartCard
+                                    key={p.name}
+                                    partName={p.name}
+                                    owned={isAmgPartOwned(p.name)}
+                                    onBuy={handleBuy}
+                                    onEquip={handleEquip}
+                                    size="compact"
+                                    isNew={isNew}
                                   />
-                                ) : (
-                                  <Text style={s.amgPackEmoji}>{meta.emoji}</Text>
-                                )}
-                                <Text style={s.amgPackName}>{meta.displayName}</Text>
-                                <Text style={s.amgPackCounts}>
-                                  {ownedCount}/{parts.length}
-                                </Text>
+                                );
+                              })}
+                            </View>
+                          </>
+                        );
+                      }
+                      // Default: pack-card grid + active pack drill-in.
+                      // Single open at a time (Set still used to keep
+                      // the same store API; we just only render one).
+                      const openPack = packOrder.find((p) => amgExpandedPacks.has(p));
+                      return (
+                        <>
+                          <View style={s.amgPackToolbar}>
+                            <Text style={s.amgPackCount}>
+                              {packOrder.length} {packOrder.length === 1 ? 'pack' : 'packs'} ·{' '}
+                              {Object.values(byPack).reduce((sum, ps) => sum + ps.length, 0)} parts
+                            </Text>
+                            {openPack && (
+                              <Pressable
+                                onPress={() => { haptics.tap(); setAmgExpandedPacks(new Set()); }}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close pack and return to all packs"
+                              >
+                                <Text style={s.amgPackToolbarBtn}>{'← ALL PACKS'}</Text>
                               </Pressable>
-                              {isOpen && (
+                            )}
+                          </View>
+                          <View style={s.packCardGrid}>
+                            {packOrder.map((pack) => {
+                              const meta = packMeta(pack);
+                              const parts = byPack[pack];
+                              const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
+                              const isOpen = openPack === pack;
+                              const cover = getPackIcon(pack);
+                              return (
+                                <PressScale
+                                  key={pack}
+                                  scaleTo={0.96}
+                                  onPress={() => {
+                                    haptics.tap();
+                                    playSound('click');
+                                    setAmgExpandedPacks((prev) => {
+                                      // Single-open: clicking the open
+                                      // pack closes it; clicking any
+                                      // other pack switches to it.
+                                      if (prev.has(pack)) return new Set();
+                                      return new Set([pack]);
+                                    });
+                                  }}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`${meta.displayName} pack, ${ownedCount} of ${parts.length} owned${isOpen ? ', currently open' : ''}`}
+                                  accessibilityState={{ selected: isOpen }}
+                                >
+                                  <View style={[s.packCard, isOpen && s.packCardActive]}>
+                                    <View style={s.packCardCover}>
+                                      {cover ? (
+                                        <Image
+                                          source={cover}
+                                          style={s.packCardCoverImg}
+                                          resizeMode="contain"
+                                          accessibilityIgnoresInvertColors
+                                        />
+                                      ) : (
+                                        <Text style={s.packCardCoverEmoji}>{meta.emoji}</Text>
+                                      )}
+                                    </View>
+                                    <Text style={s.packCardName} numberOfLines={1}>
+                                      {meta.displayName}
+                                    </Text>
+                                    <View style={s.packCardCountRow}>
+                                      <Text style={[
+                                        s.packCardCount,
+                                        ownedCount > 0 && { color: colors.green },
+                                      ]}>
+                                        {ownedCount}/{parts.length}
+                                      </Text>
+                                      <Text style={s.packCardCountLabel}>OWNED</Text>
+                                    </View>
+                                  </View>
+                                </PressScale>
+                              );
+                            })}
+                          </View>
+                          {/* Selected pack drill-in: shown beneath the
+                              grid with a clear header so the player
+                              knows what they're browsing. */}
+                          {openPack && (() => {
+                            const meta = packMeta(openPack);
+                            const parts = byPack[openPack];
+                            const ownedCount = parts.filter((p) => isAmgPartOwned(p.name)).length;
+                            return (
+                              <Animated.View entering={FadeIn.duration(200)} style={s.packDrillIn}>
+                                <View style={s.packDrillHeader}>
+                                  {getPackIcon(openPack) ? (
+                                    <Image
+                                      source={getPackIcon(openPack)!}
+                                      style={s.packDrillIcon}
+                                      resizeMode="contain"
+                                      accessibilityIgnoresInvertColors
+                                    />
+                                  ) : (
+                                    <Text style={s.amgPackEmoji}>{meta.emoji}</Text>
+                                  )}
+                                  <View style={{ flex: 1 }}>
+                                    <Text style={s.packDrillName}>{meta.displayName.toUpperCase()}</Text>
+                                    <Text style={s.packDrillSub}>
+                                      {ownedCount}/{parts.length} owned · {parts.length} part{parts.length === 1 ? '' : 's'}
+                                    </Text>
+                                  </View>
+                                </View>
                                 <View style={s.amgPackGrid}>
                                   {parts.map((p) => {
                                     const unlockedAt = amgPartUnlockedAt[p.name];
@@ -1332,12 +1408,12 @@ export function ShopScreen() {
                                     );
                                   })}
                                 </View>
-                              )}
-                            </View>
-                          );
-                        })}
-                      </>
-                    )}
+                              </Animated.View>
+                            );
+                          })()}
+                        </>
+                      );
+                    })()}
                   </>
                 );
               })()
@@ -2027,6 +2103,159 @@ const s = StyleSheet.create({
     color: colors.orange,
     letterSpacing: 1.4,
   },
+  // ── Clothes-tab intent banner ──
+  // Tells the player explicitly: this is the MIX & MATCH catalog. Full
+  // outfit sets live in the OUTFITS tab. Devon repro: "no clear
+  // difference in what you are buying."
+  intentBanner: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.35)',
+    backgroundColor: 'rgba(255,140,0,0.08)',
+  },
+  intentBannerTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 1.6,
+    marginBottom: 2,
+  },
+  intentBannerBody: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.78)',
+    lineHeight: 15,
+  },
+  intentBannerLink: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    color: colors.orange,
+    letterSpacing: 0.6,
+  },
+
+  // ── Pack-card grid ──
+  // Visual 2-col card layout for the Clothes pack browser. Each card
+  // shows the chunky 3D pack cover so players scan packs by image, not
+  // by text. Tap → opens the pack drill-in below.
+  packCardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    rowGap: 10,
+  },
+  packCard: {
+    width: 168,
+    height: 188,
+    borderRadius: 16,
+    backgroundColor: 'rgba(10,14,32,0.65)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.10)',
+    paddingTop: 10,
+    paddingBottom: 12,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  packCardActive: {
+    borderColor: 'rgba(255,180,90,0.85)',
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  packCardCover: {
+    width: 110,
+    height: 110,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  packCardCoverImg: {
+    width: 96,
+    height: 96,
+  },
+  packCardCoverEmoji: {
+    fontSize: 48,
+  },
+  packCardName: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 0.8,
+    paddingHorizontal: 8,
+    textAlign: 'center',
+  },
+  packCardCountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    marginTop: 4,
+  },
+  packCardCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    letterSpacing: 0.4,
+  },
+  packCardCountLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1,
+  },
+
+  // ── Pack drill-in ──
+  // Opened pack expands beneath the grid as a clearly-scoped section
+  // ("BROWSING: Modern Civilians 12 parts") with the parts grid.
+  packDrillIn: {
+    marginTop: 14,
+    marginHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,180,90,0.3)',
+  },
+  packDrillHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 6,
+    paddingBottom: 8,
+  },
+  packDrillIcon: {
+    width: 44,
+    height: 44,
+  },
+  packDrillName: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 1.4,
+  },
+  packDrillSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+
   // Collapsible pack section
   amgPackSection: {
     marginTop: 6,
