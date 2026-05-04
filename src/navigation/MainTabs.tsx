@@ -14,6 +14,7 @@ import { CareerMapScreen } from '../screens/CareerMapScreen';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useChallengeStore } from '../stores/challengeStore';
+import { useCharacterStore } from '../stores/characterStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -86,14 +87,40 @@ function MissionsTabIcon({ focused }: { focused: boolean }) {
   return <TabIcon iconKey="missions" label="Missions" focused={focused} badgeCount={claimable} />;
 }
 
+// Customize tab badge — counts AMG parts that were unlocked within
+// the last 7 days but aren't currently equipped on the player. Drives
+// the "you have new clothes to try on" red dot. Same retention loop
+// as Missions: surface fresh content the player hasn't engaged with.
+const NEW_PARTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+function CustomizeTabIcon({ focused }: { focused: boolean }) {
+  const unequippedNew = useCharacterStore((s) => {
+    const unlockedAt = s.amgPartUnlockedAt;
+    const parts = (s.amgCharacter as unknown as { parts?: Record<string, string> } | null)?.parts;
+    const equippedNames = new Set<string>();
+    if (parts) {
+      for (const v of Object.values(parts)) {
+        if (typeof v === 'string') equippedNames.add(v);
+      }
+    }
+    const cutoff = Date.now() - NEW_PARTS_WINDOW_MS;
+    let count = 0;
+    for (const [name, ts] of Object.entries(unlockedAt)) {
+      if (ts >= cutoff && !equippedNames.has(name)) count++;
+    }
+    return count;
+  });
+  return <TabIcon iconKey="customize" label="Customize" focused={focused} badgeCount={unequippedNew} />;
+}
+
 // Maps a route name to its iconKey + label config. Keeps the per-tab
 // rendering logic out of the route definitions and centralizes "this
-// tab gets a custom MissionsTabIcon" branch.
-const TAB_META: Record<string, { iconKey: keyof typeof TAB_ICON_SOURCES; label: string; useReactiveBadge?: boolean }> = {
-  Missions:  { iconKey: 'missions',  label: 'Missions',  useReactiveBadge: true },
+// tab gets a custom reactive badge" branch.
+type ReactiveBadge = 'missions' | 'customize';
+const TAB_META: Record<string, { iconKey: keyof typeof TAB_ICON_SOURCES; label: string; reactiveBadge?: ReactiveBadge }> = {
+  Missions:  { iconKey: 'missions',  label: 'Missions',  reactiveBadge: 'missions' },
   Career:    { iconKey: 'career',    label: 'Career' },
   Home:      { iconKey: 'home',      label: 'Home' },
-  Customize: { iconKey: 'customize', label: 'Customize' },
+  Customize: { iconKey: 'customize', label: 'Customize', reactiveBadge: 'customize' },
   Shop:      { iconKey: 'shop',      label: 'Shop' },
 };
 
@@ -125,8 +152,10 @@ function BottomTabBar({ state, navigation }: MaterialTopTabBarProps) {
             accessibilityLabel={meta?.label ?? route.name}
             style={styles.tabPressable}
           >
-            {meta?.useReactiveBadge ? (
+            {meta?.reactiveBadge === 'missions' ? (
               <MissionsTabIcon focused={focused} />
+            ) : meta?.reactiveBadge === 'customize' ? (
+              <CustomizeTabIcon focused={focused} />
             ) : (
               <TabIcon
                 iconKey={meta?.iconKey ?? 'home'}
