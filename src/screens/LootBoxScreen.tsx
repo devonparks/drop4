@@ -210,10 +210,25 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onContinue: () => void }) {
   const { item, isDupe, shardsAwarded, coinRefund, wasPityEpic, wasPityLegendary } = result;
   const rarityColor = RARITY_COLORS[item.rarity];
-  // Single-line "category badge" replaces the old emoji icon. With 245+
-  // possible drops, a typed category label reads more clearly than a
-  // generic emoji per item.
-  const categoryLabel = item.type.toUpperCase();
+  // Friendly category label per drop type. Replaces the prior raw
+  // `item.type.toUpperCase()` which read poorly for compound types
+  // ('PARTVARIANT' → 'COLORWAY'). Variant drops (Path A, 2026-05-04)
+  // get a dedicated label so the player understands "you got a new
+  // colorway of an existing part" vs "you got a new part."
+  const TYPE_LABEL: Record<typeof item.type, string> = {
+    board: 'BOARD',
+    pieces: 'PIECES',
+    dropFx: 'DROP FX',
+    winFx: 'WIN FX',
+    frame: 'FRAME',
+    outfit: 'OUTFIT',
+    pet: 'PET',
+    emote: 'EMOTE',
+    partVariant: 'COLORWAY',
+    coins: 'COINS',
+    gems: 'GEMS',
+  } as const;
+  const categoryLabel = TYPE_LABEL[item.type] ?? String(item.type).toUpperCase();
 
   return (
     <ScreenBackground>

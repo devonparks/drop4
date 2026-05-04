@@ -9,6 +9,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
+import { seedDrop4Variants } from './src/services/seedDrop4Variants';
 import { scheduleDailyReminders } from './src/services/notifications';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
@@ -101,6 +102,13 @@ export default function App() {
         }
         await usePetStore.getState().hydrate();
         await useMilestoneStore.getState().loadFromStorage();
+
+        // Seed the lootbox drop pool with Path A variant entries
+        // (2026-05-04 colorway pivot). Generates ~8K (partName,
+        // variantId) drops on top of the existing ~245-item pool so
+        // openBox can roll variant drops alongside the original
+        // outfit-pack drops. Idempotent — safe across hot reloads.
+        seedDrop4Variants();
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();

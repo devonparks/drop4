@@ -292,6 +292,31 @@ export function mintPartVariantItem(
   };
 }
 
+/** Append items to the active drop POOL after module load. Drop4
+ *  calls this once at app boot from `seedDrop4Variants` to inject the
+ *  variant-tuple drops for outfit packs. Tic Tac Toe will call its
+ *  own seeder. The function is idempotent — items already in
+ *  POOL.byId by id are skipped so duplicate seed runs are safe.
+ *
+ *  Why a runtime mutation rather than a re-build: the POOL is
+ *  module-level and cached at first import. Pieces of the catalog
+ *  (e.g. variant data) arrive after import (manifest fetch, store
+ *  hydration). The mutation pattern keeps the existing roll logic
+ *  untouched while letting the catalog grow over the app's life. */
+export function appendItemsToPool(items: LootBoxItem[]): void {
+  let added = 0;
+  for (const item of items) {
+    if (POOL.byId[item.id]) continue; // dedup against existing pool
+    POOL.byId[item.id] = item;
+    POOL.byCatRarity[item.category][item.rarity].push(item);
+    added++;
+  }
+  if (added > 0 && typeof __DEV__ !== 'undefined' && __DEV__) {
+    // eslint-disable-next-line no-console
+    console.log(`[lootBoxStore] appended ${added} items to pool (total ${Object.keys(POOL.byId).length})`);
+  }
+}
+
 const COIN_FILLERS: LootBoxItem[] = [
   { id: 'coins_50',   name: '50 Coins',   type: 'coins', rarity: 'common',    value: 50,   category: 'currency' },
   { id: 'coins_100',  name: '100 Coins',  type: 'coins', rarity: 'common',    value: 100,  category: 'currency' },
