@@ -486,7 +486,18 @@ export function CustomizeScreen() {
                 </Text>
                 <Text style={styles.identityLvl}>{`LVL ${level}`}</Text>
                 <View style={{ flex: 1 }} />
+                {/* Collection % pill — now with a subtle horizontal
+                    progress fill behind the number so the chip itself
+                    visually reads "you're X% there" without taking the
+                    space of a separate bar. AAA pass 2026-05-04. */}
                 <View style={styles.collectionPill}>
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.collectionPillFill,
+                      { width: `${Math.min(100, Math.max(0, collectionPct))}%` },
+                    ]}
+                  />
                   <Text style={styles.collectionPillText}>
                     {`${collectionPct.toFixed(1)}%`}
                   </Text>
@@ -887,6 +898,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,180,90,0.4)',
     backgroundColor: 'rgba(255,140,0,0.10)',
+    overflow: 'hidden',
+    position: 'relative',
+    minWidth: 56,
+    alignItems: 'center',
+  },
+  collectionPillFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,140,0,0.28)',
   },
   collectionPillText: {
     fontFamily: fonts.body,
@@ -894,6 +916,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#ffb347',
     letterSpacing: 0.8,
+    zIndex: 1,
   },
 
   // ── Character stage ────────────────────────────────────────────
