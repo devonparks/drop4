@@ -47,7 +47,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { PressScale, StaggeredEntry } from '../animations';
+import { PressScale } from '../animations';
 // Engine-lifted UI primitives (2026-05-04 cross-game pivot).
 // The Drop4-local copies of VariantGallery, AmgPartCard + the slot
 // bucket array were removed; ClothesCatalog now consumes the engine
