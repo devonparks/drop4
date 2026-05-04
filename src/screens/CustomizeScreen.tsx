@@ -912,7 +912,10 @@ const styles = StyleSheet.create({
   scrollWrap: {
     paddingHorizontal: 12,
     paddingTop: 4,
-    paddingBottom: 20,
+    // Trimmed 20→12 per docs/CUSTOMIZE_VISUAL_AUDIT_2026-05-04.md Fix 7
+    // — the 8px gain reduces the warm-amber bleed-through below the
+    // loadout grid on phones where content barely fills the viewport.
+    paddingBottom: 12,
   },
 
   // ── Hero card ──────────────────────────────────────────────────

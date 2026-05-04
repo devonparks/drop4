@@ -260,6 +260,16 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
       // Hide starter parts from the catalog — they're already owned by
       // every player, no shopping value to surface them as "FREE."
       if (isStarterPack(packPrefixFromPartName(p.name))) return false;
+      // Paired-slot collapse for FACE bucket (audit Fix 5). Brows and
+      // ears are mirror pairs — players always equip both at once. So
+      // we hide the right-side mate (EyebrowRight, EarRight) and let
+      // the left card represent the pair. The equip handler then
+      // dual-equips the right side automatically. Drops face card
+      // count from ~12 to ~6 — the bucket suddenly reads as "6 brow
+      // styles" instead of "12 confusingly-similar brow halves."
+      if (bucket === 'face' && (p.slot === 'EyebrowRight' || p.slot === 'EarRight')) {
+        return false;
+      }
       // Sub-category filter — when active sub-cat is anything other
       // than 'All', drop parts whose computed sub-category doesn't
       // match. The sub-cat is computed via partSubcategories.ts which
@@ -271,7 +281,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
       }
       return true;
     });
-  }, [manifest, activeBucket, speciesFilter, subcategory]);
+  }, [manifest, activeBucket, bucket, speciesFilter, subcategory]);
 
   // Sorted: owned-first, then by pack name + variant. Owned-first
   // means the player can immediately confirm "yep that's mine" before
@@ -567,6 +577,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
                 setManifestRetry((n) => n + 1);
               }}
               unlockedAt={amgPartUnlockedAt}
+              isFaceBucket={bucket === 'face'}
             />
           ) : (
             <PacksGrid
@@ -640,12 +651,23 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             ? (amgCharacter as unknown as { parts?: Record<string, string> }).parts?.[previewPart.slot]
             : undefined;
           const isCurrentlyEquipped = equippedAtSlot === previewPart.name;
+          // Pair-collapse label override for the modal header — same
+          // logic as the card's slotLabelOverride. When the player
+          // tapped a BROW L card representing the brow pair, the modal
+          // should also read "BROWS" not "BROW L" so the header
+          // matches the card.
+          const slotLabelOverride = bucket === 'face'
+            ? previewPart.slot === 'EyebrowLeft' ? 'BROWS'
+            : previewPart.slot === 'EarLeft'    ? 'EARS'
+            : undefined
+            : undefined;
           return (
             <AmgPartPreviewModal
               visible={true}
               partName={previewPart.name}
               slot={previewPart.slot}
               canAfford={true}
+              slotLabelOverride={slotLabelOverride}
               onClose={() => setPreviewPart(null)}
               onBuy={() => {
                 setPreviewPart(null);
@@ -661,6 +683,27 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
                       const variantId = useCharacterStore.getState()
                         .equippedPartVariant[partName] ?? '';
                       useCharacterStore.getState().equipPartVariant(slot, partName, variantId);
+                      // Paired-slot dual-equip (audit Fix 5). When the
+                      // tapped card represents a brow / ear pair, also
+                      // equip the right-side mate so the character
+                      // ends up with a matched pair instead of one
+                      // brow + one stray. The right-side part name is
+                      // a name-substitution of the left: 03EBRL→04EBRR
+                      // and 07EARL→08EARR. Same variant id so the
+                      // colorways stay in sync.
+                      if (slot === 'EyebrowLeft') {
+                        const rightName = partName.replace('_03EBRL_', '_04EBRR_');
+                        if (rightName !== partName) {
+                          useCharacterStore.getState()
+                            .equipPartVariant('EyebrowRight', rightName, variantId);
+                        }
+                      } else if (slot === 'EarLeft') {
+                        const rightName = partName.replace('_07EARL_', '_08EARR_');
+                        if (rightName !== partName) {
+                          useCharacterStore.getState()
+                            .equipPartVariant('EarRight', rightName, variantId);
+                        }
+                      }
                       const packDisplay = packMeta(packPrefixFromPartName(partName)).displayName;
                       setEquipFlash(`Equipped ${packDisplay}`);
                       setPreviewPart(null);
@@ -740,6 +783,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
 
 function PartsGrid({
   parts, isOwned, equippedBySlot, onTap, loading, error, onRetry, unlockedAt,
+  isFaceBucket,
 }: {
   parts: AmgManifestPart[];
   isOwned: (name: string) => boolean;
@@ -755,6 +799,12 @@ function PartsGrid({
    *  Used to drive the red NEW ribbon on cards unlocked in the last
    *  7 days. */
   unlockedAt: Record<string, number>;
+  /** When true, brow-left and ear-left cards are pair representatives
+   *  (right-side mates filtered out upstream). Switches their
+   *  displayed slot label from "BROW L" / "EAR L" to "BROWS" / "EARS"
+   *  so the card reads as the pair the player is actually equipping.
+   *  Per docs/CUSTOMIZE_VISUAL_AUDIT_2026-05-04.md Fix 5. */
+  isFaceBucket: boolean;
 }) {
   // 7-day "newness" window — matches the polish-queue spec. Computed
   // once per render of the grid, not per-card, so the cutoff doesn't
@@ -812,6 +862,15 @@ function PartsGrid({
         // Locked parts never show NEW (no unlock timestamp).
         const ts = unlockedAt[part.name];
         const isNew = owned && typeof ts === 'number' && ts >= newCutoff;
+        // Pair-collapse label override for FACE bucket. Brow L / Ear L
+        // cards are now pair representatives — relabel as the pair so
+        // the slot tag matches the equip semantics. Other slots fall
+        // through to the engine default (slotLabel(partName)).
+        const slotLabelOverride = isFaceBucket
+          ? part.slot === 'EyebrowLeft' ? 'BROWS'
+          : part.slot === 'EarLeft'    ? 'EARS'
+          : undefined
+          : undefined;
         return (
           <Animated.View
             key={part.name}
@@ -827,6 +886,7 @@ function PartsGrid({
               onBuy={() => onTap(part)}
               hooks={{ playClick: () => playSound('click') }}
               isNew={isNew}
+              slotLabelOverride={slotLabelOverride}
             />
             {isEquipped && (
               <View style={styles.partsCellEquippedPill}>

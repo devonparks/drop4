@@ -42,6 +42,10 @@ interface Props {
   onOpenVariants?: () => void;
   /** True when the player is currently wearing this exact part. */
   isCurrentlyEquipped?: boolean;
+  /** Override the modal header slot label (e.g. "BROWS" / "EARS" for
+   *  Drop4 FACE-bucket pair-collapsed cards). Falls through to the
+   *  engine default (slotLabel(partName)) when unset. */
+  slotLabelOverride?: string;
 }
 
 export function AmgPartPreviewModal(props: Props) {
@@ -94,6 +98,7 @@ export function AmgPartPreviewModal(props: Props) {
         lockedActionLabel={props.lockedActionLabel}
         onBuy={props.onBuy}
         canAfford={props.canAfford}
+        slotLabelOverride={props.slotLabelOverride}
         hooks={{
           onTap: haptics.tap,
           onSelect: haptics.select,
