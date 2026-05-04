@@ -1248,12 +1248,21 @@ export function ShopScreen() {
               for the open-and-reveal flow. */}
           <StaggeredEntry index={2} delay={60}>
           <View style={s.boxesSectionWrap}>
-            <SectionHeader title="BAGS" gradientColors={['#8e44ad', '#9b59b6']} />
-            <View style={s.boxList}>
-              <Text style={s.boxListIntro}>
-                Bags drop random cosmetics — outfits, parts, pets, board themes,
-                pieces, effects. Higher tier = better odds on rare items.
+            {/* BAGS used to be a full-width purple gradient banner.
+                After the section grouping (TIERED / THEMED / FEATURED)
+                landed below it the banner felt redundant — three
+                gradient bars stacked. Replaced with a tighter title +
+                blurb pair so visual hierarchy reads:
+                  SHOP big title > TODAY'S DEALS orange banner (primary)
+                  > BAGS / sub-sections (text-only). */}
+            <View style={s.bagsSectionHead}>
+              <Text style={s.bagsSectionTitle}>BAGS</Text>
+              <Text style={s.bagsSectionBlurb}>
+                Random cosmetic drops — outfits, parts, pets, boards, pieces, effects.
+                Dupes auto-convert into shards.
               </Text>
+            </View>
+            <View style={s.boxList}>
               {/* Boxes grouped: Tiered / Themed / Featured. Themed
                   boxes carry a category accent border + tinted bg so
                   they read as distinct from the generic chest-art
@@ -1872,6 +1881,33 @@ const s = StyleSheet.create({
     fontSize: 20,
     color: '#ffb347',
     lineHeight: 20,
+  },
+
+  // ── BAGS section header (text-only) ────────────────────────
+  // Replaced the full-width purple gradient banner — once TIERED /
+  // THEMED / FEATURED sub-section headers landed below, the banner
+  // felt redundant (three gradient bars stacked). Text-only header
+  // matches the sub-section pattern for one consistent rhythm.
+  bagsSectionHead: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+  },
+  bagsSectionTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 18,
+    color: '#ffffff',
+    letterSpacing: 2.0,
+  },
+  bagsSectionBlurb: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.4,
+    marginTop: 4,
+    lineHeight: 16,
   },
 
   // ── Boxes section grouping ───────────────────────────────────
