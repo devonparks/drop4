@@ -49,6 +49,7 @@ import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { PressScale, StaggeredEntry } from '../animations';
 import { AmgPartCard } from '../ui/AmgPartCard';
+import { VariantGallery } from './VariantGallery';
 import { useCharacterStore } from '../../stores/characterStore';
 import { OUTFITS, type Species } from '../../data/outfitRegistry';
 import { OUTFIT_SHOP_ITEMS } from '../../data/cosmeticsShopCatalog';
@@ -61,6 +62,11 @@ import {
   getPartPrice,
 } from '../../data/amgPartPricing';
 import { packMeta } from '../../data/amgPackMeta';
+import {
+  subcategoryForPart,
+  subcategoriesForBucket,
+  type TopBucket,
+} from '../../data/partSubcategories';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
@@ -222,6 +228,11 @@ export function ClothesCatalog({ visible, onClose }: Props) {
 
   const [mode, setMode] = useState<Mode>('parts');
   const [bucket, setBucket] = useState<string>('tops');
+  // Sub-category chip — second-level filter inside the top bucket
+  // (TOPS → All / Hoodies / Shirts / Jackets / etc.). Resets to 'All'
+  // whenever the player switches buckets so they don't end up in
+  // weird states (e.g. switch to PANTS while sub-cat says 'Hoodies').
+  const [subcategory, setSubcategory] = useState<string>('All');
   const [speciesFilter, setSpeciesFilter] = useState<'All' | Species>('All');
   const [manifest, setManifest] = useState<AmgManifestPart[] | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -232,6 +243,12 @@ export function ClothesCatalog({ visible, onClose }: Props) {
     onConfirm: () => void;
   } | null>(null);
   const [equipFlash, setEquipFlash] = useState<string | null>(null);
+
+  // Variant Gallery state — opens when the player taps an OWNED part
+  // card. Shows all colorways for that part. Tap a colorway → equip
+  // it. Replaces the previous "instant-equip-default" behavior so
+  // the GTA-style colorway picker is one tap deep.
+  const [galleryPart, setGalleryPart] = useState<{ name: string; slot: string } | null>(null);
 
   // Fetch the AMG manifest once when the modal opens. Same pattern
   // ShopScreen.tsx uses for its (now-removed) Clothes tab.
@@ -271,9 +288,18 @@ export function ClothesCatalog({ visible, onClose }: Props) {
       // Hide starter parts from the catalog — they're already owned by
       // every player, no shopping value to surface them as "FREE."
       if (isStarterPack(packPrefixFromPartName(p.name))) return false;
+      // Sub-category filter — when active sub-cat is anything other
+      // than 'All', drop parts whose computed sub-category doesn't
+      // match. The sub-cat is computed via partSubcategories.ts which
+      // tags by pack (Modern Civilians = Hoodies, Fantasy Knights =
+      // Armor, etc.).
+      if (subcategory !== 'All') {
+        const sub = subcategoryForPart(p.name, p.slot);
+        if (sub !== subcategory) return false;
+      }
       return true;
     });
-  }, [manifest, activeBucket, speciesFilter]);
+  }, [manifest, activeBucket, speciesFilter, subcategory]);
 
   // Sorted: owned-first, then by pack name + variant. Owned-first
   // means the player can immediately confirm "yep that's mine" before
@@ -306,10 +332,13 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   const handlePartTap = (part: AmgManifestPart) => {
     const owned = isAmgPartOwned(part.name);
     if (owned) {
-      haptics.select();
-      playSound('whoosh');
-      equipAmgPart(part.slot, part.name);
-      setEquipFlash(`Equipped ${packMeta(packPrefixFromPartName(part.name)).displayName}`);
+      // Open the Goku-transformation gallery instead of insta-equipping.
+      // The player can now pick the colorway they want, and OWNED
+      // becomes a two-tap flow (part → variant) instead of single-tap
+      // default equip. Way more like GTA / Marvel Snap.
+      haptics.tap();
+      playSound('click');
+      setGalleryPart({ name: part.name, slot: part.slot });
       return;
     }
     // Locked AMG part — info modal explaining it's part of an outfit
@@ -501,7 +530,13 @@ export function ClothesCatalog({ visible, onClose }: Props) {
               return (
                 <Pressable
                   key={b.id}
-                  onPress={() => { haptics.tap(); setBucket(b.id); }}
+                  onPress={() => {
+                    haptics.tap();
+                    setBucket(b.id);
+                    // Reset sub-cat when bucket changes — sub-cats are
+                    // bucket-scoped (PANTS doesn't have "Hoodies").
+                    setSubcategory('All');
+                  }}
                   style={[styles.bucketChip, active && styles.bucketChipActive]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}
@@ -510,6 +545,37 @@ export function ClothesCatalog({ visible, onClose }: Props) {
                   <Text style={styles.bucketChipGlyph}>{b.glyph}</Text>
                   <Text style={[styles.bucketChipText, active && styles.bucketChipTextActive]}>
                     {b.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* Sub-category chip row — only in PARTS mode, second-level
+            drill-down (TOPS → All / Hoodies / Shirts / Jackets / …).
+            Per Devon's GTA-style vision: shop by silhouette inside
+            the bucket, not just by raw slot. */}
+        {mode === 'parts' && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.subcatRow}
+            style={styles.subcatScroll}
+          >
+            {subcategoriesForBucket(bucket as TopBucket).map((sub) => {
+              const active = subcategory === sub;
+              return (
+                <Pressable
+                  key={sub}
+                  onPress={() => { haptics.tap(); setSubcategory(sub); }}
+                  style={[styles.subcatChip, active && styles.subcatChipActive]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Sub-category: ${sub}`}
+                >
+                  <Text style={[styles.subcatChipText, active && styles.subcatChipTextActive]}>
+                    {sub}
                   </Text>
                 </Pressable>
               );
@@ -592,6 +658,26 @@ export function ClothesCatalog({ visible, onClose }: Props) {
             <Text style={styles.equipFlashText}>{equipFlash}</Text>
           </View>
         )}
+
+        {/* Variant Gallery — Goku transformations modal for owned parts.
+            Mounted inside the catalog so dismissing returns to the same
+            sub-cat / bucket the player was browsing. */}
+        <VariantGallery
+          visible={galleryPart !== null}
+          partName={galleryPart?.name ?? ''}
+          slot={galleryPart?.slot ?? ''}
+          onClose={() => setGalleryPart(null)}
+          onEquipped={(name) => {
+            setEquipFlash(`Equipped ${packMeta(packPrefixFromPartName(name)).displayName}`);
+          }}
+          onLockedVariantTap={() => {
+            // Locked colorway → route to LootBox (same flow as locked
+            // base-part). Once the lootbox knows about variant ids it
+            // can preload the destination box / shard cost.
+            setGalleryPart(null);
+            navigation.navigate('LootBox');
+          }}
+        />
 
         {/* Confirm dialog (locked-part route) */}
         <ConfirmDialog
@@ -989,6 +1075,45 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 0.4,
   },
+
+  // Sub-category chip row — sits BETWEEN the top buckets (TOPS / PANTS)
+  // and the grid. Smaller, lower-contrast than top buckets so the
+  // visual hierarchy reads as bucket > sub-cat > grid.
+  subcatScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: 36,
+  },
+  subcatRow: {
+    paddingHorizontal: 12,
+    paddingTop: 2,
+    paddingBottom: 4,
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subcatChip: {
+    height: 26,
+    paddingHorizontal: 11,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(10,14,32,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subcatChipActive: {
+    borderColor: 'rgba(255,180,90,0.7)',
+    backgroundColor: 'rgba(255,140,0,0.14)',
+  },
+  subcatChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.6,
+  },
+  subcatChipTextActive: { color: '#ffffff' },
 
   // ── Scroll area ─────────────────────────────────────────────
   scrollArea: { flex: 1 },

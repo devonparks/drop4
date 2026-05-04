@@ -63,12 +63,43 @@ interface CharacterStoreState {
    *  toast doesn't fire every time they open the creator. */
   amgStarterSeen: boolean;
 
+  /** Color-variant ownership per AMG part — Path A from the variant
+   *  pivot 2026-05-04. Each owned part can have N color variants
+   *  unlocked independently (the "Goku transformations" model — same
+   *  base part, different color). Default variant is the empty string
+   *  '' which represents the as-rendered Synty default colorway.
+   *
+   *  Backward-compat: if a player owns a part via the legacy
+   *  `ownedAmgParts` set but has nothing in `ownedPartVariants` for
+   *  that part, the runtime treats it as owning the default variant.
+   *  Migration on load populates `[''] (default)` for every part in
+   *  `ownedAmgParts` so the new ownership map is always consistent.
+   *
+   *  Variant id format: typically a color slug ('red', 'cyan',
+   *  'gold', 'camo'), but the lootbox can mint any unique string per
+   *  drop. Empty-string '' is reserved for the default colorway. */
+  ownedPartVariants: Record<string, string[]>;
+
+  /** Currently-equipped color variant per (slot, part) — keyed by
+   *  partName so swapping variants on an already-equipped part is a
+   *  one-line update. Empty string means "default colorway." */
+  equippedPartVariant: Record<string, string>;
+
+  /** Equipped equipped pack-VARIANT — separate from equippedOutfitId
+   *  so a single pack can be worn in multiple colorways without
+   *  forking the pack id. '' = default. Drives the COLOR tab of
+   *  the creator and the Goku-gallery picker. */
+  equippedOutfitVariant: string;
+
   // ── Actions ──
   setAmgCharacter: (next: AmgCharacterState) => void;
   /** Equip a single AMG part (Torso, Hair, AttachmentBack, etc.) into
    *  the named slot without touching anything else. Lets the shop equip
    *  in-place after a buy without bouncing the player to the creator. */
   equipAmgPart: (slot: string, partName: string) => void;
+  /** Equip a specific color variant of a part. Auto-equips the part
+   *  too if it's not already in the active loadout. */
+  equipPartVariant: (slot: string, partName: string, variantId: string) => void;
   /** Equip an outfit pack: swaps the body slots (Hair, Torso, Hips, arms,
    *  hands, legs, feet) into amgCharacter without touching the player's
    *  Head / Eyebrows. Also sets equippedOutfitId. */
@@ -77,9 +108,18 @@ interface CharacterStoreState {
    *  AMG parts so they're available in the creator's pickers. */
   unlockOutfit: (id: string) => void;
   unlockAmgPart: (name: string) => void;
+  /** Unlock a specific color variant of a part. Adds to the part's
+   *  variant set; auto-unlocks the base part too if not already owned. */
+  unlockPartVariant: (partName: string, variantId: string) => void;
   markAmgStarterSeen: () => void;
   isOutfitOwned: (id: string) => boolean;
   isAmgPartOwned: (name: string) => boolean;
+  /** True when the player owns the given (part, variant) tuple.
+   *  Variant '' = default colorway, always owned if base part is owned. */
+  isPartVariantOwned: (partName: string, variantId: string) => boolean;
+  /** All variant ids the player owns for the given part (includes ''
+   *  default when the base part is owned). */
+  ownedVariantsForPart: (partName: string) => string[];
   loadFromStorage: () => Promise<void>;
 }
 
@@ -92,11 +132,19 @@ interface PersistedCharacter {
   ownedAmgParts?: string[];
   amgPartUnlockedAt?: Record<string, number>;
   amgStarterSeen?: boolean;
+  ownedPartVariants?: Record<string, string[]>;
+  equippedPartVariant?: Record<string, string>;
+  equippedOutfitVariant?: string;
   /** Legacy field — pre-Path-A migration. Read once on load to recover the
    *  player's last-equipped outfit; never written. After the first load
    *  the migrated value lives in `equippedOutfitId`. */
   customization?: { outfitId?: string };
 }
+
+/** The default colorway id — represents the as-rendered Synty default
+ *  material colors that ship with each part. Whenever the player owns
+ *  the base part (legacy ownership), they always own this variant. */
+export const DEFAULT_VARIANT_ID = '';
 
 // Starter outfits every player owns for free (one per species). These
 // IDs come from `outfitRegistry.ts` — adding more here grants free
@@ -117,6 +165,9 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
   ownedAmgParts: [],
   amgPartUnlockedAt: {},
   amgStarterSeen: false,
+  ownedPartVariants: {},
+  equippedPartVariant: {},
+  equippedOutfitVariant: DEFAULT_VARIANT_ID,
 
   setAmgCharacter: (next) => set({ amgCharacter: next }),
 
@@ -182,6 +233,65 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     if (isStarterPack(packPrefixFromPartName(name))) return true;
     return get().ownedAmgParts.includes(name);
   },
+
+  // ── Variant ownership API ────────────────────────────────────
+  // Path A from the 2026-05-04 pivot: each part can have N color
+  // variants unlocked independently. Starter / base ownership
+  // implicitly grants the default variant '' so legacy saves keep
+  // working without migration on the player's end. New variant drops
+  // populate `ownedPartVariants[partName]` with the variant id.
+
+  unlockPartVariant: (partName, variantId) => set((s) => {
+    // Auto-unlock the base part too — variants are meaningless if
+    // the part itself isn't in the loadout pickers. Mirrors GTA's
+    // "first colorway buy unlocks the silhouette."
+    const next: Partial<CharacterStoreState> = {};
+    if (!s.ownedAmgParts.includes(partName)) {
+      next.ownedAmgParts = [...s.ownedAmgParts, partName];
+      next.amgPartUnlockedAt = { ...s.amgPartUnlockedAt, [partName]: Date.now() };
+    }
+    const existing = s.ownedPartVariants[partName] ?? [];
+    if (!existing.includes(variantId)) {
+      next.ownedPartVariants = {
+        ...s.ownedPartVariants,
+        [partName]: [...existing, variantId],
+      };
+    }
+    return next;
+  }),
+
+  isPartVariantOwned: (partName, variantId) => {
+    // Default variant: always owned when the base part is owned.
+    if (variantId === DEFAULT_VARIANT_ID) {
+      return get().isAmgPartOwned(partName);
+    }
+    const list = get().ownedPartVariants[partName];
+    return !!list && list.includes(variantId);
+  },
+
+  ownedVariantsForPart: (partName) => {
+    const explicit = get().ownedPartVariants[partName] ?? [];
+    // Always include '' (default) when the base part is owned.
+    if (get().isAmgPartOwned(partName)) {
+      if (!explicit.includes(DEFAULT_VARIANT_ID)) {
+        return [DEFAULT_VARIANT_ID, ...explicit];
+      }
+    }
+    return explicit;
+  },
+
+  equipPartVariant: (slot, partName, variantId) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    const baseChar = current ?? STARTER_HUMAN_CHARACTER;
+    return {
+      amgCharacter: {
+        ...baseChar,
+        parts: { ...baseChar.parts, [slot]: partName },
+      } as unknown as AmgCharacterState,
+      equippedPartVariant: { ...s.equippedPartVariant, [partName]: variantId },
+    };
+  }),
+
   markAmgStarterSeen: () => set({ amgStarterSeen: true }),
 
   loadFromStorage: async () => {
@@ -204,6 +314,13 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         ownedAmgParts: saved.ownedAmgParts ?? [],
         amgPartUnlockedAt: saved.amgPartUnlockedAt ?? {},
         amgStarterSeen: saved.amgStarterSeen ?? false,
+        // Variant fields land for the first time on saves that pre-date
+        // the 2026-05-04 pivot. Default is empty maps — `ownedVariantsForPart`
+        // synthesizes the default colorway from `ownedAmgParts` so no
+        // migration step is required.
+        ownedPartVariants: saved.ownedPartVariants ?? {},
+        equippedPartVariant: saved.equippedPartVariant ?? {},
+        equippedOutfitVariant: saved.equippedOutfitVariant ?? DEFAULT_VARIANT_ID,
       });
     }
   },
@@ -218,5 +335,8 @@ useCharacterStore.subscribe((state) => {
     ownedAmgParts: state.ownedAmgParts,
     amgPartUnlockedAt: state.amgPartUnlockedAt,
     amgStarterSeen: state.amgStarterSeen,
+    ownedPartVariants: state.ownedPartVariants,
+    equippedPartVariant: state.equippedPartVariant,
+    equippedOutfitVariant: state.equippedOutfitVariant,
   });
 });
