@@ -622,7 +622,7 @@ export function CustomizeScreen() {
               const hasNew = c.total > 0 && c.owned === 0;
               const equippedName = equippedNames[cat.id];
               return (
-                <StaggeredEntry key={cat.id} index={i + 1} delay={30} style={styles.cellOuter}>
+                <StaggeredEntry key={cat.id} index={i + 2} delay={30} style={styles.cellOuter}>
                   <LoadoutCell
                     icon={cat.icon}
                     label={cat.label}
@@ -636,7 +636,7 @@ export function CustomizeScreen() {
                 </StaggeredEntry>
               );
             })}
-            <StaggeredEntry index={CATEGORIES.length} delay={30} style={styles.cellOuter}>
+            <StaggeredEntry index={CATEGORIES.length + 1} delay={30} style={styles.cellOuter}>
               <ShardsCell
                 shardsTotal={
                   lootShards.common + lootShards.rare + lootShards.epic + lootShards.legendary
