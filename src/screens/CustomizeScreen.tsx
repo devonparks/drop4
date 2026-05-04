@@ -43,7 +43,6 @@ import { PETS as PETS_3D } from '../data/petRegistry';
 import {
   BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS,
 } from '../data/shopCatalog';
-import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
 // ═══════════════════════════════════════════════════════════════════════
