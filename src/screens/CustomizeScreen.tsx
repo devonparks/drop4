@@ -19,9 +19,14 @@ import { PressScale, StaggeredEntry } from '../components/animations';
 import type { BrowsableCategory } from './CategoryBrowserScreen';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { ClothesCatalog } from '../components/customize/ClothesCatalog';
-// SparkleField lifted to @amg/cosmetic-ui — every AMG game's locker
-// stage gets the same ambient twinkle without a per-game copy.
-import { SparkleField } from '@amg/cosmetic-ui';
+// Locker primitives lifted to @amg/cosmetic-ui — every AMG game's
+// Customize tab inherits the same ambient twinkle, equipped pills,
+// and loadout grid without a per-game copy.
+import {
+  SparkleField,
+  EquippedDot,
+  LoadoutCell,
+} from '@amg/cosmetic-ui';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -605,7 +610,9 @@ export function CustomizeScreen() {
               return (
                 <StaggeredEntry key={cat.id} index={i + 1} delay={30} style={styles.cellOuter}>
                   <LoadoutCell
-                    cat={cat}
+                    icon={cat.icon}
+                    label={cat.label}
+                    accent={CATEGORY_ACCENT[cat.id] ?? '#ffb347'}
                     owned={c.owned}
                     total={c.total}
                     hasNew={hasNew}
@@ -701,45 +708,8 @@ function PulsingBadge({ value }: { value: number }) {
   );
 }
 
-// ── EquippedDot ────────────────────────────────────────────────────
-//
-// Tiny "you're wearing X" chip — colored dot + slot label + item name.
-// Three of these stack horizontally beneath the character so the player
-// reads their loadout at a glance. Replaces the v1 emoji+text chip
-// (🎲 Classic Blue · 🔴 Classic · 🐕 Labrador) which felt like a data
-// dump.
-//
-// Now tappable: tap a pill to jump straight to that slot's browser.
-// The pill is the most direct affordance for "I want to change this
-// thing" — short-circuits the need to scroll down to the loadout grid.
-function EquippedDot({ color, label, name, onPress }: {
-  color: string;
-  label: string;
-  name: string;
-  onPress?: () => void;
-}) {
-  const inner = (
-    <View style={styles.eqDot}>
-      <View style={[styles.eqDotSwatch, { backgroundColor: color }]} />
-      <View style={styles.eqDotText}>
-        <Text style={styles.eqDotLabel}>{label}</Text>
-        <Text style={styles.eqDotName} numberOfLines={1}>{name}</Text>
-      </View>
-    </View>
-  );
-  if (!onPress) return inner;
-  return (
-    <PressScale
-      onPress={onPress}
-      scaleTo={0.94}
-      containerStyle={styles.eqDotPressWrap}
-      accessibilityRole="button"
-      accessibilityLabel={`Change ${label.toLowerCase()}: currently ${name}`}
-    >
-      {inner}
-    </PressScale>
-  );
-}
+// EquippedDot was lifted to @amg/cosmetic-ui — see the import at the
+// top of this file.
 
 // ── Action band ────────────────────────────────────────────────────
 //
@@ -832,55 +802,9 @@ const CATEGORY_ACCENT: Record<CategoryId, string> = {
   frames:    '#1abc9c',
 };
 
-function LoadoutCell({
-  cat, owned, total, hasNew, equippedName, onPress,
-}: {
-  cat: CategoryMeta;
-  owned: number;
-  total: number;
-  hasNew?: boolean;
-  equippedName: string | null;
-  onPress: () => void;
-}) {
-  const showCount = total > 0;
-  const accent = CATEGORY_ACCENT[cat.id] ?? '#ffb347';
-  return (
-    <PressScale
-      onPress={onPress}
-      scaleTo={0.96}
-      accessibilityRole="button"
-      accessibilityLabel={`${cat.label}${showCount ? `, ${owned} of ${total} owned` : ''}${equippedName ? `, currently equipped: ${equippedName}` : ''}${hasNew ? ', new content available' : ''}`}
-    >
-      <View style={[styles.cell, { borderColor: `${accent}33` }]}>
-        {/* Left-edge rarity stripe — tiny vertical band tinted to the
-            category's signature color. Adds visual identity per slot
-            so the grid isn't a uniform navy slab. */}
-        <View style={[styles.cellAccent, { backgroundColor: accent }]} />
-        <Image source={cat.icon} style={styles.cellIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
-        <View style={styles.cellTextStack}>
-          <View style={styles.cellLabelRow}>
-            <Text style={styles.cellLabel} numberOfLines={1}>{cat.label.toUpperCase()}</Text>
-            {showCount && (
-              <Text style={[styles.cellCountInline, { color: accent }]}>{`${owned}/${total}`}</Text>
-            )}
-          </View>
-          <Text
-            style={[styles.cellEquipped, !equippedName && styles.cellEquippedEmpty]}
-            numberOfLines={1}
-          >
-            {equippedName ?? 'Tap to browse'}
-          </Text>
-        </View>
-        <Text style={styles.cellChevron}>{'›'}</Text>
-        {hasNew && (
-          <View style={styles.newBadge}>
-            <Text style={styles.newBadgeText}>NEW</Text>
-          </View>
-        )}
-      </View>
-    </PressScale>
-  );
-}
+// LoadoutCell was lifted to @amg/cosmetic-ui — every AMG game's
+// Customize tab inherits the same wardrobe-slot tile. Drop4 wires
+// CATEGORY_ACCENT into the engine cell at the call site above.
 
 // Specialized cell for the SHARDS shortcut — fills the 8th grid slot
 // (the cosmetic categories only have 7 entries since Frames doesn't
