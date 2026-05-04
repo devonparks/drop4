@@ -19,7 +19,7 @@ import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import type { BrowsableCategory } from './CategoryBrowserScreen';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
-import { OutfitsCatalog } from '../components/customize/OutfitsCatalog';
+import { ClothesCatalog } from '../components/customize/ClothesCatalog';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -332,7 +332,7 @@ export function CustomizeScreen() {
   // view inside Customize per the 2026-05-03 pivot ("merge old shop
   // into customize"). Owned items tap-to-equip + close; locked items
   // route to LootBox.
-  const [outfitsCatalogOpen, setOutfitsCatalogOpen] = useState(false);
+  const [clothesCatalogOpen, setClothesCatalogOpen] = useState(false);
 
   // Tap-to-preview emote on the 3D character. Same pattern as Home's
   // handleCharacterTap — picks a random owned emote, plays it for 3
@@ -390,7 +390,7 @@ export function CustomizeScreen() {
       // CLOTHES card opens the painted catalog modal — every pack
       // variant with painted Sidekick covers. Single source of truth
       // for "what clothes can I get from bags" / "what do I own."
-      setOutfitsCatalogOpen(true);
+      setClothesCatalogOpen(true);
       return;
     }
     if (cat.id === 'emotes') {
@@ -734,9 +734,9 @@ export function CustomizeScreen() {
           and IN BAGS badges on locked items. Mounted here so tapping
           the OUTFITS category card surfaces the catalog without
           leaving the Customize tab. */}
-      <OutfitsCatalog
-        visible={outfitsCatalogOpen}
-        onClose={() => setOutfitsCatalogOpen(false)}
+      <ClothesCatalog
+        visible={clothesCatalogOpen}
+        onClose={() => setClothesCatalogOpen(false)}
       />
     </ScreenBackground>
   );
