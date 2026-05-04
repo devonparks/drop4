@@ -1065,6 +1065,65 @@ export function ShopScreen() {
             phone the content extends below the visible area and the
             player can't scroll all the way down (Devon's audit). */}
         <ScrollView style={s.scrollFlex} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+          {/* ── Locker status strip ─────────────────────────────────
+              Surfaces "you have N boxes waiting to open" + shard
+              balance just below the header. Without this the player
+              has no signal that they have unopened content — they
+              would have to scroll to the BAGS section or open the
+              Customize tab to find out. Each chip is tappable: BOXES
+              jumps to LootBoxScreen, SHARDS jumps to ShardShop. */}
+          {(() => {
+            const totalBoxes = ownedBoxes.reduce((sum, b) => sum + b.count, 0);
+            const totalShards = shards.common + shards.rare + shards.epic + shards.legendary;
+            if (totalBoxes === 0 && totalShards === 0) return null;
+            return (
+              <StaggeredEntry index={1} delay={50}>
+                <View style={s.lockerStripWrap}>
+                  {totalBoxes > 0 && (
+                    <PressScale
+                      onPress={() => {
+                        haptics.tap();
+                        playSound('click');
+                        navigation.navigate('LootBox' as never);
+                      }}
+                      containerStyle={{ flex: 1 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Open boxes, ${totalBoxes} ready`}
+                    >
+                      <LinearGradient
+                        colors={['rgba(255,140,0,0.30)', 'rgba(255,90,0,0.15)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={s.lockerStripChip}
+                      >
+                        <Text style={s.lockerStripChipValue}>{totalBoxes}</Text>
+                        <Text style={s.lockerStripChipLabel}>BOXES READY</Text>
+                        <Text style={s.lockerStripChevron}>{'›'}</Text>
+                      </LinearGradient>
+                    </PressScale>
+                  )}
+                  {totalShards > 0 && (
+                    <PressScale
+                      onPress={() => {
+                        haptics.tap();
+                        playSound('click');
+                        navigation.navigate('ShardShop' as never);
+                      }}
+                      containerStyle={{ flex: 1 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Shard shop, ${totalShards} total shards`}
+                    >
+                      <View style={s.lockerStripShardsChip}>
+                        <Text style={[s.lockerStripChipValue, { color: '#c997e7' }]}>{totalShards}</Text>
+                        <Text style={[s.lockerStripChipLabel, { color: 'rgba(201,151,231,0.85)' }]}>SHARDS</Text>
+                        <Text style={[s.lockerStripChevron, { color: '#c997e7' }]}>{'›'}</Text>
+                      </View>
+                    </PressScale>
+                  )}
+                </View>
+              </StaggeredEntry>
+            );
+          })()}
 
           {/* ═══ 1. ITEM-SHOP TABS — REMOVED 2026-05-03 ═══
               All cosmetic browse tabs (Clothes / Outfits / Boards /
@@ -1749,6 +1808,66 @@ const s = StyleSheet.create({
     paddingHorizontal: 4,
     lineHeight: 15,
   },
+  // ── Locker status strip (above Daily Deals) ──────────────────
+  // Two chips side-by-side that surface "you have N boxes waiting"
+  // + shard balance. Each chip is tappable and jumps to the
+  // corresponding screen. Hidden entirely when both are zero so the
+  // header doesn't carry dead pixels for new players.
+  lockerStripWrap: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  lockerStripChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.55)',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lockerStripShardsChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(155,89,182,0.55)',
+    backgroundColor: 'rgba(155,89,182,0.18)',
+  },
+  lockerStripChipValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 18,
+    color: '#ffb347',
+  },
+  lockerStripChipLabel: {
+    flex: 1,
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 11,
+    color: '#ffb347',
+    letterSpacing: 1.4,
+  },
+  lockerStripChevron: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 20,
+    color: '#ffb347',
+    lineHeight: 20,
+  },
+
   // ── Boxes section grouping ───────────────────────────────────
   // TIERED / THEMED / FEATURED groups read top-down, each with a tiny
   // header strip (title + blurb) so the player sees the menu of
