@@ -147,6 +147,10 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   const isAmgPartOwned = useCharacterStore((s) => s.isAmgPartOwned);
   const equipAmgPart = useCharacterStore((s) => s.equipAmgPart);
   const amgCharacter = useCharacterStore((s) => s.amgCharacter);
+  // Per-part unlock timestamp map drives the red NEW ribbon on
+  // recently-acquired part cards (queue item: "NEW badge on parts
+  // unlocked this week"). 7-day window matches the polish-queue spec.
+  const amgPartUnlockedAt = useCharacterStore((s) => s.amgPartUnlockedAt);
 
   const [mode, setMode] = useState<Mode>('parts');
   const [bucket, setBucket] = useState<string>('tops');
@@ -517,6 +521,7 @@ export function ClothesCatalog({ visible, onClose }: Props) {
               equippedBySlot={equippedSlotsInBucket}
               onTap={handlePartTap}
               loading={!manifest}
+              unlockedAt={amgPartUnlockedAt}
             />
           ) : (
             <PacksGrid
@@ -635,14 +640,23 @@ export function ClothesCatalog({ visible, onClose }: Props) {
 // AmgPartCard is rendered.
 
 function PartsGrid({
-  parts, isOwned, equippedBySlot, onTap, loading,
+  parts, isOwned, equippedBySlot, onTap, loading, unlockedAt,
 }: {
   parts: AmgManifestPart[];
   isOwned: (name: string) => boolean;
   equippedBySlot: Record<string, string>;
   onTap: (part: AmgManifestPart) => void;
   loading: boolean;
+  /** Map of partName → ms-since-epoch when the part was unlocked.
+   *  Used to drive the red NEW ribbon on cards unlocked in the last
+   *  7 days. */
+  unlockedAt: Record<string, number>;
 }) {
+  // 7-day "newness" window — matches the polish-queue spec. Computed
+  // once per render of the grid, not per-card, so the cutoff doesn't
+  // drift while the user scrolls.
+  const NEW_CUTOFF_MS = 7 * 24 * 60 * 60 * 1000;
+  const newCutoff = Date.now() - NEW_CUTOFF_MS;
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
@@ -665,6 +679,10 @@ function PartsGrid({
       {parts.map((part) => {
         const owned = isOwned(part.name);
         const isEquipped = equippedBySlot[part.slot] === part.name;
+        // Red NEW ribbon for parts unlocked within the 7-day window.
+        // Locked parts never show NEW (no unlock timestamp).
+        const ts = unlockedAt[part.name];
+        const isNew = owned && typeof ts === 'number' && ts >= newCutoff;
         return (
           <Animated.View
             key={part.name}
@@ -679,6 +697,7 @@ function PartsGrid({
               onEquip={() => onTap(part)}
               onBuy={() => onTap(part)}
               hooks={{ playClick: () => playSound('click') }}
+              isNew={isNew}
             />
             {isEquipped && (
               <View style={styles.partsCellEquippedPill}>
