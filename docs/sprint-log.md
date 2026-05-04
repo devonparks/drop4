@@ -322,3 +322,80 @@ Still queued for future runs:
 - Starter pack unlock ceremony toast
 - ErrorBoundary coverage on per-screen level
 - App Store screenshots + 1024×1024 icon export
+
+---
+
+## 2026-05-04 — AMG Wardrobe Architecture Phase 1
+
+Devon's strategic call: forget the ship date, get the engine done
+right. The AMG Creator becomes the single source of truth for every
+3D asset across every AMG game — Creation Club / CoD HQ pattern
+mapped to AMG's portfolio. Multi-hour redesign of the wardrobe
+architecture.
+
+### Drop4 commits this session
+
+| Hash | Scope | What |
+|------|-------|------|
+| `3f5a00f` | drop4 | test: 4 new tests covering `filterManifestForGame` paths |
+| `07c1d71` | drop4 | polish: CLOTHES first-tap is the dressing-room mirror |
+| `cc04735` | drop4 | engine-lift: AmgPartPreviewModal now from @amg/cosmetic-ui |
+| `f25fb6f` | drop4 | feat: HAIR + FACE Customize destinations (barbershop split) |
+
+Plus engine commits saving Devon's pre-existing Dart Club rail
+refactor + the architecture doc + the gameExclusive foundation +
+the AmgCreator strip (see amg-engine/docs/sprint-log.md round 9).
+
+### What changed for Drop4 specifically
+
+**The CLOTHES tab is now the dressing-room mirror.** Tapping a
+part — owned or locked — opens AmgPartPreviewModal showing the
+player's character wearing it. Action row composes from owned/
+equipped state:
+- Owned + not equipped: [VARIANTS] [WEAR]
+- Owned + currently equipped: [VARIANTS] [WEARING ✓]
+- Locked: [GET FROM BAGS]
+
+Replaces the previous split where owned tap → straight to colorway
+gallery and locked tap → info-only ConfirmDialog. The mirror beat
+is the GTA pattern Devon called out as missing.
+
+**HAIR and FACE became their own Customize destinations.** The
+Customize loadout grid gains two new cells:
+- HAIR cell (warm rose accent) → opens hair-only ClothesCatalog
+  (the barbershop)
+- FACE cell (soft gold accent) → opens face-only ClothesCatalog
+  (eyebrows / beard / ears)
+
+ClothesCatalog gained `lockedBucket` / `title` / `subtitle` props
+to support these focused destinations. The full wardrobe (CLOTHES
+cell) still works as before.
+
+**The AmgCreator became body-identity only.** The engine package
+defaults to `availableTabs = ['body', 'color']` — Drop4's wrapper
+inherits it, so the FACE / HAIR / OUTFIT tabs disappear from the
+creator. Cosmetic equipping moves to the Customize hub. The body
+sliders and color pickers stay free + always editable (NBA 2K
+myPlayer pattern).
+
+### Architecture decisions you'll see in the code
+
+- AMG manifest entries can carry `gameExclusive: 'drop4' | 'ttt' | ...`
+- Most parts have no flag (cross-game). Drop4 lootbox sees
+  cross-game + Drop4-exclusive parts; TTT will see cross-game +
+  TTT-exclusive parts; equip remains unrestricted (acquired in
+  one game = wearable in any game)
+- The line between cross-game and per-game: anything on the AMG
+  character mesh = cross-game (clothes, hair, face, pets, emotes).
+  Anything on the game board = per-game (Drop4 boards/pieces, TTT
+  X/O marks, Chess piece sets).
+- 5 build phases mapped out, no ship date pressure on any. See
+  amg-engine/docs/AMG_WARDROBE_ARCHITECTURE.md for the full plan.
+
+### Status
+
+- Drop4 typecheck clean across all 4 commits
+- 74/74 jest passing
+- Drop4 main + engine master both pushed to GitHub
+- Web preview rebuilds the new architecture on next reload
+  (port 8086, dev hooks at window.__stores)
