@@ -1210,13 +1210,19 @@ export function ShopScreen() {
                   } else if (deal.category === 'emote') {
                     painted = getEmoteIcon(deal.item.id);
                   }
+                  // Post-pivot 2026-05-03: direct purchase is dead, so
+                  // the "1500🪙 (was 2000)" discount-price subtitle is
+                  // misleading — the player can't pay any coin price
+                  // for the item. Replaced with a flat "Spotlight pick"
+                  // and the PREVIEW button still opens the modal which
+                  // routes to LootBox/shards via runLockedAction.
                   return (
                     <DailyDealCard
                       key={deal.item.id}
                       icon={iconByCategory[deal.category] ?? '✨'}
                       iconImage={painted}
                       title={deal.item.name}
-                      subtitle={`${deal.discountedPrice}🪙 (was ${deal.originalPrice})`}
+                      subtitle={isOwned ? 'In your locker' : 'Spotlight pick'}
                       buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
                       buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
                       badge={deal.badge}
