@@ -172,13 +172,25 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
   // When lockedBucket is set, force PARTS mode + bucket. PACKS doesn't
   // make sense for hair-only / face-only destinations because packs
   // are full outfits.
-  const [mode, setMode] = useState<Mode>(lockedBucket ? 'parts' : 'parts');
+  const [mode, setMode] = useState<Mode>('parts');
   const [bucket, setBucket] = useState<string>(lockedBucket ?? 'tops');
   // Sub-category chip — second-level filter inside the top bucket
   // (TOPS → All / Hoodies / Shirts / Jackets / etc.). Resets to 'All'
   // whenever the player switches buckets so they don't end up in
   // weird states (e.g. switch to PANTS while sub-cat says 'Hoodies').
   const [subcategory, setSubcategory] = useState<string>('All');
+  // Sync bucket / mode whenever the lockedBucket prop changes — the
+  // modal stays mounted between Customize cell taps (controlled via
+  // visible), so without this effect a tap on HAIR after browsing
+  // CLOTHES (TOPS) would still render TOPS parts. Resets sub-category
+  // too since sub-cats are bucket-scoped.
+  useEffect(() => {
+    if (lockedBucket) {
+      setBucket(lockedBucket);
+      setMode('parts');
+      setSubcategory('All');
+    }
+  }, [lockedBucket]);
   const [speciesFilter, setSpeciesFilter] = useState<'All' | Species>('All');
   const [manifest, setManifest] = useState<AmgManifestPart[] | null>(null);
   // Manifest fetch error — falls into a "Try Again" state in PartsGrid
