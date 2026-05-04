@@ -209,6 +209,7 @@ export function CustomizeScreen() {
   const coins = useShopStore((s) => s.coins);
   const gems = useShopStore((s) => s.gems);
   const level = useShopStore((s) => s.level);
+  const xp = useShopStore((s) => s.xp);
   const owned = useShopStore((s) => s.owned);
   const ownedEmotes = useShopStore((s) => s.ownedEmotes);
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
@@ -591,6 +592,23 @@ export function CustomizeScreen() {
                     {`${collectionPct.toFixed(1)}%`}
                   </Text>
                 </View>
+              </View>
+
+              {/* XP progress to next level — thin warm-amber bar so the
+                  player gets a tiny reward signal every time the level
+                  number changes context. The level-up math in shopStore
+                  is `xp >= level * 100`, so the visible fill is just
+                  xp / (level * 100). Per AAA polish 2026-05-04: turns
+                  the bare LVL number into a progressing system the
+                  player can root for. */}
+              <View style={styles.xpTrack}>
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.xpFill,
+                    { width: `${Math.min(100, (xp / (level * 100)) * 100)}%` },
+                  ]}
+                />
               </View>
 
               {/* Character stage — slimmer than v1 (260 vs 320) to leave
@@ -1039,6 +1057,25 @@ const styles = StyleSheet.create({
     color: '#ffb347',
     letterSpacing: 0.8,
     zIndex: 1,
+  },
+
+  // XP progress to next level — sits just under the identity row so
+  // every coin earned drives a visible amber fill. Thin (3 px) so it
+  // doesn't compete with the more important character + equipped chips
+  // below. Soft fade gradient ends so the progress edge doesn't read
+  // as a hard line.
+  xpTrack: {
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+    marginTop: 4,
+    marginHorizontal: 2,
+  },
+  xpFill: {
+    height: '100%',
+    backgroundColor: '#ffb347',
+    borderRadius: 1.5,
   },
 
   // ── Character stage ────────────────────────────────────────────
