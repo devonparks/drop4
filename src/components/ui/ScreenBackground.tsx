@@ -464,14 +464,19 @@ const styles = StyleSheet.create({
     animationTimingFunction: 'linear',
     animationIterationCount: 'infinite',
   } as any) : null,
-  // Breathing glow orbs — large soft radial gradients sized to fill
-  // ~60% of the viewport, positioned off-screen so only the glow edge
-  // reaches the visible area. The scale/opacity animation makes them
-  // look like they're slowly inhaling and exhaling.
+  // Breathing glow orbs — large soft radial gradients positioned mostly
+  // off-screen so only the glow halo reaches the visible area. Was
+  // -10% offsets, but the orb body still showed visibly past the
+  // right edge as a "stretched" half-circle (Devon flagged
+  // 2026-05-04: "right behind the idle button idk what that is").
+  // Pushed to -35% so the orb body is fully off-screen and what
+  // bleeds in is purely the blurred halo — ambient warmth without a
+  // visible orb shape. The scale/opacity breathing animation still
+  // sells "alive."
   orbA: {
     position: 'absolute',
-    top: '-20%',
-    left: '-10%',
+    top: '-30%',
+    left: '-35%',
     width: '70%',
     height: '55%',
     borderRadius: 9999,
@@ -482,8 +487,8 @@ const styles = StyleSheet.create({
   },
   orbB: {
     position: 'absolute',
-    bottom: '-15%',
-    right: '-10%',
+    bottom: '-25%',
+    right: '-35%',
     width: '65%',
     height: '50%',
     borderRadius: 9999,
