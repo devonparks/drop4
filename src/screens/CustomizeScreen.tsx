@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType, Platform } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType, Platform, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -200,6 +200,30 @@ function CustomizeCharacter({
         showFloor={false}
       />
     </View>
+  );
+}
+
+// Subtle opacity pulse on the "TAP TO PREVIEW EMOTES" hint — draws
+// the eye for first-time players without being noisy. Hides itself
+// after the first character tap (parent gates rendering on
+// hasTappedChar). Per AAA polish 2026-05-04: was a static 55%-opacity
+// pill that was easy to miss; now it breathes between 50% and 90%.
+function CharTapHintPulsing() {
+  const opacity = useRef(new Animated.Value(0.5)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.9, duration: 1100, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.5, duration: 1100, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+  return (
+    <Animated.View pointerEvents="none" style={[styles.charTapHint, { opacity }]}>
+      <Text style={styles.charTapHintText}>TAP TO PREVIEW EMOTES</Text>
+    </Animated.View>
   );
 }
 
@@ -647,9 +671,7 @@ export function CustomizeScreen() {
                   </LinearGradient>
                 </PressScale>
                 {!hasTappedChar && (
-                  <View pointerEvents="none" style={styles.charTapHint}>
-                    <Text style={styles.charTapHintText}>TAP TO PREVIEW EMOTES</Text>
-                  </View>
+                  <CharTapHintPulsing />
                 )}
               </View>
 
