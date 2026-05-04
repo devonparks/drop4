@@ -10,7 +10,6 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-  withDelay,
   Easing,
 } from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
@@ -20,6 +19,9 @@ import { PressScale, StaggeredEntry } from '../components/animations';
 import type { BrowsableCategory } from './CategoryBrowserScreen';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { ClothesCatalog } from '../components/customize/ClothesCatalog';
+// SparkleField lifted to @amg/cosmetic-ui — every AMG game's locker
+// stage gets the same ambient twinkle without a per-game copy.
+import { SparkleField } from '@amg/cosmetic-ui';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
@@ -129,92 +131,8 @@ const CATEGORIES: CategoryMeta[] = [
   { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png') },
 ];
 
-// ── SparkleField ───────────────────────────────────────────────────
-//
-// Ambient warm-amber sparkle particles drifting inside the hero card.
-// Each particle has its own opacity pulse + slight Y drift so the card
-// reads as alive instead of static. Replaces what would otherwise be a
-// very still 3D-character-on-dark-stage tableau.
-//
-// Implemented with Reanimated 3 (already in the project) instead of
-// Skia — six 4px circles at fixed positions is the smallest design
-// that delivers the "AAA mobile screen breathes" feel without a new
-// rendering pipeline.
-function Sparkle({ delay, leftPct, topPct, color, size }: {
-  delay: number;
-  leftPct: number;
-  topPct: number;
-  color: string;
-  size: number;
-}) {
-  const opacity = useSharedValue(0);
-  const drift = useSharedValue(0);
-  useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(0.85, { duration: 1600, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.10, { duration: 1600, easing: Easing.inOut(Easing.quad) }),
-        ),
-        -1,
-      ),
-    );
-    drift.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(-6, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
-        ),
-        -1,
-      ),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: drift.value }],
-  }));
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.sparkle,
-        {
-          left: `${leftPct}%`,
-          top: `${topPct}%`,
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          shadowColor: color,
-        },
-        animStyle,
-      ]}
-    />
-  );
-}
-
-// Eight-particle SparkleField — staggered phases so the twinkle reads
-// as random ambient light, not a coordinated pulse. Positioned around
-// the hero card edges so the character silhouette stays visually
-// clean. Bumped from six to eight after a critique pass said the
-// effect was barely visible at the previous count + opacity.
-function SparkleField() {
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Sparkle delay={0}    leftPct={8}  topPct={18} color="#ffd485" size={4} />
-      <Sparkle delay={400}  leftPct={88} topPct={12} color="#ffb347" size={5} />
-      <Sparkle delay={900}  leftPct={92} topPct={48} color="#ffd485" size={4} />
-      <Sparkle delay={1400} leftPct={6}  topPct={62} color="#ffd485" size={4} />
-      <Sparkle delay={1900} leftPct={78} topPct={78} color="#ffb347" size={4} />
-      <Sparkle delay={2400} leftPct={20} topPct={88} color="#ffb347" size={4} />
-      <Sparkle delay={2900} leftPct={50} topPct={28} color="#ffd485" size={3} />
-      <Sparkle delay={3400} leftPct={48} topPct={92} color="#ffb347" size={3} />
-    </View>
-  );
-}
+// SparkleField was lifted to @amg/cosmetic-ui — every AMG game gets
+// the same ambient twinkle. Drop4 imports it at the top of this file.
 
 // 3D character presenter — Customize tab is a stage AND a tap-to-react
 // toy. Tapping the character plays a random owned emote so the player
@@ -1154,13 +1072,6 @@ const styles = StyleSheet.create({
   // ── Sparkle ────────────────────────────────────────────────────
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
-  sparkle: {
-    position: 'absolute',
-    shadowOpacity: 0.7,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-  },
-
   // Soft warm halo behind the character — diffuse, no hard edge.
   charGlow: {
     position: 'absolute',
