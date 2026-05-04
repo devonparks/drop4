@@ -1031,45 +1031,6 @@ const styles = StyleSheet.create({
   },
   // Outer PressScale wrapper for the equipped pill — flex:1 so the
   // inner View gets the same width treatment as the previous (non-
-  // pressable) layout. Without flex:1 here the dots collapse to
-  // content width and the row stops being a 3-up grid.
-  eqDotPressWrap: { flex: 1 },
-  eqDot: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  eqDotSwatch: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    shadowColor: 'rgba(0,0,0,0.6)',
-    shadowOpacity: 0.6,
-    shadowRadius: 2,
-  },
-  eqDotText: { flex: 1, minWidth: 0 },
-  eqDotLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 7,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 1.2,
-  },
-  eqDotName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 10,
-    color: '#ffffff',
-    letterSpacing: 0.4,
-  },
-
   // ── Action band ────────────────────────────────────────────────
   // Single-row primary CTA. OPEN BOXES is full-width unless the player
   // has shards (then SHARDS gets a sliver). Replaces the v1 stat strip
@@ -1270,10 +1231,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     marginTop: 2,
   },
-  cellEquippedEmpty: {
-    fontStyle: 'italic',
-    color: 'rgba(255,255,255,0.35)',
-  },
   cellChevron: {
     fontFamily: fonts.body,
     fontWeight: weight.black,
@@ -1281,21 +1238,5 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     marginLeft: 2,
     marginRight: 2,
-  },
-  newBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 6,
-    backgroundColor: '#ff8c00',
-  },
-  newBadgeText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 8,
-    color: '#0a0e27',
-    letterSpacing: 0.5,
   },
 });
