@@ -195,7 +195,12 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
           }]} />
           <View style={[st.openingBox, { borderColor: tier.border }]}>
             <LinearGradient colors={tier.gradient as any} style={st.openingBoxInner}>
-              <Text style={st.openingBoxIcon}>{tier.icon}</Text>
+              {/* Use the SAME painted chest art as the selection list
+                  (LootChest at size 96) so the visual continuity holds
+                  across the buy → open flow. Was a generic 🎁 / 📦
+                  emoji that broke the premium feel of the box rotation.
+                  AAA polish 2026-05-04. */}
+              <LootChest tier={chestTierFor(box.tier)} size={96} />
               <Text style={[st.openingBoxName, { color: tier.tagColor }]}>{box.name}</Text>
             </LinearGradient>
           </View>
