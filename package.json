@@ -26,6 +26,10 @@
       "^@amg/character-runtime/(.*)$": "<rootDir>/../amg-engine/packages/character-runtime/src/$1.ts",
       "^@amg/character-creator$": "<rootDir>/../amg-engine/packages/character-creator/src/index.ts",
       "^@amg/character-creator/(.*)$": "<rootDir>/../amg-engine/packages/character-creator/src/$1.ts",
+      "^@amg/cosmetic-ui$": "<rootDir>/../amg-engine/packages/cosmetic-ui/src/index.ts",
+      "^@amg/cosmetic-ui/(.*)$": "<rootDir>/../amg-engine/packages/cosmetic-ui/src/$1.ts",
+      "^@amg/cosmetic-runtime$": "<rootDir>/../amg-engine/packages/cosmetic-runtime/src/index.ts",
+      "^@amg/cosmetic-runtime/(.*)$": "<rootDir>/../amg-engine/packages/cosmetic-runtime/src/$1.ts",
       "\\.(glb|gltf|png|jpg|jpeg|gif|webp|svg|mp3|wav|ttf|otf)$": "<rootDir>/jest.asset-mock.js"
     },
     "transform": {
