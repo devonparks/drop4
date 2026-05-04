@@ -46,7 +46,6 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { FilterChip } from '../ui/FilterChip';
 import { AmgPartPreviewModal } from '../ui/AmgPartPreviewModal';
 import { PressScale } from '../animations';
@@ -198,13 +197,6 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
   // refetch trigger to retry without re-mounting the modal.
   const [manifestError, setManifestError] = useState(false);
   const [manifestRetry, setManifestRetry] = useState(0);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    title: string;
-    message: string;
-    confirmLabel: string;
-    cancelLabel?: string;
-    onConfirm: () => void;
-  } | null>(null);
   const [equipFlash, setEquipFlash] = useState<string | null>(null);
 
   // Variant Gallery state — opens when the player taps VARIANTS in
@@ -753,21 +745,6 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             playClick: () => playSound('click'),
             playWhoosh: () => playSound('whoosh'),
           }}
-        />
-
-        {/* Confirm dialog (locked-part route) */}
-        <ConfirmDialog
-          visible={confirmDialog !== null}
-          title={confirmDialog?.title ?? ''}
-          message={confirmDialog?.message}
-          confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
-          cancelLabel={confirmDialog?.cancelLabel}
-          confirmOnly={confirmDialog?.cancelLabel === undefined}
-          onConfirm={() => {
-            confirmDialog?.onConfirm();
-            setConfirmDialog(null);
-          }}
-          onCancel={() => setConfirmDialog(null)}
         />
       </View>
     </PreviewSafeModal>
