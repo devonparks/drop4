@@ -161,6 +161,11 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   const [subcategory, setSubcategory] = useState<string>('All');
   const [speciesFilter, setSpeciesFilter] = useState<'All' | Species>('All');
   const [manifest, setManifest] = useState<AmgManifestPart[] | null>(null);
+  // Manifest fetch error — falls into a "Try Again" state in PartsGrid
+  // so players never see infinite loading on a flaky network. Bumps a
+  // refetch trigger to retry without re-mounting the modal.
+  const [manifestError, setManifestError] = useState(false);
+  const [manifestRetry, setManifestRetry] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     message: string;
@@ -176,23 +181,28 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   // the GTA-style colorway picker is one tap deep.
   const [galleryPart, setGalleryPart] = useState<{ name: string; slot: string } | null>(null);
 
-  // Fetch the AMG manifest once when the modal opens. Same pattern
-  // ShopScreen.tsx uses for its (now-removed) Clothes tab.
+  // Fetch the AMG manifest once when the modal opens. Falls into the
+  // PartsGrid error state on failure so players see "Try Again" instead
+  // of an infinite loading spinner.
   useEffect(() => {
     if (!visible || manifest) return;
     let canceled = false;
+    setManifestError(false);
     (async () => {
       try {
         const r = await fetch(AMG_MANIFEST_URL);
-        if (!r.ok) return;
+        if (!r.ok) {
+          if (!canceled) setManifestError(true);
+          return;
+        }
         const data = await r.json();
         if (!canceled) setManifest(data.parts as AmgManifestPart[]);
       } catch {
-        // Best-effort — leave manifest null and let the empty state render.
+        if (!canceled) setManifestError(true);
       }
     })();
     return () => { canceled = true; };
-  }, [visible, manifest]);
+  }, [visible, manifest, manifestRetry]);
 
   // Auto-fade equip-flash toast.
   useEffect(() => {
@@ -520,7 +530,14 @@ export function ClothesCatalog({ visible, onClose }: Props) {
               isOwned={(name: string) => isAmgPartOwned(name)}
               equippedBySlot={equippedSlotsInBucket}
               onTap={handlePartTap}
-              loading={!manifest}
+              loading={!manifest && !manifestError}
+              error={manifestError}
+              onRetry={() => {
+                haptics.tap();
+                playSound('click');
+                setManifestError(false);
+                setManifestRetry((n) => n + 1);
+              }}
               unlockedAt={amgPartUnlockedAt}
             />
           ) : (
@@ -644,13 +661,18 @@ export function ClothesCatalog({ visible, onClose }: Props) {
 // AmgPartCard is rendered.
 
 function PartsGrid({
-  parts, isOwned, equippedBySlot, onTap, loading, unlockedAt,
+  parts, isOwned, equippedBySlot, onTap, loading, error, onRetry, unlockedAt,
 }: {
   parts: AmgManifestPart[];
   isOwned: (name: string) => boolean;
   equippedBySlot: Record<string, string>;
   onTap: (part: AmgManifestPart) => void;
   loading: boolean;
+  /** True when the manifest fetch failed. Shows a Try Again CTA
+   *  instead of an infinite loading spinner. */
+  error: boolean;
+  /** Called when the player taps Try Again on the error state. */
+  onRetry: () => void;
   /** Map of partName → ms-since-epoch when the part was unlocked.
    *  Used to drive the red NEW ribbon on cards unlocked in the last
    *  7 days. */
@@ -666,6 +688,31 @@ function PartsGrid({
       <View style={styles.loadingWrap}>
         <ActivityIndicator color="#ffb347" size="large" />
         <Text style={styles.loadingText}>Loading parts catalog…</Text>
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={styles.loadingWrap}>
+        <Text style={styles.errorIcon}>{'\u{26A0}\u{FE0F}'}</Text>
+        <Text style={styles.loadingText}>
+          Couldn't reach the parts catalog. Check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={onRetry}
+          style={styles.retryBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Try fetching the parts catalog again"
+        >
+          <LinearGradient
+            colors={['#ffce63', '#ff9a2c', '#e87617', '#b85c0e']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.retryBtnGradient}
+          >
+            <Text style={styles.retryBtnText}>TRY AGAIN</Text>
+          </LinearGradient>
+        </Pressable>
       </View>
     );
   }
@@ -1203,9 +1250,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // ── Loading / empty ─────────────────────────────────────────
+  // ── Loading / error / empty ─────────────────────────────────
   loadingWrap: {
     paddingTop: 60,
+    paddingHorizontal: 24,
     alignItems: 'center',
     gap: 12,
   },
@@ -1215,6 +1263,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,180,90,0.7)',
     letterSpacing: 1.2,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  errorIcon: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  retryBtn: {
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  retryBtnGradient: {
+    paddingHorizontal: 28,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,120,0.85)',
+  },
+  retryBtnText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 13,
+    color: '#ffffff',
+    letterSpacing: 1.4,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   emptyWrap: {
     paddingTop: 40,
