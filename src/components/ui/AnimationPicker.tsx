@@ -508,17 +508,20 @@ const styles = StyleSheet.create({
   gridCardIconFallback: { width: 64, height: 64, marginBottom: 2, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)' },
   gridCardName: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 10, color: 'rgba(255,255,255,0.9)', marginTop: 2, textAlign: 'center' },
   gridCardNameLocked: { color: 'rgba(255,255,255,0.45)' },
-  // Lock badge — small pill in the bottom-right corner of locked
-  // tiles. "🔒 IN BAGS" tells the player exactly where to find this
-  // animation. Warm-amber so it ties to the bag art.
+  // Lock badge — small chip in the TOP-right corner of locked tiles.
+  // Used to be bottom-right but it overlapped the name text on cards
+  // with longer emote names ("Greased Lightnin", "Slick Spin"). Top-
+  // right keeps the lock affordance visible while leaving the bottom
+  // free for the name + (future) shard cost. Warm-amber so it ties
+  // to the bag art.
   lockBadge: {
     position: 'absolute',
-    bottom: 4,
+    top: 4,
     right: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     borderWidth: 1,
     borderColor: 'rgba(255,180,90,0.4)',
   },

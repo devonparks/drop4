@@ -1,20 +1,43 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ImageSourcePropType, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PressScale, StaggeredEntry } from '../components/animations';
-import { EquipPanel, type EquipCategory } from '../components/customize/EquipPanel';
+import type { BrowsableCategory } from './CategoryBrowserScreen';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
+import { OutfitsCatalog } from '../components/customize/OutfitsCatalog';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
-import { useShopStore } from '../stores/shopStore';
+import { useShopStore, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
 import { useCharacterStore } from '../stores/characterStore';
 import { usePetStore } from '../stores/petStore';
+// Loot-box store backs the Customize "your locker" stat strip — total
+// boxes waiting to open and items the player has enough shards to
+// unlock right now. Both selectors are exported by lootBoxStore as
+// pure helpers so the screen doesn't compute them inline.
+import {
+  useLootBoxStore,
+  selectWaitingBoxCount,
+  selectShardUnlockableItems,
+  getAllLootableItems,
+} from '../stores/lootBoxStore';
+import { isLootItemOwned } from '../stores/lootBoxStore';
 import { OUTFITS } from '../data/outfitRegistry';
+import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { PETS as PETS_3D } from '../data/petRegistry';
 import {
@@ -41,6 +64,7 @@ import { fonts, weight } from '../theme/typography';
 type CategoryId =
   | 'character'
   | 'clothes'
+  | 'outfits'
   | 'emotes'
   | 'pets'
   | 'pieces'
@@ -55,21 +79,29 @@ type CategoryMeta = {
   icon: ImageSourcePropType;
 };
 
-// Customize Overhaul 2026-04-30: dropped the redundant Outfits tile
-// (now covered by Clothes via the AMG migration — every part lives in
-// the per-pack Clothes catalog). Remaining 9 fit cleanly in a 3x3 grid
-// with no orphan card, which Devon flagged in the audit.
+// Customize Overhaul timeline:
+//   • 2026-04-30 — Dropped the OUTFITS tile in favor of the AMG
+//     creator's Outfit tab covering both parts + pack swaps.
+//   • 2026-05-03 — Brought OUTFITS BACK as a dedicated catalog card
+//     after Devon flagged the loss of the painted Shop > Outfits art.
+//     OUTFITS now opens the new OutfitsCatalog modal (152 pack
+//     variants with painted Sidekick pack covers); CLOTHES still
+//     opens the AMG creator's Outfit tab for individual-part shopping.
+//     Same content surfaced two ways: parts catalog (CLOTHES) vs.
+//     pack-bundle browse (OUTFITS). FRAMES dropped from the grid
+//     until the season-pass / tournament reward registry ships.
 //
 // Each tile uses a chunky 3D category icon (cat-*.png) generated to
 // match the locked-in DROP4 logo style — white-cyan body face + warm
 // orange-red 3D extrusion + thick dark navy outline.
+//
 // Category order matters — at 4 cards per row, two visual rows naturally
-// group themselves by row position. Now 8 cards in the grid (character is
+// group themselves by row position. 8 cards in the grid (character is
 // the hero card above and not in this list):
 //
 //   Row 1 — AVATAR / IDENTITY
-//     CLOTHES (parts you wear) · EMOTES (poses you perform) ·
-//     PETS (companions you bring) · FRAMES (your profile chrome)
+//     CLOTHES (parts you wear) · OUTFITS (full pack bundles) ·
+//     EMOTES (poses you perform) · PETS (companions you bring)
 //
 //   Row 2 — GAMEPLAY COSMETICS
 //     PIECES (in-match) · BOARDS (in-match) ·
@@ -77,25 +109,108 @@ type CategoryMeta = {
 //
 // Players don't need section headers to feel the grouping — the row
 // position does the work.
-//
-// CLOTHES routes to the AMG creator on its 'outfit' tab (the parts
-// catalog that shows owned + locked + tap-to-buy). OUTFITS-as-bundle
-// is currently folded INTO the Clothes catalog because the creator's
-// Outfit tab handles both individual parts AND full pack swaps via
-// PresetBar. If we later split them, add a separate OUTFITS card.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
   // Row 1 — avatar / identity
-  { id: 'clothes',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png') },
+  // 'outfits' uses the 'clothes' icon and is the wardrobe view: the
+  // 152-pack catalog modal showing every outfit in bags, painted pack
+  // covers, IN BAGS pills on locked items. The redundant 'clothes'
+  // tile (which routed to the AMG creator's Outfit tab) was removed
+  // 2026-05-03 — it pointed at the same content from a different
+  // angle and confused the player. Power users who want individual-
+  // part control still get there from CHARACTER → Creator → Outfit.
+  { id: 'outfits',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png') },
   { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png') },
   { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png') },
-  { id: 'frames',    label: 'Frames',    icon: require('../assets/images/ui/cat-frames.png') },
   // Row 2 — gameplay cosmetics
   { id: 'pieces',    label: 'Pieces',    icon: require('../assets/images/ui/cat-pieces.png') },
   { id: 'boards',    label: 'Boards',    icon: require('../assets/images/ui/cat-boards.png') },
   { id: 'effects',   label: 'Effects',   icon: require('../assets/images/ui/cat-effects.png') },
   { id: 'wins',      label: 'Wins',      icon: require('../assets/images/ui/cat-wins.png') },
 ];
+
+// ── SparkleField ───────────────────────────────────────────────────
+//
+// Ambient warm-amber sparkle particles drifting inside the hero card.
+// Each particle has its own opacity pulse + slight Y drift so the card
+// reads as alive instead of static. Replaces what would otherwise be a
+// very still 3D-character-on-dark-stage tableau.
+//
+// Implemented with Reanimated 3 (already in the project) instead of
+// Skia — six 4px circles at fixed positions is the smallest design
+// that delivers the "AAA mobile screen breathes" feel without a new
+// rendering pipeline.
+function Sparkle({ delay, leftPct, topPct, color, size }: {
+  delay: number;
+  leftPct: number;
+  topPct: number;
+  color: string;
+  size: number;
+}) {
+  const opacity = useSharedValue(0);
+  const drift = useSharedValue(0);
+  useEffect(() => {
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(0.65, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0.05, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+        ),
+        -1,
+      ),
+    );
+    drift.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(-6, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0, { duration: 3600, easing: Easing.inOut(Easing.quad) }),
+        ),
+        -1,
+      ),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: drift.value }],
+  }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.sparkle,
+        {
+          left: `${leftPct}%`,
+          top: `${topPct}%`,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color,
+          shadowColor: color,
+        },
+        animStyle,
+      ]}
+    />
+  );
+}
+
+// Six-particle SparkleField — staggered phases so the twinkle reads as
+// random ambient light, not a coordinated pulse. Positioned around
+// the hero card edges so the character silhouette stays visually clean.
+function SparkleField() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Sparkle delay={0}    leftPct={8}  topPct={18} color="#ffb347" size={3} />
+      <Sparkle delay={500}  leftPct={88} topPct={12} color="#ffb347" size={4} />
+      <Sparkle delay={1100} leftPct={92} topPct={48} color="#ffd485" size={3} />
+      <Sparkle delay={1700} leftPct={6}  topPct={62} color="#ffd485" size={4} />
+      <Sparkle delay={2300} leftPct={78} topPct={78} color="#ffb347" size={3} />
+      <Sparkle delay={2900} leftPct={20} topPct={88} color="#ffb347" size={3} />
+    </View>
+  );
+}
 
 // 3D character presenter — Customize tab is a stage AND a tap-to-react
 // toy. Tapping the character plays a random owned emote so the player
@@ -132,8 +247,8 @@ function CustomizeCharacter({
         end={{ x: 0.5, y: 1 }}
       />
       <Character3DPortrait
-        width={320}
-        height={320}
+        width={260}
+        height={260}
         animationId={animationId}
         onTap={onTap}
         // Painted scene already supplies warm-amber backdrop; we own the
@@ -162,6 +277,34 @@ export function CustomizeScreen() {
   const equippedBoardId = useShopStore((s) => s.equipped.board);
   const equippedPiecesId = useShopStore((s) => s.equipped.pieces);
   const equippedPetId = usePetStore((s) => s.activePetId);
+
+  // Locker-stat selectors — three primitive reads so the stat strip
+  // recomputes only when the relevant store slice changes.
+  const ownedBoxesList = useLootBoxStore((s) => s.ownedBoxes);
+  const lootShards = useLootBoxStore((s) => s.shards);
+  // We're already pulling 'owned'/'ownedEmotes'/'ownedOutfits'/'ownedPets'
+  // above; combine into a single ownedTotal count for the strip.
+  const lockerStats = useMemo(() => {
+    const allLootable = getAllLootableItems();
+    const ownedCount = allLootable.reduce(
+      (acc, item) => (isLootItemOwned(item) ? acc + 1 : acc),
+      0,
+    );
+    const totalCount = allLootable.length;
+    const waitingBoxes = selectWaitingBoxCount({ ownedBoxes: ownedBoxesList } as any);
+    const shardReady = selectShardUnlockableItems({
+      shards: lootShards,
+    } as any).length;
+    return { ownedCount, totalCount, waitingBoxes, shardReady };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Each ownership store is depended on so the count updates when
+    // anything is unlocked. The selectors read the latest store state
+    // via getState() inside isLootItemOwned, so they don't need the
+    // arrays in deps — but we list them anyway for clarity + correctness.
+    owned, ownedEmotes, ownedOutfits, ownedPets,
+    ownedBoxesList, lootShards,
+  ]);
   const summary = useMemo(() => {
     const boardName = BOARD_THEMES.find((b) => b.id === equippedBoardId)?.name;
     const piecesName = PIECE_THEMES.find((p) => p.id === equippedPiecesId)?.name;
@@ -171,12 +314,6 @@ export function CustomizeScreen() {
     return { boardName, piecesName, petName: petMeta?.name ?? null };
   }, [equippedBoardId, equippedPiecesId, equippedPetId]);
 
-  // Customize-tab equip panel state. Replaces the previous "tap card →
-  // jump to Shop tab" behavior for non-character categories. Tapping a
-  // card now opens this slide-up panel inside Customize so the player
-  // never leaves the tab to equip what they own.
-  const [equipPanelCategory, setEquipPanelCategory] = useState<EquipCategory | null>(null);
-
   // EMOTES card now opens the in-app AnimationPicker modal (same one
   // used by Home's emote/idle side buttons) instead of bouncing the
   // player to Shop > Emotes. The picker shows owned emotes/idles and
@@ -184,6 +321,14 @@ export function CustomizeScreen() {
   // taps without leaving the Customize tab.
   const [animPickerOpen, setAnimPickerOpen] = useState(false);
   const [animPickerTab, setAnimPickerTab] = useState<'emotes' | 'idles'>('emotes');
+
+  // OUTFITS card opens the full-screen OutfitsCatalog modal — all 152
+  // pack variants with painted Sidekick covers, rarity chips, IN BAGS
+  // badges on locked items. Resurrects the old Shop > Outfits browse
+  // view inside Customize per the 2026-05-03 pivot ("merge old shop
+  // into customize"). Owned items tap-to-equip + close; locked items
+  // route to LootBox.
+  const [outfitsCatalogOpen, setOutfitsCatalogOpen] = useState(false);
 
   // Tap-to-preview emote on the 3D character. Same pattern as Home's
   // handleCharacterTap — picks a random owned emote, plays it for 3
@@ -221,14 +366,15 @@ export function CustomizeScreen() {
   // After 2026-05-03 Shop pivot, every card destination lives WITHIN
   // Drop4 (no more "jump to Shop > Clothes"). Each card has a clear,
   // distinct destination:
-  //   • CHARACTER (hero) — AMG creator on Body tab (default tab)
-  //   • CLOTHES — AMG creator on Outfit tab (the catalog of parts —
-  //               shows owned + locked + tap-to-buy via creator's
-  //               existing PartGrid). This IS the Synty parts catalog
-  //               now that Shop's Clothes tab is gone.
+  //   • CHARACTER (hero) — AMG creator (full Sims-tier editor, all
+  //                        tabs including Outfit for individual parts)
+  //   • CLOTHES — full-screen catalog modal showing all 152 pack
+  //               variants with painted Sidekick pack covers. Locked
+  //               items show IN BAGS pills routing to LootBox. Owned
+  //               items tap-to-equip the whole pack.
   //   • EMOTES — in-app AnimationPicker modal (one-tap selection)
-  //   • PETS / PIECES / BOARDS / EFFECTS / WINS / FRAMES — slide-up
-  //     EquipPanel sheet stays inside the Customize tab.
+  //   • PETS / PIECES / BOARDS / EFFECTS / WINS — slide-up EquipPanel
+  //     sheet stays inside the Customize tab.
   const handleCategoryTap = (cat: CategoryMeta) => {
     haptics.tap();
     playSound('click');
@@ -236,10 +382,11 @@ export function CustomizeScreen() {
       navigation.navigate('AmgCreator' as never);
       return;
     }
-    if (cat.id === 'clothes') {
-      // Open the creator on the Outfit tab — that's where the parts
-      // catalog (PartGrid with owned + locked + tap-to-buy) lives.
-      navigation.navigate('AmgCreator' as never, { initialTab: 'outfit' } as never);
+    if (cat.id === 'outfits') {
+      // CLOTHES card opens the painted catalog modal — every pack
+      // variant with painted Sidekick covers. Single source of truth
+      // for "what clothes can I get from bags" / "what do I own."
+      setOutfitsCatalogOpen(true);
       return;
     }
     if (cat.id === 'emotes') {
@@ -249,19 +396,24 @@ export function CustomizeScreen() {
       setAnimPickerOpen(true);
       return;
     }
-    // Pets / Boards / Pieces / Effects / Wins / Frames → open the
-    // EquipPanel slide-up sheet inside Customize (no nav detour).
-    const equipPanelMap: Record<string, EquipCategory> = {
+    // Pivot 2026-05-03: Pets / Boards / Pieces / Effects / Wins / Frames
+    // now navigate to the dedicated CategoryBrowserScreen instead of
+    // opening the EquipPanel slide-up sheet. The browser shows ALL
+    // items in the category (owned + locked) with rarity filters and
+    // a Shard Shop link — replaces the "owned only" sheet so the
+    // player can discover what they don't have yet, not just rotate
+    // what they do have.
+    const browserMap: Record<string, BrowsableCategory> = {
       pets: 'pets',
       boards: 'boards',
       pieces: 'pieces',
-      effects: 'effects',
-      wins: 'wins',
-      frames: 'frames',
+      effects: 'dropEffects',
+      wins: 'winAnimations',
+      frames: 'boardAccessories',
     };
-    const panelCategory = equipPanelMap[cat.id];
-    if (panelCategory) {
-      setEquipPanelCategory(panelCategory);
+    const browserCategory = browserMap[cat.id];
+    if (browserCategory) {
+      navigation.navigate('CategoryBrowser', { category: browserCategory });
       return;
     }
   };
@@ -271,9 +423,22 @@ export function CustomizeScreen() {
   // for now. The `/M` slot renders blank when total===0 below.
   const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
 
+  // Outfits owned count: how many of the catalogued OUTFIT_SHOP_ITEMS
+  // (152 pack variants) the player owns. ownedOutfits is the canonical
+  // store of unlocked pack variant ids.
+  const ownedOutfitsInCatalog = useMemo(
+    () => OUTFIT_SHOP_ITEMS.filter((item) => ownedOutfits.includes(item.id)).length,
+    [ownedOutfits],
+  );
+
   const counts: Record<CategoryId, { owned: number; total: number }> = {
     character: { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
+    // 'clothes' kept in CategoryId for forward-compat (was removed
+    // from the visible grid 2026-05-03 — outfits now labeled "Clothes"
+    // covers the wardrobe view). Counts unused but the Record type
+    // requires every key.
     clothes:   { owned: ownedAmgParts.length, total: 0 },
+    outfits:   { owned: ownedOutfitsInCatalog, total: OUTFIT_SHOP_ITEMS.length },
     emotes:    { owned: ownedEmotes.length,  total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },
     pieces:    { owned: owned.pieces.length, total: PIECE_THEMES.length },
@@ -283,6 +448,43 @@ export function CustomizeScreen() {
     // Frames don't have a canonical registry yet — show owned count only.
     frames:    { owned: 0, total: 0 },
   };
+
+  // ── Identity banner inputs ──────────────────────────────────────
+  // Player identity (name + computed title) replaces the redundant
+  // "CUSTOMIZE / YOUR LOCKER" header from v1. The character is now the
+  // hero — the chip-line above them tells you WHO you are looking at.
+  const playerName = useShopStore((s) => s.playerName);
+  const equippedCustomTitle = useShopStore((s) => s.equippedCustomTitle);
+  const computedTitle = getPlayerTitle(level, undefined, coins);
+  const displayTitle = equippedCustomTitle ?? computedTitle;
+  const titleColor = getPlayerTitleColor(computedTitle);
+  const collectionPct = lockerStats.totalCount > 0
+    ? (lockerStats.ownedCount / lockerStats.totalCount) * 100
+    : 0;
+
+  // Currently-equipped item name per category — drives the loadout
+  // grid where each cell shows what's on right now. Maps categoryId →
+  // display name so the cell renderer doesn't reach into 4 stores.
+  const equippedNames: Record<CategoryId, string | null> = useMemo(() => {
+    const equipped = useShopStore.getState().equipped;
+    const equippedOutfitId = useCharacterStore.getState().equippedOutfitId;
+    const outfitName = OUTFIT_SHOP_ITEMS.find((o) => o.id === equippedOutfitId)?.name ?? null;
+    const dropFx = DROP_EFFECTS.find((f) => f.id === equipped.dropEffect)?.name ?? null;
+    const winFx = WIN_ANIMATIONS.find((w) => w.id === equipped.winAnimation)?.name ?? null;
+    const petName = summary.petName;
+    return {
+      character: playerName,
+      clothes: outfitName,
+      outfits: outfitName,
+      emotes: ownedEmotes.length > 0 ? `${ownedEmotes.length} owned` : null,
+      pets: petName,
+      pieces: summary.piecesName ?? null,
+      boards: summary.boardName ?? null,
+      effects: dropFx,
+      wins: winFx,
+      frames: null,
+    };
+  }, [playerName, summary, ownedEmotes]);
 
   return (
     <ScreenBackground scene="profile">
@@ -296,111 +498,197 @@ export function CustomizeScreen() {
           onCoinPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as never)}
           onGemPress={() => navigation.navigate('MainTabs', { screen: 'Shop' } as never)}
         />
-        {/* AAA pass: title row also carries an inline subtitle pill so the
-            screen reads as "your locker" not just a generic dashboard. */}
-        <View style={styles.titleRow}>
-          <Text style={styles.title} accessibilityRole="header">CUSTOMIZE</Text>
-          <Text style={styles.titleSub}>YOUR LOCKER</Text>
-        </View>
 
-        {/* 3D character stage. Centered with spotlight aura + floor disc.
-            Tappable — fires a random owned emote preview so the player
-            can show off their cosmetics without leaving the tab.
-            Live-updates when the player changes gear via the category
-            cards / EquipPanel sheets below. */}
-        <View style={styles.charStage}>
-          <CustomizeCharacter
-            animationId={activeEmote}
-            onTap={handleCharacterTap}
-          />
-          {/* Tap-to-preview affordance — only visible until the player
-              has tapped the character at least once this mount. Fades
-              automatically after first interaction so it doesn't
-              compete with the chip / hero card visually. */}
-          {!hasTappedChar && (
-            <View pointerEvents="none" style={styles.charTapHint}>
-              <Text style={styles.charTapHintText}>TAP TO PREVIEW EMOTES</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Equipped summary readout — passive at-a-glance label of what
-            the player has on right now. Per-slot icons (board / pieces /
-            pet) make the chip self-documenting: each value sits next to
-            an indicator of WHICH cosmetic slot it represents, instead
-            of a single generic 🎯 anchor. */}
-        <View
-          style={styles.equippedChip}
-          accessibilityRole="text"
-          accessibilityLabel={`Currently equipped: ${summary.boardName ?? 'Classic'} board, ${summary.piecesName ?? 'Classic'} pieces${summary.petName ? `, ${summary.petName} pet` : ''}`}
-        >
-          <Text style={styles.equippedChipSlotIcon}>{'\u{1F3B2}'}</Text>
-          <Text style={styles.equippedChipText} numberOfLines={1}>
-            {summary.boardName ?? 'Classic'}
-          </Text>
-          <Text style={styles.equippedChipDot}>{'·'}</Text>
-          <Text style={styles.equippedChipSlotIcon}>{'\u{1F534}'}</Text>
-          <Text style={styles.equippedChipText} numberOfLines={1}>
-            {summary.piecesName ?? 'Classic'}
-          </Text>
-          {summary.petName && (
-            <>
-              <Text style={styles.equippedChipDot}>{'·'}</Text>
-              <Text style={styles.equippedChipSlotIcon}>{'\u{1F436}'}</Text>
-              <Text style={styles.equippedChipText} numberOfLines={1}>
-                {summary.petName}
-              </Text>
-            </>
-          )}
-        </View>
-
-        {/* Category grid. AAA pass: CHARACTER is broken out as a
-            full-width hero card so the player's primary action — open the
-            creator — is the obvious next tap. Remaining 8 categories sit
-            in a 4x2 / 2x4 grid below. */}
         <ScrollView
-          contentContainerStyle={styles.gridWrap}
+          contentContainerStyle={styles.scrollWrap}
           showsVerticalScrollIndicator={false}
         >
-          <StaggeredEntry index={0} delay={35}>
-            <HeroCharacterCard
-              cat={CATEGORIES[0]}
-              onPress={() => handleCategoryTap(CATEGORIES[0])}
-            />
+          {/* Hero card — character is the hero of this screen. Identity
+              banner up top tells you WHO this is; character render fills
+              the stage; equipped chip-line below shows your loadout at a
+              glance. EDIT pill in top-right gets you to the creator. */}
+          <StaggeredEntry index={0} delay={30}>
+            <View style={styles.heroCard}>
+              {/* Inner radial gradient — deepens the center where the
+                  character stands, brightens the edges subtly. Sells
+                  "framed display" instead of "flat panel." */}
+              <LinearGradient
+                pointerEvents="none"
+                colors={[
+                  'rgba(255,140,0,0.06)',
+                  'rgba(10,14,32,0.0)',
+                  'rgba(10,14,32,0.0)',
+                ]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Ambient sparkle particles — six warm-amber dots
+                  twinkling at staggered phases. Sells "alive premium
+                  display" without competing with the character. */}
+              <SparkleField />
+              {/* Identity banner: player name + title + tier color +
+                  collection % pill. Replaces the redundant "CUSTOMIZE /
+                  YOUR LOCKER" big-title header from v1. */}
+              <View style={styles.identityRow}>
+                <View style={[styles.titleDot, { backgroundColor: titleColor }]} />
+                <Text style={styles.identityName} numberOfLines={1}>
+                  {playerName.toUpperCase()}
+                </Text>
+                <Text style={[styles.identityTitle, { color: titleColor }]} numberOfLines={1}>
+                  {displayTitle.toUpperCase()}
+                </Text>
+                <Text style={styles.identityLvl}>{`LVL ${level}`}</Text>
+                <View style={{ flex: 1 }} />
+                <View style={styles.collectionPill}>
+                  <Text style={styles.collectionPillText}>
+                    {`${collectionPct.toFixed(1)}%`}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Character stage — slimmer than v1 (260 vs 320) to leave
+                  room for the loadout grid below without scrolling. EDIT
+                  pill floats in the top-right corner of the stage so the
+                  creator is one tap away without a full-width hero card
+                  fighting the action band. */}
+              <View style={styles.charStage}>
+                <CustomizeCharacter
+                  animationId={activeEmote}
+                  onTap={handleCharacterTap}
+                />
+                <PressScale
+                  onPress={() => {
+                    haptics.tap();
+                    playSound('click');
+                    navigation.navigate('AmgCreator' as never);
+                  }}
+                  containerStyle={styles.editPill}
+                  accessibilityLabel="Edit character"
+                  accessibilityRole="button"
+                >
+                  <View style={styles.editPillInner}>
+                    <Text style={styles.editPillText}>{`EDIT  ›`}</Text>
+                  </View>
+                </PressScale>
+                {!hasTappedChar && (
+                  <View pointerEvents="none" style={styles.charTapHint}>
+                    <Text style={styles.charTapHintText}>TAP TO PREVIEW EMOTES</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Equipped summary line — three rarity-tinted dots with
+                  inline labels. Each dot is tappable to jump straight
+                  to that slot's browser (most direct "I want to change
+                  this thing" affordance). */}
+              <View
+                style={styles.equippedRow}
+                accessibilityLabel={`Currently equipped: ${summary.boardName ?? 'Classic'} board, ${summary.piecesName ?? 'Classic'} pieces${summary.petName ? `, ${summary.petName} pet` : ''}`}
+              >
+                <EquippedDot
+                  color="#3a78d4"
+                  label="BOARD"
+                  name={summary.boardName ?? 'Classic'}
+                  onPress={() => {
+                    haptics.tap();
+                    playSound('click');
+                    navigation.navigate('CategoryBrowser', { category: 'boards' });
+                  }}
+                />
+                <EquippedDot
+                  color="#e63946"
+                  label="PIECES"
+                  name={summary.piecesName ?? 'Classic'}
+                  onPress={() => {
+                    haptics.tap();
+                    playSound('click');
+                    navigation.navigate('CategoryBrowser', { category: 'pieces' });
+                  }}
+                />
+                {summary.petName && (
+                  <EquippedDot
+                    color="#2ecc71"
+                    label="PET"
+                    name={summary.petName}
+                    onPress={() => {
+                      haptics.tap();
+                      playSound('click');
+                      navigation.navigate('CategoryBrowser', { category: 'pets' });
+                    }}
+                  />
+                )}
+              </View>
+            </View>
           </StaggeredEntry>
+
+          {/* Action band — single row, primary CTA full width unless the
+              player has shards (or shard-ready items) in which case the
+              SHARDS button takes a sliver. Hidden when both balance and
+              shard-ready are 0 keeps the screen quiet for new players. */}
+          <ActionBand
+            waitingBoxes={lockerStats.waitingBoxes}
+            shardReady={lockerStats.shardReady}
+            shardsTotal={
+              lootShards.common + lootShards.rare + lootShards.epic + lootShards.legendary
+            }
+            onOpenBoxes={() => {
+              haptics.tap();
+              playSound('click');
+              navigation.navigate('LootBox');
+            }}
+            onOpenShardShop={() => {
+              haptics.tap();
+              playSound('click');
+              navigation.navigate('ShardShop');
+            }}
+          />
+
+          {/* Loadout grid — 2-col 4-row, 8 slots. 7 cosmetic categories
+              + a SHARDS shortcut cell to fill the 8th slot (Frames was
+              dropped from CATEGORIES until the registry ships, leaving
+              an empty cell that looked like a layout bug). */}
           <View style={styles.grid}>
             {CATEGORIES.slice(1).map((cat, i) => {
               const c = counts[cat.id];
-              // "NEW" badge: when the player owns 0 of a category that
-              // has content available, surface a small accent so the
-              // category reads as "go explore." Suppressed for character
-              // (multi-attribute) and frames (no registry yet).
               const hasNew = c.total > 0 && c.owned === 0;
+              const equippedName = equippedNames[cat.id];
               return (
-                <StaggeredEntry key={cat.id} index={i + 1} delay={35}>
-                  <CategoryCard
+                <StaggeredEntry key={cat.id} index={i + 1} delay={30} style={styles.cellOuter}>
+                  <LoadoutCell
                     cat={cat}
                     owned={c.owned}
                     total={c.total}
                     hasNew={hasNew}
+                    equippedName={equippedName}
                     onPress={() => handleCategoryTap(cat)}
                   />
                 </StaggeredEntry>
               );
             })}
+            <StaggeredEntry index={CATEGORIES.length} delay={30} style={styles.cellOuter}>
+              <ShardsCell
+                shardsTotal={
+                  lootShards.common + lootShards.rare + lootShards.epic + lootShards.legendary
+                }
+                shardReady={lockerStats.shardReady}
+                onPress={() => {
+                  haptics.tap();
+                  playSound('click');
+                  navigation.navigate('ShardShop');
+                }}
+              />
+            </StaggeredEntry>
           </View>
         </ScrollView>
       </View>
 
-      {/* EquipPanel — slide-up sheet for Pets / Boards / Pieces / Effects /
-          Wins / Frames. Replaces the legacy "jump to Shop tab" redirect
-          for those categories. Open: setEquipPanelCategory(id). Close:
-          setEquipPanelCategory(null) via onClose. */}
-      <EquipPanel
-        visible={equipPanelCategory !== null}
-        category={equipPanelCategory}
-        onClose={() => setEquipPanelCategory(null)}
-      />
+      {/* EquipPanel was the slide-up sheet used pre-pivot for Pets /
+          Boards / Pieces / Effects / Wins / Frames. After the 2026-05-03
+          pivot every category card routes to CategoryBrowserScreen
+          instead, so the sheet never opens. Removed to keep this
+          surface honest — the dead mount + setState plumbing was just
+          confusing future readers. */}
       {/* AnimationPicker — full-screen emote/idle picker modal. Same
           one used by Home's emote/idle side buttons. Mounted here so
           tapping the EMOTES category card opens it in-place instead
@@ -410,35 +698,232 @@ export function CustomizeScreen() {
         onClose={() => setAnimPickerOpen(false)}
         initialTab={animPickerTab}
       />
+      {/* OutfitsCatalog — full-screen modal showing all 152 pack
+          variants with painted Sidekick pack covers, rarity chips,
+          and IN BAGS badges on locked items. Mounted here so tapping
+          the OUTFITS category card surfaces the catalog without
+          leaving the Customize tab. */}
+      <OutfitsCatalog
+        visible={outfitsCatalogOpen}
+        onClose={() => setOutfitsCatalogOpen(false)}
+      />
     </ScreenBackground>
   );
 }
 
-function CategoryCard({
-  cat, owned, total, hasNew, onPress,
-}: {
-  cat: CategoryMeta; owned: number; total: number; hasNew?: boolean; onPress: () => void;
+// ── PulsingBadge ───────────────────────────────────────────────────
+//
+// Count badge for the OPEN BOXES button. Pulses scale + opacity slowly
+// so the player's eye is drawn to "you have N boxes waiting." Without
+// the pulse the count blends into the button's overall warmth and the
+// player can miss the call-to-action.
+function PulsingBadge({ value }: { value: number }) {
+  const scale = useSharedValue(1);
+  const ringOpacity = useSharedValue(0);
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1.0, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+    );
+    ringOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.6, { duration: 1400, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 0 }),
+      ),
+      -1,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const badgeStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: ringOpacity.value,
+    transform: [{ scale: 1 + (1 - ringOpacity.value / 0.6) * 0.5 }],
+  }));
+  return (
+    <View style={styles.pulsingBadgeWrap}>
+      <Animated.View pointerEvents="none" style={[styles.pulseRing, ringStyle]} />
+      <Animated.View style={[styles.openBoxesBadge, badgeStyle]}>
+        <Text style={styles.openBoxesBadgeText}>{value}</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ── EquippedDot ────────────────────────────────────────────────────
+//
+// Tiny "you're wearing X" chip — colored dot + slot label + item name.
+// Three of these stack horizontally beneath the character so the player
+// reads their loadout at a glance. Replaces the v1 emoji+text chip
+// (🎲 Classic Blue · 🔴 Classic · 🐕 Labrador) which felt like a data
+// dump.
+//
+// Now tappable: tap a pill to jump straight to that slot's browser.
+// The pill is the most direct affordance for "I want to change this
+// thing" — short-circuits the need to scroll down to the loadout grid.
+function EquippedDot({ color, label, name, onPress }: {
+  color: string;
+  label: string;
+  name: string;
+  onPress?: () => void;
 }) {
-  // Show count only when category is count-based (not Character, not the
-  // unregistered Frames). Character is a multi-attribute editor.
-  const showCount = cat.id !== 'character' && total > 0;
+  const inner = (
+    <View style={styles.eqDot}>
+      <View style={[styles.eqDotSwatch, { backgroundColor: color }]} />
+      <View style={styles.eqDotText}>
+        <Text style={styles.eqDotLabel}>{label}</Text>
+        <Text style={styles.eqDotName} numberOfLines={1}>{name}</Text>
+      </View>
+    </View>
+  );
+  if (!onPress) return inner;
   return (
     <PressScale
       onPress={onPress}
-      scaleTo={0.95}
+      scaleTo={0.94}
+      containerStyle={styles.eqDotPressWrap}
       accessibilityRole="button"
-      accessibilityLabel={`${cat.label}${showCount ? `, ${owned} of ${total} owned` : ''}${hasNew ? ', new content available' : ''}`}
+      accessibilityLabel={`Change ${label.toLowerCase()}: currently ${name}`}
     >
-      <View style={styles.card}>
-        <Image source={cat.icon} style={styles.cardIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
-        <Text style={styles.cardLabel} numberOfLines={1}>{cat.label.toUpperCase()}</Text>
-        {showCount && (
-          <Text style={styles.cardCount}>{owned}/{total}</Text>
+      {inner}
+    </PressScale>
+  );
+}
+
+// ── Action band ────────────────────────────────────────────────────
+//
+// Single-row primary CTA. OPEN BOXES is the hero — full-width unless
+// the player has shards to spend, in which case SHARDS gets a sliver.
+// The tiny stat sub-line below conveys context (collection %, shards)
+// without a giant stat-strip eating vertical space.
+function ActionBand({
+  waitingBoxes, shardReady, shardsTotal, onOpenBoxes, onOpenShardShop,
+}: {
+  waitingBoxes: number;
+  shardReady: number;
+  shardsTotal: number;
+  onOpenBoxes: () => void;
+  onOpenShardShop: () => void;
+}) {
+  const showShards = shardReady > 0 || shardsTotal > 0;
+  return (
+    <StaggeredEntry index={1} delay={30}>
+      <View style={styles.actionBand}>
+        <PressScale
+          onPress={onOpenBoxes}
+          containerStyle={{ flex: showShards ? 2 : 1 }}
+          accessibilityRole="button"
+          accessibilityLabel={waitingBoxes > 0 ? `Open boxes, ${waitingBoxes} ready` : 'Open boxes'}
+        >
+          {/* Multi-layer button — outer glow ring, gradient fill, inner
+              top-edge highlight for that "embossed metal" feel. */}
+          <View style={styles.openBoxesShell}>
+            <LinearGradient
+              colors={['#ffce63', '#ff9a2c', '#e87617', '#b85c0e']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.openBoxesCta}
+            >
+              {/* Top inner highlight — thin horizontal rim that sells
+                  the 3D button feel without needing an asset. */}
+              <View pointerEvents="none" style={styles.openBoxesHighlight} />
+              <Text style={styles.openBoxesCtaText}>OPEN BOXES</Text>
+              {waitingBoxes > 0 && <PulsingBadge value={waitingBoxes} />}
+            </LinearGradient>
+          </View>
+        </PressScale>
+        {showShards && (
+          <PressScale
+            onPress={onOpenShardShop}
+            containerStyle={{ flex: 1 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Shard shop${shardReady > 0 ? `, ${shardReady} unlockable` : ''}`}
+          >
+            {/* expo-blur on native gives a real frosted backdrop; on
+                web we fall back to a translucent fill since BlurView
+                requires the native module. */}
+            {Platform.OS === 'web' ? (
+              <View style={[styles.shardCta, styles.shardCtaWebFallback]}>
+                <Text style={styles.shardCtaText}>{`SHARDS · ${shardsTotal}`}</Text>
+              </View>
+            ) : (
+              <BlurView intensity={30} tint="dark" style={styles.shardCta}>
+                <Text style={styles.shardCtaText}>{`SHARDS · ${shardsTotal}`}</Text>
+              </BlurView>
+            )}
+          </PressScale>
         )}
+      </View>
+    </StaggeredEntry>
+  );
+}
+
+// ── Loadout cell ───────────────────────────────────────────────────
+//
+// Each cosmetic category renders one cell showing: painted icon (top),
+// category label (mid), currently-equipped item name (bottom),
+// owned/total chip (top-right). 4 cells per row × 2 rows on a 390px
+// phone = visible without scroll on the standard PhoneFrame.
+// Per-category accent color for the loadout cell left edge. Each
+// category gets a tint that ties into its content vibe — outfits =
+// amber, pets = green, pieces = red (player1), boards = blue, etc.
+// Replaces the uniform white-on-navy cell with a small visual hook.
+const CATEGORY_ACCENT: Record<CategoryId, string> = {
+  character: '#ffb347',
+  clothes:   '#ffb347',
+  outfits:   '#ffb347',
+  emotes:    '#c997e7',
+  pets:      '#3eb489',
+  pieces:    '#e63946',
+  boards:    '#3a78d4',
+  effects:   '#f1c40f',
+  wins:      '#9b59b6',
+  frames:    '#1abc9c',
+};
+
+function LoadoutCell({
+  cat, owned, total, hasNew, equippedName, onPress,
+}: {
+  cat: CategoryMeta;
+  owned: number;
+  total: number;
+  hasNew?: boolean;
+  equippedName: string | null;
+  onPress: () => void;
+}) {
+  const showCount = total > 0;
+  const accent = CATEGORY_ACCENT[cat.id] ?? '#ffb347';
+  return (
+    <PressScale
+      onPress={onPress}
+      scaleTo={0.96}
+      accessibilityRole="button"
+      accessibilityLabel={`${cat.label}${showCount ? `, ${owned} of ${total} owned` : ''}${equippedName ? `, currently equipped: ${equippedName}` : ''}${hasNew ? ', new content available' : ''}`}
+    >
+      <View style={[styles.cell, { borderColor: `${accent}33` }]}>
+        {/* Left-edge rarity stripe — tiny vertical band tinted to the
+            category's signature color. Adds visual identity per slot
+            so the grid isn't a uniform navy slab. */}
+        <View style={[styles.cellAccent, { backgroundColor: accent }]} />
+        <Image source={cat.icon} style={styles.cellIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
+        <View style={styles.cellTextStack}>
+          <View style={styles.cellLabelRow}>
+            <Text style={styles.cellLabel} numberOfLines={1}>{cat.label.toUpperCase()}</Text>
+            {showCount && (
+              <Text style={[styles.cellCountInline, { color: accent }]}>{`${owned}/${total}`}</Text>
+            )}
+          </View>
+          <Text
+            style={[styles.cellEquipped, !equippedName && styles.cellEquippedEmpty]}
+            numberOfLines={1}
+          >
+            {equippedName ?? 'Tap to browse'}
+          </Text>
+        </View>
+        <Text style={styles.cellChevron}>{'›'}</Text>
         {hasNew && (
-          // Tiny accent pill in the top-right corner — surfaces "you
-          // have not equipped anything in this category yet." Helps the
-          // player discover content they own but haven't tried.
           <View style={styles.newBadge}>
             <Text style={styles.newBadgeText}>NEW</Text>
           </View>
@@ -448,285 +933,488 @@ function CategoryCard({
   );
 }
 
-// Hero CHARACTER card — full-width, painted icon left, copy stack right
-// + chevron. The screen's primary CTA so it owns visual weight that the
-// 8 grid cards below collectively share.
-function HeroCharacterCard({
-  cat, onPress,
-}: {
-  cat: CategoryMeta; onPress: () => void;
+// Specialized cell for the SHARDS shortcut — fills the 8th grid slot
+// (the cosmetic categories only have 7 entries since Frames doesn't
+// have a registry yet, leaving an awkward empty cell). Routes to the
+// Shard Shop screen and shows the player's total shards as the
+// "equipped" line.
+function ShardsCell({ shardsTotal, shardReady, onPress }: {
+  shardsTotal: number;
+  shardReady: number;
+  onPress: () => void;
 }) {
+  const accent = '#c997e7';
   return (
     <PressScale
       onPress={onPress}
-      scaleTo={0.97}
+      scaleTo={0.96}
       accessibilityRole="button"
-      accessibilityLabel="Open character creator"
-      accessibilityHint="Edit body, face, hair, outfit, and color"
+      accessibilityLabel={`Shard shop, ${shardsTotal} total shards, ${shardReady} unlockable`}
     >
-      <LinearGradient
-        colors={['rgba(255,140,0,0.22)', 'rgba(255,80,0,0.08)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.heroCard}
-      >
-        <View style={styles.heroIconWrap}>
-          <Image source={cat.icon} style={styles.heroIcon} resizeMode="contain" accessibilityIgnoresInvertColors />
+      <View style={[styles.cell, { borderColor: `${accent}55` }]}>
+        <View style={[styles.cellAccent, { backgroundColor: accent }]} />
+        <View style={[styles.cellIcon, styles.shardsIconWrap]}>
+          <Text style={styles.shardsIconGlyph}>{'\u{2727}'}</Text>
         </View>
-        <View style={styles.heroTextWrap}>
-          <Text style={styles.heroTitle}>EDIT CHARACTER</Text>
-          <Text style={styles.heroSub}>Body · Face · Hair · Outfit · Color</Text>
+        <View style={styles.cellTextStack}>
+          <View style={styles.cellLabelRow}>
+            <Text style={styles.cellLabel} numberOfLines={1}>SHARDS</Text>
+            <Text style={[styles.cellCountInline, { color: accent }]}>{shardsTotal}</Text>
+          </View>
+          <Text style={styles.cellEquipped} numberOfLines={1}>
+            {shardReady > 0 ? `${shardReady} unlockable` : 'Earned from dupes'}
+          </Text>
         </View>
-        <Text style={styles.heroChevron}>{'›'}</Text>
-      </LinearGradient>
+        <Text style={styles.cellChevron}>{'›'}</Text>
+      </View>
     </PressScale>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  scrollWrap: {
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    paddingBottom: 20,
+  },
 
-  // Title row — primary "CUSTOMIZE" + secondary "YOUR LOCKER" pill so
-  // the screen identity reads at a glance instead of a single bare word.
-  titleRow: {
+  // ── Hero card ──────────────────────────────────────────────────
+  // Single rounded container that holds the identity banner + character
+  // stage + equipped row. The screen reads as ONE block at the top
+  // (hero) and one block below (action band + loadout grid) instead of
+  // 7 stacked panels. Strong amber border + glassy fill + soft drop
+  // shadow + inner radial give the card real "framed display" weight.
+  heroCard: {
+    position: 'relative',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.45)',
+    backgroundColor: 'rgba(10,14,32,0.55)',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
+    marginBottom: 10,
+    overflow: 'hidden',
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+
+  // ── Identity banner ─────────────────────────────────────────────
+  // Player name + computed title + level + collection % chip on a
+  // single tight row. Replaces the redundant "CUSTOMIZE / YOUR LOCKER"
+  // big-title header from v1 — the bottom tab already says Customize.
+  identityRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 4,
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
     marginBottom: 2,
   },
-  title: {
+  // Tier-tinted dot precedes the name. Color comes from the player's
+  // computed title (Rookie/Veteran/Champion/Legend/etc.) so the same
+  // signal that's on Profile/Home reads here too.
+  titleDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    shadowColor: 'rgba(0,0,0,0.6)',
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+  },
+  identityName: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 24,
+    fontSize: 13,
     color: '#ffffff',
-    letterSpacing: 2.4,
+    letterSpacing: 1.2,
+    maxWidth: 110,
   },
-  titleSub: {
+  identityTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    letterSpacing: 1.2,
+  },
+  identityLvl: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
     fontSize: 9,
-    color: 'rgba(255,180,90,0.85)',
-    letterSpacing: 1.6,
-    paddingTop: 2,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.2,
+  },
+  collectionPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.4)',
+    backgroundColor: 'rgba(255,140,0,0.10)',
+  },
+  collectionPillText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 10,
+    color: '#ffb347',
+    letterSpacing: 0.8,
   },
 
-  // Character stage with layered backdrop:
-  //   1. charGlow — large diffuse aura behind the silhouette
-  //   2. charFloorDisc — soft warm gradient under the feet
-  //   3. Character3DPortrait — the actual rendered hero
+  // ── Character stage ────────────────────────────────────────────
+  // Slimmer than v1 (260 vs 320) so the loadout grid fits without
+  // scroll on a 390x844 phone. Spotlight aura + floor disc unchanged
+  // — those are doing the heavy "presented on stage" work.
   charStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 300,
-    marginBottom: 2,
+    height: 260,
     position: 'relative',
   },
-  // First-visit hint that the character is tappable. Hides after the
-  // first tap (tracked by hasTappedChar). Positioned at the bottom of
-  // the stage so it sits between the character's feet and the chip
-  // below — reads as "tap me" without overlapping the silhouette.
+  charStageInner: {
+    width: 260,
+    height: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Floating EDIT pill in the top-right corner of the stage. Replaces
+  // the v1 full-width EDIT CHARACTER hero card that ate ~80px of
+  // vertical space. Glassmorphic outline so it reads as "secondary
+  // affordance on the character" not "competing CTA."
+  editPill: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 5,
+  },
+  editPillInner: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,180,90,0.5)',
+    backgroundColor: 'rgba(10,14,32,0.7)',
+  },
+  editPillText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 10,
+    color: '#ffb347',
+    letterSpacing: 1.2,
+  },
   charTapHint: {
     position: 'absolute',
-    bottom: 8,
+    bottom: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
-    backgroundColor: 'rgba(10,14,32,0.7)',
+    backgroundColor: 'rgba(10,14,32,0.6)',
     borderWidth: 1,
-    borderColor: 'rgba(255,180,90,0.35)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   charTapHintText: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 9,
-    color: 'rgba(255,180,90,0.85)',
-    letterSpacing: 1.4,
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 1.2,
   },
-  charStageInner: {
-    width: 320,
-    height: 320,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // ── Sparkle ────────────────────────────────────────────────────
+  // Each particle in the SparkleField — tiny circle with shadow glow
+  // (color set per-particle). Position is animated at render time.
+  sparkle: {
+    position: 'absolute',
+    shadowOpacity: 0.7,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
   },
-  // Soft warm halo behind the character — diffuse, no hard edge. Reads
-  // as "warm light from above" rather than a circle on stage. We layer
-  // a tighter inner disc on top to add depth.
+
+  // Soft warm halo behind the character — diffuse, no hard edge.
   charGlow: {
     position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: 'rgba(255,140,0,0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255,140,0,0.10)',
   },
-  // Floor shadow — squashed ellipse under the feet. Lower opacity than
-  // before so it doesn't compete with the character silhouette as the
-  // dominant orange element on screen.
+  // Floor shadow — squashed ellipse under the feet.
   charFloorDisc: {
     position: 'absolute',
-    bottom: 38,
-    width: 200,
-    height: 22,
-    borderRadius: 100,
+    bottom: 30,
+    width: 180,
+    height: 18,
+    borderRadius: 90,
     transform: [{ scaleY: 0.5 }],
     opacity: 0.6,
   },
 
-  // Equipped summary chip — quick "what's on me right now" + tap-to-edit.
-  // Sits between character stage and category grid as a connective tissue
-  // pill (no border-shouting, just a subtle warm-amber outline).
-  equippedChip: {
+  // ── Equipped row ────────────────────────────────────────────────
+  // Three rarity-tinted dots showing currently equipped board / pieces
+  // / pet. Replaces the v1 emoji+text chip. Each dot is bigger, so the
+  // row reads as "your loadout swatches" not "an info string."
+  equippedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
-    flexWrap: 'nowrap',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
+    justifyContent: 'space-around',
+    paddingHorizontal: 4,
+    paddingTop: 6,
+    gap: 8,
+  },
+  // Outer PressScale wrapper for the equipped pill — flex:1 so the
+  // inner View gets the same width treatment as the previous (non-
+  // pressable) layout. Without flex:1 here the dots collapse to
+  // content width and the row stops being a 3-up grid.
+  eqDotPressWrap: { flex: 1 },
+  eqDot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,180,90,0.4)',
-    backgroundColor: 'rgba(10,14,32,0.55)',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    maxWidth: 360,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
-  // Per-slot indicator (board / pieces / pet). Sits to the LEFT of
-  // each equipped name so the chip is self-documenting at a glance.
-  equippedChipSlotIcon: {
-    fontSize: 11,
-    marginRight: 1,
+  eqDotSwatch: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    shadowColor: 'rgba(0,0,0,0.6)',
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
   },
-  // Subtle dot separator between (slot + value) groups. Lower opacity
-  // than the values so the eye reads "icon + name" as one unit.
-  equippedChipDot: {
+  eqDotText: { flex: 1, minWidth: 0 },
+  eqDotLabel: {
     fontFamily: fonts.body,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
-    marginHorizontal: 2,
+    fontWeight: weight.bold,
+    fontSize: 7,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.2,
   },
-  equippedChipText: {
+  eqDotName: {
     fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.85)',
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: '#ffffff',
     letterSpacing: 0.4,
   },
 
-  gridWrap: {
-    paddingHorizontal: 12,
-    paddingBottom: 16,
-  },
-
-  // Hero CHARACTER card — full-width, painted icon left, label stack
-  // right, chevron tail. Owns the screen's primary action visual weight.
-  heroCard: {
+  // ── Action band ────────────────────────────────────────────────
+  // Single-row primary CTA. OPEN BOXES is full-width unless the player
+  // has shards (then SHARDS gets a sliver). Replaces the v1 stat strip
+  // + progress bar + 2-button row sandwich (~140px → 56px).
+  actionBand: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 16,
+    gap: 8,
+    marginBottom: 12,
+  },
+  // Shell wraps the gradient fill so we can layer a subtle amber outer
+  // glow ring (border) without burning shadows on the gradient itself.
+  openBoxesShell: {
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,180,90,0.6)',
-    marginBottom: 10,
+    borderColor: 'rgba(255,210,140,0.7)',
+    overflow: 'hidden',
     shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 8,
   },
-  heroIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+  openBoxesCta: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
-    marginRight: 12,
+    gap: 10,
+    position: 'relative',
   },
-  heroIcon: {
-    width: 46,
-    height: 46,
+  // Top inner highlight — thin bright rim that sells the embossed-metal
+  // button feel. Positioned at the top of the gradient so it reads as
+  // light catching the upper edge.
+  openBoxesHighlight: {
+    position: 'absolute',
+    top: 1,
+    left: 6,
+    right: 6,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    borderRadius: 1,
   },
-  heroTextWrap: {
-    flex: 1,
-  },
-  heroTitle: {
+  openBoxesCtaText: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 15,
+    fontSize: 14,
     color: '#ffffff',
-    letterSpacing: 1.4,
+    letterSpacing: 1.6,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  heroSub: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 0.4,
-    marginTop: 2,
+  pulsingBadgeWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  heroChevron: {
-    fontFamily: fonts.body,
+  // Expanding ring behind the badge — fades from solid white to nothing
+  // every 1.4s in a slow ripple. Reads as "active, waiting for tap."
+  pulseRing: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.85)',
+  },
+  openBoxesBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    minWidth: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  openBoxesBadgeText: {
+    fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 26,
+    fontSize: 12,
     color: '#ffffff',
-    marginLeft: 6,
-    marginRight: 4,
-    lineHeight: 26,
+    letterSpacing: 0.6,
+  },
+  shardCta: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(155,89,182,0.55)',
+  },
+  // Web fallback — BlurView only renders frosted glass on native.
+  // On web we use a translucent purple tint so the SHARDS button still
+  // reads as a sibling style to OPEN BOXES (frosted vs glossy).
+  shardCtaWebFallback: {
+    backgroundColor: 'rgba(155,89,182,0.20)',
+  },
+  shardCtaText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#c997e7',
+    letterSpacing: 1.2,
   },
 
+  // ── Loadout grid ────────────────────────────────────────────────
+  // 2-col 4-row grid of cells. Each cell is a horizontal loadout slot —
+  // painted icon (left) + category label + currently-equipped item name
+  // + count chip + chevron (right). Wide enough to read item names like
+  // "Modern Civilians 01" without truncation.
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 8,
+    rowGap: 8,
   },
-
-  // Category cards (8 in a 4-col layout). Smaller than the previous 3-col
-  // layout to make room for the hero CHARACTER card above. Width tuned
-  // so 4 fit per row on a 390px-wide phone with 12px outer padding +
-  // 8px gaps.
-  card: {
-    width: 80,
-    height: 92,
+  cellOuter: {
+    width: '48.5%',
+  },
+  cell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 64,
     borderRadius: 12,
-    backgroundColor: 'rgba(10,14,32,0.6)',
+    backgroundColor: 'rgba(10,14,32,0.7)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 8,
+    paddingRight: 8,
+    paddingLeft: 10, // 4px stripe + 6px breath
+    gap: 6,
+    overflow: 'hidden',
+    shadowColor: 'rgba(0,0,0,0.5)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  // Vertical accent stripe along the left edge of each cell, tinted
+  // to the category's signature color. Adds visual identity per slot
+  // and ties cells back to category icons (which use the same hue).
+  cellAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  // Specialized shards icon — purple radiant sparkle glyph in lieu of
+  // a painted asset (one will replace this in a polish pass via fal.ai).
+  shardsIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 8,
-    shadowColor: 'rgba(0,0,0,0.6)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
+    backgroundColor: 'rgba(155,89,182,0.18)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(155,89,182,0.5)',
   },
-  cardIcon: {
-    width: 38,
-    height: 38,
-    marginBottom: 2,
+  shardsIconGlyph: {
+    fontSize: 22,
+    color: '#c997e7',
   },
-  cardLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
+  cellIcon: {
+    width: 36,
+    height: 36,
+  },
+  cellTextStack: {
+    flex: 1,
+    minWidth: 0,
+  },
+  cellLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  cellLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 11,
     color: '#ffffff',
-    letterSpacing: 0.7,
-    textAlign: 'center',
+    letterSpacing: 1.2,
   },
-  cardCount: {
+  cellCountInline: {
     fontFamily: fonts.body,
-    fontWeight: weight.bold,
+    fontWeight: weight.black,
     fontSize: 9,
-    color: colors.orange,
+    color: '#ffb347',
+    letterSpacing: 0.4,
+  },
+  cellEquipped: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 0.2,
     marginTop: 2,
+  },
+  cellEquippedEmpty: {
+    fontStyle: 'italic',
+    color: 'rgba(255,255,255,0.35)',
+  },
+  cellChevron: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.4)',
+    marginLeft: 2,
+    marginRight: 2,
   },
   newBadge: {
     position: 'absolute',

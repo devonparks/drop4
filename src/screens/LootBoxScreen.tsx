@@ -7,7 +7,15 @@ import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
-import { useLootBoxStore, LOOT_BOXES, LootBoxItem, LootBox } from '../stores/lootBoxStore';
+import {
+  useLootBoxStore,
+  LOOT_BOXES,
+  LootBoxItem,
+  LootBox,
+  OpenBoxResult,
+  TIER_RARITY_WEIGHTS,
+  featuredItemsForWeek,
+} from '../stores/lootBoxStore';
 import { LootChest, LootChestTier } from '../components/ui/LootChest';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
@@ -65,7 +73,23 @@ const TIER_STYLES: Record<string, {
     tagColor: '#3498db',
     tagBg: 'rgba(52,152,219,0.2)',
   },
+  // Featured Box uses gold-with-amber styling. The actual chest art falls
+  // back to gold below since LootChest doesn't render featured natively.
+  featured: {
+    gradient: ['rgba(241,196,15,0.32)', 'rgba(241,196,15,0.06)'],
+    border: 'rgba(241,196,15,0.7)',
+    glow: 'rgba(241,196,15,0.5)',
+    icon: '⭐',
+    tagColor: '#f1c40f',
+    tagBg: 'rgba(241,196,15,0.25)',
+  },
 };
+
+/** Map a logical box tier (which now includes 'featured') down to a tier
+ *  the LootChest component can render. Featured shares gold's chest art. */
+function chestTierFor(tier: LootBox['tier']): LootChestTier {
+  return tier === 'featured' ? 'gold' : tier;
+}
 
 // ── Full-screen opening experience ─────────────────────────────
 function BoxOpeningScreen({ box, onReveal, onCancel }: {
@@ -179,8 +203,17 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 }
 
 // ── Item reveal screen ─────────────────────────────────────────
-function ItemRevealScreen({ item, onContinue }: { item: LootBoxItem; onContinue: () => void }) {
+//
+// Now consumes the full OpenBoxResult so we can surface DUPE / PITY
+// state on the card. Dupes don't feel like a loss anymore — the player
+// gets shards + a coin refund and the screen makes that visible.
+function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onContinue: () => void }) {
+  const { item, isDupe, shardsAwarded, coinRefund, wasPityEpic, wasPityLegendary } = result;
   const rarityColor = RARITY_COLORS[item.rarity];
+  // Single-line "category badge" replaces the old emoji icon. With 245+
+  // possible drops, a typed category label reads more clearly than a
+  // generic emoji per item.
+  const categoryLabel = item.type.toUpperCase();
 
   return (
     <ScreenBackground>
@@ -204,14 +237,43 @@ function ItemRevealScreen({ item, onContinue }: { item: LootBoxItem; onContinue:
             style={st.revealGlow}
           />
 
-          {/* Rarity banner */}
-          <View style={[st.revealRarityBanner, { backgroundColor: `${rarityColor}30`, borderColor: `${rarityColor}50` }]}>
-            <Text style={[st.revealRarityText, { color: rarityColor }]}>{item.rarity.toUpperCase()}</Text>
-          </View>
+          {/* Top banner: PITY / DUPE / NEW status takes precedence over
+              the bare rarity label so the player understands the roll
+              context at a glance. */}
+          {(wasPityLegendary || wasPityEpic) ? (
+            <View style={[st.revealRarityBanner, { backgroundColor: '#f1c40f30', borderColor: '#f1c40f80' }]}>
+              <Text style={[st.revealRarityText, { color: '#f1c40f' }]}>
+                {wasPityLegendary ? 'PITY · LEGENDARY' : 'PITY · EPIC'}
+              </Text>
+            </View>
+          ) : isDupe ? (
+            <View style={[st.revealRarityBanner, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}>
+              <Text style={[st.revealRarityText, { color: 'rgba(255,255,255,0.85)' }]}>DUPLICATE</Text>
+            </View>
+          ) : (
+            <View style={[st.revealRarityBanner, { backgroundColor: `${rarityColor}30`, borderColor: `${rarityColor}50` }]}>
+              <Text style={[st.revealRarityText, { color: rarityColor }]}>{item.rarity.toUpperCase()}</Text>
+            </View>
+          )}
 
-          <Text style={st.revealIcon}>{item.icon}</Text>
+          {/* Rarity-tinted category chip stands in for the old emoji icon. */}
+          <View style={[st.revealCategoryChip, { borderColor: rarityColor, backgroundColor: `${rarityColor}15` }]}>
+            <Text style={[st.revealCategoryChipText, { color: rarityColor }]}>{categoryLabel}</Text>
+          </View>
           <Text style={[st.revealName, { color: rarityColor }]}>{item.name}</Text>
-          <Text style={st.revealType}>{item.type}</Text>
+
+          {/* Dupe payout strip — shows what the player got instead of
+              the duplicate item. Hidden when the item was new. */}
+          {isDupe && (shardsAwarded > 0 || coinRefund > 0) && (
+            <View style={st.dupePayout}>
+              {shardsAwarded > 0 && (
+                <Text style={st.dupePayoutLine}>{`+${shardsAwarded} ${item.rarity.toUpperCase()} SHARDS`}</Text>
+              )}
+              {coinRefund > 0 && (
+                <Text style={st.dupePayoutLine}>{`+${coinRefund} COINS REFUND`}</Text>
+              )}
+            </View>
+          )}
 
           {/* Shine line */}
           <View style={st.shineLine} />
@@ -245,9 +307,11 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
           </View>
 
           <View style={st.boxCardRow}>
-            {/* Rendered chest art (per-tier composition, no image assets) */}
+            {/* Rendered chest art (per-tier composition, no image assets).
+                Featured falls back to the gold chest since it's a logical
+                tier without its own art (handled by chestTierFor). */}
             <View style={[st.boxIconArea, { borderColor: tier.border }]}>
-              <LootChest tier={box.tier as LootChestTier} size={60} />
+              <LootChest tier={chestTierFor(box.tier)} size={60} />
             </View>
 
             {/* Info */}
@@ -312,11 +376,15 @@ function BoxCard({ box, count, isOpening, onOpen, onBuy, playerCoins, index }: {
 export function LootBoxScreen() {
   const navigation = useNavigation();
   const { openBox, getBoxCount, addBox } = useLootBoxStore();
+  const shards = useLootBoxStore((s) => s.shards);
+  const lifetimeOpens = useLootBoxStore((s) => s.lifetimeOpens);
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
   const spendCoins = useShopStore(s => s.spendCoins);
-  const [revealedItem, setRevealedItem] = useState<LootBoxItem | null>(null);
+  // Reveal state holds the FULL OpenBoxResult so the reveal screen can
+  // render dupe + pity context, not just the bare item.
+  const [revealedResult, setRevealedResult] = useState<OpenBoxResult | null>(null);
   const [isOpening, setIsOpening] = useState(false);
   const [openingBox, setOpeningBox] = useState<LootBox | null>(null);
 
@@ -346,10 +414,11 @@ export function LootBoxScreen() {
     setIsOpening(true);
 
     // openBox() already grants rewards (coins, gems, items) inside lootBoxStore
-    // so we only need to get the item back for the reveal UI — no double-granting
-    const item = openBox(openingBox.id);
-    if (item) {
-      setRevealedItem(item);
+    // and now also handles dupes by giving shards + coin refund. We feed the
+    // whole OpenBoxResult to the reveal screen so it can render context.
+    const result = openBox(openingBox.id);
+    if (result) {
+      setRevealedResult(result);
       haptics.win();
       playSound('win');
     }
@@ -369,8 +438,8 @@ export function LootBoxScreen() {
   }
 
   // Item reveal screen
-  if (revealedItem) {
-    return <ItemRevealScreen item={revealedItem} onContinue={() => setRevealedItem(null)} />;
+  if (revealedResult) {
+    return <ItemRevealScreen result={revealedResult} onContinue={() => setRevealedResult(null)} />;
   }
 
   return (
@@ -386,48 +455,174 @@ export function LootBoxScreen() {
         </StaggeredEntry>
 
         <ScrollView contentContainerStyle={st.boxList} showsVerticalScrollIndicator={false}>
-          {LOOT_BOXES.map((box, index) => {
-            const count = getBoxCount(box.id);
-            return (
-              <BoxCard
-                key={box.id}
-                box={box}
-                count={count}
-                isOpening={isOpening}
-                onOpen={() => handleStartOpen(box)}
-                onBuy={() => handleBuyBox(box)}
-                playerCoins={coins}
-                index={index}
-              />
-            );
-          })}
-
-          {/* Drop rates transparency */}
-          <StaggeredEntry index={1} delay={60}>
-            <View style={st.ratesSection}>
-              <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']} style={st.ratesGradient}>
-                <Text style={st.ratesTitle} accessibilityRole="header">DROP RATES</Text>
-                <View style={st.ratesGrid}>
-                  {[
-                    { label: 'Common', pct: '60%', color: RARITY_COLORS.common },
-                    { label: 'Rare', pct: '25%', color: RARITY_COLORS.rare },
-                    { label: 'Epic', pct: '10%', color: RARITY_COLORS.epic },
-                    { label: 'Legendary', pct: '5%', color: RARITY_COLORS.legendary },
-                  ].map((rate, i) => (
-                    <View key={i} style={st.rateRow}>
-                      <View style={[st.rateDot, { backgroundColor: rate.color, shadowColor: rate.color }]} />
-                      <Text style={[st.rateLabel, { color: rate.color }]}>{rate.label}</Text>
-                      <Text style={st.ratePct}>{rate.pct}</Text>
-                    </View>
-                  ))}
-                </View>
-                <Text style={st.ratesNote}>Better boxes have higher epic & legendary chances</Text>
-              </LinearGradient>
+          {/* Shard balance strip — earned from dupes, spent in Shard Shop. */}
+          <StaggeredEntry index={0} delay={40}>
+            <View style={st.shardStrip} accessibilityRole="text" accessibilityLabel="Shard balance">
+              {(['common', 'rare', 'epic', 'legendary'] as const).map((r) => {
+                const c = RARITY_COLORS[r];
+                return (
+                  <View key={r} style={[st.shardChip, { borderColor: `${c}55` }]}>
+                    <Text style={[st.shardChipValue, { color: c }]}>{shards[r]}</Text>
+                    <Text style={st.shardChipLabel}>{r.toUpperCase()}</Text>
+                  </View>
+                );
+              })}
             </View>
           </StaggeredEntry>
+
+          {/* Lifetime opens stat — small flex */}
+          {lifetimeOpens > 0 && (
+            <Text style={st.lifetimeText}>
+              {lifetimeOpens.toLocaleString()} BOXES OPENED ALL-TIME
+            </Text>
+          )}
+
+          {/* Boxes grouped: Tiered / Themed / Featured. Each section
+              gets a header so the player can see at a glance what
+              kind of box they're picking. */}
+          {(() => {
+            const tiered = LOOT_BOXES.filter((b) => !b.themedCategory && b.tier !== 'featured');
+            const themed = LOOT_BOXES.filter((b) => b.themedCategory);
+            const featured = LOOT_BOXES.filter((b) => b.tier === 'featured');
+            let runningIndex = 1;
+            const renderSection = (title: string, blurb: string, list: LootBox[]) =>
+              list.length === 0 ? null : (
+                <View key={title} style={st.section}>
+                  <View style={st.sectionHeader}>
+                    <Text style={st.sectionTitle} accessibilityRole="header">{title}</Text>
+                    <Text style={st.sectionBlurb}>{blurb}</Text>
+                  </View>
+                  {list.map((box) => {
+                    const count = getBoxCount(box.id);
+                    const idx = runningIndex++;
+                    return (
+                      <BoxCard
+                        key={box.id}
+                        box={box}
+                        count={count}
+                        isOpening={isOpening}
+                        onOpen={() => handleStartOpen(box)}
+                        onBuy={() => handleBuyBox(box)}
+                        playerCoins={coins}
+                        index={idx}
+                      />
+                    );
+                  })}
+                </View>
+              );
+            return (
+              <>
+                {renderSection('TIERED', 'Generic pool, better odds at higher tiers', tiered)}
+                {renderSection('THEMED', 'Bias toward a specific category', themed)}
+                {renderSection('FEATURED', 'Hand-picked rotation, refreshed weekly', featured)}
+                {/* Mini-preview strip of this week's 10 picks. Lives
+                    only when the Featured Box rendered above so the
+                    player understands what they're shopping. */}
+                {featured.length > 0 && <FeaturedPreview />}
+              </>
+            );
+          })()}
+
+          {/* Drop rates transparency — per-tier switcher reads the real
+              TIER_RARITY_WEIGHTS so the player can see exactly how each
+              box is biased. Replaces the prior static 60/25/10/5 panel
+              which was a single average across all boxes. */}
+          <DropRatesPanel />
         </ScrollView>
       </View>
     </ScreenBackground>
+  );
+}
+
+// ── Per-tier drop-rates panel ──────────────────────────────────
+//
+// Tier switcher (Bronze/Silver/Gold/Diamond/Featured) + the four
+// rarity bars for the active tier. Reads from TIER_RARITY_WEIGHTS so
+// any future tuning of the table flows here without code changes.
+function DropRatesPanel() {
+  const tiers: LootBox['tier'][] = ['bronze', 'silver', 'gold', 'diamond', 'featured'];
+  const [tier, setTier] = useState<LootBox['tier']>('bronze');
+  const weights = TIER_RARITY_WEIGHTS[tier];
+  const total = weights.common + weights.rare + weights.epic + weights.legendary;
+  const rows = [
+    { key: 'common',    label: 'Common',    color: RARITY_COLORS.common,    w: weights.common },
+    { key: 'rare',      label: 'Rare',      color: RARITY_COLORS.rare,      w: weights.rare },
+    { key: 'epic',      label: 'Epic',      color: RARITY_COLORS.epic,      w: weights.epic },
+    { key: 'legendary', label: 'Legendary', color: RARITY_COLORS.legendary, w: weights.legendary },
+  ];
+  return (
+    <StaggeredEntry index={1} delay={60}>
+      <View style={st.ratesSection}>
+        <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']} style={st.ratesGradient}>
+          <Text style={st.ratesTitle} accessibilityRole="header">DROP RATES</Text>
+
+          {/* Tier switcher */}
+          <View style={st.tierSwitcher}>
+            {tiers.map((t) => {
+              const active = t === tier;
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => setTier(t)}
+                  style={[st.tierTab, active && st.tierTabActive]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`${t} tier drop rates`}
+                >
+                  <Text style={[st.tierTabText, active && st.tierTabTextActive]}>
+                    {t.toUpperCase()}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Rate bars */}
+          <View style={st.ratesGrid}>
+            {rows.map((rate) => {
+              const pct = total > 0 ? Math.round((rate.w / total) * 100) : 0;
+              return (
+                <View key={rate.key} style={st.rateRow}>
+                  <View style={[st.rateDot, { backgroundColor: rate.color, shadowColor: rate.color }]} />
+                  <Text style={[st.rateLabel, { color: rate.color }]}>{rate.label}</Text>
+                  <Text style={st.ratePct}>{pct}%</Text>
+                </View>
+              );
+            })}
+          </View>
+          <Text style={st.ratesNote}>Diamond & Featured tilt hardest toward Epic & Legendary.</Text>
+        </LinearGradient>
+      </View>
+    </StaggeredEntry>
+  );
+}
+
+// ── Featured rotation preview strip ─────────────────────────────
+//
+// Below the Featured Box card we render a horizontal scroller of the
+// 10 hand-picked items in this week's rotation. Each tile is just a
+// rarity-tinted disc + name — small, readable, no images required.
+function FeaturedPreview() {
+  const items = featuredItemsForWeek();
+  return (
+    <View style={st.featuredPreviewWrap}>
+      <Text style={st.featuredPreviewTitle}>THIS WEEK&rsquo;S PICKS</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={st.featuredPreviewRow}
+      >
+        {items.map((it) => {
+          const c = RARITY_COLORS[it.rarity];
+          return (
+            <View key={it.id} style={[st.featuredTile, { borderColor: `${c}aa` }]}>
+              <View style={[st.featuredTileDisc, { backgroundColor: `${c}55` }]} />
+              <Text style={st.featuredTileName} numberOfLines={2}>{it.name}</Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -599,15 +794,173 @@ const st = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12,
     letterSpacing: 2,
   },
-  revealIcon: { fontSize: 72, marginBottom: 12 },
-  revealName: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 24 },
-  revealType: {
-    fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 12,
-    color: colors.textSecondary, marginTop: 4, textTransform: 'uppercase',
+  // Category chip replaces the old emoji icon — with 245+ possible drop
+  // outcomes, a typed label reads more clearly than a generic glyph.
+  revealCategoryChip: {
+    paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 12, borderWidth: 1.5,
+    marginBottom: 16,
+  },
+  revealCategoryChipText: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
+    letterSpacing: 1.4,
+  },
+  revealName: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 24, textAlign: 'center' },
+  // Dupe-payout strip — visible only when isDupe, shows the shard +
+  // coin refund the player got instead of the duplicate item.
+  dupePayout: {
+    marginTop: 14,
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center', gap: 4,
+  },
+  dupePayoutLine: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12,
+    color: 'rgba(255,255,255,0.85)', letterSpacing: 1.2,
   },
   shineLine: {
     position: 'absolute', top: 0, left: -20, right: -20, height: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
     transform: [{ rotate: '-5deg' }],
+  },
+
+  // ── Shard balance strip ────────────────────────────────────────
+  shardStrip: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 4,
+    marginBottom: 6,
+  },
+  shardChip: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(10,14,32,0.55)',
+    alignItems: 'center',
+  },
+  shardChipValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 16,
+  },
+  shardChipLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.8,
+    marginTop: 1,
+  },
+
+  // ── Section headers ────────────────────────────────────────────
+  section: {
+    marginTop: 4,
+  },
+  sectionHeader: {
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 6,
+  },
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 1.6,
+  },
+  sectionBlurb: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.4,
+    marginTop: 2,
+  },
+
+  // Lifetime stat
+  lifetimeText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+    paddingVertical: 4,
+  },
+
+  // ── Tier switcher inside DROP RATES panel ─────────────────────
+  tierSwitcher: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginVertical: 8,
+  },
+  tierTab: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  tierTabActive: {
+    borderColor: 'rgba(255,180,90,0.85)',
+    backgroundColor: 'rgba(255,140,0,0.18)',
+  },
+  tierTabText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 1.0,
+  },
+  tierTabTextActive: { color: '#ffffff' },
+
+  // ── Featured rotation preview ────────────────────────────────
+  featuredPreviewWrap: {
+    marginTop: 4,
+    paddingHorizontal: 4,
+    paddingTop: 6,
+    paddingBottom: 8,
+  },
+  featuredPreviewTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 10,
+    color: 'rgba(241,196,15,0.85)',
+    letterSpacing: 1.4,
+    marginBottom: 6,
+  },
+  featuredPreviewRow: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  featuredTile: {
+    width: 76,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(10,14,32,0.55)',
+    alignItems: 'center',
+  },
+  featuredTileDisc: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginBottom: 4,
+  },
+  featuredTileName: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: '#ffffff',
+    textAlign: 'center',
+    letterSpacing: 0.4,
+    minHeight: 22,
+    lineHeight: 11,
   },
 });

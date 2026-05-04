@@ -22,6 +22,12 @@ import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CharacterCreatorScreen as AmgCharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
+// Customize-side cosmetic screens added in the 2026-05-03 pivot. Both
+// live as stack screens (vs slide-up sheets) so the player gets a
+// proper full-screen browse + filter UI for "lots of content."
+import { CategoryBrowserScreen } from '../screens/CategoryBrowserScreen';
+import { ShardShopScreen } from '../screens/ShardShopScreen';
+import type { BrowsableCategory } from '../screens/CategoryBrowserScreen';
 
 export type CareerRewardParams = {
   type: 'coins' | 'board' | 'pieces' | 'pet' | 'emote' | 'title';
@@ -99,6 +105,12 @@ export type RootStackParamList = {
   // across every AMG game. Character state persists to
   // characterStore.amgCharacter.
   AmgCreator: { initialTab?: 'body' | 'face' | 'hair' | 'outfit' | 'color' } | undefined;
+  // Customize-side cosmetic browser. Single screen handles 6 simple
+  // categories (boards / pieces / drop FX / win FX / frames / pets);
+  // outfits keep the OutfitsCatalog modal, emotes keep AnimationPicker.
+  CategoryBrowser: { category: BrowsableCategory };
+  // Spend dupe-earned shards to directly unlock specific items.
+  ShardShop: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -185,6 +197,16 @@ export function RootNavigator() {
         name="AmgCreator"
         component={AmgCharacterCreatorScreen}
         options={{ animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
+        name="CategoryBrowser"
+        component={CategoryBrowserScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="ShardShop"
+        component={ShardShopScreen}
+        options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen
         name="Game"

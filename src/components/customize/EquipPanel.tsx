@@ -38,9 +38,14 @@ import {
   PIECE_THEMES,
   DROP_EFFECTS,
   WIN_ANIMATIONS,
-  type ShopItem,
 } from '../../data/shopCatalog';
 import { PETS as PETS_3D } from '../../data/petRegistry';
+import { PremiumBoardThumbnail } from '../ui/PremiumBoardThumbnail';
+import {
+  PremiumPiece,
+  EffectPreviewCard,
+  EFFECT_PREVIEW_CONFIGS,
+} from './CosmeticPreviews';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 import { haptics } from '../../services/haptics';
@@ -99,6 +104,12 @@ interface ItemView {
   thumbnail?: string; // optional emoji/text fallback
   /** Painted PNG icon — when present, takes precedence over thumbnail. */
   iconImage?: ReturnType<typeof require>;
+  /** Painted preview kind — drives which preview component renders.
+   *  'board' → PremiumBoardThumbnail. 'pieces' → 2× PremiumPiece in
+   *  the p1/p2 colors. 'effect' → EffectPreviewCard with the per-id
+   *  config. 'pet' → painted PNG via iconImage. Falls back to a flat
+   *  color swatch when undefined. */
+  previewKind?: 'board' | 'pieces' | 'effect' | 'pet';
   isOwned: boolean;
   isEquipped: boolean;
 }
@@ -141,6 +152,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         name: b.name,
         rarity: b.rarity,
         preview: b.preview,
+        previewKind: 'board' as const,
         isOwned: ownedBoards.includes(b.id),
         isEquipped: equippedBoard === b.id,
       }));
@@ -151,6 +163,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         name: p.name,
         rarity: p.rarity,
         preview: p.preview,
+        previewKind: 'pieces' as const,
         isOwned: ownedPieces.includes(p.id),
         isEquipped: equippedPieces === p.id,
       }));
@@ -161,6 +174,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         name: e.name,
         rarity: e.rarity,
         preview: e.preview,
+        previewKind: 'effect' as const,
         isOwned: ownedDropEffects.includes(e.id),
         isEquipped: equippedDropEffect === e.id,
       }));
@@ -171,6 +185,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         name: w.name,
         rarity: w.rarity,
         preview: w.preview,
+        previewKind: 'effect' as const,
         isOwned: ownedWinAnimations.includes(w.id),
         isEquipped: equippedWinAnimation === w.id,
       }));
@@ -181,6 +196,7 @@ export function EquipPanel({ visible, category, onClose }: Props) {
         name: p.name,
         thumbnail: '🐾',
         iconImage: PET_ICONS[p.id],
+        previewKind: 'pet' as const,
         isOwned: ownedPetsList.includes(p.id as any),
         isEquipped: activePet === p.id,
       }));
@@ -350,9 +366,17 @@ export function EquipPanel({ visible, category, onClose }: Props) {
   );
 }
 
+// Card preview width target. EquipPanel cards are 31% wide, so on a
+// 390px-wide phone with horizontal padding 14 + 10px gaps each card is
+// roughly (390 - 28 - 20) / 3 ≈ 114px wide. The preview slot then sits
+// at ~98px after card padding 8. We pass a width hint to the painted
+// preview components so they render at the correct internal scale.
+const PREVIEW_WIDTH = 100;
+const PREVIEW_HEIGHT = 64;
+
 function ItemCard({ item, onPress }: { item: ItemView; onPress: () => void }) {
   const rarityColor = item.rarity ? RARITY_COLORS[item.rarity] ?? '#7f8c8d' : '#7f8c8d';
-  const previewColor =
+  const fallbackColor =
     item.preview?.boardColor ?? item.preview?.p1Color ?? '#1a3a5c';
 
   return (
@@ -366,21 +390,57 @@ function ItemCard({ item, onPress }: { item: ItemView; onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel={`${item.name}${item.isEquipped ? ', equipped' : item.isOwned ? '' : ', locked'}`}
     >
-      <View style={[styles.cardPreview, { backgroundColor: previewColor }]}>
-        {item.iconImage ? (
-          // Painted breed icon — sits over the rarity-tinted backdrop so
-          // the EquipPanel pet grid reads as "real cosmetics" instead of
-          // 🐾 placeholder strings.
-          <Image
-            source={item.iconImage}
-            style={styles.cardIconImg}
-            resizeMode="contain"
-            accessibilityIgnoresInvertColors
+      <View style={styles.cardPreview}>
+        {/* Painted previews per category. Mirrors the painted art the
+            old Shop showed for each cosmetic kind. Boards: layered
+            atmospheric scene + mini board. Pieces: 2× glossy plastic
+            discs in p1/p2 colors over a dark backdrop. Effects/Wins:
+            EffectPreviewCard with per-id config (gradient bg + accent
+            glow + center icon + drifting particles + accent line).
+            Pets: painted breed PNG over rarity-tinted backdrop. */}
+        {item.previewKind === 'board' ? (
+          <PremiumBoardThumbnail
+            themeId={item.id}
+            width={PREVIEW_WIDTH}
+            height={PREVIEW_HEIGHT}
           />
+        ) : item.previewKind === 'pieces' && item.preview?.p1Color && item.preview?.p2Color ? (
+          <View style={styles.piecePreviewBackdrop}>
+            <LinearGradient
+              colors={['#1a1a2e', '#0e0e1a', '#060610']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.piecePreviewRow}>
+              <PremiumPiece color={item.preview.p1Color} size={26} />
+              <PremiumPiece color={item.preview.p2Color} size={26} />
+            </View>
+          </View>
+        ) : item.previewKind === 'effect' && EFFECT_PREVIEW_CONFIGS[item.id] ? (
+          <EffectPreviewCard
+            config={EFFECT_PREVIEW_CONFIGS[item.id]}
+            width={PREVIEW_WIDTH}
+            height={PREVIEW_HEIGHT}
+          />
+        ) : item.previewKind === 'pet' && item.iconImage ? (
+          // Pet card: painted breed PNG over a soft rarity-tinted
+          // backdrop so each card reads as "real pet" not text string.
+          <View style={[styles.petPreviewBackdrop, { backgroundColor: `${rarityColor}22` }]}>
+            <Image
+              source={item.iconImage}
+              style={styles.cardIconImg}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          </View>
         ) : item.thumbnail ? (
-          <Text style={styles.cardEmoji}>{item.thumbnail}</Text>
+          <View style={[styles.fallbackBackdrop, { backgroundColor: fallbackColor }]}>
+            <Text style={styles.cardEmoji}>{item.thumbnail}</Text>
+          </View>
         ) : (
-          <View style={[styles.previewDot, { backgroundColor: item.preview?.p1Color ?? '#e63946' }]} />
+          // Final fallback: flat color swatch with a small accent dot.
+          <View style={[styles.fallbackBackdrop, { backgroundColor: fallbackColor }]}>
+            <View style={[styles.previewDot, { backgroundColor: item.preview?.p1Color ?? '#e63946' }]} />
+          </View>
         )}
       </View>
       <Text style={styles.cardName} numberOfLines={1}>
@@ -515,6 +575,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
+    overflow: 'hidden',
+  },
+  // Pieces: dark gradient backdrop with two glossy plastic discs side
+  // by side. Mirrors what the old Shop's piece cards showed.
+  piecePreviewBackdrop: {
+    width: '100%',
+    height: 64,
+    borderRadius: 6,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  piecePreviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  // Pet preview: rarity-tinted backdrop holds the painted breed PNG.
+  petPreviewBackdrop: {
+    width: '100%',
+    height: 64,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  // Fallback: flat color swatch when no painted preview applies.
+  fallbackBackdrop: {
+    width: '100%',
+    height: 64,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardEmoji: {
     fontSize: 28,

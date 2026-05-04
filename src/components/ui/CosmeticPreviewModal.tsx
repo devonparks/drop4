@@ -54,6 +54,11 @@ interface Props {
   onBuy: () => void;
   onEquip: () => void;
   onClose: () => void;
+  /** Post-pivot 2026-05-03 override: when set, the locked-state primary
+   *  CTA renders this label and is always enabled. Coin price/affordance
+   *  are ignored on the button. The modal still calls `onBuy` when
+   *  tapped — the shop wires that to box-routing or shard-spend logic. */
+  lockedActionLabel?: string;
 }
 
 // A sample board state for the preview — looks like a real mid-game
@@ -149,6 +154,7 @@ function InGameBoardPreview({ boardThemeId, pieceSkinId }: { boardThemeId: strin
 export function CosmeticPreviewModal({
   visible, item, category, isOwned, isEquipped, canAfford,
   onBuy, onEquip, onClose,
+  lockedActionLabel,
 }: Props) {
   if (!item) return null;
 
@@ -236,6 +242,18 @@ export function CosmeticPreviewModal({
               <View style={[s.earnOnlyBanner, { borderColor: `${rarityColor}40` }]}>
                 <Text style={[s.earnOnlyText, { color: rarityColor }]}>EARN ONLY</Text>
               </View>
+            ) : lockedActionLabel ? (
+              // Post-pivot: single primary CTA wired to box-routing or
+              // shard-spend. Always enabled while shown.
+              <PressScale
+                onPress={() => { haptics.win(); playSound('click'); onBuy(); }}
+                accessibilityLabel={lockedActionLabel}
+                accessibilityHint="Routes to loot boxes or spends shards to unlock"
+              >
+                <LinearGradient colors={['#ff8c00', '#cc5500']} style={s.actionBtn}>
+                  <Text style={s.actionBtnText}>{lockedActionLabel}</Text>
+                </LinearGradient>
+              </PressScale>
             ) : (
               <PressScale
                 onPress={() => { haptics.win(); playSound('purchase'); onBuy(); }}

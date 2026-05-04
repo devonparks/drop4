@@ -23,7 +23,7 @@ import { FilterChip } from '../components/ui/FilterChip';
 import { AnimatedRarityBg } from '../components/effects/AnimatedRarityBg';
 
 const EMOTE_IDS = new Set(EMOTES.map(e => e.id));
-import { useLootBoxStore, LOOT_BOXES } from '../stores/lootBoxStore';
+import { useLootBoxStore, LOOT_BOXES, SHARD_UNLOCK_COST, type LootBoxRarity } from '../stores/lootBoxStore';
 import { LootChest } from '../components/ui/LootChest';
 import { useChallengeStore } from '../stores/challengeStore';
 import { PETS, Pet, PET_RARITY_COLORS, PET_RARITY_LABELS } from '../data/pets';
@@ -671,23 +671,29 @@ export function ShopScreen() {
   const ownedEmotes = useShopStore(s2 => s2.ownedEmotes);
   const equippedPet = useShopStore(s2 => s2.equippedPet);
   const ownedPets = useShopStore(s2 => s2.ownedPets);
-  const purchaseItem = useShopStore(s2 => s2.purchaseItem);
+  // Pivot 2026-05-03: direct-purchase actions (purchaseItem,
+  // purchaseEmote, purchasePet, spendCoins) and inline part/outfit
+  // unlocks (unlockOutfit, unlockAmgPart, equipAmgPart) are no longer
+  // called from this screen — every locked-item path routes through
+  // runLockedAction → either spendShardsForItem (lootBoxStore) or
+  // navigation to LootBox. The store still exposes those actions
+  // because the loot-box grant path uses them.
   const equipItem = useShopStore(s2 => s2.equipItem);
   const setEquippedEmote = useShopStore(s2 => s2.setEquippedEmote);
   const removeEquippedEmote = useShopStore(s2 => s2.removeEquippedEmote);
-  const purchaseEmote = useShopStore(s2 => s2.purchaseEmote);
   const equipPet = useShopStore(s2 => s2.equipPet);
-  const purchasePet = useShopStore(s2 => s2.purchasePet);
-  const spendCoins = useShopStore(s2 => s2.spendCoins);
 
   // Outfits live in characterStore (separate from shopStore's board/piece owned set)
   const ownedOutfits = useCharacterStore(s => s.ownedOutfits);
   const equippedOutfitId = useCharacterStore(s => s.equippedOutfitId);
-  const unlockOutfit = useCharacterStore(s => s.unlockOutfit);
   const equipOutfitPack = useCharacterStore(s => s.equipOutfitPack);
-  const equipAmgPart = useCharacterStore(s => s.equipAmgPart);
   const unlockedSpecies = useCareerStore(s => s.unlockedSpecies);
   const ownedBoxes = useLootBoxStore(s => s.ownedBoxes);
+  // Shards + spend action — used so locked-item BUY actions can offer
+  // a shard-spend path when affordable instead of always routing to
+  // LootBox screen (post-pivot 2026-05-03).
+  const shards = useLootBoxStore(s => s.shards);
+  const spendShardsForItem = useLootBoxStore(s => s.spendShardsForItem);
   const lastShopCoinCollect = useShopStore(s2 => s2.lastShopCoinCollect);
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('clothes');
@@ -713,7 +719,6 @@ export function ShopScreen() {
   // rendered via AmgPartCard. Species chip filters the grid.
   const navigation = useNavigation<any>();
   const ownedAmgParts = useCharacterStore(s => s.ownedAmgParts);
-  const unlockAmgPart = useCharacterStore(s => s.unlockAmgPart);
   const isAmgPartOwned = useCharacterStore(s => s.isAmgPartOwned);
   const amgPartUnlockedAt = useCharacterStore(s => s.amgPartUnlockedAt);
   const [amgManifest, setAmgManifest] = useState<AmgManifestPart[] | null>(null);
@@ -772,6 +777,65 @@ export function ShopScreen() {
     useChallengeStore.getState().updateProgress('shop_visit', 1);
   }, []);
 
+  // ── Locked-item routing (post-pivot 2026-05-03) ─────────────────────
+  //
+  // After the loot-box pivot, no cosmetic is buyable directly. When a
+  // locked item is tapped from the shop's preview modals, we either:
+  //   • offer a shard-spend if the player has enough shards of the
+  //     matching rarity (cheap, deterministic unlock), OR
+  //   • route to the LootBox screen so they can open boxes for it.
+  //
+  // The two helpers below centralize that decision so every category
+  // (boards, pieces, FX, frames, outfits, parts, pets, emotes) plugs
+  // into the same logic and shows the same "OPEN BOXES" / "USE N
+  // SHARDS" CTA copy on the preview modal.
+
+  /** Map a source-registry rarity (7-tier) onto the loot-box 4-tier
+   *  rarity used by the shard cost table. Mirrors the helper in
+   *  lootBoxStore so we don't drag a private export across files. */
+  function mapToLootRarity(rarity: ShopItem['rarity']): LootBoxRarity {
+    switch (rarity) {
+      case 'rare': return 'rare';
+      case 'epic': return 'epic';
+      case 'legendary':
+      case 'mythic': return 'legendary';
+      default: return 'common'; // common, uncommon, darkmatter (shouldn't drop)
+    }
+  }
+
+  /** Given an item id + its 4-tier rarity, return the locked-state
+   *  primary-CTA label. "USE N SHARDS" when affordable, else "OPEN
+   *  BOXES". `itemId` is used to query ownership-aware shard cost. */
+  function lockedActionLabelFor(rarity: LootBoxRarity): string {
+    const cost = SHARD_UNLOCK_COST[rarity];
+    return shards[rarity] >= cost
+      ? `USE ${cost} ${rarity.toUpperCase()} SHARDS`
+      : 'OPEN BOXES';
+  }
+
+  /** Run the locked-tap action: if the player has enough shards, spend
+   *  them via the loot-box store (which invokes the right grant
+   *  action). Otherwise navigate to LootBox. `onShardUnlockSuccess` is
+   *  called when the shard spend lands so the caller can equip the
+   *  newly-unlocked item in one beat. */
+  function runLockedAction(itemId: string, rarity: LootBoxRarity, onShardUnlockSuccess?: () => void) {
+    const cost = SHARD_UNLOCK_COST[rarity];
+    if (shards[rarity] >= cost) {
+      const ok = spendShardsForItem(itemId);
+      if (ok) {
+        haptics.win();
+        playSound('coin');
+        onShardUnlockSuccess?.();
+        return;
+      }
+      // Spend failed (already owned race or unknown id). Fall through
+      // to box routing so the player still gets a path forward.
+    }
+    haptics.tap();
+    playSound('click');
+    navigation.navigate('LootBox' as never);
+  }
+
   // Open cosmetic preview modal instead of buying directly
   const handleItemPress = (category: 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories', item: ShopItem) => {
     haptics.tap();
@@ -786,15 +850,15 @@ export function ShopScreen() {
       : previewCategory === 'dropEffects' ? 'dropEffect'
       : previewCategory === 'boardAccessories' ? 'boardAccessory'
       : 'winAnimation';
-    const success = purchaseItem(previewCategory as any, previewItem.id, previewItem.price);
-    if (success) {
-      haptics.win();
-      playSound('coin');
+    // Post-pivot: no direct purchase. Run the shared locked-action —
+    // shard-spend if affordable (auto-equips on success), else route
+    // to LootBox so the player can open boxes for this category.
+    const rarity = mapToLootRarity(previewItem.rarity);
+    runLockedAction(previewItem.id, rarity, () => {
       equipItem(equipKey, previewItem.id);
       setPreviewItem(null);
-    } else {
-      haptics.error(); playSound('error');
-    }
+    });
+    setPreviewItem(null);
   };
 
   const handlePreviewEquip = () => {
@@ -815,36 +879,32 @@ export function ShopScreen() {
     setOutfitPreview(item);
   };
 
-  // AMG part buy — runs after the player confirms the try-on preview.
-  // Spends coins, unlocks, auto-equips, and toasts. Lives at the top
-  // level (vs inside the clothes IIFE) so the AmgPartPreviewModal can
-  // call it directly when the player taps BUY.
-  const confirmPartPurchase = (partName: string) => {
-    const { price } = getPartPrice(partName);
-    if (coins < price) { haptics.error(); return; }
-    const ok = spendCoins(price);
-    if (!ok) { haptics.error(); return; }
-    haptics.win();
-    playSound('purchase');
-    unlockAmgPart(partName);
-    const entry = amgManifest?.find((p) => p.name === partName);
-    if (entry) {
-      equipAmgPart(entry.slot, partName);
-      setEquipToast({
-        label: `Bought + Equipped ${packMeta(packPrefixFromPartName(partName)).displayName} ${entry.slot}`,
-      });
-    }
+  // AMG part tap — post-pivot routes to LootBox screen. Individual AMG
+  // parts are not shard-unlockable in v1 (only outfit packs are, since
+  // a pack auto-unlocks all its parts). So when the player taps the
+  // CTA in AmgPartPreviewModal, we always navigate to boxes — the
+  // creator does the same. No coin debit, no inline unlock.
+  const confirmPartPurchase = (_partName: string) => {
+    haptics.tap();
+    playSound('click');
     setPartPreview(null);
+    navigation.navigate('LootBox' as never);
   };
 
   const handleOutfitBuy = () => {
     if (!outfitPreview) return;
-    if (outfitPreview.price > 0 && !spendCoins(outfitPreview.price)) return;
-    // Unlock first so the AMG parts land in ownedAmgParts before equip
-    // reads them; equipOutfitPack swaps in the body slots and updates
-    // equippedOutfitId in one set call.
-    unlockOutfit(outfitPreview.id);
-    equipOutfitPack(outfitPreview.id);
+    // Post-pivot: shard-spend if affordable (auto-equips), else route
+    // to LootBox. unlockOutfit + equipOutfitPack still grant + equip
+    // when shards land — they're called from the lootBoxStore grant
+    // path inside spendShardsForItem.
+    const rarity = mapToLootRarity(outfitPreview.rarity);
+    const itemId = outfitPreview.id;
+    runLockedAction(itemId, rarity, () => {
+      // After a shard unlock the outfit is already in ownedOutfits;
+      // make sure it's the equipped pack so the player sees the change.
+      equipOutfitPack(itemId);
+      setOutfitPreview(null);
+    });
     setOutfitPreview(null);
   };
 
@@ -879,36 +939,14 @@ export function ShopScreen() {
       return;
     }
 
-    // Buy flow with confirm — same UX as AMG parts + pets so the
-    // player never accidentally spends coins by tapping a shop card.
-    if (coins < item.price) {
-      haptics.error();
-      const shortBy = item.price - coins;
-      setConfirmDialog({
-        title: 'Not enough coins',
-        message: `This emote costs ${item.price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
-        confirmLabel: 'Got it',
-        onConfirm: () => {},
-        confirmOnly: true,
-      });
-      return;
-    }
-    const doBuy = () => {
-      const success = purchaseEmote(item.id, item.price);
-      if (success) {
-        haptics.win();
-        playSound('coin');
-        equipEmote(item.id);
-      } else {
-        haptics.error();
-        playSound('error');
-      }
-    };
-    setConfirmDialog({
-      title: 'Buy this emote?',
-      message: `Costs ${item.price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - item.price).toLocaleString()}.`,
-      confirmLabel: `Buy · ${item.price.toLocaleString()} 🪙`,
-      onConfirm: doBuy,
+    // Post-pivot: locked emote → shard-unlock if affordable, else
+    // route to LootBox. Direct coin purchase + the corresponding
+    // confirm dialog are gone.
+    const rarity = mapToLootRarity(item.rarity);
+    runLockedAction(item.id, rarity, () => {
+      // After a shard unlock the emote is in ownedEmotes; equip it
+      // into the wheel like the old buy path did.
+      equipEmote(item.id);
     });
   };
 
@@ -927,33 +965,16 @@ export function ShopScreen() {
       return;
     }
     if (pet.price <= 0) return;
-    // Insufficient coins guard — same UX as AMG parts: error + bail.
-    if (coins < pet.price) {
-      haptics.error();
-      const shortBy = pet.price - coins;
-      setConfirmDialog({
-        title: 'Not enough coins',
-        message: `${pet.name} costs ${pet.price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
-        confirmLabel: 'Got it',
-        onConfirm: () => {},
-        confirmOnly: true,
-      });
-      return;
-    }
-    // Confirm before spending. Pets cost 200-2000 coins; tapping a card
-    // shouldn't auto-debit the player. Web uses window.confirm because
-    // RN-Web's Alert.alert silently no-ops multi-button configs; native
-    // gets a proper Alert.
-    const doBuy = () => {
-      const success = purchasePet(pet.id, pet.price);
-      if (success) { haptics.win(); playSound('coin'); equipPet(pet.id); }
-      else { haptics.error(); playSound('error'); }
-    };
-    setConfirmDialog({
-      title: 'Buy this pet?',
-      message: `${pet.name} costs ${pet.price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - pet.price).toLocaleString()}.`,
-      confirmLabel: `Buy · ${pet.price.toLocaleString()} 🪙`,
-      onConfirm: doBuy,
+    // Post-pivot: locked pet → shard-unlock if affordable, else
+    // route to LootBox. Pet rarity comes from petRegistry meta.
+    const rarity: LootBoxRarity =
+      pet.rarity === 'rare' ? 'rare'
+      : pet.rarity === 'epic' ? 'epic'
+      : pet.rarity === 'legendary' ? 'legendary'
+      : 'common';
+    runLockedAction(pet.id, rarity, () => {
+      // After a shard unlock the pet is in ownedPets; equip it.
+      equipPet(pet.id);
     });
   };
 
@@ -1184,7 +1205,10 @@ export function ShopScreen() {
                   >
                     <View style={s.boxItem}>
                       <View style={s.boxItemChestSlot}>
-                        <LootChest tier={box.tier} size={56} />
+                        {/* 'featured' is a logical tier with no chest art
+                            of its own; render it with the gold palette
+                            since it's the curated weekly box. */}
+                        <LootChest tier={box.tier === 'featured' ? 'gold' : box.tier} size={56} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.boxItemName}>{box.name}</Text>
@@ -1261,6 +1285,9 @@ export function ShopScreen() {
         onBuy={handlePreviewBuy}
         onEquip={handlePreviewEquip}
         onClose={() => setPreviewItem(null)}
+        lockedActionLabel={previewItem
+          ? lockedActionLabelFor(mapToLootRarity(previewItem.rarity))
+          : undefined}
       />
 
       {/* Outfit preview modal — dedicated 3D preview for the Outfits tab */}
@@ -1274,6 +1301,10 @@ export function ShopScreen() {
         onClose={() => setOutfitPreview(null)}
         onBuy={handleOutfitBuy}
         onEquip={handleOutfitEquip}
+        lockedActionLabel={outfitPreview
+          ? lockedActionLabelFor(mapToLootRarity(outfitPreview.rarity))
+          : undefined}
+        lockedStatusLabel="🔒 IN BAGS"
       />
 
       {/* AMG part try-on preview — opens when the player taps an
@@ -1287,6 +1318,10 @@ export function ShopScreen() {
         canAfford={partPreview ? coins >= getPartPrice(partPreview.name).price : false}
         onClose={() => setPartPreview(null)}
         onBuy={confirmPartPurchase}
+        // Post-pivot: AMG parts always route to LootBox. They're not
+        // shard-unlockable individually in v1 — the player gets parts
+        // as bundles when an outfit pack drops or shards-unlocks.
+        lockedActionLabel="OPEN BOXES"
       />
 
       {/* Styled buy-confirm dialog for pet + emote purchases. Replaces

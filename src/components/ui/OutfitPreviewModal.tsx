@@ -31,11 +31,22 @@ interface Props {
   onClose: () => void;
   onBuy: () => void;
   onEquip: () => void;
+  /** Optional override for the locked-state primary CTA. When set, the
+   *  button always renders enabled with this label and `canAfford`/`price`
+   *  are ignored for the button (they still drive the status pill copy).
+   *  Used post-pivot 2026-05-03 so the BUY button can read "OPEN BOXES"
+   *  or "USE N SHARDS" instead of a now-defunct coin price. */
+  lockedActionLabel?: string;
+  /** Optional copy to show in the status pill when not owned. Defaults
+   *  to the coin price ("🪙 X") if absent. Set to e.g. "IN BAGS" so
+   *  locked items don't advertise a price the player can't pay. */
+  lockedStatusLabel?: string;
 }
 
 export function OutfitPreviewModal({
   visible, outfitId, price, isOwned, isEquipped, canAfford,
   onClose, onBuy, onEquip,
+  lockedActionLabel, lockedStatusLabel,
 }: Props) {
   const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const outfit = outfitId ? OUTFITS[outfitId] : null;
@@ -101,7 +112,9 @@ export function OutfitPreviewModal({
               </View>
             ) : (
               <View style={[styles.statusPill, { backgroundColor: 'rgba(255,140,0,0.2)', borderColor: colors.orange }]}>
-                <Text style={[styles.statusText, { color: colors.orange }]}>🪙 {price}</Text>
+                <Text style={[styles.statusText, { color: colors.orange }]}>
+                  {lockedStatusLabel ?? `🪙 ${price}`}
+                </Text>
               </View>
             )}
           </View>
@@ -131,6 +144,21 @@ export function OutfitPreviewModal({
               >
                 <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.primaryBtn}>
                   <Text style={styles.primaryText}>EQUIP</Text>
+                </LinearGradient>
+              </PressScale>
+            ) : lockedActionLabel ? (
+              // Post-pivot: locked items get a single primary CTA the
+              // shop wires to box-routing or shard-spend logic. The
+              // affordability check moved to the shop layer so this
+              // button is always enabled when shown.
+              <PressScale
+                onPress={handleBuy}
+                containerStyle={styles.primaryBtnWrap}
+                accessibilityLabel={lockedActionLabel}
+                accessibilityHint="Routes to loot boxes or spends shards to unlock"
+              >
+                <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.primaryBtn}>
+                  <Text style={styles.primaryText}>{lockedActionLabel}</Text>
                 </LinearGradient>
               </PressScale>
             ) : (

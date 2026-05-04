@@ -8,11 +8,11 @@ import {
   type ContentSource,
 } from '@amg/character-runtime';
 import { useCharacterStore } from '../stores/characterStore';
-import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
 import { isStarterPack, packPrefixFromPartName, getPartPrice, RARITY_COLORS, RARITY_LABELS } from '../data/amgPartPricing';
 import { PACK_ICON } from '../data/cosmeticIcons';
 import { getPartThumb } from '../data/partThumbs';
+import { packMeta } from '../data/amgPackMeta';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CharacterCreatorScreen — Drop4's wiring for the shared AMG creator
@@ -63,13 +63,18 @@ export function CharacterCreatorScreen() {
   // 'body'. Customize CLOTHES → initialTab='outfit', etc.
   const route = useRoute<any>();
   const initialTab = (route.params?.initialTab ?? 'body') as 'body' | 'face' | 'hair' | 'outfit' | 'color';
-  // Styled in-app confirm dialog state — replaces the old window.confirm
-  // / window.alert blocking pair when the player taps a locked AMG part
-  // and is asked to spend coins (or told they can't afford it).
+  // Styled in-app confirm dialog state. Two callers now:
+  //   1. The starter-wardrobe ceremony (one-shot info modal, confirmOnly)
+  //   2. The "this part is locked, open boxes to find it" route — there
+  //      is NO inline buy-with-coins anymore. Pivot 2026-05-03 killed
+  //      direct purchase of individual AMG parts; players unlock parts
+  //      by getting outfit packs from loot boxes (or by spending
+  //      shards earned from dupes in the Customize Shard Shop).
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     message: string;
     confirmLabel: string;
+    cancelLabel?: string;
     onConfirm: () => void;
     confirmOnly?: boolean;
   } | null>(null);
@@ -85,7 +90,9 @@ export function CharacterCreatorScreen() {
   const amgCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const setAmgCharacter = useCharacterStore((s) => s.setAmgCharacter);
   const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
-  const unlockAmgPart = useCharacterStore((s) => s.unlockAmgPart);
+  // unlockAmgPart still exists on the store (used by the loot-box grant
+  // path when an outfit pack drops). The creator just doesn't call it
+  // directly anymore — direct part purchase was removed in the pivot.
   const amgStarterSeen = useCharacterStore((s) => s.amgStarterSeen);
   const markAmgStarterSeen = useCharacterStore((s) => s.markAmgStarterSeen);
 
@@ -101,8 +108,8 @@ export function CharacterCreatorScreen() {
       setConfirmDialog({
         title: '🎁 Starter Wardrobe Unlocked',
         message: "You already own 5 base character heads/hair (one per species) " +
-          "and 12 Modern Civilian outfit variants. Browse the Shop's Clothes " +
-          "tab to buy more packs (Samurai, Apocalypse, Fighters, and more).",
+          "and 12 Modern Civilian outfit variants. Open Loot Boxes to find " +
+          "more packs — Samurai, Apocalypse, Fighters, Knights, and more.",
         confirmLabel: "Let's go",
         confirmOnly: true,
         onConfirm: () => markAmgStarterSeen(),
@@ -149,41 +156,42 @@ export function CharacterCreatorScreen() {
     navigation.goBack();
   }
 
-  // Inline buy-and-equip. When the player taps a locked part in any
-  // picker (Outfit / Hair / Face), the creator calls this with the part
-  // name. We price it, show a coin-spend prompt, and on confirm move
-  // coins → unlock the part → the creator picks up the new ownedParts
-  // set on the next render and unlocks the thumbnail.
+  // Locked-part tap → "open boxes to find this pack" info modal.
+  //
+  // Pivot 2026-05-03: individual AMG parts can no longer be bought
+  // directly with coins. They drop as part of OUTFIT PACKS from loot
+  // boxes (the Outfits Box biases toward this, Diamond/Gold also pull
+  // outfits). We surface that flow here:
+  //   - "Locked" + the pack's display name + rarity
+  //   - "OPEN BOXES" routes the player to the LootBox screen
+  //   - "MAYBE LATER" dismisses
+  //
+  // Shard-unlock at the part level isn't a thing for v1 — shards unlock
+  // outfit packs (which include the part) via the Customize Shard Shop.
+  // Keeping the message clear and the surface single-CTA-deep so the
+  // player never feels like there's a hidden purchase path they're
+  // missing.
   function handleLockedPart(partName: string) {
-    // Starter-pack parts should never reach this handler, but guard
-    // anyway so a stale render doesn't double-charge.
+    // Starter-pack parts should never reach this handler. Guard anyway.
     if (isStarterPack(packPrefixFromPartName(partName))) return;
 
-    const { price, rarity } = getPartPrice(partName);
-    const coins = useShopStore.getState().coins;
+    const { rarity } = getPartPrice(partName);
+    const pack = packPrefixFromPartName(partName);
+    const meta = packMeta(pack);
+    const packName = meta.displayName;
 
-    if (coins < price) {
-      haptics.error();
-      const shortBy = price - coins;
-      setConfirmDialog({
-        title: 'Not enough coins',
-        message: `This ${RARITY_LABELS[rarity]} part costs ${price.toLocaleString()}. You have ${coins.toLocaleString()} — short by ${shortBy.toLocaleString()}.`,
-        confirmLabel: 'Got it',
-        onConfirm: () => {},
-        confirmOnly: true,
-      });
-      return;
-    }
-
+    haptics.tap();
     setConfirmDialog({
-      title: `Buy this ${RARITY_LABELS[rarity]} part?`,
-      message: `Unlock for ${price.toLocaleString()} coins. You have ${coins.toLocaleString()}, will leave ${(coins - price).toLocaleString()}.`,
-      confirmLabel: `Buy · ${price.toLocaleString()} 🪙`,
+      title: `${RARITY_LABELS[rarity]} part — locked`,
+      message:
+        `This part is part of ${packName}. Open Loot Boxes to find ` +
+        `outfit packs — every pack you unlock auto-equips its parts so ` +
+        `you can mix and match.`,
+      confirmLabel: 'OPEN BOXES',
+      cancelLabel: 'Maybe later',
       onConfirm: () => {
-        const ok = useShopStore.getState().spendCoins(price);
-        if (!ok) { haptics.error(); return; }
-        haptics.win();
-        unlockAmgPart(partName);
+        haptics.tap();
+        navigation.navigate('LootBox' as never);
       },
     });
   }
@@ -199,10 +207,15 @@ export function CharacterCreatorScreen() {
     return RARITY_COLORS[rarity] ?? null;
   }
 
+  // Pivot 2026-05-03: locked parts no longer show a coin price chip.
+  // The chip used to read "500 🪙" implying a direct-buy path, which is
+  // dead. Returning the rarity label keeps the lock affordance (the
+  // creator's own padlock overlay does the heavy lifting) without
+  // implying a purchase price the player can't actually pay.
   function getPriceLabel(partName: string): string | null {
-    const { price, pack } = getPartPrice(partName);
+    const { rarity, pack } = getPartPrice(partName);
     if (isStarterPack(pack)) return null;
-    return `${price} 🪙`;
+    return RARITY_LABELS[rarity];
   }
 
   return (
@@ -249,6 +262,7 @@ export function CharacterCreatorScreen() {
         title={confirmDialog?.title ?? ''}
         message={confirmDialog?.message}
         confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        cancelLabel={confirmDialog?.cancelLabel}
         confirmOnly={confirmDialog?.confirmOnly}
         onConfirm={() => {
           confirmDialog?.onConfirm();

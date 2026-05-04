@@ -67,10 +67,16 @@ interface Props {
   canAfford: boolean;
   onClose: () => void;
   onBuy: (partName: string) => void;
+  /** Post-pivot 2026-05-03 override: locked-state CTA label. When set,
+   *  the button always renders enabled with this label and the coin
+   *  affordability check is bypassed. The shop wires onBuy to box-
+   *  routing or shard-spend instead of a coin debit. */
+  lockedActionLabel?: string;
 }
 
 export function AmgPartPreviewModal({
   visible, partName, slot, canAfford, onClose, onBuy,
+  lockedActionLabel,
 }: Props) {
   const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
 
@@ -147,38 +153,57 @@ export function AmgPartPreviewModal({
             >
               <Text style={styles.cancelText}>CANCEL</Text>
             </Pressable>
-            <Pressable
-              onPress={() => {
-                if (!canAfford) { haptics.error(); playSound('error'); return; }
-                onBuy(partName);
-              }}
-              // Web onClick fallback — LinearGradient inside Pressable
-              // swallows pointer events on web (same gotcha as TopBar).
-              {...(Platform.OS === 'web'
-                ? ({ onClick: () => {
-                    if (!canAfford) { haptics.error(); playSound('error'); return; }
-                    onBuy(partName);
-                  } } as any)
-                : {})}
-              // Wrapping Pressable needs flex:2 — the LinearGradient
-              // inside can't expand past its parent's intrinsic width,
-              // so without flex here the BUY button collapses to its
-              // text width while CANCEL (flex:1) eats the rest of the
-              // action row.
-              style={styles.buyBtnWrap}
-              accessibilityRole="button"
-              accessibilityLabel={canAfford ? `Buy for ${price} coins` : 'Not enough coins'}
-              accessibilityState={{ disabled: !canAfford }}
-            >
-              <LinearGradient
-                colors={canAfford ? ['#ff8c00', '#cc5500'] : ['#555', '#333']}
-                style={styles.buyBtn}
+            {lockedActionLabel ? (
+              // Post-pivot path: single primary CTA the shop routes to
+              // box-pickup or shard-spend. Always enabled; affordability
+              // logic moved out of the modal.
+              <Pressable
+                onPress={() => onBuy(partName)}
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: () => onBuy(partName) } as any)
+                  : {})}
+                style={styles.buyBtnWrap}
+                accessibilityRole="button"
+                accessibilityLabel={lockedActionLabel}
               >
-                <Text style={styles.buyText}>
-                  {canAfford ? `BUY · ${price}🪙` : 'NOT ENOUGH COINS'}
-                </Text>
-              </LinearGradient>
-            </Pressable>
+                <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.buyBtn}>
+                  <Text style={styles.buyText}>{lockedActionLabel}</Text>
+                </LinearGradient>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  if (!canAfford) { haptics.error(); playSound('error'); return; }
+                  onBuy(partName);
+                }}
+                // Web onClick fallback — LinearGradient inside Pressable
+                // swallows pointer events on web (same gotcha as TopBar).
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: () => {
+                      if (!canAfford) { haptics.error(); playSound('error'); return; }
+                      onBuy(partName);
+                    } } as any)
+                  : {})}
+                // Wrapping Pressable needs flex:2 — the LinearGradient
+                // inside can't expand past its parent's intrinsic width,
+                // so without flex here the BUY button collapses to its
+                // text width while CANCEL (flex:1) eats the rest of the
+                // action row.
+                style={styles.buyBtnWrap}
+                accessibilityRole="button"
+                accessibilityLabel={canAfford ? `Buy for ${price} coins` : 'Not enough coins'}
+                accessibilityState={{ disabled: !canAfford }}
+              >
+                <LinearGradient
+                  colors={canAfford ? ['#ff8c00', '#cc5500'] : ['#555', '#333']}
+                  style={styles.buyBtn}
+                >
+                  <Text style={styles.buyText}>
+                    {canAfford ? `BUY · ${price}🪙` : 'NOT ENOUGH COINS'}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            )}
           </View>
         </Animated.View>
       </Animated.View>
