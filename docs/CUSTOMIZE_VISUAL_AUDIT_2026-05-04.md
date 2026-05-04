@@ -186,18 +186,23 @@ This is a fal.ai gen pass — one badge per pack × ~17 packs =
 
 ## Suggested sequence
 
-1. **Today (no art needed):**
-   - Fix 1 (accessibility labels) — 5 lines
-   - Fix 2 (variant prominence) — 10 lines
-   - Fix 4 (card label hierarchy) — pairs with Fix 2
-   - Fix 6 (3-col grid OR keep + tighten padding) — moderate
-   - Fix 7 (padding tightening) — 5 lines
+1. **Today (no art needed) — SHIPPED 2026-05-04:**
+   - ✅ Fix 1 (accessibility labels) — engine commit 0815aa6
+   - ✅ Fix 2 (variant prominence) — engine commit 0815aa6
+   - ✅ Fix 4 (card label hierarchy) — engine commit 0815aa6
+   - ⏸️  Fix 6 (3-col grid) — deferred (audit noted trade is real;
+     2-col with scroll is acceptable until LoadoutCell density
+     pressure forces the issue)
+   - ✅ Fix 7 (padding tightening) — Drop4 commit a0fe5d7
 
-2. **Soon (no art needed, slightly bigger):**
-   - Fix 3 (camera zoom for FACE/HAIR mirror) — 30 lines across
-     engine modal contract + Drop4 wrapper + Character3DPortrait
-   - Fix 5 (paired-slot collapse for FACE) — moderate, requires
-     part-pairing logic in PartsGrid
+2. **Soon (no art needed, slightly bigger) — SHIPPED 2026-05-04:**
+   - ✅ Fix 3 (camera zoom for FACE/HAIR mirror) — engine 5eb8ca8 +
+     Drop4 4e90fc1 (CAMERA_PRESETS body/face on Character3DPortrait,
+     slot-aware preset selection in dressing-room mirror wrapper)
+   - ✅ Fix 5 (paired-slot collapse for FACE) — engine 905f069 +
+     Drop4 a0fe5d7 (slotLabelOverride on AmgPartCard +
+     AmgPartPreviewModal, partsInBucket filter drops right-side
+     mates, onEquip dual-equips by name substitution)
 
 3. **Unity batch (Devon's call when to run):**
    - Re-render face parts with head-zoomed camera
@@ -213,9 +218,10 @@ This is a fal.ai gen pass — one badge per pack × ~17 packs =
 - **Architecture:** A (Phase 1 working correctly, every game inherits cleanly)
 - **Visual identity:** A− (warm amber + gold rim language is consistent)
 - **Information hierarchy at the card level:** B (Fix 2 + Fix 4 push to A−)
-- **Face-bucket-specific browsing:** C+ today → B+ post Fix 1+2+3+5 → A post Unity re-render
+- **Face-bucket-specific browsing:** C+ today → **B+ post Fix 1+2+3+5 (SHIPPED)** → A post Unity re-render
 
 The audit's headline finding: **almost everything works, but the
 FACE bucket is the demo killer.** Fix 1 + 2 + 3 + 5 today get it
-to "good"; the Unity re-render gets it to "great." Hair, body
+to "good" (✅ shipped 2026-05-04); the Unity re-render gets it
+to "great." Hair, body
 clothes, and accessories are already in good shape.
