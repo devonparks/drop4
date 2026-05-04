@@ -139,12 +139,14 @@ export const LOOT_BOXES: LootBox[] = [
   { id: 'gold_box',    name: 'Gold Box',    tier: 'gold',    cost: 500,  blurb: 'Strong epic chance.' },
   { id: 'diamond_box', name: 'Diamond Box', tier: 'diamond', cost: 2000, blurb: 'Legendary-tier odds.' },
 
-  // Themed (category-biased, rarity-bias same as Gold)
-  { id: 'outfits_box', name: 'Outfits Box', tier: 'gold', cost: 750, themedCategory: 'outfits', themedAccent: '#ff8c42', blurb: 'Bias toward outfits + characters.' },
+  // Themed (category-biased, rarity-bias same as Gold). Accent colors
+  // mirror the Customize loadout cell CATEGORY_ACCENT map so the
+  // player builds one consistent visual language across screens.
+  { id: 'outfits_box', name: 'Outfits Box', tier: 'gold', cost: 750, themedCategory: 'outfits', themedAccent: '#ffb347', blurb: 'Bias toward outfits + characters.' },
   { id: 'pets_box',    name: 'Pets Box',    tier: 'gold', cost: 750, themedCategory: 'pets',    themedAccent: '#3eb489', blurb: 'Bias toward dog companions.' },
-  { id: 'boards_box',  name: 'Boards Box',  tier: 'gold', cost: 750, themedCategory: 'boards',  themedAccent: '#4a9a4a', blurb: 'Bias toward board skins.' },
-  { id: 'pieces_box',  name: 'Pieces Box',  tier: 'gold', cost: 750, themedCategory: 'pieces',  themedAccent: '#3a78d4', blurb: 'Bias toward piece skins.' },
-  { id: 'emotes_box',  name: 'Emotes Box',  tier: 'gold', cost: 750, themedCategory: 'emotes',  themedAccent: '#c97aff', blurb: 'Bias toward emotes + dances.' },
+  { id: 'boards_box',  name: 'Boards Box',  tier: 'gold', cost: 750, themedCategory: 'boards',  themedAccent: '#3a78d4', blurb: 'Bias toward board skins.' },
+  { id: 'pieces_box',  name: 'Pieces Box',  tier: 'gold', cost: 750, themedCategory: 'pieces',  themedAccent: '#e63946', blurb: 'Bias toward piece skins.' },
+  { id: 'emotes_box',  name: 'Emotes Box',  tier: 'gold', cost: 750, themedCategory: 'emotes',  themedAccent: '#c997e7', blurb: 'Bias toward emotes + dances.' },
 
   // Featured (weekly hand-curated rotation, see featuredItemsForWeek)
   { id: 'featured_box', name: 'Featured Box', tier: 'featured', cost: 1500, themedAccent: '#f1c40f', blurb: 'This week’s hand-picked drops.' },

@@ -1189,50 +1189,81 @@ export function ShopScreen() {
                 Bags drop random cosmetics — outfits, parts, pets, board themes,
                 pieces, effects. Higher tier = better odds on rare items.
               </Text>
-              {LOOT_BOXES.map(box => {
-                const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
-                return (
-                  <PressScale
-                    key={box.id}
-                    scaleTo={0.97}
-                    onPress={() => {
-                      haptics.tap();
-                      playSound('click');
-                      navigation.navigate('LootBox' as never);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${box.name}, ${count} owned${box.cost > 0 ? `, costs ${box.cost} coins` : ', earn-only'}`}
-                  >
-                    <View style={s.boxItem}>
-                      <View style={s.boxItemChestSlot}>
-                        {/* 'featured' is a logical tier with no chest art
-                            of its own; render it with the gold palette
-                            since it's the curated weekly box. */}
-                        <LootChest tier={box.tier === 'featured' ? 'gold' : box.tier} size={56} />
+              {/* Boxes grouped: Tiered / Themed / Featured. Themed
+                  boxes carry a category accent border + tinted bg so
+                  they read as distinct from the generic chest-art
+                  rows. The Featured Box gets its own section with a
+                  "rotates weekly" tagline. */}
+              {(() => {
+                const tiered = LOOT_BOXES.filter((b) => !b.themedCategory && b.tier !== 'featured');
+                const themed = LOOT_BOXES.filter((b) => b.themedCategory);
+                const featured = LOOT_BOXES.filter((b) => b.tier === 'featured');
+
+                const renderBoxRow = (box: typeof LOOT_BOXES[number]) => {
+                  const count = ownedBoxes.find(b => b.boxId === box.id)?.count || 0;
+                  const accent = box.themedAccent ?? null;
+                  return (
+                    <PressScale
+                      key={box.id}
+                      scaleTo={0.97}
+                      onPress={() => {
+                        haptics.tap();
+                        playSound('click');
+                        navigation.navigate('LootBox' as never);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${box.name}, ${count} owned${box.cost > 0 ? `, costs ${box.cost} coins` : ', earn-only'}`}
+                    >
+                      <View style={[
+                        s.boxItem,
+                        accent ? { borderColor: `${accent}66`, backgroundColor: `${accent}10` } : null,
+                      ]}>
+                        {accent ? <View style={[s.boxItemAccent, { backgroundColor: accent }]} /> : null}
+                        <View style={s.boxItemChestSlot}>
+                          <LootChest tier={box.tier === 'featured' ? 'gold' : box.tier} size={56} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.boxItemName}>{box.name}</Text>
+                          <Text style={[s.boxItemCount, count > 0 && accent ? { color: accent } : null]}>
+                            {count > 0 ? `${'\u00D7'}${count} owned` : box.blurb}
+                          </Text>
+                        </View>
+                        <View style={s.boxItemRight}>
+                          {box.cost > 0 ? (
+                            <View style={s.boxItemPriceRow}>
+                              <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
+                              <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
+                            </View>
+                          ) : (
+                            <View style={s.boxEarnPill}>
+                              <Text style={s.boxEarnPillText}>EARN</Text>
+                            </View>
+                          )}
+                          <Text style={s.boxItemChevron}>{'\u203A'}</Text>
+                        </View>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={s.boxItemName}>{box.name}</Text>
-                        <Text style={s.boxItemCount}>
-                          {count > 0 ? `${'\u00D7'}${count} owned` : 'None owned yet'}
-                        </Text>
-                      </View>
-                      <View style={s.boxItemRight}>
-                        {box.cost > 0 ? (
-                          <View style={s.boxItemPriceRow}>
-                            <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
-                            <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
-                          </View>
-                        ) : (
-                          <View style={s.boxEarnPill}>
-                            <Text style={s.boxEarnPillText}>EARN</Text>
-                          </View>
-                        )}
-                        <Text style={s.boxItemChevron}>{'\u203A'}</Text>
-                      </View>
+                    </PressScale>
+                  );
+                };
+
+                const renderSection = (title: string, blurb: string, list: typeof LOOT_BOXES) => list.length === 0 ? null : (
+                  <View key={title} style={s.boxSection}>
+                    <View style={s.boxSectionHead}>
+                      <Text style={s.boxSectionTitle}>{title}</Text>
+                      <Text style={s.boxSectionBlurb}>{blurb}</Text>
                     </View>
-                  </PressScale>
+                    {list.map(renderBoxRow)}
+                  </View>
                 );
-              })}
+
+                return (
+                  <>
+                    {renderSection('TIERED', 'Generic pool, better odds at higher tiers', tiered)}
+                    {renderSection('THEMED', 'Bias toward a specific category', themed)}
+                    {renderSection('FEATURED', 'Hand-picked rotation, refreshed weekly', featured)}
+                  </>
+                );
+              })()}
             </View>
           </View>
           </StaggeredEntry>
@@ -1718,6 +1749,44 @@ const s = StyleSheet.create({
     paddingHorizontal: 4,
     lineHeight: 15,
   },
+  // ── Boxes section grouping ───────────────────────────────────
+  // TIERED / THEMED / FEATURED groups read top-down, each with a tiny
+  // header strip (title + blurb) so the player sees the menu of
+  // options at a glance instead of one long flat list.
+  boxSection: {
+    marginTop: 4,
+  },
+  boxSectionHead: {
+    paddingHorizontal: 4,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  boxSectionTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 12,
+    color: '#ffffff',
+    letterSpacing: 1.6,
+  },
+  boxSectionBlurb: {
+    fontFamily: fonts.body,
+    fontWeight: weight.regular,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.4,
+    marginTop: 2,
+  },
+  // Vertical accent stripe on themed boxes — same language as the
+  // Customize loadout cells so themed-box → category-cell visual
+  // identity is consistent across screens.
+  boxItemAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+
   boxItem: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: 'rgba(10,14,32,0.65)', borderRadius: 14, padding: 12,
