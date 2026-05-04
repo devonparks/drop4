@@ -1127,6 +1127,12 @@ export function ShopScreen() {
                 gradientColors={['#ff6a00', '#ff8c00']}
                 rightText={`Refreshes in: ${countdown}`}
               />
+              {/* Wrap the horizontal scroller in a relative container so
+                  we can stack a right-edge fade gradient on top — visual
+                  affordance that the deals row scrolls horizontally. AAA
+                  polish 2026-05-04: prior to this only 3 of ~6 deals
+                  were visible without a hint that more existed. */}
+              <View style={s.dealsRowWrap}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.dealsRow}>
               <DailyDealCard
                 icon={'\u{1FA99}'}
@@ -1203,6 +1209,18 @@ export function ShopScreen() {
                 });
               })()}
             </ScrollView>
+              {/* Right-edge fade gradient — overlaid on top of the
+                  scrollable cards so the trailing edge softly dissolves.
+                  Web-only because expo-linear-gradient with horizontal
+                  start/end works there; on native we leave it off. */}
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(10,14,32,0)', 'rgba(10,14,32,0.85)']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={s.dealsScrollFade}
+              />
+              </View>
             </View>
           </StaggeredEntry>
 
@@ -1269,9 +1287,21 @@ export function ShopScreen() {
                         </View>
                         <View style={s.boxItemRight}>
                           {box.cost > 0 ? (
-                            <View style={s.boxItemPriceRow}>
+                            // Affordability-aware price chip \u2014 green-tinted
+                            // when the player has enough coins so they can
+                            // see at a glance which boxes are within reach.
+                            // Subtle gray-tint when out of reach prevents
+                            // false hope without hiding the price. AAA
+                            // polish 2026-05-04.
+                            <View style={[
+                              s.boxItemPriceRow,
+                              coins >= box.cost ? s.boxItemPriceRowAfford : s.boxItemPriceRowOver,
+                            ]}>
                               <Text style={s.boxItemPriceEmoji}>{'\u{1FA99}'}</Text>
-                              <Text style={s.boxItemPrice}>{box.cost.toLocaleString()}</Text>
+                              <Text style={[
+                                s.boxItemPrice,
+                                coins >= box.cost ? s.boxItemPriceAfford : null,
+                              ]}>{box.cost.toLocaleString()}</Text>
                             </View>
                           ) : (
                             <View style={s.boxEarnPill}>
@@ -1471,6 +1501,17 @@ const s = StyleSheet.create({
   },
 
   // ── Daily Deals ──
+  // Relative wrap so we can stack a right-edge fade gradient on top
+  // of the horizontal ScrollView. Without this affordance, players
+  // see exactly 3 of ~6 deals and miss the rest.
+  dealsRowWrap: { position: 'relative' },
+  // 32 px wide right-edge fade — wide enough to read as "more →"
+  // without obscuring a meaningful chunk of the visible deal card.
+  dealsScrollFade: {
+    position: 'absolute',
+    top: 0, bottom: 0, right: 0,
+    width: 32,
+  },
   dealsRow: { paddingHorizontal: 16, gap: 10 },
   dealCard: {
     width: (SCREEN_WIDTH - 52) / 3, minWidth: 105, maxWidth: 130,
@@ -1907,9 +1948,17 @@ const s = StyleSheet.create({
   boxItemName: { fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 14, color: '#ffffff', letterSpacing: 1 },
   boxItemCount: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   boxItemRight: { alignItems: 'center', flexDirection: 'row', gap: 6 },
-  boxItemPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  boxItemPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: 'transparent' },
+  // Player can afford this box — soft green ring + slightly brighter gold
+  // price so the chip reads "ready to buy" at a glance.
+  boxItemPriceRowAfford: { borderColor: 'rgba(46,204,113,0.55)', backgroundColor: 'rgba(46,204,113,0.10)' },
+  // Player can't afford this box — muted ring so it reads "locked" without
+  // hiding the price. The chevron + tap behaviour stays the same; this is
+  // a glance-level indicator only.
+  boxItemPriceRowOver: { borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.04)' },
   boxItemPriceEmoji: { fontSize: 13 },
   boxItemPrice: { fontFamily: fonts.body, fontWeight: weight.black, fontSize: 14, color: colors.coinGold },
+  boxItemPriceAfford: { color: '#ffd35a' },
   boxItemChevron: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 22, color: 'rgba(255,180,90,0.7)', marginLeft: 4, lineHeight: 22 },
   boxEarnPill: {
     paddingHorizontal: 8, paddingVertical: 3,

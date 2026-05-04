@@ -809,7 +809,15 @@ function ActionBand({
               {/* Top inner highlight — thin horizontal rim that sells
                   the 3D button feel without needing an asset. */}
               <View pointerEvents="none" style={styles.openBoxesHighlight} />
-              <Text style={styles.openBoxesCtaText}>OPEN BOXES</Text>
+              {/* Dynamic CTA — "OPEN 3 BOXES" when there's something specific
+                  to open beats the static "OPEN BOXES" because the player
+                  reads the number first and feels the urgency. The pulse
+                  badge stays as a secondary signal. AAA polish 2026-05-04. */}
+              <Text style={styles.openBoxesCtaText}>
+                {waitingBoxes > 0
+                  ? `OPEN ${waitingBoxes} ${waitingBoxes === 1 ? 'BOX' : 'BOXES'}`
+                  : 'OPEN BOXES'}
+              </Text>
               {waitingBoxes > 0 && <PulsingBadge value={waitingBoxes} />}
             </LinearGradient>
           </View>
