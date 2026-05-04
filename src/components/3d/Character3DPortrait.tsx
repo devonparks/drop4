@@ -71,12 +71,28 @@ export interface Character3DPortraitProps {
   showFloor?: boolean;
   onTap?: () => void;
   style?: ViewStyle;
+  /** Camera framing preset. Matches AmgCreator's per-tab camera poses
+   *  so the dressing-room mirror can zoom to the head when previewing
+   *  hair / face / brow / beard parts (otherwise the previewed detail
+   *  is invisible at thumbnail-size in a full-body shot). Per
+   *  docs/CUSTOMIZE_VISUAL_AUDIT_2026-05-04.md Fix 3. */
+  cameraPreset?: 'body' | 'face';
 }
+
+// Per-preset camera framing. body = standard full-body shot
+// (matches AmgCreator's BODY tab CAMERA_POSES.body). face = head
+// zoom for hair / brow / beard / ear previews so the actual
+// detail being equipped is visible.
+const CAMERA_PRESETS = {
+  body: { pos: [0, 1.1, 3.2] as [number, number, number], lookAt: [0, 0.95, 0] as [number, number, number] },
+  face: { pos: [0, 1.65, 1.25] as [number, number, number], lookAt: [0, 1.65, 0] as [number, number, number] },
+};
 
 export function Character3DPortrait({
   width, height, customization,
   animationId,
   mode = 'display', autoRotate, showFloor = true, onTap, style,
+  cameraPreset = 'body',
 }: Character3DPortraitProps) {
   const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const base = customization ?? playerCharacter;
@@ -116,8 +132,11 @@ export function Character3DPortrait({
           frameloop="always"
           gl={{ antialias: true, alpha: true } as any}
           shadows
-          camera={{ position: [0, 1.1, 3.2], fov: 42, near: 0.01, far: 1000 }}
-          onCreated={(s: any) => { s.camera.lookAt(0, 0.95, 0); }}
+          camera={{ position: CAMERA_PRESETS[cameraPreset].pos, fov: 42, near: 0.01, far: 1000 }}
+          onCreated={(s: any) => {
+            const { lookAt } = CAMERA_PRESETS[cameraPreset];
+            s.camera.lookAt(lookAt[0], lookAt[1], lookAt[2]);
+          }}
           style={StyleSheet.absoluteFill as any}
         >
           {/* Three-point lighting matches the AAA legacy look. */}

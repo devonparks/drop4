@@ -63,15 +63,30 @@ export function AmgPartPreviewModal(props: Props) {
         slot={props.slot}
         adapter={drop4CosmeticAdapter}
         currentCharacter={playerCharacter}
-        renderCharacterPreview={(swapped, opts) => (
-          <Character3DPortrait
-            width={opts.width}
-            height={opts.height}
-            customization={swapped as CharacterState}
-            showFloor={false}
-            autoRotate
-          />
-        )}
+        renderCharacterPreview={(swapped, opts) => {
+          // Per-slot camera framing. Face / brow / beard / ear /
+          // hair details are invisible in the default full-body
+          // shot — use the head-zoomed face preset instead. Per
+          // docs/CUSTOMIZE_VISUAL_AUDIT_2026-05-04.md Fix 3.
+          const FACE_OR_HAIR_SLOTS = new Set([
+            'Hair',
+            'EyebrowLeft', 'EyebrowRight',
+            'EarLeft', 'EarRight',
+            'FacialHair',
+            'Nose',
+          ]);
+          const cameraPreset: 'body' | 'face' = FACE_OR_HAIR_SLOTS.has(opts.slot) ? 'face' : 'body';
+          return (
+            <Character3DPortrait
+              width={opts.width}
+              height={opts.height}
+              customization={swapped as CharacterState}
+              showFloor={false}
+              autoRotate
+              cameraPreset={cameraPreset}
+            />
+          );
+        }}
         onClose={props.onClose}
         onEquip={props.onEquip}
         onOpenVariants={props.onOpenVariants}
