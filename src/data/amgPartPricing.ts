@@ -31,8 +31,10 @@ interface PartPriceInfo {
 }
 
 /** Parts that every new player owns for free, so the creator has something
- *  to put on a fresh avatar even before the player spends a single coin. */
-export const STARTER_PACKS: readonly string[] = [
+ *  to put on a fresh avatar even before the player spends a single coin.
+ *  Internal-only — no external Drop4 file imports the constant directly;
+ *  isStarterPack() is the public API. */
+const STARTER_PACKS: readonly string[] = [
   'HUMN_BASE', 'GOBL_BASE', 'ELVS_BASE', 'SKEL_BASE', 'ZOMB_BASE', // base heads/hair per species
   'MDRN_CIVL', // the default outfit pack — jeans + tee, 12 variants
 ];
