@@ -647,11 +647,10 @@ export function CustomizeScreen() {
         onClose={() => setAnimPickerOpen(false)}
         initialTab={animPickerTab}
       />
-      {/* OutfitsCatalog — full-screen modal showing all 152 pack
-          variants with painted Sidekick pack covers, rarity chips,
-          and IN BAGS badges on locked items. Mounted here so tapping
-          the OUTFITS category card surfaces the catalog without
-          leaving the Customize tab. */}
+      {/* ClothesCatalog — full-screen catalog mounted here so tapping
+          the CLOTHES category card surfaces the wardrobe without
+          leaving the Customize tab. PARTS + PACKS modes show the 2,886
+          painted Sidekick parts and the 152 outfit-pack covers. */}
       <ClothesCatalog
         visible={clothesCatalogOpen}
         onClose={() => setClothesCatalogOpen(false)}
