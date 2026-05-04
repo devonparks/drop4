@@ -147,14 +147,14 @@ export function TopBar({
   );
 }
 
-function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextColor, scaleAnim, label, plusLabel }: {
-  iconSource: ImageSourcePropType; value: string; onPress?: () => void; onPlusPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string; plusLabel?: string;
+function CurrencyPill({ iconSource, value, onPress, animatedTextColor, scaleAnim, label }: {
+  iconSource: ImageSourcePropType; value: string; onPress?: () => void; animatedTextColor?: Animated.AnimatedInterpolation<string>; scaleAnim?: Animated.Value; label?: string;
 }) {
-  // IMPORTANT: on web RN's Pressable renders as <button>. The main tap area
-  // and the "+" badge used to be nested Pressables → nested <button> in the
-  // DOM, which React flags as a hydration error and which causes unreliable
-  // "+" clicks in some browsers. The pill is now a plain View with two
-  // sibling Pressables (tap area + "+"), so each button stays flat.
+  // The pill used to optionally render a green "+" button when onPlusPress
+  // was passed. Removed in the calm-pass — tap-pill already opens the shop,
+  // so the plus was redundant visual weight (see TopBar comment above).
+  // The onPlusPress + plusLabel props sat dormant for ~6 weeks; cleaned
+  // up alongside the rest of the no-callers polish in this round.
   const tapArea = (
     <Pressable
       onPress={onPress ? () => { haptics.tap(); onPress(); } : undefined}
@@ -171,33 +171,10 @@ function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextCol
     </Pressable>
   );
 
-  const plus = onPlusPress ? (
-    <Pressable
-      onPress={() => { haptics.tap(); onPlusPress(); }}
-      // Web onClick fallback — LinearGradient inside Pressable can
-      // swallow pointer events on web (same gotcha as TopBar's avatar
-      // and GlossyButton). Without this, the green "+" sometimes
-      // no-ops on the first tap.
-      {...(Platform.OS === 'web'
-        ? ({ onClick: () => { haptics.tap(); onPlusPress(); } } as any)
-        : {})}
-      accessibilityLabel={plusLabel}
-      accessibilityRole="button"
-    >
-      <LinearGradient
-        colors={['#34c94d', '#27ae3d', '#1e8a30']}
-        style={styles.plusBtn}
-      >
-        <Text style={styles.plusText}>+</Text>
-      </LinearGradient>
-    </Pressable>
-  ) : null;
-
   if (scaleAnim) {
     return (
       <Animated.View style={[styles.pill, { transform: [{ scale: scaleAnim }] }]}>
         {tapArea}
-        {plus}
       </Animated.View>
     );
   }
@@ -205,7 +182,6 @@ function CurrencyPill({ iconSource, value, onPress, onPlusPress, animatedTextCol
   return (
     <View style={styles.pill}>
       {tapArea}
-      {plus}
     </View>
   );
 }
@@ -307,35 +283,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     minWidth: 16,
   },
-  // "+" buy-more badge. Sits inside the pill, slightly smaller than the
-  // painted currency icon so it reads as a button rather than competing
-  // with the icon for attention. Single subtle green glow only — the pill
-  // itself already has a drop shadow, stacking two read as muddy.
-  plusBtn: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    shadowColor: '#34c94d',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  plusText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 14,
-    lineHeight: 16,
-    color: '#ffffff',
-    marginTop: -1,
-    textShadowColor: 'rgba(0,40,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
-  },
+  // plusBtn / plusText styles removed alongside the "+" buy-more badge
+  // (calm-pass dropped the badge; styles sat dead for ~6 weeks).
   avatarWrap: {
     position: 'relative',
     alignItems: 'center',
