@@ -73,7 +73,7 @@ import {
   isStarterPack,
   getPartPrice,
 } from '../../data/amgPartPricing';
-import { packMeta } from '../../data/amgPackMeta';
+import { packMeta, OUTFIT_PACK_TO_SIDEKICK } from '../../data/amgPackMeta';
 import {
   subcategoryForPart,
   subcategoriesForBucket,
@@ -84,28 +84,10 @@ import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
 
-// ─── Outfit-pack identity helpers (shared with OutfitsCatalog) ──────
+// ─── Outfit-pack identity helpers ───────────────────────────────────
 
-// Pack-slug → Sidekick prefix translator. Maps registry pack slugs
-// ('elven_warriors') to their AMG content prefix ('ELVN_WARR') which
-// is what `getPackIcon()` uses to resolve the painted pack cover.
-const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
-  modern_civilians:    'MDRN_CIVL',
-  modern_police:       'MDRN_POLC',
-  apocalypse_outlaws:  'APOC_OUTL',
-  apocalypse_survivor: 'APOC_SURV',
-  apocalypse_zombies:  'APOC_ZOMB',
-  fantasy_villagers:   'FANT_VILL',
-  fantasy_knights:     'FANT_KNGT',
-  fantasy_skeletons:   'FANT_SKTN',
-  elven_warriors:      'ELVN_WARR',
-  goblin_fighters:     'GOBL_FIGT',
-  pirate_captains:     'PIRT_CAPT',
-  samurai_warriors:    'SAMR_WARR',
-  viking_warriors:     'VIKG_WARR',
-  sci_fi_civilians:    'SCFI_CIVL',
-  sci_fi_soldiers:     'SCFI_SOLD',
-};
+// OUTFIT_PACK_TO_SIDEKICK lives in amgPackMeta.ts — single source of
+// truth shared with ShopScreen.
 
 function packHue(pack: string): number {
   let hash = 0;

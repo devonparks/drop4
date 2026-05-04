@@ -74,6 +74,29 @@ export function packMeta(pack: string): AmgPackMeta {
   };
 }
 
+/** Translator from outfit-registry pack slugs ('elven_warriors') to the
+ *  Sidekick content prefix ('ELVN_WARR'). Used by every screen that
+ *  resolves a Drop4 outfit pack to its painted icon — getPackIcon()
+ *  reads the Sidekick prefix, not the slug. Centralized here so the
+ *  Customize tab + Shop tab + any future surface render identically. */
+export const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
+  modern_civilians:    'MDRN_CIVL',
+  modern_police:       'MDRN_POLC',
+  apocalypse_outlaws:  'APOC_OUTL',
+  apocalypse_survivor: 'APOC_SURV',
+  apocalypse_zombies:  'APOC_ZOMB',
+  fantasy_villagers:   'FANT_VILL',
+  fantasy_knights:     'FANT_KNGT',
+  fantasy_skeletons:   'FANT_SKTN',
+  elven_warriors:      'ELVN_WARR',
+  goblin_fighters:     'GOBL_FIGT',
+  pirate_captains:     'PIRT_CAPT',
+  samurai_warriors:    'SAMR_WARR',
+  viking_warriors:     'VIKG_WARR',
+  sci_fi_civilians:    'SCFI_CIVL',
+  sci_fi_soldiers:     'SCFI_SOLD',
+};
+
 // ── Slot-code → emoji mapping ────────────────────────────────────────
 //
 // The Sidekick part-code is the 2-digit + 3-5-letter segment in every

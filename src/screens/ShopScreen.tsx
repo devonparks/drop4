@@ -31,7 +31,7 @@ import { OUTFIT_SHOP_ITEMS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalo
 import { getDailyFeatured } from '../data/shopRotation';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
-import { packMeta } from '../data/amgPackMeta';
+import { packMeta, OUTFIT_PACK_TO_SIDEKICK } from '../data/amgPackMeta';
 import { getPackIcon, getEmoteIcon } from '../data/cosmeticIcons';
 import { filterAmgParts, groupAmgPartsByPack } from '../data/amgShopFilters';
 import { AmgPartPreviewModal } from '../components/ui/AmgPartPreviewModal';
@@ -401,27 +401,8 @@ function PremiumPiece({ color }: { color: string }) {
 }
 
 // ─── Shop Item Card (existing, improved) ───────────────────────
-// outfitRegistry pack-slug (lowercase snake_case) → Sidekick pack-code
-// (UPPERCASE) translator. Outfit cards use this to look up their
-// chunky 3D pack cover via getPackIcon() so the Outfits tab matches
-// the Character/Clothes tab visual treatment.
-const OUTFIT_PACK_TO_SIDEKICK: Record<string, string> = {
-  modern_civilians:    'MDRN_CIVL',
-  modern_police:       'MDRN_POLC',
-  apocalypse_outlaws:  'APOC_OUTL',
-  apocalypse_survivor: 'APOC_SURV',
-  apocalypse_zombies:  'APOC_ZOMB',
-  fantasy_villagers:   'FANT_VILL',
-  fantasy_knights:     'FANT_KNGT',
-  fantasy_skeletons:   'FANT_SKTN',
-  elven_warriors:      'ELVN_WARR',
-  goblin_fighters:     'GOBL_FIGT',
-  pirate_captains:     'PIRT_CAPT',
-  samurai_warriors:    'SAMR_WARR',
-  viking_warriors:     'VIKG_WARR',
-  sci_fi_civilians:    'SCFI_CIVL',
-  sci_fi_soldiers:     'SCFI_SOLD',
-};
+// OUTFIT_PACK_TO_SIDEKICK lives in amgPackMeta.ts — single source of
+// truth shared with ClothesCatalog (Customize tab).
 
 // Deterministic hue from an outfit id. Used to tint each outfit card a
 // different color so Elven Warriors 01/02/03 look distinct without needing
