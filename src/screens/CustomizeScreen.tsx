@@ -4,14 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
@@ -26,6 +18,7 @@ import {
   SparkleField,
   EquippedDot,
   LoadoutCell,
+  PulsingBadge,
 } from '@amg/cosmetic-ui';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -667,49 +660,8 @@ export function CustomizeScreen() {
   );
 }
 
-// ── PulsingBadge ───────────────────────────────────────────────────
-//
-// Count badge for the OPEN BOXES button. Pulses scale + opacity slowly
-// so the player's eye is drawn to "you have N boxes waiting." Without
-// the pulse the count blends into the button's overall warmth and the
-// player can miss the call-to-action.
-function PulsingBadge({ value }: { value: number }) {
-  const scale = useSharedValue(1);
-  const ringOpacity = useSharedValue(0);
-  useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 700, easing: Easing.inOut(Easing.quad) }),
-        withTiming(1.0, { duration: 700, easing: Easing.inOut(Easing.quad) }),
-      ),
-      -1,
-    );
-    ringOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.6, { duration: 1400, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 0 }),
-      ),
-      -1,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const badgeStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: ringOpacity.value,
-    transform: [{ scale: 1 + (1 - ringOpacity.value / 0.6) * 0.5 }],
-  }));
-  return (
-    <View style={styles.pulsingBadgeWrap}>
-      <Animated.View pointerEvents="none" style={[styles.pulseRing, ringStyle]} />
-      <Animated.View style={[styles.openBoxesBadge, badgeStyle]}>
-        <Text style={styles.openBoxesBadgeText}>{value}</Text>
-      </Animated.View>
-    </View>
-  );
-}
-
-// EquippedDot was lifted to @amg/cosmetic-ui — see the import at the
-// top of this file.
+// PulsingBadge + EquippedDot were lifted to @amg/cosmetic-ui — see
+// the imports at the top of this file.
 
 // ── Action band ────────────────────────────────────────────────────
 //
@@ -1084,39 +1036,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  pulsingBadgeWrap: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Expanding ring behind the badge — fades from solid white to nothing
-  // every 1.4s in a slow ripple. Reads as "active, waiting for tap."
-  pulseRing: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.85)',
-  },
-  openBoxesBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  openBoxesBadgeText: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 12,
-    color: '#ffffff',
-    letterSpacing: 0.6,
-  },
+  // PulsingBadge styles (pulsingBadgeWrap / pulseRing / openBoxesBadge
+  // / openBoxesBadgeText) lifted to @amg/cosmetic-ui along with the
+  // component itself.
   shardCta: {
     paddingVertical: 14,
     borderRadius: 14,
