@@ -91,10 +91,6 @@ export function getEmoteIcon(emoteId: string): ImageSourcePropType | undefined {
   return EMOTE_ICON[emoteId];
 }
 
-export function getIdleIcon(idleId: string): ImageSourcePropType | undefined {
-  return IDLE_ICON[idleId];
-}
-
 export function getPackIcon(packCode: string): ImageSourcePropType | undefined {
   return PACK_ICON[packCode];
 }

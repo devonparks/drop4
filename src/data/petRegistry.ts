@@ -46,6 +46,4 @@ export const PETS: Record<PetId, PetMeta> = {
   dog_scifi:            { id: 'dog_scifi',            name: 'Cyber Hound',      species: 'dog', rarity: 'legendary', price: 7500, unlockVia: 'Season Pass Tier 50',      glb: require('../assets/models/pets/dog_scifi.glb') },
 };
 
-export const PET_IDS: PetId[] = Object.keys(PETS) as PetId[];
-
 export const STARTER_PET_ID: PetId = 'dog_labrador';

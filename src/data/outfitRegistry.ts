@@ -177,9 +177,7 @@ export const OUTFITS: Record<OutfitId, OutfitMeta> = {
   zombie_apocalypse_zombies_05: { id: 'zombie_apocalypse_zombies_05', name: 'Apocalypse Zombies 05', species: 'zombie', pack: 'apocalypse_zombies', packLabel: 'Apocalypse Zombies', index: 5 },
 };
 
-export const OUTFIT_IDS: OutfitId[] = Object.keys(OUTFITS);
-
-export interface PackMeta {
+interface PackMeta {
   species: Species;
   pack: string;
   label: string;
@@ -204,11 +202,3 @@ export const PACKS: PackMeta[] = [
   { species: 'zombie', pack: 'apocalypse_zombies', label: 'Apocalypse Zombies', outfitIds: ['zombie_apocalypse_zombies_01', 'zombie_apocalypse_zombies_02', 'zombie_apocalypse_zombies_03', 'zombie_apocalypse_zombies_04', 'zombie_apocalypse_zombies_05'] },
 ];
 
-export function outfitsForPack(species: Species, pack: string): OutfitMeta[] {
-  const p = PACKS.find((x) => x.species === species && x.pack === pack);
-  return p ? p.outfitIds.map((id) => OUTFITS[id]) : [];
-}
-
-export function outfitsForSpecies(species: Species): OutfitMeta[] {
-  return OUTFIT_IDS.map((id) => OUTFITS[id]).filter((o) => o.species === species);
-}
