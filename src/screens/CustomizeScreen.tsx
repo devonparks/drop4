@@ -43,7 +43,27 @@ import { PETS as PETS_3D } from '../data/petRegistry';
 import {
   BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS,
 } from '../data/shopCatalog';
+import { AMG_PART_NAMES } from '../data/amgPartNamesIndex';
 import { fonts, weight } from '../theme/typography';
+
+// Static category totals derived from the AMG part-names index. Counted
+// once at module init so the Customize loadout cells can show
+// owned/total ratios without waiting for the manifest fetch (the
+// manifest is per-screen state inside ClothesCatalog and isn't
+// available to the parent Customize screen). Same Synty slot codes
+// the regex filters use elsewhere.
+const HAIR_TOTAL = (() => {
+  let n = 0;
+  AMG_PART_NAMES.forEach((name) => { if (/_02HAIR_/.test(name)) n++; });
+  return n;
+})();
+const FACE_TOTAL = (() => {
+  let n = 0;
+  AMG_PART_NAMES.forEach((name) => {
+    if (/_(03EBRL|04EBRR|07EARL|08EARR|09FCHR)_/.test(name)) n++;
+  });
+  return n;
+})();
 
 // ═══════════════════════════════════════════════════════════════════════
 // CustomizeScreen — the locker room (4-tab redesign)
@@ -412,12 +432,12 @@ export function CustomizeScreen() {
     // requires every key.
     clothes:   { owned: ownedAmgParts.length, total: 0 },
     outfits:   { owned: ownedOutfitsInCatalog, total: OUTFIT_SHOP_ITEMS.length },
-    // HAIR + FACE: the catalog manifest fetch happens on first
-    // ClothesCatalog mount. Until then we don't know the canonical
-    // total, so show owned count only (the /M slot stays blank when
-    // total === 0). Same pattern CLOTHES uses.
-    hair:      { owned: hairOwnedCount, total: 0 },
-    face:      { owned: faceOwnedCount, total: 0 },
+    // HAIR + FACE: totals derived from the static AMG_PART_NAMES
+    // index at module init (HAIR_TOTAL / FACE_TOTAL above). This way
+    // the loadout cells show owned/total + the progress fill on
+    // first paint without waiting for the in-screen manifest fetch.
+    hair:      { owned: hairOwnedCount, total: HAIR_TOTAL },
+    face:      { owned: faceOwnedCount, total: FACE_TOTAL },
     emotes:    { owned: totalEmotesOwned, total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },
     pieces:    { owned: owned.pieces.length, total: PIECE_THEMES.length },
