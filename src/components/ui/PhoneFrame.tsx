@@ -148,12 +148,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     overflow: 'hidden',
-    // (Removed `position: 'relative'` — it wasn't actually anchoring the
-    // modal because closer Navigation containers were already relative,
-    // AND it was disrupting the customize dashboard's flex layout —
-    // TopBar + CUSTOMIZE title were not rendering. EquipPanel modal
-    // positioning is now handled by the absolute backdrop + 400px sheet
-    // cap inside EquipPanel itself.)
+    // No `position: 'relative'` here — closer Navigation containers
+    // are already relative, and adding it disrupted the customize
+    // dashboard's flex layout in v1 testing.
   },
   homeIndicatorWrap: {
     height: 20,
