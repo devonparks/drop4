@@ -154,8 +154,8 @@ function Sparkle({ delay, leftPct, topPct, color, size }: {
       delay,
       withRepeat(
         withSequence(
-          withTiming(0.65, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.05, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0.85, { duration: 1600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0.10, { duration: 1600, easing: Easing.inOut(Easing.quad) }),
         ),
         -1,
       ),
@@ -196,18 +196,22 @@ function Sparkle({ delay, leftPct, topPct, color, size }: {
   );
 }
 
-// Six-particle SparkleField — staggered phases so the twinkle reads as
-// random ambient light, not a coordinated pulse. Positioned around
-// the hero card edges so the character silhouette stays visually clean.
+// Eight-particle SparkleField — staggered phases so the twinkle reads
+// as random ambient light, not a coordinated pulse. Positioned around
+// the hero card edges so the character silhouette stays visually
+// clean. Bumped from six to eight after a critique pass said the
+// effect was barely visible at the previous count + opacity.
 function SparkleField() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Sparkle delay={0}    leftPct={8}  topPct={18} color="#ffb347" size={3} />
-      <Sparkle delay={500}  leftPct={88} topPct={12} color="#ffb347" size={4} />
-      <Sparkle delay={1100} leftPct={92} topPct={48} color="#ffd485" size={3} />
-      <Sparkle delay={1700} leftPct={6}  topPct={62} color="#ffd485" size={4} />
-      <Sparkle delay={2300} leftPct={78} topPct={78} color="#ffb347" size={3} />
-      <Sparkle delay={2900} leftPct={20} topPct={88} color="#ffb347" size={3} />
+      <Sparkle delay={0}    leftPct={8}  topPct={18} color="#ffd485" size={4} />
+      <Sparkle delay={400}  leftPct={88} topPct={12} color="#ffb347" size={5} />
+      <Sparkle delay={900}  leftPct={92} topPct={48} color="#ffd485" size={4} />
+      <Sparkle delay={1400} leftPct={6}  topPct={62} color="#ffd485" size={4} />
+      <Sparkle delay={1900} leftPct={78} topPct={78} color="#ffb347" size={4} />
+      <Sparkle delay={2400} leftPct={20} topPct={88} color="#ffb347" size={4} />
+      <Sparkle delay={2900} leftPct={50} topPct={28} color="#ffd485" size={3} />
+      <Sparkle delay={3400} leftPct={48} topPct={92} color="#ffb347" size={3} />
     </View>
   );
 }
@@ -431,6 +435,18 @@ export function CustomizeScreen() {
     [ownedOutfits],
   );
 
+  // Emote ownership: free emotes (price=0 — Dab, Bow, Clap) are
+  // available to every player without being explicitly added to
+  // ownedEmotes. Count those toward the OWNED total so the EMOTES
+  // cell reads "5/21" on day-one instead of a misleading "0/21."
+  const totalEmotesOwned = useMemo(() => {
+    const ownedSet = new Set(ownedEmotes);
+    return HUMAN_EMOTES.reduce(
+      (acc, e) => (ownedSet.has(e.id) || (e.price ?? 0) === 0 ? acc + 1 : acc),
+      0,
+    );
+  }, [ownedEmotes]);
+
   const counts: Record<CategoryId, { owned: number; total: number }> = {
     character: { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
     // 'clothes' kept in CategoryId for forward-compat (was removed
@@ -439,7 +455,7 @@ export function CustomizeScreen() {
     // requires every key.
     clothes:   { owned: ownedAmgParts.length, total: 0 },
     outfits:   { owned: ownedOutfitsInCatalog, total: OUTFIT_SHOP_ITEMS.length },
-    emotes:    { owned: ownedEmotes.length,  total: HUMAN_EMOTES.length },
+    emotes:    { owned: totalEmotesOwned, total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },
     pieces:    { owned: owned.pieces.length, total: PIECE_THEMES.length },
     boards:    { owned: owned.boards.length, total: BOARD_THEMES.length },
@@ -468,15 +484,30 @@ export function CustomizeScreen() {
   const equippedNames: Record<CategoryId, string | null> = useMemo(() => {
     const equipped = useShopStore.getState().equipped;
     const equippedOutfitId = useCharacterStore.getState().equippedOutfitId;
-    const outfitName = OUTFIT_SHOP_ITEMS.find((o) => o.id === equippedOutfitId)?.name ?? null;
+    // Outfit name comes through as e.g. "Fantasy Skeletons 05" — too
+    // long for the loadout cell. Strip everything before the last
+    // word and pad the index, yielding a tight "Skeletons 05" that
+    // fits without truncation. Falls back to the full name if the
+    // expected pattern doesn't match.
+    const outfitFull = OUTFIT_SHOP_ITEMS.find((o) => o.id === equippedOutfitId)?.name ?? null;
+    const outfitShort = outfitFull
+      ? outfitFull.replace(/^(?:[A-Z][a-z]+\s)?/, '').trim() // drop leading "Modern " / "Fantasy " / "Sci-Fi "
+      : null;
     const dropFx = DROP_EFFECTS.find((f) => f.id === equipped.dropEffect)?.name ?? null;
     const winFx = WIN_ANIMATIONS.find((w) => w.id === equipped.winAnimation)?.name ?? null;
     const petName = summary.petName;
+    // Emote pinned-or-equipped readout. The wheel holds 6 emote slots;
+    // surfacing "6 wheel" is more meaningful than "0 owned" when the
+    // player has the default free emotes pinned.
+    const emoteCount = ownedEmotes.length;
+    const emoteReadout = emoteCount > 0
+      ? `${emoteCount} pinned`
+      : '6 wheel slots';
     return {
       character: playerName,
-      clothes: outfitName,
-      outfits: outfitName,
-      emotes: ownedEmotes.length > 0 ? `${ownedEmotes.length} owned` : null,
+      clothes: outfitShort,
+      outfits: outfitShort,
+      emotes: emoteReadout,
       pets: petName,
       pieces: summary.piecesName ?? null,
       boards: summary.boardName ?? null,
