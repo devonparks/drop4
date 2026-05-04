@@ -23,6 +23,11 @@ import { playSound } from '../services/audio';
 import { PressScale } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+// DEFAULT_PALETTE + parseVariantDropId let us decode a partVariant
+// drop's colorway hex so the reveal screen shows the actual color,
+// not just a generic "COLORWAY" chip.
+import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
+import { parseVariantDropId } from '@amg/cosmetic-runtime';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -271,8 +276,21 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
             </View>
           )}
 
-          {/* Rarity-tinted category chip stands in for the old emoji icon. */}
+          {/* Rarity-tinted category chip stands in for the old emoji icon.
+              For partVariant drops we sneak the colorway swatch in front of
+              the COLORWAY label so the reveal feels like a real "look at
+              the new color" moment instead of a generic category tag. */}
           <View style={[st.revealCategoryChip, { borderColor: rarityColor, backgroundColor: `${rarityColor}15` }]}>
+            {item.type === 'partVariant' && (() => {
+              const { variantId } = parseVariantDropId(item.id);
+              const variant = DEFAULT_PALETTE.find((v) => v.id === variantId);
+              if (!variant) return null;
+              return (
+                <View
+                  style={[st.revealVariantSwatch, { backgroundColor: variant.color }]}
+                />
+              );
+            })()}
             <Text style={[st.revealCategoryChipText, { color: rarityColor }]}>{categoryLabel}</Text>
           </View>
           <Text style={[st.revealName, { color: rarityColor }]}>{item.name}</Text>
@@ -812,6 +830,9 @@ const st = StyleSheet.create({
   // Category chip replaces the old emoji icon — with 245+ possible drop
   // outcomes, a typed label reads more clearly than a generic glyph.
   revealCategoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 14, paddingVertical: 6,
     borderRadius: 12, borderWidth: 1.5,
     marginBottom: 16,
@@ -819,6 +840,16 @@ const st = StyleSheet.create({
   revealCategoryChipText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
     letterSpacing: 1.4,
+  },
+  // Tiny color disc shown inside the chip for partVariant drops, so
+  // the player sees the actual colorway they rolled (not just the
+  // word COLORWAY).
+  revealVariantSwatch: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   revealName: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 24, textAlign: 'center' },
   // Dupe-payout strip — visible only when isDupe, shows the shard +
