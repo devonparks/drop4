@@ -31,7 +31,6 @@ import { OUTFIT_SHOP_ITEMS, EMOTE_SHOP_ITEMS } from '../data/cosmeticsShopCatalo
 import { getDailyFeatured } from '../data/shopRotation';
 import { OUTFITS } from '../data/outfitRegistry';
 import { useCharacterStore } from '../stores/characterStore';
-import { AmgPartCard } from '../components/ui/AmgPartCard';
 import { packMeta, sortPacksForShop } from '../data/amgPackMeta';
 import { getPackIcon, getEmoteIcon } from '../data/cosmeticIcons';
 import { filterAmgParts, groupAmgPartsByPack } from '../data/amgShopFilters';

@@ -28,6 +28,7 @@ import {
   getPartPrice,
 } from '../data/amgPartPricing';
 import { packMeta } from '../data/amgPackMeta';
+import { getPackIcon } from '../data/cosmeticIcons';
 
 /** The Drop4-specific implementation of the cross-game CosmeticAdapter.
  *  Other games (TTT, RPS+, Chess) implement the same shape against
@@ -67,5 +68,27 @@ export const drop4CosmeticAdapter: CosmeticAdapter = {
 
   currentVariantFor: (partName: string): string => {
     return useCharacterStore.getState().equippedPartVariant[partName] ?? '';
+  },
+
+  // ──────────────────────────────────────────────────────────────────
+  // AmgPartCard extensions — only the per-part shop card touches these
+  // ──────────────────────────────────────────────────────────────────
+
+  getPrice: (partName: string): number => {
+    return getPartPrice(partName).price;
+  },
+
+  getPackCoverIcon: (partName: string): ImageSourcePropType | undefined => {
+    // Tier 2 of the AmgPartCard hero cascade — chunky 3D AI mascot
+    // for the part's owning pack (used when the painted Unity per-
+    // part PNG isn't bundled yet).
+    const pack = packPrefixFromPartName(partName);
+    return getPackIcon(pack);
+  },
+
+  getFallbackIcon: (): ImageSourcePropType => {
+    // Tier 3 — last-resort generic pack icon so cards never render
+    // blank when a fresh pack lands without thumbs/cover icons yet.
+    return require('../assets/images/ui/pack-humn-base.png');
   },
 };

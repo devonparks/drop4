@@ -48,12 +48,13 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { PressScale, StaggeredEntry } from '../animations';
-import { AmgPartCard } from '../ui/AmgPartCard';
 // Engine-lifted UI primitives (2026-05-04 cross-game pivot).
-// The Drop4-local copy of VariantGallery + the slot bucket array were
-// removed; ClothesCatalog now consumes the engine version through
-// drop4CosmeticAdapter — same JSX every AMG game renders.
+// The Drop4-local copies of VariantGallery, AmgPartCard + the slot
+// bucket array were removed; ClothesCatalog now consumes the engine
+// versions through drop4CosmeticAdapter — same JSX every AMG game
+// renders.
 import {
+  AmgPartCard,
   VariantGallery,
   DEFAULT_PALETTE,
   DEFAULT_SLOT_BUCKETS,
@@ -697,8 +698,10 @@ function PartsGrid({
               partName={part.name}
               owned={owned}
               size="compact"
+              adapter={drop4CosmeticAdapter}
               onEquip={() => onTap(part)}
               onBuy={() => onTap(part)}
+              hooks={{ playClick: () => playSound('click') }}
             />
             {isEquipped && (
               <View style={styles.partsCellEquippedPill}>
