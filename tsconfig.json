@@ -18,7 +18,15 @@
       "react-native": ["./node_modules/react-native"],
       "react-native/*": ["./node_modules/react-native/*"],
       "@react-three/fiber": ["./node_modules/@react-three/fiber"],
-      "@react-three/fiber/*": ["./node_modules/@react-three/fiber/*"]
+      "@react-three/fiber/*": ["./node_modules/@react-three/fiber/*"],
+      // The new @amg/cosmetic-* packages were scaffolded 2026-05-04 with
+      // peerDeps on Drop4's installed RN ecosystem. tsc resolves them
+      // through Drop4's node_modules — same trick the existing engine
+      // packages above use.
+      "react-native-reanimated": ["./node_modules/react-native-reanimated"],
+      "react-native-reanimated/*": ["./node_modules/react-native-reanimated/*"],
+      "expo-linear-gradient": ["./node_modules/expo-linear-gradient"],
+      "expo-linear-gradient/*": ["./node_modules/expo-linear-gradient/*"]
     }
   },
   "include": [
