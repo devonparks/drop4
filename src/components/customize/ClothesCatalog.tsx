@@ -135,11 +135,27 @@ const AMG_MANIFEST_URL = 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/ma
 interface Props {
   visible: boolean;
   onClose: () => void;
+  /** Lock the catalog to a specific slot bucket — used for the HAIR /
+   *  FACE / ACCESSORIES destination mounts from the Customize grid.
+   *  When set:
+   *    · The bucket chip row is hidden (player can't switch buckets)
+   *    · The PARTS/PACKS toggle is hidden (PACKS doesn't make sense
+   *      for a single-bucket destination — packs are full outfits)
+   *    · The header title swaps to the bucket label (HAIR / FACE / etc)
+   *  Per AMG_WARDROBE_ARCHITECTURE Phase 1 — splitting hair from
+   *  clothes mirrors NBA 2K's barbershop / closet split. */
+  lockedBucket?: string;
+  /** Optional override title — when lockedBucket is set, shows
+   *  e.g. "HAIR" instead of "CLOTHES" in the modal header. Defaults
+   *  to the bucket's UPPERCASE label. */
+  title?: string;
+  /** Optional override subtitle — defaults to the bucket's blurb. */
+  subtitle?: string;
 }
 
 type Mode = 'parts' | 'packs';
 
-export function ClothesCatalog({ visible, onClose }: Props) {
+export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle }: Props) {
   const navigation = useNavigation<any>();
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
   const equippedOutfitId = useCharacterStore((s) => s.equippedOutfitId);
@@ -153,8 +169,11 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   // unlocked this week"). 7-day window matches the polish-queue spec.
   const amgPartUnlockedAt = useCharacterStore((s) => s.amgPartUnlockedAt);
 
-  const [mode, setMode] = useState<Mode>('parts');
-  const [bucket, setBucket] = useState<string>('tops');
+  // When lockedBucket is set, force PARTS mode + bucket. PACKS doesn't
+  // make sense for hair-only / face-only destinations because packs
+  // are full outfits.
+  const [mode, setMode] = useState<Mode>(lockedBucket ? 'parts' : 'parts');
+  const [bucket, setBucket] = useState<string>(lockedBucket ?? 'tops');
   // Sub-category chip — second-level filter inside the top bucket
   // (TOPS → All / Hoodies / Shirts / Jackets / etc.). Resets to 'All'
   // whenever the player switches buckets so they don't end up in
@@ -332,14 +351,21 @@ export function ClothesCatalog({ visible, onClose }: Props) {
           style={StyleSheet.absoluteFill}
         />
 
-        {/* Header — title + counts + close */}
+        {/* Header — title + counts + close. When locked to a bucket
+            (HAIR / FACE / ACCESSORIES from the Customize hub), the
+            title swaps to the bucket label so the modal reads as a
+            dedicated destination shop. */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title} accessibilityRole="header">CLOTHES</Text>
+            <Text style={styles.title} accessibilityRole="header">
+              {title ?? 'CLOTHES'}
+            </Text>
             <Text style={styles.subtitle}>
-              {mode === 'parts'
-                ? 'Shop pieces by slot — mix & match'
-                : 'Whole-outfit packs for fast equip'}
+              {subtitle ?? (
+                mode === 'parts'
+                  ? 'Shop pieces by slot — mix & match'
+                  : 'Whole-outfit packs for fast equip'
+              )}
             </Text>
           </View>
           <Pressable
@@ -352,33 +378,37 @@ export function ClothesCatalog({ visible, onClose }: Props) {
           </Pressable>
         </View>
 
-        {/* Mode toggle — PARTS vs PACKS */}
-        <View style={styles.modeRow}>
-          <PressScale
-            onPress={() => { haptics.tap(); setMode('parts'); }}
-            containerStyle={{ flex: 1 }}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: mode === 'parts' }}
-          >
-            <View style={[styles.modeChip, mode === 'parts' && styles.modeChipActive]}>
-              <Text style={[styles.modeChipText, mode === 'parts' && styles.modeChipTextActive]}>
-                {`PARTS  ·  ${ownedPartCount}`}
-              </Text>
-            </View>
-          </PressScale>
-          <PressScale
-            onPress={() => { haptics.tap(); setMode('packs'); }}
-            containerStyle={{ flex: 1 }}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: mode === 'packs' }}
-          >
-            <View style={[styles.modeChip, mode === 'packs' && styles.modeChipActive]}>
-              <Text style={[styles.modeChipText, mode === 'packs' && styles.modeChipTextActive]}>
-                {`PACKS  ·  ${ownedPackCount}/${OUTFIT_SHOP_ITEMS.length}`}
-              </Text>
-            </View>
-          </PressScale>
-        </View>
+        {/* Mode toggle — PARTS vs PACKS. Hidden when locked to a single
+            bucket (HAIR / FACE) since PACKS is for full outfits and
+            doesn't make sense for a single-slot destination. */}
+        {!lockedBucket && (
+          <View style={styles.modeRow}>
+            <PressScale
+              onPress={() => { haptics.tap(); setMode('parts'); }}
+              containerStyle={{ flex: 1 }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: mode === 'parts' }}
+            >
+              <View style={[styles.modeChip, mode === 'parts' && styles.modeChipActive]}>
+                <Text style={[styles.modeChipText, mode === 'parts' && styles.modeChipTextActive]}>
+                  {`PARTS  ·  ${ownedPartCount}`}
+                </Text>
+              </View>
+            </PressScale>
+            <PressScale
+              onPress={() => { haptics.tap(); setMode('packs'); }}
+              containerStyle={{ flex: 1 }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: mode === 'packs' }}
+            >
+              <View style={[styles.modeChip, mode === 'packs' && styles.modeChipActive]}>
+                <Text style={[styles.modeChipText, mode === 'packs' && styles.modeChipTextActive]}>
+                  {`PACKS  ·  ${ownedPackCount}/${OUTFIT_SHOP_ITEMS.length}`}
+                </Text>
+              </View>
+            </PressScale>
+          </View>
+        )}
 
         {/* NOW EQUIPPED banner (always shown — outfit pack is the
             anchor for both modes; PARTS view lets you swap individual
@@ -430,8 +460,11 @@ export function ClothesCatalog({ visible, onClose }: Props) {
           ))}
         </ScrollView>
 
-        {/* PARTS-mode bucket chip row */}
-        {mode === 'parts' && (
+        {/* PARTS-mode bucket chip row. Hidden when the catalog is
+            locked to a single bucket (HAIR / FACE / ACCESSORIES
+            destinations from the Customize hub) — the modal is
+            already scoped, no need to let the player jump out. */}
+        {mode === 'parts' && !lockedBucket && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}

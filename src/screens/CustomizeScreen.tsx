@@ -64,6 +64,8 @@ type CategoryId =
   | 'character'
   | 'clothes'
   | 'outfits'
+  | 'hair'
+  | 'face'
   | 'emotes'
   | 'pets'
   | 'pieces'
@@ -110,15 +112,17 @@ type CategoryMeta = {
 // position does the work.
 const CATEGORIES: CategoryMeta[] = [
   { id: 'character', label: 'Character', icon: require('../assets/images/ui/cat-character.png') },
-  // Row 1 — avatar / identity
-  // 'outfits' uses the 'clothes' icon and is the wardrobe view: the
-  // 152-pack catalog modal showing every outfit in bags, painted pack
-  // covers, IN BAGS pills on locked items. The redundant 'clothes'
-  // tile (which routed to the AMG creator's Outfit tab) was removed
-  // 2026-05-03 — it pointed at the same content from a different
-  // angle and confused the player. Power users who want individual-
-  // part control still get there from CHARACTER → Creator → Outfit.
+  // Row 1 — avatar / identity (CLOTHES + HAIR + FACE follow the
+  // NBA 2K myPlayer-vs-barbershop split per
+  // amg-engine/docs/AMG_WARDROBE_ARCHITECTURE.md Phase 1).
+  // 'outfits' opens the wardrobe view (152-pack catalog with painted
+  // covers + parts grid). 'hair' opens a hair-only ClothesCatalog
+  // mount (the barbershop). 'face' opens a face-only mount (eyebrows
+  // / beard / ears). Each is a focused destination instead of forcing
+  // the player into a tabbed creator that does too much.
   { id: 'outfits',   label: 'Clothes',   icon: require('../assets/images/ui/cat-clothes.png') },
+  { id: 'hair',      label: 'Hair',      icon: require('../assets/images/ui/cat-character.png') },
+  { id: 'face',      label: 'Face',      icon: require('../assets/images/ui/cat-character.png') },
   { id: 'emotes',    label: 'Emotes',    icon: require('../assets/images/ui/cat-emotes.png') },
   { id: 'pets',      label: 'Pets',      icon: require('../assets/images/ui/cat-pets.png') },
   // Row 2 — gameplay cosmetics
@@ -247,7 +251,16 @@ export function CustomizeScreen() {
   // view inside Customize per the 2026-05-03 pivot ("merge old shop
   // into customize"). Owned items tap-to-equip + close; locked items
   // route to LootBox.
-  const [clothesCatalogOpen, setClothesCatalogOpen] = useState(false);
+  // Catalog destination state — drives both the wardrobe modal AND
+  // the dedicated HAIR / FACE / ACCESSORIES bucket-locked mounts (per
+  // amg-engine/docs/AMG_WARDROBE_ARCHITECTURE.md Phase 1). Each value
+  // selects a focused ClothesCatalog view:
+  //   · 'all'  → full wardrobe (PARTS + PACKS, all buckets)
+  //   · 'hair' → hair-only (the barbershop)
+  //   · 'face' → face-only (eyebrows, beard, ears)
+  // Closed when null.
+  type CatalogDest = 'all' | 'hair' | 'face' | null;
+  const [clothesCatalogOpen, setClothesCatalogOpen] = useState<CatalogDest>(null);
 
   // Tap-to-preview emote on the 3D character. Same pattern as Home's
   // handleCharacterTap — picks a random owned emote, plays it for 3
@@ -302,10 +315,24 @@ export function CustomizeScreen() {
       return;
     }
     if (cat.id === 'outfits') {
-      // CLOTHES card opens the painted catalog modal — every pack
-      // variant with painted Sidekick covers. Single source of truth
-      // for "what clothes can I get from bags" / "what do I own."
-      setClothesCatalogOpen(true);
+      // CLOTHES card opens the full wardrobe modal — every pack
+      // variant + parts grid with painted Sidekick covers. Single
+      // source of truth for "what clothes can I get from bags" /
+      // "what do I own."
+      setClothesCatalogOpen('all');
+      return;
+    }
+    if (cat.id === 'hair') {
+      // HAIR is the barbershop — bucket-locked ClothesCatalog mount
+      // showing only hair parts with the dressing-room mirror flow.
+      // Per AMG_WARDROBE_ARCHITECTURE Phase 1.
+      setClothesCatalogOpen('hair');
+      return;
+    }
+    if (cat.id === 'face') {
+      // FACE is the face-details destination — eyebrows, beard, ears.
+      // Same focused-bucket mount as HAIR.
+      setClothesCatalogOpen('face');
       return;
     }
     if (cat.id === 'emotes') {
@@ -362,6 +389,21 @@ export function CustomizeScreen() {
     );
   }, [ownedEmotes]);
 
+  // HAIR / FACE counts derived from owned AMG parts. Synty slot codes
+  // appear in the part name (e.g. SK_MDRN_CIVL_01_02HAIR_HU01) so we
+  // regex against ownedAmgParts directly. Tracks acquisition, not
+  // equip — same logic the CLOTHES tab uses.
+  const hairOwnedCount = useMemo(
+    () => ownedAmgParts.filter((name) => /_02HAIR_/.test(name)).length,
+    [ownedAmgParts],
+  );
+  const faceOwnedCount = useMemo(
+    () => ownedAmgParts.filter((name) =>
+      /_(03EBRL|04EBRR|07EARL|08EARR|09FCHR)_/.test(name),
+    ).length,
+    [ownedAmgParts],
+  );
+
   const counts: Record<CategoryId, { owned: number; total: number }> = {
     character: { owned: ownedOutfits.length, total: Object.keys(OUTFITS).length },
     // 'clothes' kept in CategoryId for forward-compat (was removed
@@ -370,6 +412,12 @@ export function CustomizeScreen() {
     // requires every key.
     clothes:   { owned: ownedAmgParts.length, total: 0 },
     outfits:   { owned: ownedOutfitsInCatalog, total: OUTFIT_SHOP_ITEMS.length },
+    // HAIR + FACE: the catalog manifest fetch happens on first
+    // ClothesCatalog mount. Until then we don't know the canonical
+    // total, so show owned count only (the /M slot stays blank when
+    // total === 0). Same pattern CLOTHES uses.
+    hair:      { owned: hairOwnedCount, total: 0 },
+    face:      { owned: faceOwnedCount, total: 0 },
     emotes:    { owned: totalEmotesOwned, total: HUMAN_EMOTES.length },
     pets:      { owned: ownedPets.length,    total: Object.keys(PETS_3D).length },
     pieces:    { owned: owned.pieces.length, total: PIECE_THEMES.length },
@@ -418,10 +466,31 @@ export function CustomizeScreen() {
     const emoteReadout = emoteCount > 0
       ? `${emoteCount} pinned`
       : '6 wheel slots';
+    // HAIR / FACE: read the equipped part name from amgCharacter and
+    // surface a friendly readout. Don't show the raw Sidekick id —
+    // strip to the last word for legibility (e.g. 'SK_MDRN_CIVL_01_02HAIR_HU01'
+    // → 'Hair 01'). The full part-name lives in the dressing-room
+    // mirror; the cell just hints at "what's on right now."
+    const amgChar = useCharacterStore.getState().amgCharacter as unknown as
+      { parts?: Record<string, string> } | null;
+    const equippedHair = amgChar?.parts?.['Hair'] ?? null;
+    const equippedHairLabel = equippedHair
+      ? `Hair ${(equippedHair.match(/_(\d{2})_\d{2}HAIR_/) ?? [])[1] ?? ''}`.trim()
+      : null;
+    // Face is "the most prominent face slot equipped" — pick FacialHair
+    // (beard) if set, else EyebrowLeft. Tiny heuristic; the full grid
+    // is in the FACE catalog.
+    const equippedFace = amgChar?.parts?.['FacialHair'] ?? amgChar?.parts?.['EyebrowLeft'] ?? null;
+    const equippedFaceLabel = equippedFace
+      ? `${(equippedFace.match(/_\d{2}([A-Z]+)_/) ?? [])[1] === 'FCHR' ? 'Beard' : 'Face'}`
+      : null;
+
     return {
       character: playerName,
       clothes: outfitShort,
       outfits: outfitShort,
+      hair: equippedHairLabel,
+      face: equippedFaceLabel,
       emotes: emoteReadout,
       pets: petName,
       pieces: summary.piecesName ?? null,
@@ -669,12 +738,32 @@ export function CustomizeScreen() {
         initialTab={animPickerTab}
       />
       {/* ClothesCatalog — full-screen catalog mounted here so tapping
-          the CLOTHES category card surfaces the wardrobe without
-          leaving the Customize tab. PARTS + PACKS modes show the 2,886
-          painted Sidekick parts and the 152 outfit-pack covers. */}
+          the CLOTHES / HAIR / FACE Customize cells surfaces the right
+          focused destination without leaving the Customize tab.
+            · 'all'  → full wardrobe (PARTS + PACKS, all buckets)
+            · 'hair' → hair-only (barbershop)
+            · 'face' → face-only (eyebrows / beard / ears)
+          Per AMG_WARDROBE_ARCHITECTURE Phase 1. */}
       <ClothesCatalog
-        visible={clothesCatalogOpen}
-        onClose={() => setClothesCatalogOpen(false)}
+        visible={clothesCatalogOpen !== null}
+        onClose={() => setClothesCatalogOpen(null)}
+        lockedBucket={
+          clothesCatalogOpen === 'hair' ? 'hair'
+            : clothesCatalogOpen === 'face' ? 'face'
+            : undefined
+        }
+        title={
+          clothesCatalogOpen === 'hair' ? 'HAIR'
+            : clothesCatalogOpen === 'face' ? 'FACE'
+            : undefined
+        }
+        subtitle={
+          clothesCatalogOpen === 'hair'
+            ? 'Cuts, styles, and color volume.'
+            : clothesCatalogOpen === 'face'
+              ? 'Brows, ears, beards, sideburns.'
+              : undefined
+        }
       />
     </ScreenBackground>
   );
@@ -765,6 +854,8 @@ const CATEGORY_ACCENT: Record<CategoryId, string> = {
   character: '#ffb347',
   clothes:   '#ffb347',
   outfits:   '#ffb347',
+  hair:      '#e07a5f', // warm rose — barbershop vibe
+  face:      '#f4d35e', // soft gold — face details (brows / beard / ears)
   emotes:    '#c997e7',
   pets:      '#3eb489',
   pieces:    '#e63946',
