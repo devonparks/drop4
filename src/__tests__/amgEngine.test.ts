@@ -22,6 +22,8 @@ import {
 import {
   bucketForSlot,
   DEFAULT_SLOT_BUCKETS,
+  filterManifestForGame,
+  type AmgManifestPart,
 } from '@amg/cosmetic-ui/types/slots';
 import {
   DEFAULT_PALETTE,
@@ -95,6 +97,44 @@ describe('@amg/cosmetic-ui variantFromPartName()', () => {
 });
 
 // ─── bucketForSlot ────────────────────────────────────────────────────
+
+// ─── filterManifestForGame ────────────────────────────────────────────
+
+describe('@amg/cosmetic-ui filterManifestForGame()', () => {
+  // Three-part manifest: cross-game (no flag), Drop4-exclusive,
+  // TTT-exclusive. Each game's lootbox roller filters via this helper.
+  const manifest: AmgManifestPart[] = [
+    { name: 'cross_game_part',  species: 'Human', slot: 'Torso', file: 'a.glb' },
+    { name: 'drop4_only_part',  species: 'Human', slot: 'Torso', file: 'b.glb', gameExclusive: 'drop4' },
+    { name: 'ttt_only_part',    species: 'Human', slot: 'Torso', file: 'c.glb', gameExclusive: 'ttt' },
+  ];
+
+  test('Drop4 lootbox sees cross-game + Drop4 exclusives only', () => {
+    const filtered = filterManifestForGame(manifest, 'drop4');
+    const names = filtered.map((p) => p.name);
+    expect(names).toContain('cross_game_part');
+    expect(names).toContain('drop4_only_part');
+    expect(names).not.toContain('ttt_only_part');
+  });
+
+  test('TTT lootbox sees cross-game + TTT exclusives only', () => {
+    const filtered = filterManifestForGame(manifest, 'ttt');
+    const names = filtered.map((p) => p.name);
+    expect(names).toContain('cross_game_part');
+    expect(names).toContain('ttt_only_part');
+    expect(names).not.toContain('drop4_only_part');
+  });
+
+  test('A future game with no exclusives sees only cross-game parts', () => {
+    const filtered = filterManifestForGame(manifest, 'rps');
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].name).toBe('cross_game_part');
+  });
+
+  test('Empty manifest stays empty', () => {
+    expect(filterManifestForGame([], 'drop4')).toEqual([]);
+  });
+});
 
 describe('@amg/cosmetic-ui bucketForSlot()', () => {
   // bucketForSlot takes the manifest's Synty slot NAME (e.g. 'Torso',
