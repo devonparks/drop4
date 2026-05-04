@@ -50,7 +50,6 @@ import {
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { fonts, weight } from '../theme/typography';
-import { colors as themeColors } from '../theme/colors';
 
 // ─── Category definitions ──────────────────────────────────────────
 
