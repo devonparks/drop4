@@ -204,3 +204,86 @@ package.
   ClothesCatalog itself gets lifted (deferred for now since it's
   ~1100 lines and the leaf primitives — adapter, gallery, slot
   buckets — give TTT enough to start).
+
+---
+
+## 2026-05-04 — daytime polish session (Devon at work)
+
+Devon's directive: "keep working all night... I want all of [the
+customize section + sub-tabs] to look good and cohesive. The EDIT
+button is too small for the AMG creator." Worked through the polish
+queue + cohesion targets while Devon was at his ODA shift.
+
+### Commits this session
+
+| Hash | Scope | What |
+|------|-------|------|
+| `3ecf123` | drop4 | polish: customize EDIT pill — bigger, filled gradient, pencil glyph |
+| `a471d2d` | drop4 | polish: filter chip cohesion across all sub-tabs (Shop / Clothes / CategoryBrowser / MatchHistory now share the FilterChip primitive) |
+| `3800fe6` | drop4 | polish: NEW ribbon on parts unlocked this week (PartsGrid wired to amgPartUnlockedAt) |
+| `96689c4` | drop4 | polish: ClothesCatalog OPEN BOXES footer matches Customize hero CTA |
+| `684739a` | drop4 | polish: bottom tab badge for Customize — unequipped new clothes |
+| `063c5a3` | drop4 | polish: collection % pill — subtle horizontal progress fill behind the digits |
+| `c1161a7` | drop4 | cleanup: drop dead "+" buy-more badge code from TopBar CurrencyPill (~50 dead lines) |
+| `92129e2` | drop4 | cleanup: drop stale GlossyButton import in HomeScreen |
+
+### Polish themes shipped
+
+**EDIT affordance prominence (Devon's specific complaint).** The
+top-right EDIT pill on the Customize hero card was an outline-only
+glass chip that read as secondary chrome. Now a filled warm-amber
+gradient with a pencil glyph + larger padding + gold rim + drop
+shadow. Tap target ~3× larger, reads as "this is how you enter
+the creator."
+
+**Filter chip cohesion across sub-tabs.** ClothesCatalog +
+CategoryBrowserScreen each had their own near-identical filter-chip
+styles. Migrated both to the shared `FilterChip` primitive that
+ShopScreen + MatchHistoryScreen already use. Net: one visual
+treatment for filter rows EVERYWHERE in Drop4. Less code, better
+consistency, free haptics+sound from FilterChip's internal
+handlers.
+
+**NEW ribbon + retention badging.** The engine `AmgPartCard`
+already had an `isNew` prop with a wobbling red ribbon — wired
+`characterStore.amgPartUnlockedAt` to it. 7-day window. Plus a
+matching bottom-tab badge for Customize that counts unequipped
+recently-unlocked parts — clears as soon as the player engages.
+
+**OPEN BOXES CTA cohesion.** ClothesCatalog footer now uses the
+same 4-stop amber gradient + gold rim the Customize hero's OPEN
+BOXES button uses. Both buttons route to the same screen so they
+match visually.
+
+**Collection % pill micro-polish.** The flat amber chip in the hero
+identity row now has a horizontal warm-orange fill behind the
+digits proportional to the player's collection %. Reads as "X%
+there" at a glance.
+
+**TopBar dead-code purge.** ~50 lines of dead "+" badge code in
+CurrencyPill — the calm-pass dropped the badge but left props
++ JSX + styles dormant for ~6 weeks. Plus a stale GlossyButton
+import in HomeScreen.
+
+### Status
+
+- typecheck clean across all 8 commits
+- 70/70 jest passing
+- pre-commit hook validated every commit
+- no engine-side changes this session (Devon has an in-flight
+  Dart Club refactor to character-creator that I left untouched)
+
+### Polish-queue progress
+
+Shipped from POLISH_FOLLOWUPS.md:
+- Bottom tab badges → Customize (Shop tab still pending)
+- Shop: NEW badge on parts unlocked this week
+- DailyRewardPopup day-7+ celebration — verified already shipped
+
+Still queued for future runs:
+- Crossfade outfit mesh in creator (engine work, blocked by
+  Dart Club refactor in flight)
+- Daily AMG part deal slot in shopStore
+- Starter pack unlock ceremony toast
+- ErrorBoundary coverage on per-screen level
+- App Store screenshots + 1024×1024 icon export
