@@ -19,7 +19,6 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS, BOARD_ACCESSORIES, EMOTES, RARITY_COLORS, RARITY_LABELS, ShopItem } from '../data/shopCatalog';
 import { CosmeticPreviewModal } from '../components/ui/CosmeticPreviewModal';
-import { FilterChip } from '../components/ui/FilterChip';
 import { AnimatedRarityBg } from '../components/effects/AnimatedRarityBg';
 
 const EMOTE_IDS = new Set(EMOTES.map(e => e.id));

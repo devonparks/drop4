@@ -28,6 +28,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { FilterChip } from '../components/ui/FilterChip';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import {
   BOARD_THEMES,
@@ -491,30 +492,22 @@ export function CategoryBrowserScreen() {
             </View>
           )}
 
-          {/* Rarity filter chips */}
+          {/* Rarity filter chips — uses the cross-screen FilterChip
+              primitive so the visual treatment matches the other
+              filter rows across Drop4. (Cohesion pass 2026-05-04.) */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterRow}
           >
-            {RARITY_FILTERS.map((f) => {
-              const active = rarityFilter === f.id;
-              return (
-                <PressScale
-                  key={f.id}
-                  onPress={() => { haptics.tap(); setRarityFilter(f.id); }}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`Filter by ${f.label}`}
-                >
-                  <View style={[styles.filterChip, active && styles.filterChipActive]}>
-                    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
-                      {f.label}
-                    </Text>
-                  </View>
-                </PressScale>
-              );
-            })}
+            {RARITY_FILTERS.map((f) => (
+              <FilterChip
+                key={f.id}
+                label={f.label}
+                active={rarityFilter === f.id}
+                onPress={() => setRarityFilter(f.id)}
+              />
+            ))}
           </ScrollView>
 
           {/* Items grid — 3-col View+map (not FlatList; small list, no
@@ -763,31 +756,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 6,
   },
-  filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(10,14,32,0.55)',
-  },
-  filterChipActive: {
-    borderColor: 'rgba(255,180,90,0.85)',
-    backgroundColor: 'rgba(255,140,0,0.20)',
-    shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  filterChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.8,
-  },
-  filterChipTextActive: { color: '#ffffff' },
+  // filterChip styles moved to FilterChip shared component (cohesion
+  // pass 2026-05-04 — every filter row across Drop4 uses the same chip
+  // visual now: Shop, MatchHistory, ClothesCatalog, CategoryBrowser).
 
   // Grid
   grid: {

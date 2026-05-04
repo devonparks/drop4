@@ -47,6 +47,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { FilterChip } from '../ui/FilterChip';
 import { PressScale } from '../animations';
 // Engine-lifted UI primitives (2026-05-04 cross-game pivot).
 // The Drop4-local copies of VariantGallery, AmgPartCard + the slot
@@ -412,30 +413,24 @@ export function ClothesCatalog({ visible, onClose }: Props) {
           </View>
         )}
 
-        {/* Species filter chips — shared between PARTS and PACKS. */}
+        {/* Species filter chips — shared between PARTS and PACKS. Uses
+            the cross-screen FilterChip primitive so the visual treatment
+            matches the Shop, MatchHistory, and CategoryBrowser filter
+            rows. (Cohesion pass 2026-05-04.) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterRow}
           style={styles.filterScroll}
         >
-          {SPECIES_FILTERS.map((f) => {
-            const active = speciesFilter === f.id;
-            return (
-              <Pressable
-                key={f.id}
-                onPress={() => { haptics.tap(); setSpeciesFilter(f.id); }}
-                style={[styles.filterChip, active && styles.filterChipActive]}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={`Filter species: ${f.label}`}
-              >
-                <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {SPECIES_FILTERS.map((f) => (
+            <FilterChip
+              key={f.id}
+              label={f.label}
+              active={speciesFilter === f.id}
+              onPress={() => setSpeciesFilter(f.id)}
+            />
+          ))}
         </ScrollView>
 
         {/* PARTS-mode bucket chip row */}
@@ -936,28 +931,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  filterChip: {
-    height: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    borderRadius: 15,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(10,14,32,0.55)',
-  },
-  filterChipActive: {
-    borderColor: 'rgba(255,180,90,0.85)',
-    backgroundColor: 'rgba(255,140,0,0.18)',
-  },
-  filterChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.6,
-  },
-  filterChipTextActive: { color: '#ffffff' },
+  // filterChip styles moved to FilterChip shared component (cohesion
+  // pass 2026-05-04 — every filter row across Drop4 uses the same chip
+  // visual now: Shop, MatchHistory, ClothesCatalog, CategoryBrowser).
 
   // ── PARTS bucket row ───────────────────────────────────────
   bucketScroll: {
