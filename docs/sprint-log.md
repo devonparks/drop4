@@ -135,3 +135,72 @@ backpacks / belts / pauldrons / knee pads).
   flexible.
 - **`@amg/cosmetic-ui` + `@amg/cosmetic-runtime`** as the package
   names for the lift.
+
+---
+
+## 2026-05-04 — overnight session round 2: end-to-end engine wiring
+
+Devon said "keep going" so I continued from the engine-package
+scaffolding into actually wiring Drop4 to consume the engine.
+
+### Commits this round
+
+| Hash | Scope | What |
+|------|-------|------|
+| `28b8f39` | drop4 | engine-lift: ClothesCatalog now consumes @amg/cosmetic-ui |
+
+### What's now live (round 2)
+
+- **`src/services/cosmeticAdapter.ts`** — Drop4's bridge to the
+  engine. Wraps `useCharacterStore` + `getPartThumb` +
+  `amgPartPricing` + `packMeta` into the cross-game `CosmeticAdapter`
+  shape every engine component takes as a prop.
+- **VariantGallery now from engine.** Drop4's local copy at
+  `src/components/customize/VariantGallery.tsx` is deleted. The
+  `@amg/cosmetic-ui` version is the live one; Drop4 wires it via
+  `drop4CosmeticAdapter` + game-specific equip/route callbacks.
+- **Slot bucket types lifted.** `SlotBucket`, `AmgManifestPart`, and
+  `DEFAULT_SLOT_BUCKETS` now live in `@amg/cosmetic-ui` (under
+  `types/slots.ts`). Drop4 imports them; the local definitions were
+  removed.
+- **Variant drop machinery in lootBoxStore.** `LootItemType`
+  extended with `'partVariant'`; `variantDropId` / `parseVariantDropId`
+  encode `(partName, variantId)` tuples as `partName__variantId`
+  ids; `mintPartVariantItem` + `awardPartVariant` are the
+  achievement/scripted-event hooks. `grantItem` and
+  `isLootItemOwned` dispatch the `partVariant` case through
+  `characterStore.unlockPartVariant` / `isPartVariantOwned`.
+- **`getLootItemById` synthesizes** partVariant items for any id
+  matching the `__` pattern, so the manifest-driven pool expansion
+  can grant variants without pre-registering each.
+
+### What's NOT in this round (waits on Unity batch)
+
+- The actual lootbox drop POOL doesn't yet seed variant items.
+  Once `colorway-manifest.json` lands at
+  `src/assets/images/parts-colorways/`, a follow-up commit reads the
+  manifest and seeds `(part, variant)` entries into
+  `POOL.byCatRarity` by rarity.
+
+### Cross-game proof
+
+Drop4's `ClothesCatalog` calls into the engine `VariantGallery` via
+the adapter pattern. Tic Tac Toe will write its own
+`tttCosmeticAdapter.ts` against its own zustand stores and render the
+exact same engine `VariantGallery` JSX. **The platform claim is now
+testable** — there's no Drop4-specific code inside the engine
+package.
+
+### Decisions locked (round 2)
+
+- **`partName__variantId` id format** is canonical across the
+  lootbox + the Unity colorway exporter (filenames match this).
+- **`awardPartVariant`** is the standard hook for achievements /
+  scripted events — uses the same dupe → shards+coin-refund logic
+  as `openBox` so the UX stays consistent.
+- **Drop4-local `partSubcategories.ts`** stays in Drop4 (pack
+  tagging is game-specific). The `SubcategoryAdapter` interface in
+  `@amg/cosmetic-ui` lets games plug their own taxonomy in when
+  ClothesCatalog itself gets lifted (deferred for now since it's
+  ~1100 lines and the leaf primitives — adapter, gallery, slot
+  buckets — give TTT enough to start).
