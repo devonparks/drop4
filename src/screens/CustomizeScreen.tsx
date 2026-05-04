@@ -513,9 +513,20 @@ export function CustomizeScreen() {
                   accessibilityLabel="Edit character"
                   accessibilityRole="button"
                 >
-                  <View style={styles.editPillInner}>
-                    <Text style={styles.editPillText}>{`EDIT  ›`}</Text>
-                  </View>
+                  {/* AAA pass 2026-05-04: was an outline-only glass pill
+                      that read as a secondary affordance and got missed.
+                      Now a filled warm-amber gradient with a pencil glyph
+                      + bigger "EDIT CHARACTER" text. Players spot it
+                      immediately as the way to enter the creator. */}
+                  <LinearGradient
+                    colors={['#ffb347', '#ff8c00']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.editPillInner}
+                  >
+                    <Text style={styles.editPillIcon}>{'✎'}</Text>
+                    <Text style={styles.editPillText}>EDIT</Text>
+                  </LinearGradient>
                 </PressScale>
                 {!hasTappedChar && (
                   <View pointerEvents="none" style={styles.charTapHint}>
@@ -910,21 +921,39 @@ const styles = StyleSheet.create({
     top: 8,
     right: 8,
     zIndex: 5,
+    // Bigger touch target — pre-AAA-pass it was 10px padding which felt
+    // missable. Drop shadow sells the "this is a real button on the
+    // stage" depth so the gradient fill doesn't look pasted on.
+    shadowColor: '#ff8c00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
+    elevation: 6,
   },
   editPillInner: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,180,90,0.5)',
-    backgroundColor: 'rgba(10,14,32,0.7)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,120,0.85)',
+  },
+  editPillIcon: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 13,
+    color: '#0a0e27',
+    lineHeight: 14,
+    // Pencil glyph reads dark on the warm gradient so the icon pops.
   },
   editPillText: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 10,
-    color: '#ffb347',
-    letterSpacing: 1.2,
+    fontSize: 12,
+    color: '#0a0e27',
+    letterSpacing: 1.4,
   },
   charTapHint: {
     position: 'absolute',
