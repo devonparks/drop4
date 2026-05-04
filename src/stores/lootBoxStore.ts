@@ -171,7 +171,7 @@ export const LOOT_BOXES: LootBox[] = [
 // but bias the CATEGORY pick toward their `themedCategory` after the
 // rarity is rolled.
 
-export type RarityWeights = Record<LootBoxRarity, number>;
+type RarityWeights = Record<LootBoxRarity, number>;
 
 /** Per-tier drop rates. Exposed so the LootBoxScreen's transparency
  *  panel can render the real numbers per tier instead of a single
@@ -375,33 +375,6 @@ export function getLootItemById(id: string): LootBoxItem | null {
   return null;
 }
 
-/** Achievement / scripted-event hook: hand the player a specific
- *  (partName, variantId) drop without going through the lootbox
- *  roller. The drop respects the same dupe + grant logic openBox uses
- *  so the UX stays consistent (dupe → shards + coin refund). */
-export function awardPartVariant(
-  partName: string,
-  variantId: string,
-  rarity: LootBoxRarity = 'common',
-): { isDupe: boolean; shardsAwarded: number; coinRefund: number } {
-  const item = mintPartVariantItem(partName, variantId, rarity);
-  const isDupe = isLootItemOwned(item);
-  if (isDupe) {
-    const shards = DUPE_SHARDS_AWARDED[item.rarity];
-    const coins = DUPE_COIN_REFUND[item.rarity];
-    useLootBoxStore.setState((state) => ({
-      shards: { ...state.shards, [item.rarity]: state.shards[item.rarity] + shards },
-    }));
-    if (coins > 0) useShopStore.getState().addCoins(coins);
-    return { isDupe: true, shardsAwarded: shards, coinRefund: coins };
-  }
-  // grantItem dispatches to characterStore.unlockPartVariant via the
-  // 'partVariant' case in the switch above.
-  // (Inlined here because grantItem is local to this file.)
-  useCharacterStore.getState().unlockPartVariant(partName, variantId);
-  return { isDupe: false, shardsAwarded: 0, coinRefund: 0 };
-}
-
 /** Enumerate every droppable item. Used by the Customize tab progress
  *  bars ("you own 12 of 245 lootable items"). Excludes currency. */
 export function getAllLootableItems(): LootBoxItem[] {
@@ -450,7 +423,7 @@ export function featuredItemsForWeek(date?: Date): LootBoxItem[] {
 
 // ─── Shards & Shard Shop ───────────────────────────────────────────────
 
-export type ShardBucket = LootBoxRarity;
+type ShardBucket = LootBoxRarity;
 
 /** Cost in shards to directly unlock a specific item, by rarity. */
 export const SHARD_UNLOCK_COST = ENGINE_SHARD_UNLOCK_COST;
