@@ -226,6 +226,10 @@ queue + cohesion targets while Devon was at his ODA shift.
 | `063c5a3` | drop4 | polish: collection % pill — subtle horizontal progress fill behind the digits |
 | `c1161a7` | drop4 | cleanup: drop dead "+" buy-more badge code from TopBar CurrencyPill (~50 dead lines) |
 | `92129e2` | drop4 | cleanup: drop stale GlossyButton import in HomeScreen |
+| `8e0cd31` | drop4 | docs: sprint log — daytime polish session summary |
+| `6a48c2d` | drop4 | polish: ClothesCatalog manifest fetch — error state with Try Again button |
+| `9df8505` | drop4 | polish: fix StaggeredEntry index collision in Customize cascade |
+| `66fd45f` | drop4 | cleanup: drop unused textStyles record (~115 lines dead in theme/typography) |
 
 ### Polish themes shipped
 
@@ -265,9 +269,29 @@ CurrencyPill — the calm-pass dropped the badge but left props
 + JSX + styles dormant for ~6 weeks. Plus a stale GlossyButton
 import in HomeScreen.
 
+**Manifest fetch error state.** Before: a flaky network or R2
+outage left PartsGrid stuck on the loading spinner forever.
+Now: ⚠️ icon + "Couldn't reach the parts catalog" message + a
+TRY AGAIN gradient button matching the OPEN BOXES treatment.
+Tap retry → bumps a counter that re-runs the fetch useEffect
+without remounting the modal. Same warm-amber gradient + gold
+rim + drop-shadow text as the rest of the customize CTAs so the
+error state feels like part of the family.
+
+**StaggeredEntry timing collision fix.** The Customize cascade had
+ActionBand at index=1 colliding with the first loadout cell at
+index=(0+1)=1 — both animated together at 30ms. Bumped cells to
+i+2 so the cascade now reads as a clean wave: Hero (0ms) →
+ActionBand (30ms) → Clothes (60ms) → ... → ShardsCell (240ms).
+
+**textStyles dead code purge.** ~115 lines of pre-built TextStyle
+ladder (displayXL → micro + specialized stat/currency/badge) was
+exported from theme/typography but never imported anywhere across
+src/. Every screen rolls inline TextStyle blocks instead. Removed.
+
 ### Status
 
-- typecheck clean across all 8 commits
+- typecheck clean across all 12 commits
 - 70/70 jest passing
 - pre-commit hook validated every commit
 - no engine-side changes this session (Devon has an in-flight
