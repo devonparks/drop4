@@ -544,10 +544,14 @@ export function ClothesCatalog({ visible, onClose }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Open boxes to find more clothes"
           >
+            {/* Solid amber gradient matches the OPEN BOXES hero CTA on
+                the Customize tab — same warm-orange treatment so the
+                player reads "this routes to the same place." Was a
+                ghostly low-alpha tint that didn't read as a real CTA. */}
             <LinearGradient
-              colors={['rgba(255,140,0,0.28)', 'rgba(255,80,0,0.18)']}
+              colors={['#ffce63', '#ff9a2c', '#e87617', '#b85c0e']}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              end={{ x: 0, y: 1 }}
               style={styles.openBagsGradient}
             >
               <Text style={styles.openBagsText}>OPEN BOXES FOR MORE CLOTHES</Text>
@@ -1239,18 +1243,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.4)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,120,0.85)',
     borderRadius: 14,
   },
   openBagsText: {
     fontFamily: fonts.heading,
-    fontWeight: weight.bold,
+    fontWeight: weight.black,
     fontSize: 13,
     color: '#ffffff',
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  openBagsArrow: { fontSize: 16, color: '#ffffff' },
+  openBagsArrow: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
 
   doneArea: {
     paddingHorizontal: 40,
