@@ -191,9 +191,23 @@ export default function App() {
       <NavigationContainer
         ref={navRef}
         onReady={() => {
-          // Dev/test hook: expose navigation for the playtest bot
+          // Dev/test hook: expose navigation + stores for the playtest bot.
+          // Lets the headless preview agent drive the unlock + equip flow
+          // without rolling RNG to hit every cosmetic category.
           if (__DEV__ && typeof window !== 'undefined') {
-            (window as any).__nav = navRef.current;
+            const w = window as any;
+            w.__nav = navRef.current;
+            w.__stores = {
+              shop: useShopStore,
+              character: useCharacterStore,
+              pet: usePetStore,
+              lootBox: useLootBoxStore,
+              challenge: useChallengeStore,
+              achievement: useAchievementStore,
+              dailyReward: useDailyRewardStore,
+              dailySpin: useDailySpinStore,
+              tutorial: useTutorialStore,
+            };
           }
         }}
         theme={{

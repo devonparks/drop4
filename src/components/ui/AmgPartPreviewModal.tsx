@@ -72,11 +72,28 @@ interface Props {
    *  affordability check is bypassed. The shop wires onBuy to box-
    *  routing or shard-spend instead of a coin debit. */
   lockedActionLabel?: string;
+
+  // ── Wardrobe mode (Phase 1 of AMG_WARDROBE_ARCHITECTURE) ─────────
+  // When the modal is opened from the Customize → CLOTHES wardrobe
+  // flow (owned part, dressing-room mirror), wire these instead of
+  // / alongside the shop's onBuy. Action row composes from whichever
+  // handlers are set.
+
+  /** Tap WEAR → equip the part on the player's character. Visible
+   *  when set + the part is owned. Disabled visual when the part
+   *  is currently equipped (becomes a passive WEARING badge). */
+  onEquip?: () => void;
+  /** Tap VARIANTS → open the colorway gallery. Visible when set. */
+  onOpenVariants?: () => void;
+  /** True when the player is currently wearing this exact part.
+   *  Switches the WEAR button into a passive "WEARING ✓" state. */
+  isCurrentlyEquipped?: boolean;
 }
 
 export function AmgPartPreviewModal({
   visible, partName, slot, canAfford, onClose, onBuy,
   lockedActionLabel,
+  onEquip, onOpenVariants, isCurrentlyEquipped,
 }: Props) {
   const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
 
@@ -143,7 +160,11 @@ export function AmgPartPreviewModal({
             )}
           </View>
 
-          {/* Action row */}
+          {/* Action row — composes from which handlers the caller
+              wires. Three modes:
+                · Wardrobe (owned): VARIANTS + WEAR/WEARING✓
+                · Locked (shop or wardrobe): GET FROM BAGS / lockedActionLabel
+                · Legacy direct-buy (kept for shop backward compat): BUY · 500 */}
           <View style={styles.actionRow}>
             <Pressable
               onPress={() => { haptics.tap(); onClose(); }}
@@ -153,10 +174,58 @@ export function AmgPartPreviewModal({
             >
               <Text style={styles.cancelText}>CANCEL</Text>
             </Pressable>
-            {lockedActionLabel ? (
-              // Post-pivot path: single primary CTA the shop routes to
-              // box-pickup or shard-spend. Always enabled; affordability
-              // logic moved out of the modal.
+
+            {onOpenVariants && (
+              <Pressable
+                onPress={() => { haptics.tap(); playSound('click'); onOpenVariants(); }}
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: () => { haptics.tap(); playSound('click'); onOpenVariants(); } } as any)
+                  : {})}
+                style={styles.variantsBtnWrap}
+                accessibilityRole="button"
+                accessibilityLabel="Open colorway variants"
+              >
+                <View style={styles.variantsBtn}>
+                  <Text style={styles.variantsText}>VARIANTS</Text>
+                </View>
+              </Pressable>
+            )}
+
+            {onEquip ? (
+              <Pressable
+                onPress={() => {
+                  if (isCurrentlyEquipped) return;
+                  haptics.win();
+                  playSound('whoosh');
+                  onEquip();
+                }}
+                {...(Platform.OS === 'web'
+                  ? ({ onClick: () => {
+                      if (isCurrentlyEquipped) return;
+                      haptics.win();
+                      playSound('whoosh');
+                      onEquip();
+                    } } as any)
+                  : {})}
+                style={styles.buyBtnWrap}
+                accessibilityRole="button"
+                accessibilityLabel={isCurrentlyEquipped ? 'Currently wearing' : 'Wear this part'}
+                accessibilityState={{ disabled: !!isCurrentlyEquipped }}
+              >
+                <LinearGradient
+                  colors={isCurrentlyEquipped ? ['#3eb489', '#2a8b66'] : ['#ffce63', '#ff9a2c', '#e87617', '#b85c0e']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.buyBtn}
+                >
+                  <Text style={styles.buyText}>
+                    {isCurrentlyEquipped ? 'WEARING ✓' : 'WEAR'}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            ) : lockedActionLabel ? (
+              // Locked state: single primary CTA the catalog routes to
+              // box-pickup or shard-spend. Always enabled.
               <Pressable
                 onPress={() => onBuy(partName)}
                 {...(Platform.OS === 'web'
@@ -166,29 +235,28 @@ export function AmgPartPreviewModal({
                 accessibilityRole="button"
                 accessibilityLabel={lockedActionLabel}
               >
-                <LinearGradient colors={['#ff8c00', '#cc5500']} style={styles.buyBtn}>
+                <LinearGradient
+                  colors={['#ffce63', '#ff9a2c', '#e87617', '#b85c0e']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.buyBtn}
+                >
                   <Text style={styles.buyText}>{lockedActionLabel}</Text>
                 </LinearGradient>
               </Pressable>
             ) : (
+              // Legacy direct-buy path (kept for shop backward compat).
               <Pressable
                 onPress={() => {
                   if (!canAfford) { haptics.error(); playSound('error'); return; }
                   onBuy(partName);
                 }}
-                // Web onClick fallback — LinearGradient inside Pressable
-                // swallows pointer events on web (same gotcha as TopBar).
                 {...(Platform.OS === 'web'
                   ? ({ onClick: () => {
                       if (!canAfford) { haptics.error(); playSound('error'); return; }
                       onBuy(partName);
                     } } as any)
                   : {})}
-                // Wrapping Pressable needs flex:2 — the LinearGradient
-                // inside can't expand past its parent's intrinsic width,
-                // so without flex here the BUY button collapses to its
-                // text width while CANCEL (flex:1) eats the rest of the
-                // action row.
                 style={styles.buyBtnWrap}
                 accessibilityRole="button"
                 accessibilityLabel={canAfford ? `Buy for ${price} coins` : 'Not enough coins'}
@@ -199,7 +267,7 @@ export function AmgPartPreviewModal({
                   style={styles.buyBtn}
                 >
                   <Text style={styles.buyText}>
-                    {canAfford ? `BUY · ${price}🪙` : 'NOT ENOUGH COINS'}
+                    {canAfford ? `BUY · ${price}\u{1FA99}` : 'NOT ENOUGH COINS'}
                   </Text>
                 </LinearGradient>
               </Pressable>
@@ -280,9 +348,28 @@ const styles = StyleSheet.create({
   },
   buyBtn: {
     borderRadius: 14, paddingVertical: 12, alignItems: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(255,210,120,0.85)',
   },
   buyText: {
-    fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 14,
-    color: '#fff', letterSpacing: 1.2,
+    fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 14,
+    color: '#fff', letterSpacing: 1.4,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  // Secondary "VARIANTS" button — opens the colorway gallery from
+  // the wardrobe path. Quieter visual than WEAR so the primary
+  // action stays clear.
+  variantsBtnWrap: {
+    flex: 1.4,
+  },
+  variantsBtn: {
+    borderRadius: 14, paddingVertical: 12, alignItems: 'center',
+    backgroundColor: 'rgba(155,89,182,0.18)',
+    borderWidth: 1.5, borderColor: 'rgba(155,89,182,0.7)',
+  },
+  variantsText: {
+    fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 12,
+    color: '#c997e7', letterSpacing: 1.4,
   },
 });

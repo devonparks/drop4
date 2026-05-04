@@ -48,6 +48,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { FilterChip } from '../ui/FilterChip';
+import { AmgPartPreviewModal } from '../ui/AmgPartPreviewModal';
 import { PressScale } from '../animations';
 // Engine-lifted UI primitives (2026-05-04 cross-game pivot).
 // The Drop4-local copies of VariantGallery, AmgPartCard + the slot
@@ -175,11 +176,15 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   } | null>(null);
   const [equipFlash, setEquipFlash] = useState<string | null>(null);
 
-  // Variant Gallery state — opens when the player taps an OWNED part
-  // card. Shows all colorways for that part. Tap a colorway → equip
-  // it. Replaces the previous "instant-equip-default" behavior so
-  // the GTA-style colorway picker is one tap deep.
+  // Variant Gallery state — opens when the player taps VARIANTS in
+  // the dressing-room mirror modal. Shows all colorways for the part.
   const [galleryPart, setGalleryPart] = useState<{ name: string; slot: string } | null>(null);
+
+  // Dressing-room mirror state — opens when the player taps any part
+  // card (owned OR locked). Shows their character with the part
+  // swapped in. Action row composes from owned/locked/equipped state.
+  // First-tap UX, per AMG_WARDROBE_ARCHITECTURE.md Phase 1.
+  const [previewPart, setPreviewPart] = useState<{ name: string; slot: string } | null>(null);
 
   // Fetch the AMG manifest once when the modal opens. Falls into the
   // PartsGrid error state on failure so players see "Try Again" instead
@@ -265,40 +270,18 @@ export function ClothesCatalog({ visible, onClose }: Props) {
   }, [amgCharacter, activeBucket]);
 
   // ── PARTS view actions ─────────────────────────────────────────
+  // Dressing-room mirror UX (AMG_WARDROBE_ARCHITECTURE.md Phase 1):
+  // EVERY part tap — owned or locked — opens the on-character preview
+  // modal first. Player sees their character wearing this part before
+  // committing. Modal action row composes based on ownership:
+  //   · Owned: VARIANTS + WEAR (or WEARING ✓ if already equipped)
+  //   · Locked: GET FROM BAGS (routes to LootBox)
+  // Replaces the previous "owned → variant gallery, locked → confirm
+  // dialog" split which forced the player to commit before seeing.
   const handlePartTap = (part: AmgManifestPart) => {
-    const owned = isAmgPartOwned(part.name);
-    if (owned) {
-      // Open the Goku-transformation gallery instead of insta-equipping.
-      // The player can now pick the colorway they want, and OWNED
-      // becomes a two-tap flow (part → variant) instead of single-tap
-      // default equip. Way more like GTA / Marvel Snap.
-      haptics.tap();
-      playSound('click');
-      setGalleryPart({ name: part.name, slot: part.slot });
-      return;
-    }
-    // Locked AMG part — info modal explaining it's part of an outfit
-    // pack found in boxes. (Individual parts are not shard-unlockable
-    // in v1; only outfit packs are. The pack containing the part is.)
-    const { rarity } = getPartPrice(part.name);
-    const pack = packPrefixFromPartName(part.name);
-    const meta = packMeta(pack);
     haptics.tap();
-    setConfirmDialog({
-      title: `${RARITY_LABELS[rarity]} part — locked`,
-      message:
-        `This part comes from ${meta.displayName ?? 'an outfit pack'}. ` +
-        `Open Loot Boxes to find packs — every pack you unlock auto-equips ` +
-        `its parts so you can mix and match.`,
-      confirmLabel: 'OPEN BOXES',
-      cancelLabel: 'Maybe later',
-      onConfirm: () => {
-        haptics.tap();
-        playSound('click');
-        onClose();
-        navigation.navigate('LootBox');
-      },
-    });
+    playSound('click');
+    setPreviewPart({ name: part.name, slot: part.slot });
   };
 
   // ── PACKS view filtering ───────────────────────────────────────
@@ -600,6 +583,56 @@ export function ClothesCatalog({ visible, onClose }: Props) {
             <Text style={styles.equipFlashText}>{equipFlash}</Text>
           </View>
         )}
+
+        {/* Dressing-room mirror — first-tap modal showing the player
+            wearing this part. Owned parts get [VARIANTS][WEAR];
+            locked parts get [GET FROM BAGS]. Per AMG_WARDROBE_ARCHITECTURE
+            Phase 1 — replaces the old "tap-to-instantly-equip-or-route"
+            split that forced commitment before preview. */}
+        {previewPart && (() => {
+          const owned = isAmgPartOwned(previewPart.name);
+          const equippedAtSlot = amgCharacter
+            ? (amgCharacter as unknown as { parts?: Record<string, string> }).parts?.[previewPart.slot]
+            : undefined;
+          const isCurrentlyEquipped = equippedAtSlot === previewPart.name;
+          return (
+            <AmgPartPreviewModal
+              visible={true}
+              partName={previewPart.name}
+              slot={previewPart.slot}
+              canAfford={true}
+              onClose={() => setPreviewPart(null)}
+              onBuy={() => {
+                setPreviewPart(null);
+                onClose();
+                navigation.navigate('LootBox');
+              }}
+              {...(owned
+                ? {
+                    onEquip: () => {
+                      const partName = previewPart.name;
+                      const slot = previewPart.slot;
+                      // Equip with current variant (default if none chosen).
+                      const variantId = useCharacterStore.getState()
+                        .equippedPartVariant[partName] ?? '';
+                      useCharacterStore.getState().equipPartVariant(slot, partName, variantId);
+                      const packDisplay = packMeta(packPrefixFromPartName(partName)).displayName;
+                      setEquipFlash(`Equipped ${packDisplay}`);
+                      setPreviewPart(null);
+                    },
+                    onOpenVariants: () => {
+                      const partRef = previewPart;
+                      setPreviewPart(null);
+                      // Defer to next tick so the close animation runs
+                      // before the gallery slides up.
+                      setTimeout(() => setGalleryPart(partRef), 80);
+                    },
+                    isCurrentlyEquipped,
+                  }
+                : { lockedActionLabel: 'GET FROM BAGS' })}
+            />
+          );
+        })()}
 
         {/* Variant Gallery — Goku transformations modal, lifted to
             @amg/cosmetic-ui for cross-game reuse. Drop4 wires the
