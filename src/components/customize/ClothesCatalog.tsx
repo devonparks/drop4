@@ -49,7 +49,18 @@ import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { PressScale, StaggeredEntry } from '../animations';
 import { AmgPartCard } from '../ui/AmgPartCard';
-import { VariantGallery } from './VariantGallery';
+// Engine-lifted UI primitives (2026-05-04 cross-game pivot).
+// The Drop4-local copy of VariantGallery + the slot bucket array were
+// removed; ClothesCatalog now consumes the engine version through
+// drop4CosmeticAdapter — same JSX every AMG game renders.
+import {
+  VariantGallery,
+  DEFAULT_PALETTE,
+  DEFAULT_SLOT_BUCKETS,
+  type SlotBucket,
+  type AmgManifestPart,
+} from '@amg/cosmetic-ui';
+import { drop4CosmeticAdapter } from '../../services/cosmeticAdapter';
 import { useCharacterStore } from '../../stores/characterStore';
 import { OUTFITS, type Species } from '../../data/outfitRegistry';
 import { OUTFIT_SHOP_ITEMS } from '../../data/cosmeticsShopCatalog';
@@ -117,95 +128,22 @@ const SPECIES_FILTERS: Array<{ id: 'All' | Species; label: string; manifestKey: 
 // turns them into shopping categories the player can navigate without
 // a manual.
 
-interface SlotBucket {
-  id: string;
-  label: string;
-  /** Glyph or short emoji for the chip — placeholder until painted
-   *  per-bucket icons get generated. */
-  glyph: string;
-  /** Manifest slot keys that belong in this bucket. Order roughly
-   *  determines the order parts appear inside the bucket grid. */
-  slots: string[];
-  /** Marketing blurb for the bucket header — one-liner shown above
-   *  the grid so the player knows what they're shopping. */
-  blurb: string;
-}
-
-const SLOT_BUCKETS: SlotBucket[] = [
-  {
-    id: 'tops',
-    label: 'TOPS',
-    glyph: '\u{1F455}',
-    slots: ['Torso', 'ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight'],
-    blurb: 'Shirts, jackets, sleeves, gloves.',
-  },
-  {
-    id: 'pants',
-    label: 'PANTS',
-    glyph: '\u{1F456}',
-    slots: ['Hips', 'LegLeft', 'LegRight'],
-    blurb: 'Belts, pants, shorts, skirts.',
-  },
-  {
-    id: 'shoes',
-    label: 'SHOES',
-    glyph: '\u{1F45F}',
-    slots: ['FootLeft', 'FootRight'],
-    blurb: 'Boots, sneakers, sandals.',
-  },
-  {
-    id: 'hair',
-    label: 'HAIR',
-    glyph: '\u{1F488}',
-    slots: ['Hair'],
-    blurb: 'Cuts, styles, and color volume.',
-  },
-  {
-    id: 'face',
-    label: 'FACE',
-    glyph: '\u{1F913}',
-    slots: ['EyebrowLeft', 'EyebrowRight', 'EarLeft', 'EarRight', 'FacialHair'],
-    blurb: 'Brows, ears, beards, sideburns.',
-  },
-  {
-    id: 'hats',
-    label: 'HATS',
-    glyph: '\u{1F3A9}',
-    slots: ['AttachmentHead'],
-    blurb: 'Helmets, caps, crowns, masks worn up top.',
-  },
-  {
-    id: 'accessories',
-    label: 'ACCESSORIES',
-    glyph: '\u{1F392}',
-    slots: [
-      'AttachmentFace',
-      'AttachmentBack',
-      'AttachmentHipsFront',
-      'AttachmentHipsBack',
-      'AttachmentHipsLeft',
-      'AttachmentHipsRight',
-      'AttachmentShoulderLeft',
-      'AttachmentShoulderRight',
-      'AttachmentElbowLeft',
-      'AttachmentElbowRight',
-      'AttachmentKneeLeft',
-      'AttachmentKneeRight',
-    ],
-    blurb: 'Backpacks, belts, pauldrons, knee pads.',
-  },
-];
+// Slot buckets now come from @amg/cosmetic-ui — see DEFAULT_SLOT_BUCKETS
+// imported above. Kept the alias so the existing JSX references
+// (SLOT_BUCKETS.find / SLOT_BUCKETS.map) don't have to be renamed
+// every site. If a Drop4-specific override is needed later (e.g. an
+// extra bucket not present in TTT), define a new array here that
+// extends DEFAULT_SLOT_BUCKETS.
+const SLOT_BUCKETS: SlotBucket[] = DEFAULT_SLOT_BUCKETS;
 
 // ─── Manifest fetch (shared with ShopScreen) ────────────────────────
+//
+// `AmgManifestPart` shape now lives in @amg/cosmetic-ui (imported
+// above). The R2 URL stays game-local for now since the manifest
+// CDN is owned by Drop4's content bucket — when that becomes a
+// shared AMG asset the URL moves to @amg/cosmetic-runtime.
 
 const AMG_MANIFEST_URL = 'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/manifest.json';
-
-interface AmgManifestPart {
-  name: string;
-  species: string;
-  slot: string;
-  file: string;
-}
 
 // ─── Catalog component ─────────────────────────────────────────────
 
@@ -659,23 +597,36 @@ export function ClothesCatalog({ visible, onClose }: Props) {
           </View>
         )}
 
-        {/* Variant Gallery — Goku transformations modal for owned parts.
-            Mounted inside the catalog so dismissing returns to the same
-            sub-cat / bucket the player was browsing. */}
+        {/* Variant Gallery — Goku transformations modal, lifted to
+            @amg/cosmetic-ui for cross-game reuse. Drop4 wires the
+            adapter (drop4CosmeticAdapter) + game-specific equip/route
+            callbacks; the engine package owns all the JSX. */}
         <VariantGallery
           visible={galleryPart !== null}
           partName={galleryPart?.name ?? ''}
           slot={galleryPart?.slot ?? ''}
-          onClose={() => setGalleryPart(null)}
-          onEquipped={(name) => {
+          adapter={drop4CosmeticAdapter}
+          palette={DEFAULT_PALETTE}
+          onEquip={(name, slot, variantId) => {
+            // Wire to Drop4's variant-aware equip action. The engine
+            // already closes the modal in its own onEquip handler.
+            useCharacterStore.getState().equipPartVariant(slot, name, variantId);
             setEquipFlash(`Equipped ${packMeta(packPrefixFromPartName(name)).displayName}`);
           }}
-          onLockedVariantTap={() => {
+          onLockedTap={() => {
             // Locked colorway → route to LootBox (same flow as locked
-            // base-part). Once the lootbox knows about variant ids it
-            // can preload the destination box / shard cost.
+            // base-part). Once the lootbox mints variant-id drops the
+            // route can preload the destination box / shard cost.
             setGalleryPart(null);
             navigation.navigate('LootBox');
+          }}
+          onClose={() => setGalleryPart(null)}
+          hooks={{
+            onTap: haptics.tap,
+            onSelect: haptics.select,
+            onError: haptics.error,
+            playClick: () => playSound('click'),
+            playWhoosh: () => playSound('whoosh'),
           }}
         />
 

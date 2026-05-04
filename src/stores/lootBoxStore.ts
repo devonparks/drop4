@@ -84,6 +84,7 @@ function normalizeRarity(r: string | undefined): LootBoxRarity | null {
 export type LootItemType =
   | 'board' | 'pieces' | 'dropFx' | 'winFx' | 'frame'
   | 'outfit' | 'pet' | 'emote'
+  | 'partVariant'   // Path A variants (2026-05-04) — (partName, variantId) tuple drops
   | 'coins' | 'gems';
 
 export interface LootBoxItem {
@@ -240,6 +241,57 @@ function emoteToLoot(e: AnimationMeta): LootBoxItem {
   return { id: e.id, name: e.name, type: 'emote', rarity, category: 'emotes' };
 }
 
+// ─── Part-variant drop helpers (Path A, 2026-05-04) ────────────────
+//
+// Variant drops encode (partName, variantId) into a single id string
+// using a `__` separator so the rest of the lootbox machinery (pool
+// lookup, history, dupe check) keeps treating each variant as a
+// distinct item without needing to thread tuples everywhere.
+//
+// Example: `SK_FANT_KNGT_03_10TORS_HU01__c03` = the cyan colorway
+//          (`c03`) of the Fantasy Knights torso variant 03.
+//
+// Devon's Unity Drop4ColorwayExporter writes filenames in this same
+// format so the JS thumb resolver can find the painted PNG by id.
+
+const VARIANT_ID_SEP = '__';
+
+/** Construct a variant drop id from a part name + colorway slug. */
+export function variantDropId(partName: string, variantId: string): string {
+  if (!variantId || variantId === '') return partName;
+  return `${partName}${VARIANT_ID_SEP}${variantId}`;
+}
+
+/** Parse a variant drop id back into its (partName, variantId) tuple.
+ *  Returns variantId='' for legacy non-variant ids that lack the
+ *  separator (treated as the default colorway for backward compat). */
+export function parseVariantDropId(id: string): { partName: string; variantId: string } {
+  const idx = id.indexOf(VARIANT_ID_SEP);
+  if (idx < 0) return { partName: id, variantId: '' };
+  return {
+    partName: id.substring(0, idx),
+    variantId: id.substring(idx + VARIANT_ID_SEP.length),
+  };
+}
+
+/** Mint a LootBoxItem for a (partName, variantId) tuple at the given
+ *  rarity. Used by achievement grants and the future colorway-manifest
+ *  pool seeder once Unity finishes the Path A render batch. */
+export function mintPartVariantItem(
+  partName: string,
+  variantId: string,
+  rarity: LootBoxRarity,
+  displayName?: string,
+): LootBoxItem {
+  return {
+    id: variantDropId(partName, variantId),
+    name: displayName ?? `${partName}${variantId ? ` · ${variantId}` : ''}`,
+    type: 'partVariant',
+    rarity,
+    category: 'outfits', // variant drops bias toward the outfit themed box
+  };
+}
+
 const COIN_FILLERS: LootBoxItem[] = [
   { id: 'coins_50',   name: '50 Coins',   type: 'coins', rarity: 'common',    value: 50,   category: 'currency' },
   { id: 'coins_100',  name: '100 Coins',  type: 'coins', rarity: 'common',    value: 100,  category: 'currency' },
@@ -292,9 +344,48 @@ function buildPool(): PoolBucket {
 const POOL: PoolBucket = buildPool();
 
 /** Public lookup so other modules (Shard Shop UI, achievement grant) can
- *  resolve an id without re-deriving it. */
+ *  resolve an id without re-deriving it. Falls back to a synthesized
+ *  partVariant item for ids that match the `partName__variantId`
+ *  pattern (so the lootbox can grant manifest-driven variants without
+ *  pre-registering every one in the pool builder). */
 export function getLootItemById(id: string): LootBoxItem | null {
-  return POOL.byId[id] ?? null;
+  const direct = POOL.byId[id];
+  if (direct) return direct;
+  // Variant id fallback — synthesizes a LootBoxItem on-demand for any
+  // (partName, variantId) tuple. Rarity is taken from the base part's
+  // shop pricing tier; defaults to common when the part is unknown.
+  if (id.includes(VARIANT_ID_SEP)) {
+    const { partName, variantId } = parseVariantDropId(id);
+    return mintPartVariantItem(partName, variantId, 'common');
+  }
+  return null;
+}
+
+/** Achievement / scripted-event hook: hand the player a specific
+ *  (partName, variantId) drop without going through the lootbox
+ *  roller. The drop respects the same dupe + grant logic openBox uses
+ *  so the UX stays consistent (dupe → shards + coin refund). */
+export function awardPartVariant(
+  partName: string,
+  variantId: string,
+  rarity: LootBoxRarity = 'common',
+): { isDupe: boolean; shardsAwarded: number; coinRefund: number } {
+  const item = mintPartVariantItem(partName, variantId, rarity);
+  const isDupe = isLootItemOwned(item);
+  if (isDupe) {
+    const shards = DUPE_SHARDS_AWARDED[item.rarity];
+    const coins = DUPE_COIN_REFUND[item.rarity];
+    useLootBoxStore.setState((state) => ({
+      shards: { ...state.shards, [item.rarity]: state.shards[item.rarity] + shards },
+    }));
+    if (coins > 0) useShopStore.getState().addCoins(coins);
+    return { isDupe: true, shardsAwarded: shards, coinRefund: coins };
+  }
+  // grantItem dispatches to characterStore.unlockPartVariant via the
+  // 'partVariant' case in the switch above.
+  // (Inlined here because grantItem is local to this file.)
+  useCharacterStore.getState().unlockPartVariant(partName, variantId);
+  return { isDupe: false, shardsAwarded: 0, coinRefund: 0 };
 }
 
 /** Enumerate every droppable item. Used by the Customize tab progress
@@ -518,6 +609,10 @@ export function isLootItemOwned(item: LootBoxItem): boolean {
     case 'winFx':   return useShopStore.getState().owned.winAnimations.includes(item.id);
     case 'frame':   return useShopStore.getState().owned.boardAccessories.includes(item.id);
     case 'outfit':  return useCharacterStore.getState().isOutfitOwned(item.id);
+    case 'partVariant': {
+      const { partName, variantId } = parseVariantDropId(item.id);
+      return useCharacterStore.getState().isPartVariantOwned(partName, variantId);
+    }
     case 'pet':     return usePetStore.getState().ownedPets.includes(item.id as PetId);
     case 'emote':   return useShopStore.getState().ownedEmotes.includes(item.id);
     case 'coins':
@@ -535,6 +630,11 @@ function grantItem(item: LootBoxItem): void {
     case 'winFx':   shop.purchaseItem('winAnimations', item.id, 0); break;
     case 'frame':   shop.purchaseItem('boardAccessories', item.id, 0); break;
     case 'outfit':  useCharacterStore.getState().unlockOutfit(item.id); break;
+    case 'partVariant': {
+      const { partName, variantId } = parseVariantDropId(item.id);
+      useCharacterStore.getState().unlockPartVariant(partName, variantId);
+      break;
+    }
     case 'pet':     usePetStore.getState().unlockPet(item.id as PetId); break;
     case 'emote':   shop.purchaseEmote(item.id, 0); break;
     case 'coins':   if (item.value) shop.addCoins(item.value); break;

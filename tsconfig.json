@@ -8,6 +8,10 @@
       "@amg/character-runtime/*": ["../amg-engine/packages/character-runtime/src/*"],
       "@amg/character-creator": ["../amg-engine/packages/character-creator/src/index"],
       "@amg/character-creator/*": ["../amg-engine/packages/character-creator/src/*"],
+      "@amg/cosmetic-ui": ["../amg-engine/packages/cosmetic-ui/src/index"],
+      "@amg/cosmetic-ui/*": ["../amg-engine/packages/cosmetic-ui/src/*"],
+      "@amg/cosmetic-runtime": ["../amg-engine/packages/cosmetic-runtime/src/index"],
+      "@amg/cosmetic-runtime/*": ["../amg-engine/packages/cosmetic-runtime/src/*"],
       // Type-only resolution for cross-repo amg-engine source files.
       // These don't go through Metro (Metro uses node resolution from
       // nodeModulesPaths in metro.config.js); they exist purely so that
