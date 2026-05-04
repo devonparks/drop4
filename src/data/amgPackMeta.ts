@@ -142,29 +142,3 @@ export function slotEmoji(partName: string, packEmoji: string): string {
   return SLOT_EMOJI[code] || packEmoji;
 }
 
-/** Stable ordering for shop section headers: starters first, then rising
- *  rarity tiers, then anything else alphabetically. Callers can pass
- *  their live list of packs and get an ordered copy. */
-export function sortPacksForShop(packs: string[]): string[] {
-  const TIER: Record<string, number> = {
-    // Tier 0 — species starters (always owned, hidden in shop anyway)
-    HUMN_BASE: 0, ELVN_BASE: 0, GOBL_BASE: 0, SKTN_BASE: 0, ZOMB_BASE: 0,
-    // Tier 1 — common modern
-    MDRN_CIVL: 1, FANT_VILL: 1,
-    // Tier 2 — uncommon themed
-    MDRN_POLC: 2, SCFI_CIVL: 2, APOC_SURV: 2,
-    // Tier 3 — rare combat
-    GOBL_FIGT: 3, ELVN_WARR: 3, FANT_KNGT: 3, VIKG_WARR: 3,
-    // Tier 4 — epic top-tier
-    SAMR_WARR: 4, APOC_OUTL: 4, PIRT_CAPT: 4, SCFI_SOLD: 4,
-    // Tier 5 — undead / horror
-    APOC_ZOMB: 5, FANT_SKTN: 5, HORR_VILN: 5,
-  };
-  const unique = Array.from(new Set(packs));
-  return unique.sort((a, b) => {
-    const ta = TIER[a] ?? 9;
-    const tb = TIER[b] ?? 9;
-    if (ta !== tb) return ta - tb;
-    return a.localeCompare(b);
-  });
-}

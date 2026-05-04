@@ -257,10 +257,11 @@ function emoteToLoot(e: AnimationMeta): LootBoxItem {
 //
 // The encoding moved to @amg/cosmetic-runtime so every AMG game speaks
 // the same variant id format — critical for cross-game cloud sync of
-// variant ownership keys. Drop4 just re-exports the engine helpers.
+// variant ownership keys. Internal callers below use these aliases;
+// no external Drop4 file imports them, so they're not re-exported.
 
-export const variantDropId = engineVariantDropId;
-export const parseVariantDropId = engineParseVariantDropId;
+const variantDropId = engineVariantDropId;
+const parseVariantDropId = engineParseVariantDropId;
 
 /** Mint a LootBoxItem for a (partName, variantId) tuple at the given
  *  rarity. Used by achievement grants and the future colorway-manifest
@@ -454,11 +455,13 @@ export type ShardBucket = LootBoxRarity;
 /** Cost in shards to directly unlock a specific item, by rarity. */
 export const SHARD_UNLOCK_COST = ENGINE_SHARD_UNLOCK_COST;
 
-/** Coin refund granted alongside shards when a dupe is rolled. */
-export const DUPE_COIN_REFUND = ENGINE_DUPE_COIN_REFUND;
+/** Coin refund granted alongside shards when a dupe is rolled.
+ *  Internal-only (no external callers); engine-sourced. */
+const DUPE_COIN_REFUND = ENGINE_DUPE_COIN_REFUND;
 
-/** Shards awarded per dupe (in addition to the coin refund). Tunable. */
-export const DUPE_SHARDS_AWARDED = ENGINE_DUPE_SHARDS_AWARDED;
+/** Shards awarded per dupe (in addition to the coin refund).
+ *  Internal-only (no external callers); engine-sourced. */
+const DUPE_SHARDS_AWARDED = ENGINE_DUPE_SHARDS_AWARDED;
 
 // ─── Pity timers ───────────────────────────────────────────────────────
 //
