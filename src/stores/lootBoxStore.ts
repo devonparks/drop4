@@ -47,6 +47,18 @@ import {
 import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { PETS, type PetMeta, type PetId } from '../data/petRegistry';
 import { HUMAN_EMOTES, type AnimationMeta } from '../data/animationRegistry';
+// Variant id encoding + lootbox economy constants live in the engine
+// — every AMG game encodes variant tuples the same way and runs the
+// same dupe/shard math so cross-game cloud sync has a single source
+// of truth.
+import {
+  variantDropId as engineVariantDropId,
+  parseVariantDropId as engineParseVariantDropId,
+  VARIANT_ID_SEP,
+  SHARD_UNLOCK_COST as ENGINE_SHARD_UNLOCK_COST,
+  DUPE_COIN_REFUND as ENGINE_DUPE_COIN_REFUND,
+  DUPE_SHARDS_AWARDED as ENGINE_DUPE_SHARDS_AWARDED,
+} from '@amg/cosmetic-runtime';
 
 // ─── Rarity ────────────────────────────────────────────────────────────
 //
@@ -243,36 +255,12 @@ function emoteToLoot(e: AnimationMeta): LootBoxItem {
 
 // ─── Part-variant drop helpers (Path A, 2026-05-04) ────────────────
 //
-// Variant drops encode (partName, variantId) into a single id string
-// using a `__` separator so the rest of the lootbox machinery (pool
-// lookup, history, dupe check) keeps treating each variant as a
-// distinct item without needing to thread tuples everywhere.
-//
-// Example: `SK_FANT_KNGT_03_10TORS_HU01__c03` = the cyan colorway
-//          (`c03`) of the Fantasy Knights torso variant 03.
-//
-// Devon's Unity Drop4ColorwayExporter writes filenames in this same
-// format so the JS thumb resolver can find the painted PNG by id.
+// The encoding moved to @amg/cosmetic-runtime so every AMG game speaks
+// the same variant id format — critical for cross-game cloud sync of
+// variant ownership keys. Drop4 just re-exports the engine helpers.
 
-const VARIANT_ID_SEP = '__';
-
-/** Construct a variant drop id from a part name + colorway slug. */
-export function variantDropId(partName: string, variantId: string): string {
-  if (!variantId || variantId === '') return partName;
-  return `${partName}${VARIANT_ID_SEP}${variantId}`;
-}
-
-/** Parse a variant drop id back into its (partName, variantId) tuple.
- *  Returns variantId='' for legacy non-variant ids that lack the
- *  separator (treated as the default colorway for backward compat). */
-export function parseVariantDropId(id: string): { partName: string; variantId: string } {
-  const idx = id.indexOf(VARIANT_ID_SEP);
-  if (idx < 0) return { partName: id, variantId: '' };
-  return {
-    partName: id.substring(0, idx),
-    variantId: id.substring(idx + VARIANT_ID_SEP.length),
-  };
-}
+export const variantDropId = engineVariantDropId;
+export const parseVariantDropId = engineParseVariantDropId;
 
 /** Mint a LootBoxItem for a (partName, variantId) tuple at the given
  *  rarity. Used by achievement grants and the future colorway-manifest
@@ -464,28 +452,13 @@ export function featuredItemsForWeek(date?: Date): LootBoxItem[] {
 export type ShardBucket = LootBoxRarity;
 
 /** Cost in shards to directly unlock a specific item, by rarity. */
-export const SHARD_UNLOCK_COST: Record<LootBoxRarity, number> = {
-  common: 20,
-  rare: 50,
-  epic: 150,
-  legendary: 400,
-};
+export const SHARD_UNLOCK_COST = ENGINE_SHARD_UNLOCK_COST;
 
 /** Coin refund granted alongside shards when a dupe is rolled. */
-export const DUPE_COIN_REFUND: Record<LootBoxRarity, number> = {
-  common: 10,
-  rare: 25,
-  epic: 75,
-  legendary: 200,
-};
+export const DUPE_COIN_REFUND = ENGINE_DUPE_COIN_REFUND;
 
 /** Shards awarded per dupe (in addition to the coin refund). Tunable. */
-export const DUPE_SHARDS_AWARDED: Record<LootBoxRarity, number> = {
-  common: 5,
-  rare: 10,
-  epic: 25,
-  legendary: 60,
-};
+export const DUPE_SHARDS_AWARDED = ENGINE_DUPE_SHARDS_AWARDED;
 
 // ─── Pity timers ───────────────────────────────────────────────────────
 //
