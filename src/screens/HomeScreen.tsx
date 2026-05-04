@@ -5,7 +5,6 @@ import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
-import { GlossyButton } from '../components/ui/GlossyButton';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { CompositeCharacter, type CharacterState, type ContentSource } from '@amg/character-runtime';
