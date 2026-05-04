@@ -34,7 +34,6 @@ import { packMeta, OUTFIT_PACK_TO_SIDEKICK } from '../data/amgPackMeta';
 import { getPackIcon, getEmoteIcon } from '../data/cosmeticIcons';
 import { filterAmgParts, groupAmgPartsByPack } from '../data/amgShopFilters';
 import { AmgPartPreviewModal } from '../components/ui/AmgPartPreviewModal';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { getPartPrice, isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
 import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -677,19 +676,6 @@ export function ShopScreen() {
   const collectDailyShopCoins = useShopStore(s2 => s2.collectDailyShopCoins);
   const [activeTab, setActiveTab] = useState<ShopTab>('clothes');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter | string>('All');
-  // In-app styled confirm modal — replaces window.confirm() for pet +
-  // emote purchases AND the "not enough coins" terminal alert. The
-  // native browser dialog froze the web preview (Claude headless can't
-  // dismiss) AND looked off-brand.
-  const [confirmDialog, setConfirmDialog] = useState<{
-    title: string;
-    message: string;
-    confirmLabel: string;
-    onConfirm: () => void;
-    /** Single-button mode — no Cancel. Used for terminal alerts like
-     *  "not enough coins" where the player just acknowledges. */
-    confirmOnly?: boolean;
-  } | null>(null);
   const [outfitSpecies, setOutfitSpecies] = useState<'All' | 'human' | 'elves' | 'goblin' | 'skeleton' | 'zombie'>('All');
   const [outfitPreview, setOutfitPreview] = useState<ShopItem | null>(null);
 
@@ -1406,25 +1392,6 @@ export function ShopScreen() {
         // shard-unlockable individually in v1 — the player gets parts
         // as bundles when an outfit pack drops or shards-unlocks.
         lockedActionLabel="OPEN BOXES"
-      />
-
-      {/* Styled buy-confirm dialog for pet + emote purchases. Replaces
-          the blocking native window.confirm() / multi-button Alert.alert
-          which froze the web preview AND looked off-brand. */}
-      <ConfirmDialog
-        visible={confirmDialog !== null}
-        title={confirmDialog?.title ?? ''}
-        message={confirmDialog?.message}
-        confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
-        confirmOnly={confirmDialog?.confirmOnly}
-        onConfirm={() => {
-          confirmDialog?.onConfirm();
-          setConfirmDialog(null);
-        }}
-        onCancel={() => {
-          haptics.tap();
-          setConfirmDialog(null);
-        }}
       />
 
       {/* In-place equip confirmation. Shows briefly when the player
