@@ -230,6 +230,8 @@ queue + cohesion targets while Devon was at his ODA shift.
 | `6a48c2d` | drop4 | polish: ClothesCatalog manifest fetch — error state with Try Again button |
 | `9df8505` | drop4 | polish: fix StaggeredEntry index collision in Customize cascade |
 | `66fd45f` | drop4 | cleanup: drop unused textStyles record (~115 lines dead in theme/typography) |
+| `db7f4e5` | drop4 | docs: sprint log — extend daytime polish summary with later commits |
+| `bb9c378` | drop4 | polish: lootbox reveal — show colorway swatch on partVariant drops |
 
 ### Polish themes shipped
 
@@ -289,9 +291,18 @@ ladder (displayXL → micro + specialized stat/currency/badge) was
 exported from theme/typography but never imported anywhere across
 src/. Every screen rolls inline TextStyle blocks instead. Removed.
 
+**Lootbox variant swatch on reveal.** Variant drops (the ~8K
+`(partName, variantId)` tuples seeded yesterday) showed a generic
+"COLORWAY" chip with no hint of which color rolled — players only
+learned the color from the item name string. Now the reveal chip
+shows an inline color disc parsed from the drop id against
+`@amg/cosmetic-ui`'s DEFAULT_PALETTE, so opening a Gold variant
+of Apocalypse Outlaws actually shows the gold disc inside the
+COLORWAY chip.
+
 ### Status
 
-- typecheck clean across all 12 commits
+- typecheck clean across all 14 commits
 - 70/70 jest passing
 - pre-commit hook validated every commit
 - no engine-side changes this session (Devon has an in-flight
