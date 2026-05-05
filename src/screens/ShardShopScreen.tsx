@@ -203,12 +203,27 @@ export function ShardShopScreen() {
 
           {/* Shard balance row — 4 chips, one per rarity. Doubles as
               the rarity tab switcher. Active chip scales up for
-              emphasis. */}
+              emphasis. A green "ready" dot floats on top-right when
+              the player can afford at least one unlock at that rarity
+              (= player has >= SHARD_UNLOCK_COST in that bucket AND
+              an unowned item exists). Helps the player spot tabs
+              with actionable spend without switching back and forth.
+              Polish 2026-05-05. */}
           <View style={styles.balanceRow}>
             {RARITY_TABS.map((r) => {
               const palette = RARITY_PALETTE[r];
               const have = shards[r];
               const active = activeRarity === r;
+              const cost = SHARD_UNLOCK_COST[r];
+              // Cheap "is anything left to unlock at this tier?" check.
+              // Uses the cached getAllLootableItems list. The .some()
+              // short-circuits on the first unowned match so this is
+              // fast even with hundreds of items per rarity.
+              const hasUnlockable =
+                have >= cost &&
+                getAllLootableItems().some(
+                  (it) => it.rarity === r && !isLootItemOwned(it),
+                );
               return (
                 <PressScale
                   key={r}
@@ -216,7 +231,11 @@ export function ShardShopScreen() {
                   containerStyle={{ flex: 1 }}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${palette.label} shards: ${have}`}
+                  accessibilityLabel={
+                    hasUnlockable
+                      ? `${palette.label} shards: ${have}, unlocks ready`
+                      : `${palette.label} shards: ${have}`
+                  }
                 >
                   <View
                     style={[
@@ -240,6 +259,9 @@ export function ShardShopScreen() {
                     </Text>
                     {active && (
                       <View style={[styles.balanceUnderline, { backgroundColor: palette.color }]} />
+                    )}
+                    {hasUnlockable && (
+                      <View style={styles.balanceReadyDot} />
                     )}
                   </View>
                 </PressScale>
@@ -502,6 +524,22 @@ const styles = StyleSheet.create({
     right: 12,
     height: 2,
     borderRadius: 2,
+  },
+  // "Ready to unlock" pulse dot — small green circle at top-right
+  // of a balance chip. Catches the eye via color contrast against
+  // the rarity-tinted chip without competing with the count typo.
+  balanceReadyDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3eb489',
+    shadowColor: '#3eb489',
+    shadowOpacity: 0.9,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
   },
 
   // ── Cost banner ────────────────────────────────────────────────
