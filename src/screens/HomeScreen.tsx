@@ -652,23 +652,6 @@ export function HomeScreen() {
     [characterRotationY],
   );
 
-  // FREE SPIN text pulse when spin is available
-  const spinPulse = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    if (spinAvailable) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(spinPulse, { toValue: 0.5, duration: 1000, useNativeDriver: true }),
-          Animated.timing(spinPulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    } else {
-      spinPulse.setValue(1);
-    }
-  }, [spinAvailable]);
-
   // Show tutorial on first visit — defer if welcome was just dismissed (< 5 min ago)
   const homeTip = getTipById('home_tap_character')!;
   const tipAlreadySeen = seenTips.includes('home_tap_character');
