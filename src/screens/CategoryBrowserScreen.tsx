@@ -20,8 +20,8 @@
  *
  * Route params: { category }
  */
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, Animated } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -413,6 +413,22 @@ export function CategoryBrowserScreen() {
   }
 
   const progressPct = config.items.length > 0 ? (ownedCount / config.items.length) * 100 : 0;
+  // Animate the progress fill on mount + when ownedCount changes — same
+  // reward-signal pattern as LoadoutCell's progress bar (engine 36bfb65).
+  // Bar grows from 0 to target over 600ms with an 80ms delay.
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progressPct,
+      duration: 600,
+      delay: 80,
+      useNativeDriver: false,
+    }).start();
+  }, [progressPct, progressAnim]);
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <ScreenBackground scene="profile">
@@ -451,7 +467,7 @@ export function CategoryBrowserScreen() {
               player sees "you have 3/15, here's the progress" at a glance. */}
           <View style={styles.progressWrap}>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
+              <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
             </View>
             <Text style={styles.progressLabel}>
               {`${ownedCount} / ${config.items.length}  ·  ${Math.round(progressPct)}%`}
