@@ -25,7 +25,7 @@ Devon's playtest pass surfaced these. Each is self-contained and sized for one p
 
 - **Shop Clothes: long-press preview modal.** Tapping buys, long-press opens a modal showing the full player character with JUST this part swapped in. Helps players commit to a purchase. Reuses CompositeCharacter from @amg/character-runtime.
 
-- **Bottom tab badges.** Shop tab could get a small red dot when new shop rotation hits (currently static). Missions tab already has badge for unclaimed — extend pattern to Shop + Customize (Customize dot if player has unequipped clothes newly unlocked this week).
+<!-- Shipped: Bottom tab badges — Shop tab now shows red dot when daily free-coins reward unclaimed (commit f33d02b). Customize tab badge for unequipped recent unlocks already shipped earlier. Missions badge for claimable challenges already shipped. Three of five bottom tabs (Missions / Customize / Shop) now have reactive badges. -->
 
 <!-- Shipped: Career NEXT-level shortcut — CareerMapScreen onPress branches on isNext: the single NEXT level calls newGame() + navigates straight to Matchup with full level params; other completed levels still route to CareerCity for review. Verified: tapping level 1 from a fresh save lands on Matchup with Rookie Ron / THE REC, skipping the city sheet. Saves a tap on the most common career action. -->
 
@@ -73,7 +73,7 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 - Audit `Animated.Value` uses — some could move to Reanimated `useSharedValue` for native-thread perf
 <!-- ProfileScreen 3D portrait shipped below -->
 <!-- MilestoneToast 3D preview + pulsing glow + confetti shipped below -->
-- DailyRewardPopup day-7+ could show a scaled-up celebration (confetti, bigger icon) when the reward is outfit/pet/title vs coins
+<!-- N/A: DailyRewardPopup premium-day celebration ALREADY shipped — isPremiumReward detection (outfit/pet/title/emote/lootbox), ConfettiOverlay on premium days, bigger icon (iconPremium), brighter gradient glow, "✨ RARE REWARD ✨" kicker, premium reward name styling, 6 sparkle particles, pulsing current-day dot. Verified during polish audit 2026-05-05. -->
 <!-- Shop "Outfit of the Day" HOT badge pulse + warm glow shipped below -->
 
 ## Open — retention polish
