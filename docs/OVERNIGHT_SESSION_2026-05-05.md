@@ -51,11 +51,29 @@ All commits passed `tsc --noEmit` and `jest` (74/74).
 ## What's still on the punch list
 
 **Art-blocked (Unity batch + fal.ai gen needed):**
-- Art-1 🔴 FACE thumbnails head-zoomed re-render (~500 PNGs)
-- Art-2 🟡 HAIR thumbnails head-zoomed re-render
+- Art-1 🟢 ✅ **FIXED 2026-05-05 morning** — FACE thumbnails ULTRA-tight per-feature framings shipped (4 calibration passes; final coords below). All 6 face sub-slots now produce differentiable thumbs at 96 px catalog size: brows show brow-line dominant, eyes show eye+pupil, nose shows nose+mouth, beard shows chin+jaw mass, ears show 3/4 profile, hair shows full head.
+- Art-2 🟡 HAIR thumbnails head-zoomed re-render — DONE as side effect (hair framing was the working anchor)
 - Art-3 🟢 Pack identity crests (fal.ai gen ~17 icons)
 - Art-4 🟢 Equipped pack visual dominance (intrinsic to wearing a full pack — not really fixable)
 - Art-5 🟢 "None" effect feels weird as Common rarity
+
+### Final FACE framing coords (Drop4Exporter.cs PartFraming)
+
+Calibrated empirically over 4 passes. Y=1.78 anchor for ALL face sub-
+framings (camera mounted above head); pitch + Z dialed per feature.
+focal Y = 1.78 - Z * tan(pitch).
+
+| Slot   | Pitch | Z    | FOV | Focal Y | Crop |
+|--------|-------|------|-----|---------|------|
+| Brows  | 20°   | 0.55 | 10  | 1.580   | brow-line tight |
+| Eyes   | 22°   | 0.55 | 10  | 1.558   | eye+pupil tight |
+| Nose   | 27°   | 0.55 | 12  | 1.498   | nose+mouth |
+| Beard  | 26°   | 0.65 | 18  | 1.463   | chin+jaw+neck |
+| Ears   | 8°    | 0.75 | 16  | (off-axis 0.55) | 3/4 profile |
+| Hair   | 8°    | 0.95 | 18  | 1.647   | full head |
+
+Synty character feature world Y (verified by 4-pass calibration):
+brow ≈ 1.59 / eye ≈ 1.56 / nose ≈ 1.50 / chin ≈ 1.46.
 
 **Verified working but pending phone build:**
 - T-pose flicker fix (engine `6e4920b`)
@@ -65,6 +83,17 @@ All commits passed `tsc --noEmit` and `jest` (74/74).
 
 **Could iterate further (low priority):**
 - Loadout cell density (3-col × 4-row grid swap)
+
+---
+
+## Morning continuation 2026-05-05 (after overnight)
+
+| # | Win | Commit |
+|---|---|---|
+| Art-1 | FACE thumbnail framings re-calibrated (4 passes) — all 6 face sub-slots now differentiable at 96 px | Drop4Exporter.cs (Unity, on disk) + parts/ PNGs re-rendered |
+| 16 | Eye iris/pupil dark navy fix — Synty eye GLBs ship with both material slots flat gray; tint.ts now overrides slot[1] to navy `#162033` so pupils read against any skin | engine `tint.ts` |
+| 17 | Catalog Owned/Locked filter chips — second filter row stacks under rarity, helps collector flex (Owned-only) and completionist hunt (Locked-only); empty-state copy adapts to filter cause | drop4 `86656d4` |
+| 18 | Catalog UNLOCKABLE state — locked cards check shard balance; if affordable, footer flips from passive "IN BAGS" to active green "UNLOCKABLE", same density (no layout shift) | drop4 `1d58534` |
 - Hero card bottom CTA card
 - Daily Deal card title shortName treatment
 - Catalog "Owned only" / "Locked only" filter
