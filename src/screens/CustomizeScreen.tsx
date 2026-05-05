@@ -686,9 +686,17 @@ export function CustomizeScreen() {
                     colors={['#ffce63', '#ff9a2c']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
+                    // Audit M-2 fix: floor the visible width at 5 %
+                    // so xp=0 doesn't render as a fully empty bar
+                    // (which felt deflating for new players). Pattern
+                    // borrowed from NBA 2K MyCareer's "starting at"
+                    // stats. Five percent gives a visible nub at the
+                    // start without faking real progress.
                     style={[
                       styles.xpFill,
-                      { width: `${Math.min(100, (xp / (level * 100)) * 100)}%` },
+                      {
+                        width: `${Math.min(100, Math.max(5, (xp / (level * 100)) * 100))}%`,
+                      },
                     ]}
                   />
                 </View>
@@ -1146,15 +1154,17 @@ const styles = StyleSheet.create({
   // Level chip — vertical stack: big number on top, "LVL" caption
   // below in muted color. Reads as a stat badge instead of stray
   // inline text. Boxed so it's visually distinct from the name.
+  // Audit M-1 fix: bumped min-width 38 → 44 so single-digit numbers
+  // don't feel pinched in their box.
   lvlChip: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
     backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
-    minWidth: 38,
+    minWidth: 44,
   },
   lvlChipNum: {
     fontFamily: fonts.heading,
@@ -1315,18 +1325,23 @@ const styles = StyleSheet.create({
   // ── Sparkle ────────────────────────────────────────────────────
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
-  // Single coherent stage halo — soft warm blob behind the character.
-  // Devon 2026-05-05: nuked the prior "spotlight + halo ring + floor
-  // disc" stack because it read as overlapping circles with a
-  // visible horizontal line at the bottom. New treatment: ONE big
-  // amber circle, no border ring (no edge line), just diffuse
-  // background warmth so the silhouette pops without UI clutter.
+  // Single coherent stage halo — Audit C-2 fix 2026-05-05 PM:
+  // a solid-fill circle (even at 0.16 opacity) reads as a hard-edge
+  // disc, not a soft spotlight. New approach: 0-fill view with a
+  // GIANT colored shadow. The shadow itself IS a soft radial fade
+  // (organically diffuse, no hard edge). No SVG dependency required.
+  // Width/height shrunk because the shadow does the spreading work.
   charGlow: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: 'rgba(255,140,0,0.16)',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'transparent',
+    shadowColor: '#ff9a2c',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 80,
+    elevation: 16,
   },
 
   // ── Equipped row ────────────────────────────────────────────────
