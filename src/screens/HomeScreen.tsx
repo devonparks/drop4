@@ -462,6 +462,26 @@ function LootCard({
   ready: boolean;
   onPress: () => void;
 }) {
+  // Subtle opacity pulse on the READY status pill so SPIN / WIN BOX /
+  // MISSIONS catch the eye when there's something to claim. Stays
+  // gentle (75%↔100%) so it doesn't fight the rest of the lobby
+  // visuals; same pattern the TAP TO PREVIEW EMOTES hint uses.
+  // AAA polish 2026-05-05.
+  const pulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!ready) {
+      pulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.75, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [ready, pulse]);
   return (
     <Pressable
       style={[styles.lootCard, ready && styles.lootCardReady]}
@@ -471,11 +491,17 @@ function LootCard({
     >
       <Image source={iconSrc} style={styles.lootCardIcon} resizeMode="contain" />
       <Text style={styles.lootCardLabel}>{label}</Text>
-      <View style={[styles.lootCardStatusPill, ready && styles.lootCardStatusPillReady]}>
+      <Animated.View
+        style={[
+          styles.lootCardStatusPill,
+          ready && styles.lootCardStatusPillReady,
+          ready && { opacity: pulse },
+        ]}
+      >
         <Text style={[styles.lootCardStatusText, ready && styles.lootCardStatusTextReady]} numberOfLines={1}>
           {status}
         </Text>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }
