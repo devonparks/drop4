@@ -15,6 +15,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useCharacterStore } from '../stores/characterStore';
+import { useShopStore } from '../stores/shopStore';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
@@ -112,16 +113,33 @@ function CustomizeTabIcon({ focused }: { focused: boolean }) {
   return <TabIcon iconKey="customize" label="Customize" focused={focused} badgeCount={unequippedNew} />;
 }
 
+// Shop tab badge — daily free-coins reward not yet claimed today.
+// Same retention pattern as Missions (unclaimed challenges) +
+// Customize (unequipped recent unlocks): surface fresh content the
+// player hasn't engaged with. Renders a single dot (no count) since
+// it's a binary "unclaimed" signal, not a multi-item queue.
+// Polish queue 2026-04-20: "Shop tab could get a small red dot when
+// new shop rotation hits."
+function ShopTabIcon({ focused }: { focused: boolean }) {
+  const lastCollect = useShopStore((s) => s.lastShopCoinCollect);
+  const today = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+  const dailyAvailable = lastCollect !== today;
+  return <TabIcon iconKey="shop" label="Shop" focused={focused} badgeCount={dailyAvailable ? 1 : 0} />;
+}
+
 // Maps a route name to its iconKey + label config. Keeps the per-tab
 // rendering logic out of the route definitions and centralizes "this
 // tab gets a custom reactive badge" branch.
-type ReactiveBadge = 'missions' | 'customize';
+type ReactiveBadge = 'missions' | 'customize' | 'shop';
 const TAB_META: Record<string, { iconKey: keyof typeof TAB_ICON_SOURCES; label: string; reactiveBadge?: ReactiveBadge }> = {
   Missions:  { iconKey: 'missions',  label: 'Missions',  reactiveBadge: 'missions' },
   Career:    { iconKey: 'career',    label: 'Career' },
   Home:      { iconKey: 'home',      label: 'Home' },
   Customize: { iconKey: 'customize', label: 'Customize', reactiveBadge: 'customize' },
-  Shop:      { iconKey: 'shop',      label: 'Shop' },
+  Shop:      { iconKey: 'shop',      label: 'Shop',      reactiveBadge: 'shop' },
 };
 
 // Custom bottom-positioned tab bar. The Material Top Tabs navigator
@@ -156,6 +174,8 @@ function BottomTabBar({ state, navigation }: MaterialTopTabBarProps) {
               <MissionsTabIcon focused={focused} />
             ) : meta?.reactiveBadge === 'customize' ? (
               <CustomizeTabIcon focused={focused} />
+            ) : meta?.reactiveBadge === 'shop' ? (
+              <ShopTabIcon focused={focused} />
             ) : (
               <TabIcon
                 iconKey={meta?.iconKey ?? 'home'}
