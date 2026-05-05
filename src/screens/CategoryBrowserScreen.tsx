@@ -335,6 +335,21 @@ export function CategoryBrowserScreen() {
           swatchKind: 'pet',
         };
     }
+    // Fallback for unknown categories — prevents the screen from
+    // crashing with "Cannot read properties of undefined" when a
+    // stale link routes here with an unrecognized category id.
+    // Returns an empty config so the player sees an empty grid +
+    // "Nothing here yet" instead of an error boundary. Should never
+    // trigger in practice but cheap insurance.
+    return {
+      title: 'CATEGORY',
+      blurb: 'Nothing here yet.',
+      items: [],
+      isOwned: () => false,
+      isEquipped: () => false,
+      equip: () => {},
+      swatchKind: 'frame',
+    };
   }, [category, owned, equipped, ownedPets, activePetId, equipItem, setActivePet]);
 
   const filteredItems = useMemo(() => {
