@@ -684,8 +684,9 @@ export function CategoryBrowserScreen() {
 
           {/* Empty state — only triggers when filter narrows to nothing.
               Copy adapts to which filter caused the empty result so the
-              CTA is actionable: Owned-empty pushes toward boxes; Locked-
-              empty congratulates completion; rarity-empty stays generic. */}
+              CTA is actionable: Owned-empty pushes toward boxes (with a
+              tappable OPEN BOXES button); Locked-empty congratulates
+              completion; rarity-empty stays generic with the same CTA. */}
           {filteredItems.length === 0 && (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyText}>
@@ -695,6 +696,21 @@ export function CategoryBrowserScreen() {
                     ? 'You own everything in this filter — flex on em.'
                     : 'Nothing at this rarity yet. Try All or open more boxes.'}
               </Text>
+              {ownershipFilter !== 'locked' && (
+                <PressScale
+                  onPress={() => {
+                    haptics.tap();
+                    playSound('click');
+                    navigation.navigate('LootBox' as never);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open the loot box screen"
+                >
+                  <View style={styles.emptyCta}>
+                    <Text style={styles.emptyCtaText}>OPEN BOXES</Text>
+                  </View>
+                </PressScale>
+              )}
             </View>
           )}
         </ScrollView>
@@ -996,6 +1012,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'rgba(255,255,255,0.5)',
     lineHeight: 18,
+  },
+  // OPEN BOXES CTA shown when the empty state is non-completion.
+  // Warm-amber gradient style consistent with the Customize tab's
+  // primary OPEN BOXES button so the player recognizes the action.
+  emptyCta: {
+    marginTop: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,140,0,0.18)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,140,0,0.65)',
+  },
+  emptyCtaText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 11,
+    color: '#ffb347',
+    letterSpacing: 1.4,
   },
 });
 
