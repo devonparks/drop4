@@ -120,6 +120,18 @@ const RARITY_FILTERS: Array<{ id: RarityFilter; label: string }> = [
   { id: 'legendary', label: 'Legendary+' },
 ];
 
+// Ownership filter — added 2026-05-05 to address a punch-list item from
+// the full Customize audit. Players collecting toward a complete set
+// want to see "what do I still need" at a glance; collectors flexing
+// what they own want a clean Owned-only view. Three pills, default All.
+type OwnershipFilter = 'all' | 'owned' | 'locked';
+
+const OWNERSHIP_FILTERS: Array<{ id: OwnershipFilter; label: string }> = [
+  { id: 'all',    label: 'All' },
+  { id: 'owned',  label: 'Owned' },
+  { id: 'locked', label: 'Locked' },
+];
+
 // ─── Preview swatches ──────────────────────────────────────────────
 //
 // Each category gets a tiny representative graphic in its grid cell.
@@ -264,6 +276,7 @@ export function CategoryBrowserScreen() {
   const spendShardsForItem = useLootBoxStore((s) => s.spendShardsForItem);
 
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('all');
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     message: string;
@@ -353,9 +366,17 @@ export function CategoryBrowserScreen() {
   }, [category, owned, equipped, ownedPets, activePetId, equipItem, setActivePet]);
 
   const filteredItems = useMemo(() => {
-    if (rarityFilter === 'all') return config.items;
-    return config.items.filter((it) => mapToLootRarity(it.rarity) === rarityFilter);
-  }, [config.items, rarityFilter]);
+    let items = config.items;
+    if (rarityFilter !== 'all') {
+      items = items.filter((it) => mapToLootRarity(it.rarity) === rarityFilter);
+    }
+    if (ownershipFilter === 'owned') {
+      items = items.filter((it) => config.isOwned(it.id));
+    } else if (ownershipFilter === 'locked') {
+      items = items.filter((it) => !config.isOwned(it.id));
+    }
+    return items;
+  }, [config, rarityFilter, ownershipFilter]);
 
   const ownedCount = useMemo(
     () => config.items.filter((it) => config.isOwned(it.id)).length,
@@ -515,6 +536,26 @@ export function CategoryBrowserScreen() {
             ))}
           </ScrollView>
 
+          {/* Ownership filter chips — All / Owned / Locked. Helps the
+              collector flex (Owned-only) and the completionist hunt
+              (Locked-only). Lives directly under the rarity row so
+              the two filter dimensions stack naturally. Added
+              2026-05-05 from the audit punch list. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.filterRow, styles.filterRowSecondary]}
+          >
+            {OWNERSHIP_FILTERS.map((f) => (
+              <FilterChip
+                key={f.id}
+                label={f.label}
+                active={ownershipFilter === f.id}
+                onPress={() => setOwnershipFilter(f.id)}
+              />
+            ))}
+          </ScrollView>
+
           {/* Items grid — 3-col View+map (not FlatList; small list, no
               virtualization needed and FlatList lazy-load was hiding
               items off-screen on first paint). */}
@@ -597,11 +638,18 @@ export function CategoryBrowserScreen() {
             })}
           </View>
 
-          {/* Empty state — only triggers when filter narrows to nothing. */}
+          {/* Empty state — only triggers when filter narrows to nothing.
+              Copy adapts to which filter caused the empty result so the
+              CTA is actionable: Owned-empty pushes toward boxes; Locked-
+              empty congratulates completion; rarity-empty stays generic. */}
           {filteredItems.length === 0 && (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyText}>
-                Nothing at this rarity yet. Try All or open more boxes.
+                {ownershipFilter === 'owned'
+                  ? 'Nothing owned at this rarity yet. Open boxes to earn drops.'
+                  : ownershipFilter === 'locked'
+                    ? 'You own everything in this filter — flex on em.'
+                    : 'Nothing at this rarity yet. Try All or open more boxes.'}
               </Text>
             </View>
           )}
@@ -709,6 +757,14 @@ const styles = StyleSheet.create({
   filterRow: {
     paddingVertical: 10,
     gap: 6,
+  },
+  // Secondary filter row stacks tighter against the rarity row above so
+  // the two filter dimensions read as a logical pair, not as competing
+  // toolbars. Half the vertical padding and 1px above for a subtle hint
+  // of separation without adding visual weight.
+  filterRowSecondary: {
+    paddingTop: 0,
+    paddingBottom: 6,
   },
   // filterChip styles moved to FilterChip shared component (cohesion
   // pass 2026-05-04 — every filter row across Drop4 uses the same chip
