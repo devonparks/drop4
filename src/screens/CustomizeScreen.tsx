@@ -321,7 +321,11 @@ export function CustomizeScreen() {
   const [hasTappedChar, setHasTappedChar] = useState(false);
   useEffect(() => {
     if (!activeEmote) return;
-    const t = setTimeout(() => setActiveEmote(null), 3000);
+    // 5 s — most Sidekick emotes are 3.5–5 s long; the previous
+    // 3 s was clipping dab / wave / dance mid-motion, then the
+    // crossfade-back-to-idle caught the character at an extreme
+    // pose and Devon read it as a "glitch" 2026-05-04.
+    const t = setTimeout(() => setActiveEmote(null), 5000);
     return () => clearTimeout(t);
   }, [activeEmote]);
   const handleCharacterTap = () => {

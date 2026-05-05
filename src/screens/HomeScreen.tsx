@@ -591,11 +591,14 @@ export function HomeScreen() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   // 3D emote playback on the home character. When set, feeds animationGlb to
-  // Character3DWrapper. Auto-clears after 3s so the character returns to idle.
+  // Character3DWrapper. Auto-clears after 5s so the character returns to idle.
+  // Was 3 s; bumped 2026-05-04 because most Sidekick emotes run 3.5-5 s and
+  // 3 s was cutting them off mid-motion — the crossfade-back-to-idle then
+  // caught the character at an extreme pose and read as a "glitch."
   const [active3DEmote, setActive3DEmote] = useState<string | null>(null);
   useEffect(() => {
     if (!active3DEmote) return;
-    const t = setTimeout(() => setActive3DEmote(null), 3000);
+    const t = setTimeout(() => setActive3DEmote(null), 5000);
     return () => clearTimeout(t);
   }, [active3DEmote]);
 
