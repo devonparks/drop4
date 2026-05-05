@@ -27,14 +27,18 @@ All commits passed `tsc --noEmit` and `jest` (74/74).
 | 6 | CategoryBrowser progress bar (Pets/Pieces/Boards/Effects/Wins) animates fill from 0 to target on mount + on count change. Same reward-signal pattern as LoadoutCell. | drop4 `73ac01f` |
 | 7 | AmgCreator LOOKS row gets right-edge scroll fade — players now see "swipe for more" affordance past Casual/Athletic/Tactical/Samurai. | engine `9c34701` |
 | 8 | AmgCreator SPECIES picker row gets the same fade for Human/Goblin/Skeleton/Elves/Zombie. | engine `d0f3d58` |
+| 9 | Shop locker chip pluralization — "1 BOXES READY" → "1 BOX READY" (singular when count=1). | drop4 `fef7070` |
+| 10 | Daily Deal title shortening — "Pirate Captains 01" → "Pirates · #01" using packMeta.shortName, ends "Pirate Captain..." truncation on the 115-px deal card. | drop4 `fef7070` |
+| 11 | ColorTab group headers get accessibilityLabel — screen-reader users now hear "{GROUP}, {N} colors, expanded/collapsed" instead of just "button, expanded". | engine `54f0a44` |
 
 ---
 
 ## Combined session totals (overnight)
 
-- **8 commits**: 4 engine, 4 drop4
+- **11 polish wins** across 11 commits
+- **5 engine commits + 6 drop4 commits**
 - **All 5 audit-flagged UX issues**: shipped
-- **3 bonus polish rounds**: shipped
+- **6 bonus polish rounds**: shipped (CategoryBrowser progress, LOOKS fade, SPECIES fade, BOX/BOXES grammar, Daily Deal shortening, ColorTab a11y)
 - **All passed**: tsc clean (0 errors), jest 74/74, all pre-commit hooks
 - **All pushed** to `origin/main` (drop4) and `origin/master` (engine)
 
