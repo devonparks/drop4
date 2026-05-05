@@ -44,6 +44,7 @@ import {
   BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS,
 } from '../data/shopCatalog';
 import { AMG_PART_NAMES } from '../data/amgPartNamesIndex';
+import { packMeta } from '../data/amgPackMeta';
 import { fonts, weight } from '../theme/typography';
 
 // Static category totals derived from the AMG part-names index. Counted
@@ -531,24 +532,30 @@ export function CustomizeScreen() {
     const emoteReadout = emoteCount > 0
       ? `${emoteCount} pinned`
       : '6 wheel slots';
-    // HAIR / FACE: read the equipped part name from amgCharacter and
-    // surface a friendly readout. Don't show the raw Sidekick id —
-    // strip to the last word for legibility (e.g. 'SK_MDRN_CIVL_01_02HAIR_HU01'
-    // → 'Hair 01'). The full part-name lives in the dressing-room
-    // mirror; the cell just hints at "what's on right now."
+    // HAIR / FACE: derive a "Pack Short · NN" readout from the equipped
+    // part name so the loadout cells match the rest of the grid (which
+    // shows specific item identity like "Outlaws 03"). Was a generic
+    // "Hair 01" / "Face" string that gave no pack context. Per audit
+    // 2026-05-05 follow-up.
     const amgChar = useCharacterStore.getState().amgCharacter as unknown as
       { parts?: Record<string, string> } | null;
+    // Helper: turn 'SK_APOC_OUTL_03_02HAIR_HU01' into 'Outlaws 03' using
+    // packMeta.shortName when available, else first word of displayName.
+    const labelFromPartName = (name: string | null): string | null => {
+      if (!name) return null;
+      const m = name.match(/^SK_([A-Z]{4})_([A-Z]{4})_(\d{2})_/);
+      if (!m) return null;
+      const pack = `${m[1]}_${m[2]}`;
+      const meta = packMeta(pack);
+      const short = meta.shortName ?? meta.displayName.split(' ')[0];
+      return `${short} ${m[3]}`;
+    };
     const equippedHair = amgChar?.parts?.['Hair'] ?? null;
-    const equippedHairLabel = equippedHair
-      ? `Hair ${(equippedHair.match(/_(\d{2})_\d{2}HAIR_/) ?? [])[1] ?? ''}`.trim()
-      : null;
-    // Face is "the most prominent face slot equipped" — pick FacialHair
-    // (beard) if set, else EyebrowLeft. Tiny heuristic; the full grid
-    // is in the FACE catalog.
+    const equippedHairLabel = labelFromPartName(equippedHair);
+    // Face: pick FacialHair (beard) first, else EyebrowLeft. The cell
+    // hints at "what's on" — full grid lives in the FACE catalog.
     const equippedFace = amgChar?.parts?.['FacialHair'] ?? amgChar?.parts?.['EyebrowLeft'] ?? null;
-    const equippedFaceLabel = equippedFace
-      ? `${(equippedFace.match(/_\d{2}([A-Z]+)_/) ?? [])[1] === 'FCHR' ? 'Beard' : 'Face'}`
-      : null;
+    const equippedFaceLabel = labelFromPartName(equippedFace);
 
     return {
       character: playerName,
