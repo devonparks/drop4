@@ -195,14 +195,14 @@ function CustomizeCharacter({
   }, [glowBreath]);
   return (
     <View style={styles.charStageInner}>
-      {/* Single coherent stage halo — one warm-amber blob behind the
-          character with NO ring edge so the player sees a soft
-          spotlight zone, not a circle outline. Was previously a
-          stack of (spotlight + glow + floor disc) which Devon
-          flagged as "2 overlapping circles + horizontal line at
-          the bottom." Now: one shape, one breath, one read.
-          Polish 2026-05-05. */}
-      <Animated.View pointerEvents="none" style={[styles.charGlow, { opacity: glowBreath }]} />
+      {/* No halo / no circle / no floor disc. Audit final 2026-05-05:
+          every shape (disc, ring, rectangle, gradient pool) read as
+          a UI element behind the character. The cleanest visual is
+          NO shape at all — let the hero card's own warm radial
+          gradient + slightly warmer card BG do the contrast lift.
+          Character pops because the WHOLE card is warmer-tinted, not
+          because there's a circle behind the figure. */}
+      <Animated.View pointerEvents="none" style={{ opacity: glowBreath }} />
       <Character3DPortrait
         width={320}
         height={320}
@@ -600,18 +600,22 @@ export function CustomizeScreen() {
               glance. EDIT pill in top-right gets you to the creator. */}
           <StaggeredEntry index={0} delay={30}>
             <View style={styles.heroCard}>
-              {/* Inner radial gradient — polish 2026-05-05: pumped from
-                  0.06 → 0.14 opacity at top and added a deeper warm
-                  base at the bottom so the stage reads as a "lit
-                  museum case" instead of a flat panel. Three-stop
-                  gradient: warm top → midnight middle → subtle warm
-                  base for the floor reflection vibe. */}
+              {/* Inner radial gradient — Audit C-1 2026-05-05 PM:
+                  bumped opacity HARD (0.14 → 0.28 top, 0.06 → 0.16
+                  bottom) so the whole card glows warmer behind the
+                  character instead of relying on a halo disc.
+                  Character contrast comes from the AMBIENT warmth
+                  of the card, not a localized circle.
+
+                  Three-stop: bright warm top (lit-from-above feel)
+                  → mid-card transparent (lets the card BG show) →
+                  warm reflected base (floor bounce). */}
               <LinearGradient
                 pointerEvents="none"
                 colors={[
-                  'rgba(255,160,60,0.14)',
+                  'rgba(255,170,80,0.28)',
                   'rgba(10,14,32,0.0)',
-                  'rgba(255,140,0,0.06)',
+                  'rgba(255,140,0,0.16)',
                 ]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
@@ -1325,24 +1329,10 @@ const styles = StyleSheet.create({
   // ── Sparkle ────────────────────────────────────────────────────
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
-  // Single coherent stage halo — Audit C-2 fix 2026-05-05 PM:
-  // a solid-fill circle (even at 0.16 opacity) reads as a hard-edge
-  // disc, not a soft spotlight. New approach: 0-fill view with a
-  // GIANT colored shadow. The shadow itself IS a soft radial fade
-  // (organically diffuse, no hard edge). No SVG dependency required.
-  // Width/height shrunk because the shadow does the spreading work.
-  charGlow: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'transparent',
-    shadowColor: '#ff9a2c',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 80,
-    elevation: 16,
-  },
+  // (Stage backdrop styles removed 2026-05-05 PM — the "pool of light"
+  // approaches all read as visible UI shapes behind the character.
+  // Final answer: no halo at all; lift contrast via the card-level
+  // inner gradient + slightly warmer card BG.)
 
   // ── Equipped row ────────────────────────────────────────────────
   // Three rarity-tinted dots showing currently equipped board / pieces
