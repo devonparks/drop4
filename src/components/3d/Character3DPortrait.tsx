@@ -181,8 +181,19 @@ export function Character3DPortrait({
 
       {!loaded && (
         <View style={styles.loadingOverlay} pointerEvents="none">
-          <ActivityIndicator color={themeColors.orange} size="large" />
-          <Text style={styles.loadingText}>Loading character…</Text>
+          {/* Adaptive loading state — Audit fix 2026-05-05 PM:
+              "Loading character…" text was overlapping the small
+              avatar circles in the GameScreen header (Player and
+              Bot avatars at ~50 px). Show the spinner alone when
+              the portrait is small (< 140 px); show spinner + text
+              only on large hero contexts (Customize/Home/Matchup). */}
+          <ActivityIndicator
+            color={themeColors.orange}
+            size={width < 140 ? 'small' : 'large'}
+          />
+          {width >= 140 && (
+            <Text style={styles.loadingText}>Loading character…</Text>
+          )}
         </View>
       )}
     </View>
