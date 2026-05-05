@@ -32,13 +32,14 @@ All commits passed `tsc --noEmit` and `jest` (74/74).
 | 11 | ColorTab group headers get accessibilityLabel — screen-reader users now hear "{GROUP}, {N} colors, expanded/collapsed" instead of just "button, expanded". | engine `54f0a44` |
 | 12 | Customize HAIR/FACE loadout cells show pack identity — was generic "Hair 01" / "Face", now shows "Civilians 03" / "Outlaws 02" matching CLOTHES/PETS/PIECES cells. Uses packMeta.shortName via inline labelFromPartName helper. | drop4 `477b820` |
 | 13 | Defensive: CategoryBrowserScreen no longer crashes if routed to an unknown category. Found while overnight-testing — `category: 'fx'` (vs the actual 'dropEffects' route name) had no config switch case and crashed with "Cannot read properties of undefined." Added fallback empty config so player sees graceful empty state instead of the error boundary. | drop4 `72f0235` |
+| 14 | Customize EMOTES cell — accurate readout. Was "X pinned" where X was ownedEmotes.length but "pinned" is the wheel-pinning concept (different field). Now shows the selected emote's name ("Wave" / "Dab" / "Clap"), or "Random" when in random mode (the default), or "X owned" as fallback. | drop4 `c273a44` |
 
 ---
 
 ## Combined session totals (overnight)
 
-- **12 polish wins + 1 defensive fix** across 13 commits
-- **5 engine commits + 8 drop4 commits**
+- **13 polish wins + 1 defensive fix** across 14 commits
+- **5 engine commits + 9 drop4 commits**
 - **All 5 audit-flagged UX issues**: shipped
 - **6 bonus polish rounds**: shipped (CategoryBrowser progress, LOOKS fade, SPECIES fade, BOX/BOXES grammar, Daily Deal shortening, ColorTab a11y)
 - **All passed**: tsc clean (0 errors), jest 74/74, all pre-commit hooks
