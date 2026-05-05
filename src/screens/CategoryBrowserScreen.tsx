@@ -566,6 +566,13 @@ export function CategoryBrowserScreen() {
               const rarityColor = (RARITY_COLORS as Record<string, string>)[item.rarity] ?? '#7f8c8d';
               const rarityLabel = (RARITY_LABELS as Record<string, string>)[item.rarity] ?? String(item.rarity).toUpperCase();
               const isEarnOnly = item.rarity === 'darkmatter';
+              // Shard-affordability check — if the player owns enough
+              // shards of this item's rarity to spend-unlock right now,
+              // surface that on the card. Turns "IN BAGS" (passive)
+              // into "UNLOCKABLE" (active, "tap to do it"). The same
+              // tap flow handles spend-unlock; this is just signposting.
+              const lootR = mapToLootRarity(item.rarity);
+              const canShardUnlock = !isOwned && !isEarnOnly && shards[lootR] >= SHARD_UNLOCK_COST[lootR];
               return (
                 <StaggeredEntry
                   key={item.id}
@@ -621,13 +628,19 @@ export function CategoryBrowserScreen() {
                         </Text>
                       </View>
 
-                      {/* Status footer */}
+                      {/* Status footer — shifts copy by state:
+                            equipped → gold "EQUIPPED" pill
+                            owned   → "TAP TO EQUIP" (rarity-tinted)
+                            shard-affordable lock → green "UNLOCKABLE"
+                            otherwise → muted "IN BAGS" */}
                       {isEquipped ? (
                         <View style={styles.equippedPill}>
                           <Text style={styles.equippedPillText}>EQUIPPED</Text>
                         </View>
                       ) : isOwned ? (
                         <Text style={[styles.equipText, { color: rarityColor }]}>TAP TO EQUIP</Text>
+                      ) : canShardUnlock ? (
+                        <Text style={styles.unlockableText}>UNLOCKABLE</Text>
                       ) : (
                         <Text style={styles.lockText}>IN BAGS</Text>
                       )}
@@ -887,6 +900,18 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 8,
     color: 'rgba(255,180,90,0.75)',
+    textAlign: 'center',
+    marginTop: 6,
+    letterSpacing: 1.0,
+  },
+  // Shard-affordable lock state — green so it reads as "go" /
+  // "actionable now" against the muted-amber "IN BAGS" of regular
+  // locks. Same density as lockText so card layout doesn't shift.
+  unlockableText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 8,
+    color: '#3eb489',
     textAlign: 'center',
     marginTop: 6,
     letterSpacing: 1.0,
