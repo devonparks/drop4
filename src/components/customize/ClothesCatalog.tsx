@@ -458,6 +458,10 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             the cross-screen FilterChip primitive so the visual treatment
             matches the Shop, MatchHistory, and CategoryBrowser filter
             rows. (Cohesion pass 2026-05-04.) */}
+        {/* Wrap each horizontal filter row with a right-edge fade so
+            players see "more pills →" affordance — same pattern as
+            the Shop's Daily Deals scroller. AAA polish 2026-05-05. */}
+        <View style={styles.scrollFadeWrap}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -473,12 +477,21 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             />
           ))}
         </ScrollView>
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(10,14,32,0)', 'rgba(10,14,32,0.85)']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.scrollFade}
+        />
+        </View>
 
         {/* PARTS-mode bucket chip row. Hidden when the catalog is
             locked to a single bucket (HAIR / FACE / ACCESSORIES
             destinations from the Customize hub) — the modal is
             already scoped, no need to let the player jump out. */}
         {mode === 'parts' && !lockedBucket && (
+          <View style={styles.scrollFadeWrap}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -510,6 +523,14 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
               );
             })}
           </ScrollView>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10,14,32,0)', 'rgba(10,14,32,0.85)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.scrollFade}
+          />
+          </View>
         )}
 
         {/* Sub-category chip row — only in PARTS mode, second-level
@@ -517,6 +538,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             Per Devon's GTA-style vision: shop by silhouette inside
             the bucket, not just by raw slot. */}
         {mode === 'parts' && (
+          <View style={styles.scrollFadeWrap}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -541,6 +563,14 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
               );
             })}
           </ScrollView>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10,14,32,0)', 'rgba(10,14,32,0.85)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.scrollFade}
+          />
+          </View>
         )}
 
         {/* Bucket blurb — only in PARTS mode, sets context for the grid below. */}
@@ -1101,6 +1131,17 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 9,
     letterSpacing: 0.8,
+  },
+
+  // Wrapper for any horizontal filter ScrollView so we can stack a
+  // right-edge fade gradient on top — players see "more pills →"
+  // without needing to swipe to discover. Same pattern Shop's
+  // Daily Deals uses.
+  scrollFadeWrap: { position: 'relative' },
+  scrollFade: {
+    position: 'absolute',
+    top: 0, bottom: 0, right: 0,
+    width: 28,
   },
 
   // ── Species filter ─────────────────────────────────────────
