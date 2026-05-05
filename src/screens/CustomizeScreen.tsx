@@ -176,11 +176,27 @@ function CustomizeCharacter({
   animationId: string | null;
   onTap: () => void;
 }) {
+  // Subtle slow breathing on the back-glow opacity — the spotlight
+  // gently inhales and exhales across ~5 s so the stage feels "alive"
+  // instead of static. Stays in a tight 0.85↔1.0 range so the effect
+  // is sensed more than seen — same approach a museum spotlight
+  // pulses to draw the eye to a centerpiece. AAA polish 2026-05-05.
+  const glowBreath = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowBreath, { toValue: 0.85, duration: 2500, useNativeDriver: true }),
+        Animated.timing(glowBreath, { toValue: 1, duration: 2500, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [glowBreath]);
   return (
     <View style={styles.charStageInner}>
       {/* Back-glow — large warm orange aura so the silhouette pops out
           of the dark navy background. Layered behind the character. */}
-      <View pointerEvents="none" style={styles.charGlow} />
+      <Animated.View pointerEvents="none" style={[styles.charGlow, { opacity: glowBreath }]} />
       {/* Floor disc — soft elliptical shadow under the feet for grounding. */}
       <LinearGradient
         pointerEvents="none"
