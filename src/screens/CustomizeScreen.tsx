@@ -255,6 +255,8 @@ export function CustomizeScreen() {
   // the tiny relevant slices, not every store mutation.
   const equippedBoardId = useShopStore((s) => s.equipped.board);
   const equippedPiecesId = useShopStore((s) => s.equipped.pieces);
+  const equippedDropEffectId = useShopStore((s) => s.equipped.dropEffect);
+  const equippedWinAnimationId = useShopStore((s) => s.equipped.winAnimation);
   const equippedPetId = usePetStore((s) => s.activePetId);
 
   // Locker-stat selectors — three primitive reads so the stat strip
@@ -290,8 +292,23 @@ export function CustomizeScreen() {
     const petMeta = equippedPetId
       ? (PETS_3D as Record<string, { name?: string }>)[equippedPetId]
       : null;
-    return { boardName, piecesName, petName: petMeta?.name ?? null };
-  }, [equippedBoardId, equippedPiecesId, equippedPetId]);
+    // Audit M-3 fix 2026-05-05 PM: surface equipped DROP EFFECT and
+    // WIN ANIMATION when the player has set NON-DEFAULT picks. Lets
+    // the equipped row flex the player's full loadout instead of
+    // hiding gameplay-visible cosmetics. Default ids ('drop_default',
+    // 'win_default') treated as "no flex needed."
+    const dropEffectMeta = DROP_EFFECTS.find((f) => f.id === equippedDropEffectId);
+    const winAnimationMeta = WIN_ANIMATIONS.find((w) => w.id === equippedWinAnimationId);
+    const isDropEffectDefault = !equippedDropEffectId || equippedDropEffectId === 'drop_default';
+    const isWinAnimationDefault = !equippedWinAnimationId || equippedWinAnimationId === 'win_default';
+    return {
+      boardName,
+      piecesName,
+      petName: petMeta?.name ?? null,
+      dropEffectName: !isDropEffectDefault ? (dropEffectMeta?.name ?? null) : null,
+      winAnimationName: !isWinAnimationDefault ? (winAnimationMeta?.name ?? null) : null,
+    };
+  }, [equippedBoardId, equippedPiecesId, equippedPetId, equippedDropEffectId, equippedWinAnimationId]);
 
   // EMOTES card now opens the in-app AnimationPicker modal (same one
   // used by Home's emote/idle side buttons) instead of bouncing the
@@ -786,6 +803,35 @@ export function CustomizeScreen() {
                       haptics.tap();
                       playSound('click');
                       navigation.navigate('CategoryBrowser', { category: 'pets' });
+                    }}
+                  />
+                )}
+                {/* Audit M-3 fix 2026-05-05 PM: surface non-default
+                    DROP EFFECT + WIN ANIMATION when the player has
+                    equipped a real cosmetic. Hidden when at default
+                    (most players initially) so the row stays clean
+                    until there's something to flex. */}
+                {summary.dropEffectName && (
+                  <EquippedDot
+                    color="#f1c40f"
+                    label="EFFECT"
+                    name={summary.dropEffectName}
+                    onPress={() => {
+                      haptics.tap();
+                      playSound('click');
+                      navigation.navigate('CategoryBrowser', { category: 'dropEffects' });
+                    }}
+                  />
+                )}
+                {summary.winAnimationName && (
+                  <EquippedDot
+                    color="#9b59b6"
+                    label="WIN"
+                    name={summary.winAnimationName}
+                    onPress={() => {
+                      haptics.tap();
+                      playSound('click');
+                      navigation.navigate('CategoryBrowser', { category: 'winAnimations' });
                     }}
                   />
                 )}
