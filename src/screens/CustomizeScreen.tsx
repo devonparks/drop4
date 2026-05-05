@@ -195,20 +195,36 @@ function CustomizeCharacter({
   }, [glowBreath]);
   return (
     <View style={styles.charStageInner}>
+      {/* Stage spotlight — bright warm radial gradient that "lifts"
+          the stage area out of the dark hero card so the character
+          reads with stronger contrast. Sits behind the back-glow.
+          Per Devon 2026-05-05: "the character is harder to see on
+          the customization page" — this layer fixes that. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={[
+          'rgba(255,200,140,0.22)',
+          'rgba(255,160,80,0.10)',
+          'rgba(10,14,32,0.0)',
+        ]}
+        start={{ x: 0.5, y: 0.4 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.charSpotlight}
+      />
       {/* Back-glow — large warm orange aura so the silhouette pops out
           of the dark navy background. Layered behind the character. */}
       <Animated.View pointerEvents="none" style={[styles.charGlow, { opacity: glowBreath }]} />
       {/* Floor disc — soft elliptical shadow under the feet for grounding. */}
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(255,140,0,0.22)', 'rgba(255,140,0,0)']}
+        colors={['rgba(255,180,90,0.32)', 'rgba(255,140,0,0)']}
         style={styles.charFloorDisc}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
       <Character3DPortrait
-        width={260}
-        height={260}
+        width={320}
+        height={320}
         animationId={animationId}
         onTap={onTap}
         // Painted scene already supplies warm-amber backdrop; we own the
@@ -1241,18 +1257,20 @@ const styles = StyleSheet.create({
   },
 
   // ── Character stage ────────────────────────────────────────────
-  // Slimmer than v1 (260 vs 320) so the loadout grid fits without
-  // scroll on a 390x844 phone. Spotlight aura + floor disc unchanged
-  // — those are doing the heavy "presented on stage" work.
+  // Polish 2026-05-05: bumped 260 → 320 because Devon flagged "the
+  // character could be bigger." Larger silhouette also helps the
+  // character read against the dark hero card. Loadout grid still
+  // fits on a 390x844 phone with the bigger stage because the card
+  // is in a ScrollView (not viewport-constrained).
   charStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 260,
+    height: 320,
     position: 'relative',
   },
   charStageInner: {
-    width: 260,
-    height: 260,
+    width: 320,
+    height: 320,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1319,31 +1337,43 @@ const styles = StyleSheet.create({
   // ── Sparkle ────────────────────────────────────────────────────
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
+  // Stage spotlight — full-stage radial-ish gradient that lifts the
+  // background BEHIND the character so the silhouette reads against
+  // a brighter zone. Devon 2026-05-05: "character is harder to see
+  // on the customization page" — this is the primary fix. Sits at
+  // the bottom of the layer stack (behind glow + floor + character).
+  charSpotlight: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    top: '50%',
+    marginTop: -160,
+  },
   // Soft warm halo behind the character — diffuse, no hard edge.
-  // Polish 2026-05-05: bumped halo opacity 0.06 → 0.10 + stronger
-  // ring outline so the character silhouette pops more from the
-  // dark navy background. Sells "spotlit" instead of "in shadow."
+  // Polish 2026-05-05: bumped to 280 px to scale with the larger
+  // 320 px stage; 0.18 opacity + ring outline so the character
+  // silhouette POPS hard from the dark navy background.
   charGlow: {
     position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255,140,0,0.10)',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(255,140,0,0.18)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,180,90,0.18)',
+    borderColor: 'rgba(255,180,90,0.28)',
   },
   // Floor shadow — squashed ellipse under the feet. Polish 2026-05-05:
-  // bumped width 180 → 200 and opacity 0.6 → 0.8 so the floor
-  // grounding reads more clearly behind the character. The radial
-  // gradient inside (rgba 0.22 → 0) handles the soft fade.
+  // scaled to match 320 px stage (240 wide vs 200 prior) + bumped
+  // gradient opacity 0.22 → 0.32 for stronger floor grounding.
   charFloorDisc: {
     position: 'absolute',
-    bottom: 30,
-    width: 200,
-    height: 20,
-    borderRadius: 100,
+    bottom: 36,
+    width: 240,
+    height: 22,
+    borderRadius: 120,
     transform: [{ scaleY: 0.5 }],
-    opacity: 0.8,
+    opacity: 0.85,
   },
 
   // ── Equipped row ────────────────────────────────────────────────
