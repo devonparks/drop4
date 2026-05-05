@@ -1003,7 +1003,11 @@ function ShardsCell({ shardsTotal, shardReady, onPress }: {
             <Text style={[styles.cellCountInline, { color: accent }]}>{shardsTotal}</Text>
           </View>
           <Text style={styles.cellEquipped} numberOfLines={1}>
-            {shardReady > 0 ? `${shardReady} unlockable` : 'Earned from dupes'}
+            {shardReady > 0
+              ? `${shardReady} ready to unlock`
+              : shardsTotal > 0
+                ? 'Tap to spend'
+                : 'Open boxes to earn'}
           </Text>
         </View>
         <Text style={styles.cellChevron}>{'›'}</Text>
