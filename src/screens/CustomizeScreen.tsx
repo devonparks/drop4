@@ -606,41 +606,66 @@ export function CustomizeScreen() {
               glance. EDIT pill in top-right gets you to the creator. */}
           <StaggeredEntry index={0} delay={30}>
             <View style={styles.heroCard}>
-              {/* Inner radial gradient — deepens the center where the
-                  character stands, brightens the edges subtly. Sells
-                  "framed display" instead of "flat panel." */}
+              {/* Inner radial gradient — polish 2026-05-05: pumped from
+                  0.06 → 0.14 opacity at top and added a deeper warm
+                  base at the bottom so the stage reads as a "lit
+                  museum case" instead of a flat panel. Three-stop
+                  gradient: warm top → midnight middle → subtle warm
+                  base for the floor reflection vibe. */}
               <LinearGradient
                 pointerEvents="none"
                 colors={[
+                  'rgba(255,160,60,0.14)',
+                  'rgba(10,14,32,0.0)',
                   'rgba(255,140,0,0.06)',
-                  'rgba(10,14,32,0.0)',
-                  'rgba(10,14,32,0.0)',
                 ]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={StyleSheet.absoluteFill}
               />
+              {/* Top-edge highlight — thin warm gradient line at the
+                  very top of the card sells the "lit from above"
+                  premium frame look. Sits above the radial gradient
+                  but below the content. */}
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(255,210,150,0.45)', 'rgba(255,210,150,0)']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.heroCardTopGloss}
+              />
               {/* Ambient sparkle particles — six warm-amber dots
                   twinkling at staggered phases. Sells "alive premium
                   display" without competing with the character. */}
               <SparkleField />
-              {/* Identity banner: player name + title + tier color +
-                  collection % pill. Replaces the redundant "CUSTOMIZE /
-                  YOUR LOCKER" big-title header from v1. */}
-              <View style={styles.identityRow}>
+              {/* Identity banner — split into TWO rows for proper
+                  hierarchy. Row 1 = HERO (big name + level chip on
+                  right). Row 2 = META (title + collection % pill).
+                  Polish 2026-05-05: was a single cramped row where
+                  name (13px), title (10px), LVL (9px) competed for
+                  attention; the player's NAME should dominate. */}
+              <View style={styles.identityHeroRow}>
                 <View style={[styles.titleDot, { backgroundColor: titleColor }]} />
                 <Text style={styles.identityName} numberOfLines={1}>
                   {playerName.toUpperCase()}
                 </Text>
+                <View style={{ flex: 1 }} />
+                {/* Level chip — boxed treatment makes the LVL number
+                    a tappable-feeling badge instead of stray inline
+                    text. Number + LVL caption stack vertically. */}
+                <View style={styles.lvlChip}>
+                  <Text style={styles.lvlChipNum}>{level}</Text>
+                  <Text style={styles.lvlChipCaption}>LVL</Text>
+                </View>
+              </View>
+              <View style={styles.identityMetaRow}>
                 <Text style={[styles.identityTitle, { color: titleColor }]} numberOfLines={1}>
                   {displayTitle.toUpperCase()}
                 </Text>
-                <Text style={styles.identityLvl}>{`LVL ${level}`}</Text>
                 <View style={{ flex: 1 }} />
-                {/* Collection % pill — now with a subtle horizontal
-                    progress fill behind the number so the chip itself
-                    visually reads "you're X% there" without taking the
-                    space of a separate bar. AAA pass 2026-05-04. */}
+                {/* Collection % pill — subtle horizontal fill behind
+                    the number so the chip itself visually reads
+                    "you're X% there." AAA pass 2026-05-04. */}
                 <View style={styles.collectionPill}>
                   <View
                     pointerEvents="none"
@@ -655,21 +680,27 @@ export function CustomizeScreen() {
                 </View>
               </View>
 
-              {/* XP progress to next level — thin warm-amber bar so the
-                  player gets a tiny reward signal every time the level
-                  number changes context. The level-up math in shopStore
-                  is `xp >= level * 100`, so the visible fill is just
-                  xp / (level * 100). Per AAA polish 2026-05-04: turns
-                  the bare LVL number into a progressing system the
-                  player can root for. */}
-              <View style={styles.xpTrack}>
-                <View
-                  pointerEvents="none"
-                  style={[
-                    styles.xpFill,
-                    { width: `${Math.min(100, (xp / (level * 100)) * 100)}%` },
-                  ]}
-                />
+              {/* XP progress to next level — bumped from 3 px → 5 px
+                  with a glossy gradient fill and an inline numeric
+                  label. Polish 2026-05-05: prior anemic 3 px hairline
+                  felt like a UI bug; the new bar reads as "you're
+                  progressing" with a real reward signal every coin. */}
+              <View style={styles.xpRow}>
+                <View style={styles.xpTrack}>
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={['#ffce63', '#ff9a2c']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.xpFill,
+                      { width: `${Math.min(100, (xp / (level * 100)) * 100)}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.xpLabel}>
+                  {`${xp}/${level * 100} XP`}
+                </Text>
               </View>
 
               {/* Character stage — slimmer than v1 (260 vs 320) to leave
@@ -1033,29 +1064,54 @@ const styles = StyleSheet.create({
   // (hero) and one block below (action band + loadout grid) instead of
   // 7 stacked panels. Strong amber border + glassy fill + soft drop
   // shadow + inner radial give the card real "framed display" weight.
+  // Hero card — polish 2026-05-05: stronger amber halo + thicker
+  // gradient border highlight so the card reads as a premium frame.
+  // Was a 1.5 px outline with weak shadow (0.18 opacity) that felt
+  // mid-tier; now 2 px outline + 0.35 shadow + warmer base tint.
   heroCard: {
     position: 'relative',
     borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,180,90,0.45)',
-    backgroundColor: 'rgba(10,14,32,0.55)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,180,90,0.6)',
+    backgroundColor: 'rgba(10,14,32,0.6)',
     paddingHorizontal: 12,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 10,
     marginBottom: 10,
     overflow: 'hidden',
     shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 22,
+    elevation: 12,
+  },
+  // Thin top-edge gradient line — gives the card a "lit from above"
+  // premium feel like a museum display case. 32 px tall fade.
+  heroCardTopGloss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
   },
 
   // ── Identity banner ─────────────────────────────────────────────
   // Player name + computed title + level + collection % chip on a
   // single tight row. Replaces the redundant "CUSTOMIZE / YOUR LOCKER"
   // big-title header from v1 — the bottom tab already says Customize.
-  identityRow: {
+  // Row 1 of the identity — name + level chip. Name is the hero of
+  // this row; level chip floats on the right with vertical number+LVL
+  // stack so it reads as a real badge.
+  identityHeroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
+    marginBottom: 4,
+  },
+  // Row 2 of the identity — title text + collection % pill. Sub to
+  // the name so visual hierarchy reads name → title → meta.
+  identityMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -1064,35 +1120,63 @@ const styles = StyleSheet.create({
   },
   // Tier-tinted dot precedes the name. Color comes from the player's
   // computed title (Rookie/Veteran/Champion/Legend/etc.) so the same
-  // signal that's on Profile/Home reads here too.
+  // signal that's on Profile/Home reads here too. Bumped 7 → 9 px
+  // and added a thin ring so it pops next to the bigger name.
   titleDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
     shadowColor: 'rgba(0,0,0,0.6)',
     shadowOpacity: 0.6,
     shadowRadius: 2,
   },
+  // Player name — bumped 13 → 17 px and removed maxWidth so the name
+  // gets the visual weight it deserves. Black weight + 1.4 spacing
+  // sells "this is YOUR identity."
   identityName: {
     fontFamily: fonts.heading,
     fontWeight: weight.black,
-    fontSize: 13,
+    fontSize: 17,
     color: '#ffffff',
-    letterSpacing: 1.2,
-    maxWidth: 110,
+    letterSpacing: 1.4,
+    flexShrink: 1,
   },
   identityTitle: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 10,
-    letterSpacing: 1.2,
+    fontSize: 11,
+    letterSpacing: 1.4,
   },
-  identityLvl: {
+  // Level chip — vertical stack: big number on top, "LVL" caption
+  // below in muted color. Reads as a stat badge instead of stray
+  // inline text. Boxed so it's visually distinct from the name.
+  lvlChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    minWidth: 38,
+  },
+  lvlChipNum: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 16,
+    color: '#ffffff',
+    lineHeight: 17,
+    letterSpacing: 0.4,
+  },
+  lvlChipCaption: {
     fontFamily: fonts.body,
     fontWeight: weight.bold,
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.45)',
+    fontSize: 7,
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.2,
+    marginTop: -1,
   },
   collectionPill: {
     paddingHorizontal: 8,
@@ -1122,23 +1206,38 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
-  // XP progress to next level — sits just under the identity row so
-  // every coin earned drives a visible amber fill. Thin (3 px) so it
-  // doesn't compete with the more important character + equipped chips
-  // below. Soft fade gradient ends so the progress edge doesn't read
-  // as a hard line.
-  xpTrack: {
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    overflow: 'hidden',
-    marginTop: 4,
+  // XP row — track + numeric label. Polish 2026-05-05: bumped from
+  // 3 px hairline to 5 px with a glossy gradient fill so the bar
+  // reads as a real progress system. Numeric label on the right
+  // ("X / Y XP") concretizes the level-up math (level * 100).
+  xpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
     marginHorizontal: 2,
+  },
+  xpTrack: {
+    flex: 1,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   xpFill: {
     height: '100%',
-    backgroundColor: '#ffb347',
-    borderRadius: 1.5,
+    borderRadius: 2.5,
+  },
+  xpLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 9,
+    color: 'rgba(255,180,90,0.85)',
+    letterSpacing: 0.6,
+    minWidth: 68,
+    textAlign: 'right',
   },
 
   // ── Character stage ────────────────────────────────────────────
@@ -1221,24 +1320,30 @@ const styles = StyleSheet.create({
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
   // Soft warm halo behind the character — diffuse, no hard edge.
+  // Polish 2026-05-05: bumped halo opacity 0.06 → 0.10 + stronger
+  // ring outline so the character silhouette pops more from the
+  // dark navy background. Sells "spotlit" instead of "in shadow."
   charGlow: {
     position: 'absolute',
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(255,140,0,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.10)',
+    backgroundColor: 'rgba(255,140,0,0.10)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,180,90,0.18)',
   },
-  // Floor shadow — squashed ellipse under the feet.
+  // Floor shadow — squashed ellipse under the feet. Polish 2026-05-05:
+  // bumped width 180 → 200 and opacity 0.6 → 0.8 so the floor
+  // grounding reads more clearly behind the character. The radial
+  // gradient inside (rgba 0.22 → 0) handles the soft fade.
   charFloorDisc: {
     position: 'absolute',
     bottom: 30,
-    width: 180,
-    height: 18,
-    borderRadius: 90,
+    width: 200,
+    height: 20,
+    borderRadius: 100,
     transform: [{ scaleY: 0.5 }],
-    opacity: 0.6,
+    opacity: 0.8,
   },
 
   // ── Equipped row ────────────────────────────────────────────────
