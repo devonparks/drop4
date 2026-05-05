@@ -505,10 +505,17 @@ export function CategoryBrowserScreen() {
             <PressScale
               onPress={() => navigation.navigate('ShardShop' as never)}
               accessibilityRole="button"
-              accessibilityLabel="Open Shard Shop"
+              accessibilityLabel={`Shard Shop. ${shards.common + shards.rare + shards.epic + shards.legendary} shards total.`}
             >
               <View style={styles.shardLink}>
                 <Text style={styles.shardLinkText}>SHARDS</Text>
+                {/* Total shard balance under the label so the player
+                    knows how much spend power they have before tapping
+                    in. Numbers only — the rarity breakdown lives on
+                    the next screen. Polish 2026-05-05. */}
+                <Text style={styles.shardLinkCount}>
+                  {shards.common + shards.rare + shards.epic + shards.legendary}
+                </Text>
               </View>
             </PressScale>
           </View>
@@ -750,11 +757,12 @@ const styles = StyleSheet.create({
   },
   shardLink: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 10,
     backgroundColor: 'rgba(155,89,182,0.18)',
     borderWidth: 1,
     borderColor: 'rgba(155,89,182,0.55)',
+    alignItems: 'center',
   },
   shardLinkText: {
     fontFamily: fonts.heading,
@@ -762,6 +770,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#c997e7',
     letterSpacing: 1.2,
+  },
+  // Total shard balance — shown below the SHARDS label so the player
+  // sees their spend power without tapping through. Bigger than the
+  // label since the number is the more dynamic / interesting datum.
+  shardLinkCount: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 14,
+    color: '#ffffff',
+    marginTop: 1,
+    letterSpacing: 0.4,
   },
 
   // Progress
