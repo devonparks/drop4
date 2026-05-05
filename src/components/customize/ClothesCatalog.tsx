@@ -351,12 +351,6 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
   // ── Render helpers ──────────────────────────────────────────────
   if (!visible) return null;
 
-  const equippedPackItem = OUTFIT_SHOP_ITEMS.find((it) => it.id === equippedOutfitId);
-  const equippedPackMeta = equippedPackItem ? OUTFITS[equippedPackItem.id] : null;
-  const equippedPackCover = equippedPackMeta
-    ? getPackIcon(OUTFIT_PACK_TO_SIDEKICK[equippedPackMeta.pack])
-    : undefined;
-
   return (
     <PreviewSafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -424,35 +418,12 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
           </View>
         )}
 
-        {/* NOW EQUIPPED banner (always shown — outfit pack is the
-            anchor for both modes; PARTS view lets you swap individual
-            slots within the equipped pack's body). */}
-        {equippedPackItem && equippedPackMeta && (
-          <View style={styles.equippedBanner}>
-            <View style={styles.equippedBannerSwatch}>
-              {equippedPackCover ? (
-                <Image source={equippedPackCover} style={styles.equippedBannerCover} resizeMode="contain" />
-              ) : (
-                <Text style={styles.equippedBannerGlyph}>{'\u{1F455}'}</Text>
-              )}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.equippedBannerLabel}>NOW WEARING</Text>
-              <Text style={styles.equippedBannerName} numberOfLines={1}>
-                {`${equippedPackMeta.packLabel} ${String(equippedPackMeta.index).padStart(2, '0')}`}
-              </Text>
-            </View>
-            <View style={[styles.equippedBannerChip, {
-              borderColor: RARITY_COLORS[equippedPackItem.rarity as keyof typeof RARITY_COLORS] || '#7f8c8d',
-            }]}>
-              <Text style={[styles.equippedBannerChipText, {
-                color: RARITY_COLORS[equippedPackItem.rarity as keyof typeof RARITY_COLORS] || '#7f8c8d',
-              }]}>
-                {RARITY_LABELS[equippedPackItem.rarity as keyof typeof RARITY_LABELS] || String(equippedPackItem.rarity).toUpperCase()}
-              </Text>
-            </View>
-          </View>
-        )}
+        {/* NOW WEARING banner removed 2026-05-05 per Devon: "i dont
+            like the now wearing tab on the top it just takes up space."
+            The equipped item is already signaled at the card level
+            (gold border + EQUIPPED pill on the matching cell), so the
+            redundant banner was eating ~70 px of vertical real estate
+            without adding new info. */}
 
         {/* Species filter chips — shared between PARTS and PACKS. Uses
             the cross-screen FilterChip primitive so the visual treatment
@@ -1079,59 +1050,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   modeChipTextActive: { color: '#ffffff' },
-
-  // ── NOW WEARING banner ──────────────────────────────────────
-  equippedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginHorizontal: 12,
-    marginTop: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(241,196,15,0.5)',
-    backgroundColor: 'rgba(241,196,15,0.08)',
-  },
-  equippedBannerSwatch: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  equippedBannerCover: { width: 48, height: 48 },
-  equippedBannerGlyph: { fontSize: 26 },
-  equippedBannerLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 9,
-    color: '#f1c40f',
-    letterSpacing: 1.6,
-  },
-  equippedBannerName: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 15,
-    color: '#ffffff',
-    letterSpacing: 0.6,
-    marginTop: 2,
-  },
-  equippedBannerChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1.5,
-  },
-  equippedBannerChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 9,
-    letterSpacing: 0.8,
-  },
 
   // Wrapper for any horizontal filter ScrollView so we can stack a
   // right-edge fade gradient on top — players see "more pills →"
