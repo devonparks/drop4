@@ -71,7 +71,6 @@ import {
   RARITY_COLORS,
   RARITY_LABELS,
   packPrefixFromPartName,
-  isStarterPack,
   getPartPrice,
 } from '../../data/amgPartPricing';
 import { packMeta, OUTFIT_PACK_TO_SIDEKICK } from '../../data/amgPackMeta';
@@ -249,9 +248,13 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
     return manifest.filter((p) => {
       if (!allowedSlots.has(p.slot)) return false;
       if (speciesKey !== 'All' && p.species !== speciesKey) return false;
-      // Hide starter parts from the catalog — they're already owned by
-      // every player, no shopping value to surface them as "FREE."
-      if (isStarterPack(packPrefixFromPartName(p.name))) return false;
+      // Starter parts now SHOW in the catalog (was hidden 2026-05-04).
+      // Audit 2026-05-05 (UX-2) found this caused confusion: player sees
+      // "FACE 3/381 owned" on the loadout cell, opens the catalog, and
+      // sees zero owned cards because their 3 owned face parts are
+      // starter (HUMN_BASE) which the filter dropped. Now they show as
+      // "FREE ✓ OWNED" — player can see what they have and the catalog
+      // count matches the loadout cell count.
       // Paired-slot collapse for FACE bucket (audit Fix 5). Brows and
       // ears are mirror pairs — players always equip both at once. So
       // we hide the right-side mate (EyebrowRight, EarRight) and let
