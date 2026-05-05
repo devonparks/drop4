@@ -32,7 +32,7 @@
  *     second game needs them" — keep the shared package stable, build
  *     game-specific surface in Drop4.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -189,7 +189,37 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
       setSubcategory('All');
     }
   }, [lockedBucket]);
-  const [speciesFilter, setSpeciesFilter] = useState<'All' | Species>('All');
+  // Default species filter to the player's current species so the catalog
+  // shows their relevant parts first instead of every species' starter
+  // parts mixed together (alphabetical sort otherwise puts Goblin BASE
+  // before Human BASE which confuses Human players).
+  // Per Customize audit 2026-05-05 follow-up.
+  // Note: amgCharacter.species is stored as "Human" (capital), but the
+  // Species type / SPECIES_FILTERS ids are lowercase ('human', 'elves',
+  // etc.). Normalize via lookup so the filter id actually matches.
+  const playerSpeciesRaw = amgCharacter?.species ?? null;
+  const playerSpecies: Species | null = useMemo(() => {
+    if (!playerSpeciesRaw) return null;
+    const match = SPECIES_FILTERS.find(
+      (f) => f.id !== 'All' && f.manifestKey.toLowerCase() === String(playerSpeciesRaw).toLowerCase(),
+    );
+    return match ? (match.id as Species) : null;
+  }, [playerSpeciesRaw]);
+  const [speciesFilter, setSpeciesFilter] = useState<'All' | Species>(
+    playerSpecies ?? 'All',
+  );
+  // When the catalog opens (visible flips false→true), sync the filter
+  // to the player's current species. Handles the case where amgCharacter
+  // wasn't yet loaded on first mount but becomes available before the
+  // catalog actually opens. The user can still tap "All" or any other
+  // species pill to override.
+  const lastVisibleRef = useRef(false);
+  useEffect(() => {
+    if (visible && !lastVisibleRef.current) {
+      if (playerSpecies) setSpeciesFilter(playerSpecies);
+    }
+    lastVisibleRef.current = visible;
+  }, [visible, playerSpecies]);
   const [manifest, setManifest] = useState<AmgManifestPart[] | null>(null);
   // Manifest fetch error — falls into a "Try Again" state in PartsGrid
   // so players never see infinite loading on a flaky network. Bumps a
