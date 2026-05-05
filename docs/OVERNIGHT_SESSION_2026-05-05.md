@@ -30,13 +30,14 @@ All commits passed `tsc --noEmit` and `jest` (74/74).
 | 9 | Shop locker chip pluralization — "1 BOXES READY" → "1 BOX READY" (singular when count=1). | drop4 `fef7070` |
 | 10 | Daily Deal title shortening — "Pirate Captains 01" → "Pirates · #01" using packMeta.shortName, ends "Pirate Captain..." truncation on the 115-px deal card. | drop4 `fef7070` |
 | 11 | ColorTab group headers get accessibilityLabel — screen-reader users now hear "{GROUP}, {N} colors, expanded/collapsed" instead of just "button, expanded". | engine `54f0a44` |
+| 12 | Customize HAIR/FACE loadout cells show pack identity — was generic "Hair 01" / "Face", now shows "Civilians 03" / "Outlaws 02" matching CLOTHES/PETS/PIECES cells. Uses packMeta.shortName via inline labelFromPartName helper. | drop4 `477b820` |
 
 ---
 
 ## Combined session totals (overnight)
 
-- **11 polish wins** across 11 commits
-- **5 engine commits + 6 drop4 commits**
+- **12 polish wins** across 12 commits
+- **5 engine commits + 7 drop4 commits**
 - **All 5 audit-flagged UX issues**: shipped
 - **6 bonus polish rounds**: shipped (CategoryBrowser progress, LOOKS fade, SPECIES fade, BOX/BOXES grammar, Daily Deal shortening, ColorTab a11y)
 - **All passed**: tsc clean (0 errors), jest 74/74, all pre-commit hooks
