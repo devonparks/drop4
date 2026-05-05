@@ -139,8 +139,15 @@ export function Character3DPortrait({
           }}
           style={StyleSheet.absoluteFill as any}
         >
-          {/* Three-point lighting matches the AAA legacy look. */}
-          <ambientLight intensity={0.55} color="#c0ccf0" />
+          {/* Three-point lighting — Audit C-1 fix 2026-05-05 PM:
+              boosted ambient 0.55 → 0.65 + warm rim 1.4 → 1.8 so
+              characters pop against dark UI on every screen
+              (Customize hero, Game header avatars, Matchup, Profile).
+              Dark Sidekick outfits no longer blend into navy bg.
+              The rim is what sells the silhouette — pushed brighter +
+              warmer hex (#ff9a5a → #ffb070) for a stronger amber
+              outline glow. */}
+          <ambientLight intensity={0.65} color="#c0ccf0" />
           <directionalLight
             position={[2.5, 4, 3]}
             intensity={1.3}
@@ -157,7 +164,7 @@ export function Character3DPortrait({
             shadow-bias={-0.0005}
           />
           <directionalLight position={[-2, 2, 1.5]} intensity={0.6} color="#a8c8f0" />
-          <directionalLight position={[0, 3, -3]} intensity={1.4} color="#ff9a5a" />
+          <directionalLight position={[0, 3, -3]} intensity={1.8} color="#ffb070" />
           <hemisphereLight args={['#6080a0', '#1a1820', 0.5]} />
 
           <TurntableGroup enabled={shouldRotate}>
