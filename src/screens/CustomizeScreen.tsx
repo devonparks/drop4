@@ -297,10 +297,14 @@ export function CustomizeScreen() {
     // the equipped row flex the player's full loadout instead of
     // hiding gameplay-visible cosmetics. Default ids ('drop_default',
     // 'win_default') treated as "no flex needed."
+    // Defaults are first-position freebies in their catalogs:
+    // DROP_EFFECTS[0] = { id: 'none', name: 'None' }
+    // WIN_ANIMATIONS[0] = { id: 'basic', name: 'Basic' }
+    // Suppress those in the equipped row — they're "no flex" picks.
     const dropEffectMeta = DROP_EFFECTS.find((f) => f.id === equippedDropEffectId);
     const winAnimationMeta = WIN_ANIMATIONS.find((w) => w.id === equippedWinAnimationId);
-    const isDropEffectDefault = !equippedDropEffectId || equippedDropEffectId === 'drop_default';
-    const isWinAnimationDefault = !equippedWinAnimationId || equippedWinAnimationId === 'win_default';
+    const isDropEffectDefault = !equippedDropEffectId || equippedDropEffectId === 'none';
+    const isWinAnimationDefault = !equippedWinAnimationId || equippedWinAnimationId === 'basic';
     return {
       boardName,
       piecesName,
