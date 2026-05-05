@@ -525,13 +525,23 @@ export function CustomizeScreen() {
     const dropFx = DROP_EFFECTS.find((f) => f.id === equipped.dropEffect)?.name ?? null;
     const winFx = WIN_ANIMATIONS.find((w) => w.id === equipped.winAnimation)?.name ?? null;
     const petName = summary.petName;
-    // Emote pinned-or-equipped readout. The wheel holds 6 emote slots;
-    // surfacing "6 wheel" is more meaningful than "0 owned" when the
-    // player has the default free emotes pinned.
+    // Emote readout — show selected emote name when the player has
+    // picked a specific one to play on character tap, else the count
+    // of owned emotes (or "Tap to browse" empty state via LoadoutCell).
+    // Was "X pinned" which was inaccurate (the count is OWNED, not
+    // pinned-to-wheel — pinning is a separate concept). Audit 2026-05-05
+    // follow-up.
     const emoteCount = ownedEmotes.length;
-    const emoteReadout = emoteCount > 0
-      ? `${emoteCount} pinned`
-      : '6 wheel slots';
+    const selectedEmote = useShopStore.getState().selectedHomeEmote;
+    const homeEmoteRandomMode = useShopStore.getState().homeEmoteRandomMode;
+    const selectedEmoteMeta = selectedEmote && !homeEmoteRandomMode
+      ? HUMAN_EMOTES.find((e) => e.id === selectedEmote)
+      : null;
+    // Priority: specific selected emote → "Random" if random mode →
+    // owned count. Each conveys real info instead of the misleading
+    // "X pinned" label that was just the owned count with a wrong noun.
+    const emoteReadout = selectedEmoteMeta?.name
+      ?? (homeEmoteRandomMode ? 'Random' : (emoteCount > 0 ? `${emoteCount} owned` : null));
     // HAIR / FACE: derive a "Pack Short · NN" readout from the equipped
     // part name so the loadout cells match the rest of the grid (which
     // shows specific item identity like "Outlaws 03"). Was a generic
