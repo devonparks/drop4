@@ -16,6 +16,12 @@ interface AmgPackMeta {
   emoji: string;
   /** Player-facing pack name. No "Pack" suffix — the UI adds it. */
   displayName: string;
+  /** Compact display name for tight card chrome (catalog grid cards
+   *  truncate at ~14 chars on a 96-px card). Falls back to displayName
+   *  when omitted. Per Customize audit 2026-05-05 (UX-4) — full names
+   *  like "Apocalypse Outlaws" hard-truncated to "Apocalypse Outla..."
+   *  on every card. */
+  shortName?: string;
   /** Short blurb for section headers / pack detail screens. */
   description: string;
 }
@@ -27,39 +33,39 @@ interface AmgPackMeta {
 // flagged that as confusing, so this catches all 17 known packs.
 const AMG_PACK_META: Record<string, AmgPackMeta> = {
   // ── Species base packs (always owned) ──
-  HUMN_BASE: { emoji: '🧑', displayName: 'Human Base',   description: 'Essential human heads, hair, and anatomy.' },
-  ELVN_BASE: { emoji: '🧝', displayName: 'Elf Base',     description: 'Essential elven heads and features.' },
-  GOBL_BASE: { emoji: '👺', displayName: 'Goblin Base',  description: 'Essential goblin heads and features.' },
-  SKTN_BASE: { emoji: '💀', displayName: 'Skeleton Base', description: 'Essential skeleton heads and bones.' },
-  ZOMB_BASE: { emoji: '🧟', displayName: 'Zombie Base',  description: 'Essential zombie heads and features.' },
+  HUMN_BASE: { emoji: '🧑', displayName: 'Human Base',   shortName: 'Human',   description: 'Essential human heads, hair, and anatomy.' },
+  ELVN_BASE: { emoji: '🧝', displayName: 'Elf Base',     shortName: 'Elf',     description: 'Essential elven heads and features.' },
+  GOBL_BASE: { emoji: '👺', displayName: 'Goblin Base',  shortName: 'Goblin',  description: 'Essential goblin heads and features.' },
+  SKTN_BASE: { emoji: '💀', displayName: 'Skeleton Base', shortName: 'Skeleton', description: 'Essential skeleton heads and bones.' },
+  ZOMB_BASE: { emoji: '🧟', displayName: 'Zombie Base',  shortName: 'Zombie',  description: 'Essential zombie heads and features.' },
 
   // ── Modern (civilian + tactical) ──
-  MDRN_CIVL: { emoji: '👖', displayName: 'Modern Civilians', description: 'Everyday jeans, tees, and hoodies.' },
-  MDRN_POLC: { emoji: '👮', displayName: 'Modern Police',    description: 'Tactical uniforms and badge gear.' },
+  MDRN_CIVL: { emoji: '👖', displayName: 'Modern Civilians', shortName: 'Civilians', description: 'Everyday jeans, tees, and hoodies.' },
+  MDRN_POLC: { emoji: '👮', displayName: 'Modern Police',    shortName: 'Police',    description: 'Tactical uniforms and badge gear.' },
 
   // ── Sci-fi ──
-  SCFI_CIVL: { emoji: '🚀', displayName: 'Sci-Fi Civilians', description: 'Clean future-casual fits with tech panels.' },
-  SCFI_SOLD: { emoji: '🤖', displayName: 'Sci-Fi Soldiers',  description: 'Hard-armor exo-suits for far-future ops.' },
+  SCFI_CIVL: { emoji: '🚀', displayName: 'Sci-Fi Civilians', shortName: 'Sci-Fi Civ', description: 'Clean future-casual fits with tech panels.' },
+  SCFI_SOLD: { emoji: '🤖', displayName: 'Sci-Fi Soldiers',  shortName: 'Sci-Fi Sold', description: 'Hard-armor exo-suits for far-future ops.' },
 
   // ── Fantasy ──
-  FANT_KNGT: { emoji: '⚔️', displayName: 'Fantasy Knights',  description: 'Plate armor and royal-guard fits.' },
-  FANT_VILL: { emoji: '🏘️', displayName: 'Fantasy Villagers', description: 'Townsfolk tunics and peasant garb.' },
-  FANT_SKTN: { emoji: '☠️', displayName: 'Fantasy Skeletons', description: 'Bone-warrior armor for the undead.' },
+  FANT_KNGT: { emoji: '⚔️', displayName: 'Fantasy Knights',  shortName: 'Knights',    description: 'Plate armor and royal-guard fits.' },
+  FANT_VILL: { emoji: '🏘️', displayName: 'Fantasy Villagers', shortName: 'Villagers',  description: 'Townsfolk tunics and peasant garb.' },
+  FANT_SKTN: { emoji: '☠️', displayName: 'Fantasy Skeletons', shortName: 'Bonewalkers', description: 'Bone-warrior armor for the undead.' },
 
   // ── Cultural / themed warriors ──
-  SAMR_WARR: { emoji: '🗾', displayName: 'Samurai Warriors',  description: 'Feudal warlord-tier samurai armor.' },
-  VIKG_WARR: { emoji: '🪓', displayName: 'Viking Warriors',   description: 'Northern raider furs and ironwork.' },
-  ELVN_WARR: { emoji: '🏹', displayName: 'Elven Warriors',    description: 'Forest-bound elves built for ranged combat.' },
-  GOBL_FIGT: { emoji: '🗡️', displayName: 'Goblin Fighters',   description: 'Goblin mob-boss fits with studded leather.' },
+  SAMR_WARR: { emoji: '🗾', displayName: 'Samurai Warriors',  shortName: 'Samurai',     description: 'Feudal warlord-tier samurai armor.' },
+  VIKG_WARR: { emoji: '🪓', displayName: 'Viking Warriors',   shortName: 'Vikings',     description: 'Northern raider furs and ironwork.' },
+  ELVN_WARR: { emoji: '🏹', displayName: 'Elven Warriors',    shortName: 'Elf Warriors', description: 'Forest-bound elves built for ranged combat.' },
+  GOBL_FIGT: { emoji: '🗡️', displayName: 'Goblin Fighters',   shortName: 'Goblin Brigade', description: 'Goblin mob-boss fits with studded leather.' },
 
   // ── Apocalypse / horror ──
-  APOC_OUTL: { emoji: '☢️', displayName: 'Apocalypse Outlaws', description: 'Wasteland raider fits for the end of the world.' },
-  APOC_SURV: { emoji: '🥾', displayName: 'Apocalypse Survivors', description: 'Practical wasteland-survival fits.' },
-  APOC_ZOMB: { emoji: '🧟', displayName: 'Apocalypse Zombies', description: 'Tattered remnants of the undead.' },
-  HORR_VILN: { emoji: '🎭', displayName: 'Horror Villains',   description: 'Slasher and creature-feature looks.' },
+  APOC_OUTL: { emoji: '☢️', displayName: 'Apocalypse Outlaws',  shortName: 'Outlaws',    description: 'Wasteland raider fits for the end of the world.' },
+  APOC_SURV: { emoji: '🥾', displayName: 'Apocalypse Survivors', shortName: 'Survivors',  description: 'Practical wasteland-survival fits.' },
+  APOC_ZOMB: { emoji: '🧟', displayName: 'Apocalypse Zombies',  shortName: 'Apoc Zombies', description: 'Tattered remnants of the undead.' },
+  HORR_VILN: { emoji: '🎭', displayName: 'Horror Villains',     shortName: 'Slashers',   description: 'Slasher and creature-feature looks.' },
 
   // ── Pirates ──
-  PIRT_CAPT: { emoji: '🏴‍☠️', displayName: 'Pirate Captains', description: 'High-seas captains with brass and brocade.' },
+  PIRT_CAPT: { emoji: '🏴‍☠️', displayName: 'Pirate Captains', shortName: 'Pirates', description: 'High-seas captains with brass and brocade.' },
 };
 
 /** Display metadata for a pack prefix. Returns a generic fallback for

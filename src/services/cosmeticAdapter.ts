@@ -58,6 +58,17 @@ export const drop4CosmeticAdapter: CosmeticAdapter = {
     return packMeta(pack).displayName;
   },
 
+  // Compact name for the AmgPartCard pack strip (cards are too narrow
+  // for full names like "Apocalypse Outlaws"). amgPackMeta carries
+  // shortName per pack (e.g. "Outlaws", "Knights", "Civilians").
+  // Falls back to displayName when a pack hasn't been short-named yet.
+  // Audit 2026-05-05 (UX-4).
+  getPackShortName: (partName: string): string => {
+    const pack = packPrefixFromPartName(partName);
+    const meta = packMeta(pack);
+    return meta.shortName ?? meta.displayName;
+  },
+
   isPartOwned: (partName: string): boolean => {
     return useCharacterStore.getState().isAmgPartOwned(partName);
   },
