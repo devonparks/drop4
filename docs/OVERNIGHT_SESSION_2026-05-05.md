@@ -94,6 +94,17 @@ brow ≈ 1.59 / eye ≈ 1.56 / nose ≈ 1.50 / chin ≈ 1.46.
 | 16 | Eye iris/pupil dark navy fix — Synty eye GLBs ship with both material slots flat gray; tint.ts now overrides slot[1] to navy `#162033` so pupils read against any skin | engine `tint.ts` |
 | 17 | Catalog Owned/Locked filter chips — second filter row stacks under rarity, helps collector flex (Owned-only) and completionist hunt (Locked-only); empty-state copy adapts to filter cause | drop4 `86656d4` |
 | 18 | Catalog UNLOCKABLE state — locked cards check shard balance; if affordable, footer flips from passive "IN BAGS" to active green "UNLOCKABLE", same density (no layout shift) | drop4 `1d58534` |
+| 19 | Catalog header N UNLOCKABLE chip — screen-level companion to the per-card UNLOCKABLE state; shows "X UNLOCKABLE" on the progress row when player can spend-unlock at least one item, only when count > 0 | drop4 `4dc0f46` |
+| 20 | Engine LoadoutCell gold MAX pill on 100% slot completion — flips "12/12" to gold "MAX" pill at full ownership; Steam-style achievement signal; cross-game (every game using @amg/cosmetic-ui inherits) | engine `21c0956` |
+| 21 | ShardShop ready dot on rarity tabs — small green dot top-right of balance chip when player can afford at least one unlock at that rarity AND unowned items exist; pairs with catalog UNLOCKABLE for unified visual language | drop4 `05f43be` |
+
+### Morning batch totals (2026-05-05 9:30am-10:30am)
+
+- **5 drop4 commits** + **1 engine commit** + **Unity Drop4Exporter.cs** (saved on disk, not git-tracked)
+- **All passed**: tsc clean (0 errors), jest 74/74, all pre-commit hooks
+- **All pushed** to origin
+- **Demo-killer fixed**: Art-1 face thumbnails now differentiable at 96 px (4 calibration passes)
+- **New visual language**: green = "actionable spend now" across catalog cards / catalog header chip / shard shop tabs
 - Hero card bottom CTA card
 - Daily Deal card title shortName treatment
 - Catalog "Owned only" / "Locked only" filter
