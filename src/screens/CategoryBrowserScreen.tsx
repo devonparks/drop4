@@ -347,13 +347,6 @@ export function CategoryBrowserScreen() {
     [config],
   );
 
-  // Currently-equipped item — drives the hero strip at the top of the
-  // grid showing "what's on right now."
-  const currentEquipped = useMemo(
-    () => config.items.find((it) => config.isEquipped(it.id)) ?? null,
-    [config],
-  );
-
   const handleItemTap = (item: BrowsableItem) => {
     const isOwned = config.isOwned(item.id);
     if (isOwned) {
@@ -465,32 +458,13 @@ export function CategoryBrowserScreen() {
             </Text>
           </View>
 
-          {/* Currently-equipped banner — shows what's on right now so the
-              player knows what they'll be replacing. Only shown when an
-              equipped item exists (always true for boards/pieces, true
-              for pets when player has equipped one, false otherwise). */}
-          {currentEquipped && (
-            <View style={styles.equippedBanner}>
-              <View style={styles.equippedBannerSwatch}>
-                {renderSwatch(currentEquipped, true)}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.equippedBannerLabel}>NOW EQUIPPED</Text>
-                <Text style={styles.equippedBannerName} numberOfLines={1}>
-                  {currentEquipped.name}
-                </Text>
-              </View>
-              <View style={[styles.equippedBannerChip, {
-                borderColor: (RARITY_COLORS as Record<string, string>)[currentEquipped.rarity] ?? '#7f8c8d',
-              }]}>
-                <Text style={[styles.equippedBannerChipText, {
-                  color: (RARITY_COLORS as Record<string, string>)[currentEquipped.rarity] ?? '#7f8c8d',
-                }]}>
-                  {(RARITY_LABELS as Record<string, string>)[currentEquipped.rarity] ?? String(currentEquipped.rarity).toUpperCase()}
-                </Text>
-              </View>
-            </View>
-          )}
+          {/* NOW EQUIPPED banner removed 2026-05-05 per Devon
+              (catalog precedent 6d2d945): "i dont like the now wearing
+              tab on the top it just takes up space." Equipped item is
+              already signaled by the gold border + EQUIPPED chip on
+              the matching card, so the banner was eating ~70 px of
+              vertical real estate without adding new info. Applies
+              consistently across Pets/Pieces/Boards/Effects/Wins/Frames. */}
 
           {/* Rarity filter chips — uses the cross-screen FilterChip
               primitive so the visual treatment matches the other
@@ -698,57 +672,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.0,
     marginTop: 4,
-  },
-
-  // Equipped banner
-  equippedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(241,196,15,0.5)',
-    backgroundColor: 'rgba(241,196,15,0.08)',
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  equippedBannerSwatch: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  equippedBannerLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 9,
-    color: '#f1c40f',
-    letterSpacing: 1.6,
-  },
-  equippedBannerName: {
-    fontFamily: fonts.heading,
-    fontWeight: weight.black,
-    fontSize: 16,
-    color: '#ffffff',
-    letterSpacing: 0.8,
-    marginTop: 2,
-  },
-  equippedBannerChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1.5,
-  },
-  equippedBannerChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 9,
-    letterSpacing: 0.8,
   },
 
   // Filter chips
