@@ -1062,7 +1062,7 @@ export function ShopScreen() {
                         style={s.lockerStripChip}
                       >
                         <Text style={s.lockerStripChipValue}>{totalBoxes}</Text>
-                        <Text style={s.lockerStripChipLabel}>BOXES READY</Text>
+                        <Text style={s.lockerStripChipLabel}>{totalBoxes === 1 ? 'BOX READY' : 'BOXES READY'}</Text>
                         <Text style={s.lockerStripChevron}>{'›'}</Text>
                       </LinearGradient>
                     </PressScale>
@@ -1172,11 +1172,28 @@ export function ShopScreen() {
                   // undefined (and then to the emoji glyph) when the
                   // deal item doesn't have a painted source available.
                   let painted: ImageSourcePropType | undefined;
+                  // Title for the deal card. Outfit names like
+                  // "Pirate Captains 01" hard-truncate to "Pirate Captain..."
+                  // on the 115-px daily deal card. Build a compact title:
+                  // for outfits, pull packLabel + index ("Pirates · 01").
+                  // packLabel could still be long, but we're consistent
+                  // with the catalog's pack short-name pattern (UX-4).
+                  let dealTitle = deal.item.name;
                   if (isOutfit) {
                     const outfitMeta = OUTFITS[deal.item.id];
                     if (outfitMeta) {
                       const sk = OUTFIT_PACK_TO_SIDEKICK[outfitMeta.pack];
                       painted = sk ? getPackIcon(sk) : undefined;
+                      // Use the engine pack short name when we have it.
+                      // packMeta lookups on the AMG side return shortName
+                      // like "Pirates" / "Outlaws" / "Civilians". Falls
+                      // through to outfitMeta.packLabel when shortName
+                      // isn't defined, then to the original deal name.
+                      const sidekickPrefix = sk; // e.g. 'PIRT_CAPT'
+                      const shortName = sidekickPrefix
+                        ? (packMeta(sidekickPrefix).shortName ?? outfitMeta.packLabel)
+                        : outfitMeta.packLabel;
+                      dealTitle = `${shortName} · #${String(outfitMeta.index).padStart(2, '0')}`;
                     }
                   } else if (deal.category === 'emote') {
                     painted = getEmoteIcon(deal.item.id);
@@ -1192,7 +1209,7 @@ export function ShopScreen() {
                       key={deal.item.id}
                       icon={iconByCategory[deal.category] ?? '✨'}
                       iconImage={painted}
-                      title={deal.item.name}
+                      title={dealTitle}
                       subtitle={isOwned ? 'In your locker' : 'Spotlight pick'}
                       buttonLabel={isOwned ? 'OWNED' : 'PREVIEW'}
                       buttonColor={isOwned ? ['#555', '#333'] : ['#ff6a00', '#ff8c00']}
