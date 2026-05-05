@@ -98,13 +98,17 @@ brow ≈ 1.59 / eye ≈ 1.56 / nose ≈ 1.50 / chin ≈ 1.46.
 | 20 | Engine LoadoutCell gold MAX pill on 100% slot completion — flips "12/12" to gold "MAX" pill at full ownership; Steam-style achievement signal; cross-game (every game using @amg/cosmetic-ui inherits) | engine `21c0956` |
 | 21 | ShardShop ready dot on rarity tabs — small green dot top-right of balance chip when player can afford at least one unlock at that rarity AND unowned items exist; pairs with catalog UNLOCKABLE for unified visual language | drop4 `05f43be` |
 
+| 22 | Catalog header SHARDS link total balance — stacks the total shard count under the SHARDS label so the player sees spend power without tapping through. Bigger than the label since the count is the more dynamic datum. | drop4 `ea738be` |
+| 23 | Catalog empty-state OPEN BOXES CTA button — when filter narrows to nothing AND it isn't the completion success state, a tappable warm-amber OPEN BOXES button now sits below the explanatory text routing to LootBox. | drop4 `67b843d` |
+
 ### Morning batch totals (2026-05-05 9:30am-10:30am)
 
-- **5 drop4 commits** + **1 engine commit** + **Unity Drop4Exporter.cs** (saved on disk, not git-tracked)
+- **8 drop4 commits** + **1 engine commit** + **Unity Drop4Exporter.cs** (saved on disk, not git-tracked)
 - **All passed**: tsc clean (0 errors), jest 74/74, all pre-commit hooks
 - **All pushed** to origin
-- **Demo-killer fixed**: Art-1 face thumbnails now differentiable at 96 px (4 calibration passes)
-- **New visual language**: green = "actionable spend now" across catalog cards / catalog header chip / shard shop tabs
+- **Demo-killer fixed**: Art-1 face thumbnails now differentiable at 96 px (4 calibration passes; 600+ PNGs re-rendered across 11 packs)
+- **New visual language**: green = "actionable spend now" across catalog cards / catalog header chip / shard shop tabs / empty CTA / shard total
+- **All 6 face sub-framings verified**: Brows / Eyes / Nose / Beard centered on their feature; Hair full head; Ears 3/4 profile
 - Hero card bottom CTA card
 - Daily Deal card title shortName treatment
 - Catalog "Owned only" / "Locked only" filter
