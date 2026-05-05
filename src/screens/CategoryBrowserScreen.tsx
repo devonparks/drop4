@@ -383,6 +383,20 @@ export function CategoryBrowserScreen() {
     [config],
   );
 
+  // Unlockable count — how many locked items the player can spend
+  // shards on RIGHT NOW. Surfaces below the progress bar as a green
+  // chip when > 0. Pairs with the per-card UNLOCKABLE state to
+  // answer "is there anything I should grab?" at a glance, before
+  // scanning the grid.
+  const unlockableCount = useMemo(() => {
+    return config.items.reduce((acc, it) => {
+      if (config.isOwned(it.id)) return acc;
+      if (it.rarity === 'darkmatter') return acc;
+      const r = mapToLootRarity(it.rarity);
+      return acc + (shards[r] >= SHARD_UNLOCK_COST[r] ? 1 : 0);
+    }, 0);
+  }, [config, shards]);
+
   const handleItemTap = (item: BrowsableItem) => {
     const isOwned = config.isOwned(item.id);
     if (isOwned) {
@@ -500,7 +514,10 @@ export function CategoryBrowserScreen() {
           </View>
 
           {/* Progress strip + count — single line below the header so the
-              player sees "you have 3/15, here's the progress" at a glance. */}
+              player sees "you have 3/15, here's the progress" at a glance.
+              The unlockable chip on the right surfaces "X UNLOCKABLE"
+              when shards are available, pulling the eye to a real
+              actionable opportunity (pairs with per-card UNLOCKABLE). */}
           <View style={styles.progressWrap}>
             <View style={styles.progressTrack}>
               <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
@@ -508,6 +525,13 @@ export function CategoryBrowserScreen() {
             <Text style={styles.progressLabel}>
               {`${ownedCount} / ${config.items.length}  ·  ${Math.round(progressPct)}%`}
             </Text>
+            {unlockableCount > 0 && (
+              <View style={styles.unlockableChip}>
+                <Text style={styles.unlockableChipText}>
+                  {`${unlockableCount} UNLOCKABLE`}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* NOW EQUIPPED banner removed 2026-05-05 per Devon
@@ -764,6 +788,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.0,
     marginTop: 4,
+  },
+  // Unlockable chip — small green pill showing "N UNLOCKABLE" when
+  // the player can spend shards on at least one item in this catalog.
+  // Positioned absolute so it sits at the right edge of the progress
+  // row without disturbing the existing label flow. Green to match
+  // the per-card UNLOCKABLE footer state for visual consistency.
+  unlockableChip: {
+    position: 'absolute',
+    right: 4,
+    top: 0,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(62,180,137,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(62,180,137,0.55)',
+  },
+  unlockableChipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 8,
+    color: '#3eb489',
+    letterSpacing: 1.0,
   },
 
   // Filter chips
