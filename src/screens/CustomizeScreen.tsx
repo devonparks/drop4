@@ -195,41 +195,19 @@ function CustomizeCharacter({
   }, [glowBreath]);
   return (
     <View style={styles.charStageInner}>
-      {/* Stage spotlight — bright warm radial gradient that "lifts"
-          the stage area out of the dark hero card so the character
-          reads with stronger contrast. Sits behind the back-glow.
-          Per Devon 2026-05-05: "the character is harder to see on
-          the customization page" — this layer fixes that. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={[
-          'rgba(255,200,140,0.22)',
-          'rgba(255,160,80,0.10)',
-          'rgba(10,14,32,0.0)',
-        ]}
-        start={{ x: 0.5, y: 0.4 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.charSpotlight}
-      />
-      {/* Back-glow — large warm orange aura so the silhouette pops out
-          of the dark navy background. Layered behind the character. */}
+      {/* Single coherent stage halo — one warm-amber blob behind the
+          character with NO ring edge so the player sees a soft
+          spotlight zone, not a circle outline. Was previously a
+          stack of (spotlight + glow + floor disc) which Devon
+          flagged as "2 overlapping circles + horizontal line at
+          the bottom." Now: one shape, one breath, one read.
+          Polish 2026-05-05. */}
       <Animated.View pointerEvents="none" style={[styles.charGlow, { opacity: glowBreath }]} />
-      {/* Floor disc — soft elliptical shadow under the feet for grounding. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(255,180,90,0.32)', 'rgba(255,140,0,0)']}
-        style={styles.charFloorDisc}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
       <Character3DPortrait
         width={320}
         height={320}
         animationId={animationId}
         onTap={onTap}
-        // Painted scene already supplies warm-amber backdrop; we own the
-        // floor disc + spotlight stack here so the look is consistent
-        // even if the bg theme is swapped per-screen later.
         showFloor={false}
       />
     </View>
@@ -1337,43 +1315,18 @@ const styles = StyleSheet.create({
   // ── Sparkle ────────────────────────────────────────────────────
   // Each particle in the SparkleField — tiny circle with shadow glow
   // (color set per-particle). Position is animated at render time.
-  // Stage spotlight — full-stage radial-ish gradient that lifts the
-  // background BEHIND the character so the silhouette reads against
-  // a brighter zone. Devon 2026-05-05: "character is harder to see
-  // on the customization page" — this is the primary fix. Sits at
-  // the bottom of the layer stack (behind glow + floor + character).
-  charSpotlight: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    top: '50%',
-    marginTop: -160,
-  },
-  // Soft warm halo behind the character — diffuse, no hard edge.
-  // Polish 2026-05-05: bumped to 280 px to scale with the larger
-  // 320 px stage; 0.18 opacity + ring outline so the character
-  // silhouette POPS hard from the dark navy background.
+  // Single coherent stage halo — soft warm blob behind the character.
+  // Devon 2026-05-05: nuked the prior "spotlight + halo ring + floor
+  // disc" stack because it read as overlapping circles with a
+  // visible horizontal line at the bottom. New treatment: ONE big
+  // amber circle, no border ring (no edge line), just diffuse
+  // background warmth so the silhouette pops without UI clutter.
   charGlow: {
     position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(255,140,0,0.18)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,180,90,0.28)',
-  },
-  // Floor shadow — squashed ellipse under the feet. Polish 2026-05-05:
-  // scaled to match 320 px stage (240 wide vs 200 prior) + bumped
-  // gradient opacity 0.22 → 0.32 for stronger floor grounding.
-  charFloorDisc: {
-    position: 'absolute',
-    bottom: 36,
-    width: 240,
-    height: 22,
-    borderRadius: 120,
-    transform: [{ scaleY: 0.5 }],
-    opacity: 0.85,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(255,140,0,0.16)',
   },
 
   // ── Equipped row ────────────────────────────────────────────────
