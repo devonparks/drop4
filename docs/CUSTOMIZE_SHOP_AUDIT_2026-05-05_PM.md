@@ -191,14 +191,46 @@ in a ScrollView.
 
 ## Punch list (priority order)
 
-1. 🔴 **C-2** Halo hard-edge → shadow-based radial (1 line change)
+1. 🔴 **C-2** Halo hard-edge → shadow-based radial (1 line change) ✅ SHIPPED
 2. 🔴 **C-1** Character contrast against BG (rim light boost +
-   stage-zone backdrop)
-3. 🟡 **M-2** XP bar 5 % minimum fill (1 line change)
-4. 🟡 **M-1** Level chip min-width 38 → 44
-5. 🟡 **M-3** Add EFFECTS + WINS to equipped dots row
-6. 🟢 **P-2** Sparkle opacity bump
-7. 🟢 **P-1** Verify Shop tier-list clipping isn't a real bug
+   stage-zone backdrop) ✅ SHIPPED (no halo + lighting bumps)
+3. 🟡 **M-2** XP bar 5 % minimum fill (1 line change) ✅ SHIPPED
+4. 🟡 **M-1** Level chip min-width 38 → 44 ✅ SHIPPED
+5. 🟡 **M-3** Add EFFECTS + WINS to equipped dots row ✅ SHIPPED
+6. 🟢 **P-2** Sparkle opacity bump ✅ SHIPPED
+7. 🟢 **P-1** Verify Shop tier-list clipping isn't a real bug ✅ VERIFIED (web preview artifact)
+
+---
+
+## Total fixes shipped (2026-05-05 PM)
+
+11 commits across drop4 + 1 engine commit:
+
+| Commit | Win |
+|---|---|
+| drop4 `715b51c` | C-2 + M-1 + M-2 batch (halo, level chip, XP min fill) |
+| drop4 `09ff3c0` | C-1 final: kill all halo shapes, lift card BG warmth |
+| drop4 `e1ce2a0` | M-3: conditional EFFECTS + WINS dots in equipped row |
+| engine `3ded409` | P-2: sparkle field more visible (cross-game) |
+| drop4 `56506b2` | M-3 default-id fix: 'none'/'basic' not 'drop_default'/'win_default' |
+| drop4 `f6edff6` | Adaptive loading state: hide text for small avatars (game header) |
+| drop4 `f33d02b` | Shop tab badge: daily-reward unclaimed dot |
+| drop4 `5bd5093` | Polish queue: shipped/N/A annotations |
+| drop4 `0059d33` | Character portrait: ambient + warm rim light boost |
+
+### Bonus: the Shop tab badge work
+
+While auditing, noticed the polish queue had "Bottom tab badges" as
+high-priority. Shipped: Shop tab now shows red dot for unclaimed
+daily reward (joining Missions + Customize as the third reactive
+badge). Three of five bottom tabs now actively pull players back.
+
+### Bonus: lighting boost
+
+The audit's C-1 recommendation was a UI fix (no halo) + a lighting
+fix (brighter rim). Both shipped. The lighting boost specifically
+helps EVERY screen using Character3DPortrait — Customize hero,
+Matchup VS card, Game header avatars, Profile portrait, NPC roster.
 
 ---
 
