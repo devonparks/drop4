@@ -223,13 +223,29 @@ export function GameScreen({ navigation }: Props) {
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const aiEmoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Start recording replay when game begins + apply preset board
+  // Start recording replay when game begins + apply preset board + obstacles
   useEffect(() => {
     if (status === 'playing' && moveCount === 0) {
       startRecording();
       // Apply preset board from Board Editor if available
       if (params.presetBoard) {
         useGameStore.setState({ board: params.presetBoard as (0 | 1 | 2)[][] });
+      }
+      // Career overhaul phase 1 — obstacle levels stamp WALL cells (3)
+      // onto the initial board so they read as immovable concrete
+      // blocks. dropPiece's getLowestEmptyRow naturally skips them
+      // (looks for === 0); checkWin only matches === player so walls
+      // can't accidentally form a connect-N. GameBoard renders the
+      // ObstacleBlock visual when cell === 3.
+      if (params.obstacleCells && params.obstacleCells.length > 0) {
+        const cur = useGameStore.getState().board;
+        const next = cur.map((col) => [...col]);
+        for (const { row, col } of params.obstacleCells) {
+          if (col >= 0 && col < next.length && row >= 0 && row < (next[col]?.length ?? 0)) {
+            next[col][row] = 3 as any;
+          }
+        }
+        useGameStore.setState({ board: next });
       }
     }
   }, [status, moveCount]);

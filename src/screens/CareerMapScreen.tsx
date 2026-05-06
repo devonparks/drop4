@@ -288,6 +288,9 @@ export function CareerMapScreen({ navigation }: Props) {
                                 presetBoard: lvl.settings.presetBoard as any,
                                 movesLimit: lvl.settings.movesLimit,
                                 rewardMultiplier: lvl.settings.rewardMultiplier,
+                                // Career overhaul phase 1.
+                                obstacleCells: lvl.settings.obstacleCells,
+                                levelType: lvl.type,
                               });
                               return;
                             }

@@ -225,6 +225,7 @@ export default function App() {
               dailyReward: useDailyRewardStore,
               dailySpin: useDailySpinStore,
               tutorial: useTutorialStore,
+              game: useGameStore,
             };
           }
         }}

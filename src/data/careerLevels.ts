@@ -26,6 +26,13 @@ export interface CareerLevel {
     // Phase 2 additions:
     movesLimit?: number;          // must win in ≤ N moves or lose (Candy Crush target levels)
     rewardMultiplier?: number;    // jeopardy levels pay 3× coins
+    // ── Career overhaul phase 1: obstacle levels ──
+    // List of cells that start the match as concrete walls (cell value
+    // 3 in the engine). Neither player can drop into a column whose
+    // top is walled, and walls don't count toward connect-N. Place 3-6
+    // cells per the design doc; visual contrast comes from GameBoard's
+    // ObstacleBlock component.
+    obstacleCells?: Array<{ row: number; col: number }>;
   };
   // Star thresholds — moves to earn 3 or 2 stars (1 star for any win)
   starThresholds?: { three: number; two: number };
@@ -43,7 +50,8 @@ type CareerChallengeType =
   | 'speed'           // Very fast timer (5 seconds or less)
   | 'tournament'      // Beat multiple opponents in a row
   | 'jeopardy'        // High stakes — 3× reward, tougher opponent
-  | 'moves_limit';    // Win in N moves or you lose
+  | 'moves_limit'     // Win in N moves or you lose
+  | 'obstacle';       // 3-6 concrete cells block the board (career overhaul phase 1)
 
 interface CareerReward {
   type: 'coins' | 'board' | 'pieces' | 'emote' | 'title' | 'pet';
@@ -67,6 +75,7 @@ export function getChallengeTypeLabel(type: CareerChallengeType): string {
     case 'speed': return 'Speed';
     case 'tournament': return 'Tournament';
     case 'jeopardy': return 'Jeopardy';
+    case 'obstacle': return 'Obstacle';
     case 'moves_limit': return 'Moves Limit';
     default: return 'Standard';
   }
@@ -175,12 +184,23 @@ const CHAPTER_1: CareerLevel[] = [
   },
   {
     id: 10,
-    name: 'Double Trouble',
+    name: 'Roadblock',
     opponent: 'Tricky Tara',
-    opponentPersonality: 'She sets traps everywhere.',
-    chapter: 1, type: 'standard', difficulty: 'medium', isBoss: false,
-    settings: {},
-    starThresholds: { three: 8, two: 14 },
+    opponentPersonality: 'She set up roadblocks. Play around them.',
+    chapter: 1, type: 'obstacle', difficulty: 'medium', isBoss: false,
+    // 4 concrete blocks form a diagonal "wall" across the middle rows
+    // — forces both players to think around the obstruction. Light
+    // intro to the mechanic; harder cities will use 6 cells in nastier
+    // patterns. Cells are {row,col} where (0,0) is top-left.
+    settings: {
+      obstacleCells: [
+        { row: 2, col: 1 },
+        { row: 3, col: 2 },
+        { row: 3, col: 4 },
+        { row: 2, col: 5 },
+      ],
+    },
+    starThresholds: { three: 9, two: 15 },
   },
   {
     id: 11,
@@ -275,16 +295,16 @@ const CHAPTER_2: CareerLevel[] = [
     name: 'The Wall',
     opponent: 'Stone Cold Steve',
     opponentPersonality: 'The center column is blocked. Deal with it.',
-    chapter: 2, type: 'standard', difficulty: 'medium', isBoss: false,
+    chapter: 2, type: 'obstacle', difficulty: 'medium', isBoss: false,
+    // Career overhaul phase 1: was hacked with player-2 pieces faking
+    // the wall (which let the player accidentally win THROUGH the
+    // "wall" since checkWin counts those cells as p2 pieces). Now
+    // uses real WALL cells that block the center column outright.
     settings: {
-      // Center column half-filled with "neutral" pieces (player 2 as obstacle)
-      presetBoard: [
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,2,0,0,0],
-        [0,0,0,2,0,0,0],
-        [0,0,0,2,0,0,0],
+      obstacleCells: [
+        { row: 3, col: 3 },
+        { row: 4, col: 3 },
+        { row: 5, col: 3 },
       ],
     },
     reward: { type: 'coins', name: '400 Coins', amount: 400, icon: '🪙' },

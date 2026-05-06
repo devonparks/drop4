@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 
 export type Player = 1 | 2;
-export type Cell = 0 | Player;
+/** Cell value sentinel for obstacle blocks (career "obstacle" levels).
+ *  Walls render as concrete blocks and are immovable — `dropPiece` skips
+ *  past them via getLowestEmptyRow's `=== 0` check, `checkWin` ignores
+ *  them because it only matches `=== player`, and `isBoardFull` treats
+ *  them as occupied (`!== 0`). All existing engine logic flows through
+ *  cleanly without per-cell branching. */
+export const WALL = 3 as const;
+export type Cell = 0 | Player | typeof WALL;
 export type Board = Cell[][];
 export type Difficulty = 'easy' | 'medium' | 'hard';
 type GameStatus = 'idle' | 'playing' | 'won' | 'draw';

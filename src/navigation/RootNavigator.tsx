@@ -55,6 +55,11 @@ export type MatchupParams = {
   // Phase 2 career additions:
   movesLimit?: number;       // win in ≤ N moves or lose (moves_limit levels)
   rewardMultiplier?: number; // jeopardy levels pay 3× coins
+  // Career overhaul phase 1 (obstacle level type):
+  obstacleCells?: Array<{ row: number; col: number }>;
+  // Level-type tag forwarded so MatchupScreen can render the matching
+  // badge (BLITZ / OBSTACLE / TARGET / etc.) without re-deriving it.
+  levelType?: string;
 };
 
 export type GameParams = {
@@ -73,6 +78,9 @@ export type GameParams = {
   // Phase 2 career additions — forwarded from MatchupScreen.
   movesLimit?: number;
   rewardMultiplier?: number;
+  // Career overhaul phase 1 (obstacle level type) — forwarded so
+  // GameScreen can stamp the wall cells onto the initial board.
+  obstacleCells?: Array<{ row: number; col: number }>;
 };
 
 export type RootStackParamList = {

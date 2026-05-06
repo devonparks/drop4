@@ -331,6 +331,10 @@ export function CareerCityScreen({ navigation, route }: Props) {
             // Phase 2: jeopardy 3× rewards + moves-limit target levels.
             movesLimit: lvl.settings.movesLimit,
             rewardMultiplier: lvl.settings.rewardMultiplier,
+            // Career overhaul phase 1: obstacle cells + level type tag
+            // for the matchup badge.
+            obstacleCells: lvl.settings.obstacleCells,
+            levelType: lvl.type,
           });
         }}
       />
@@ -540,6 +544,9 @@ function OpponentNode({
           const icon =
             level.type === 'jeopardy' || level.settings.rewardMultiplier ? '💰' :
             level.type === 'moves_limit' || level.settings.movesLimit ? '🎯' :
+            // Career overhaul phase 1: obstacle chip — concrete-block
+            // glyph reads instantly against the existing icon language.
+            level.type === 'obstacle' || (level.settings.obstacleCells && level.settings.obstacleCells.length > 0) ? '🧱' :
             level.type === 'speed' || (level.settings.timerSeconds && level.settings.timerSeconds <= 5) ? '⚡' :
             level.type === 'timed' || level.settings.timerSeconds ? '⏱️' :
             level.type === 'puzzle' || level.settings.presetBoard ? '🧩' :
@@ -550,7 +557,7 @@ function OpponentNode({
             (level.settings.rows && level.settings.cols && (level.settings.rows > 7 || level.settings.cols > 8)) ? '📏' :
             null;
           if (!icon) return null;
-          const isPhase2 = level.type === 'jeopardy' || level.type === 'moves_limit';
+          const isPhase2 = level.type === 'jeopardy' || level.type === 'moves_limit' || level.type === 'obstacle';
           return (
             <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2]} pointerEvents="none">
               <Text style={[styles.nodeTypeChipText, isPhase2 && styles.nodeTypeChipTextPhase2]}>{icon}</Text>
@@ -607,6 +614,9 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
   }
   if (level.settings.movesLimit) {
     modifierPills.push(`🎯 ${level.settings.movesLimit} Move Limit`);
+  }
+  if (level.settings.obstacleCells && level.settings.obstacleCells.length > 0) {
+    modifierPills.push(`🧱 ${level.settings.obstacleCells.length} Blocks`);
   }
   if (level.settings.connectCount && level.settings.connectCount !== 4) {
     modifierPills.push(`Connect ${level.settings.connectCount}`);

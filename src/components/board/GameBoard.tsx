@@ -100,6 +100,23 @@ function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
   );
 }
 
+// Concrete-block fill for career "obstacle" levels. Cell value 3 (WALL)
+// renders this in place of a player piece — solid stone-grey square with
+// a subtle inner notch grid so the block reads as "this slot is sealed,
+// nothing fits here." Square not circular so it visually contrasts the
+// circular pieces around it.
+function ObstacleBlock() {
+  return (
+    <View style={styles.obstacleBlock}>
+      <View style={styles.obstacleGrid}>
+        <View style={styles.obstacleNotchTop} />
+        <View style={styles.obstacleNotchMid} />
+        <View style={styles.obstacleNotchBot} />
+      </View>
+    </View>
+  );
+}
+
 // Landing shockwave flash ring — expands and fades after piece drops
 function LandFlash({ delay }: { delay: number }) {
   const scale = useSharedValue(1);
@@ -324,10 +341,16 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                   <View key={key} style={styles.cellWrap}>
                     {/* Hole */}
                     <View style={[styles.hole, { backgroundColor: theme.holeColor, borderColor: theme.holeBorder }]}>
-                      {/* Piece if present */}
-                      {cell !== 0 && (
+                      {/* Wall (career obstacle level) — concrete-block
+                          fill that takes the cell out of play. Renders
+                          BEFORE the piece branch since walls are never
+                          a player piece. */}
+                      {cell === 3 && <ObstacleBlock />}
+                      {/* Piece if present (excludes walls — `cell === 3`
+                          is handled above; player pieces are 1 or 2). */}
+                      {(cell === 1 || cell === 2) && (
                         <AnimatedPiece
-                          player={cell as 1 | 2}
+                          player={cell}
                           isNew={isNew}
                           row={row}
                           skinColors={pieceSkin}
@@ -342,8 +365,8 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                       )}
                     </View>
 
-                    {/* Landing shockwave flash */}
-                    {cell !== 0 && isNew && <LandFlash delay={0} />}
+                    {/* Landing shockwave flash — only on real pieces */}
+                    {(cell === 1 || cell === 2) && isNew && <LandFlash delay={0} />}
 
                     {/* Win highlight */}
                     {isWin && <WinHighlight delay={Array.from(winSet).indexOf(key) * 120} />}
@@ -508,6 +531,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
     marginTop: 4,
   },
+  // Obstacle block — concrete fill for WALL cells in career "obstacle"
+  // levels. Square + stone-grey reads instantly as "non-pieced." The
+  // inner notch lines fake brick texture without an asset.
+  obstacleBlock: {
+    width: PIECE_SIZE * 0.92,
+    height: PIECE_SIZE * 0.92,
+    borderRadius: 6,
+    backgroundColor: '#3a3a48',
+    borderWidth: 2,
+    borderColor: '#1f1f2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  obstacleGrid: {
+    width: '100%',
+    height: '100%',
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    justifyContent: 'space-between',
+  },
+  obstacleNotchTop: { height: 2, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 1 },
+  obstacleNotchMid: { height: 2, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 1 },
+  obstacleNotchBot: { height: 2, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 1 },
   landFlash: {
     position: 'absolute',
     top: -2,

@@ -142,6 +142,12 @@ export function MatchupScreen({ navigation }: Props) {
     if (params.movesLimit) {
       return { label: `🎯 WIN IN ${params.movesLimit} MOVES`, color: '#81c784' };
     }
+    // Career overhaul phase 1: obstacle levels — N concrete cells block
+    // the board. Badge surfaces the count so the player knows what
+    // they're walking into before they hit READY.
+    if (params.obstacleCells && params.obstacleCells.length > 0) {
+      return { label: `🧱 OBSTACLE · ${params.obstacleCells.length} BLOCKS`, color: '#a8a8b8' };
+    }
     if (timerSeconds && timerSeconds <= 5) return { label: `⚡ BLITZ · ${timerSeconds}s/TURN`, color: '#ff4081' };
     if (timerSeconds) return { label: `⏱️ TIMED · ${timerSeconds}s/TURN`, color: '#ff8c42' };
     if (connectCount && connectCount !== 4) return { label: `🎯 CONNECT ${connectCount}`, color: '#4dd0e1' };
@@ -240,6 +246,8 @@ export function MatchupScreen({ navigation }: Props) {
       // Phase 2 career parameters
       movesLimit: params.movesLimit,
       rewardMultiplier: params.rewardMultiplier,
+      // Career overhaul phase 1: obstacle cells.
+      obstacleCells: params.obstacleCells,
     });
   }, [navigation, params, courtName, resetScores]);
 

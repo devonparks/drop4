@@ -120,11 +120,14 @@ function getValidCols(board: Board): number[] {
 // Check if the board is a terminal state (dynamic dimensions + connect count)
 function isTerminal(board: Board, connectN: number): boolean {
   const { cols, rows } = getBoardDims(board);
-  // Check for win
+  // Check for win — only player pieces (1/2) can score a connect-N. Wall
+  // sentinel cells (3) are non-zero and would otherwise satisfy the
+  // `!== 0` gate, but they can't win and shouldn't be tested.
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
-      if (board[col][row] !== 0) {
-        if (isWinningMove(board, col, row, board[col][row] as Player, connectN)) return true;
+      const v = board[col][row];
+      if (v === 1 || v === 2) {
+        if (isWinningMove(board, col, row, v as Player, connectN)) return true;
       }
     }
   }
