@@ -39,6 +39,7 @@ import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { OutfitPreviewModal } from '../components/ui/OutfitPreviewModal';
 import { PETS as PETS_3D } from '../data/petRegistry';
+import { PETS_ENABLED } from '../data/featureFlags';
 // Pet3D / DOG_IDLES no longer imported here — shop pet cards use the
 // painted idleImage PNG instead of the live 3D render. Pet3D's camera
 // framing is tuned for larger contexts (Home stage, EquipPanel preview)
@@ -961,7 +962,9 @@ export function ShopScreen() {
     { key: 'wins', label: 'Wins', iconSource: require('../assets/images/ui/shop-wins.png') },
     { key: 'accessories', label: 'Frames', iconSource: require('../assets/images/ui/shop-frames.png') },
     { key: 'emotes', label: 'Emotes', iconSource: require('../assets/images/ui/shop-emotes.png') },
-    { key: 'pets', label: 'Pets', iconSource: require('../assets/images/ui/shop-pets.png') },
+    // Pets tab gated 2026-05-05 per Devon ("just take out all the
+    // dogs from the game"). Tab hidden until PETS_ENABLED flips back.
+    ...(PETS_ENABLED ? [{ key: 'pets' as ShopTab, label: 'Pets', iconSource: require('../assets/images/ui/shop-pets.png') }] : []),
     { key: 'boxes', label: 'Boxes', iconSource: require('../assets/images/ui/shop-boxes.png') },
   ];
 

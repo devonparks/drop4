@@ -40,6 +40,7 @@ import { OUTFITS } from '../data/outfitRegistry';
 import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { PETS as PETS_3D } from '../data/petRegistry';
+import { PETS_ENABLED } from '../data/featureFlags';
 import {
   BOARD_THEMES, PIECE_THEMES, DROP_EFFECTS, WIN_ANIMATIONS,
 } from '../data/shopCatalog';
@@ -798,7 +799,7 @@ export function CustomizeScreen() {
                     navigation.navigate('CategoryBrowser', { category: 'pieces' });
                   }}
                 />
-                {summary.petName && (
+                {PETS_ENABLED && summary.petName && (
                   <EquippedDot
                     color="#2ecc71"
                     label="PET"
@@ -868,9 +869,11 @@ export function CustomizeScreen() {
           {/* Loadout grid — 2-col 4-row, 8 slots. 7 cosmetic categories
               + a SHARDS shortcut cell to fill the 8th slot (Frames was
               dropped from CATEGORIES until the registry ships, leaving
-              an empty cell that looked like a layout bug). */}
+              an empty cell that looked like a layout bug).
+              PETS_ENABLED gate 2026-05-05: pets pulled out of v1 per
+              Devon — filter the cell out so the grid stays clean. */}
           <View style={styles.grid}>
-            {CATEGORIES.slice(1).map((cat, i) => {
+            {CATEGORIES.slice(1).filter((cat) => PETS_ENABLED || cat.id !== 'pets').map((cat, i) => {
               const c = counts[cat.id];
               const hasNew = c.total > 0 && c.owned === 0;
               const equippedName = equippedNames[cat.id];

@@ -8,6 +8,7 @@ import { PortraitFrame } from '../components/ui/PortraitFrame';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { getPetById } from '../data/pets';
+import { PETS_ENABLED } from '../data/featureFlags';
 import { useShopStore, getCoinMilestoneInfo, getPlayerTitle, getPlayerTitleColor } from '../stores/shopStore';
 import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
@@ -212,7 +213,7 @@ export function ProfileScreen() {
               }
               size={170}
             />
-            {equippedPet && (
+            {PETS_ENABLED && equippedPet && (
               <PetDisplay petId={equippedPet} size={50} style={{ position: 'absolute', right: -10, bottom: -5 }} />
             )}
           </View>
@@ -421,11 +422,13 @@ export function ProfileScreen() {
             <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
             <EquippedItem label="Drop Effect" name="None" rarity="common" />
             <EquippedItem label="Win Animation" name="Basic" rarity="common" />
-            <EquippedItem
-              label="Pet"
-              name={equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None'}
-              rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
-            />
+            {PETS_ENABLED && (
+              <EquippedItem
+                label="Pet"
+                name={equippedPet ? (getPetById(equippedPet)?.name ?? 'None') : 'None'}
+                rarity={equippedPet ? (getPetById(equippedPet)?.rarity ?? 'common') : 'common'}
+              />
+            )}
           </View>
         </StaggeredEntry>
 

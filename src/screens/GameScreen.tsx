@@ -18,6 +18,7 @@ import { PlayerHUD } from '../components/ui/PlayerHUD';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { getNpcCustomization } from '../data/npcCustomizations';
 import { PetDisplay } from '../components/ui/PetDisplay';
+import { PETS_ENABLED } from '../data/featureFlags';
 import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
 import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
@@ -1355,7 +1356,7 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   </View>
                   <Text style={styles.goCharName} numberOfLines={1}>{p1Name}</Text>
-                  {equippedPet && (
+                  {PETS_ENABLED && equippedPet && (
                     <PetDisplay petId={equippedPet} size={40} style={{ marginTop: 2 }} />
                   )}
                   {status === 'won' && winner === 1 && (

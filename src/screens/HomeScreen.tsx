@@ -15,6 +15,7 @@ import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
 import { usePetStore } from '../stores/petStore';
+import { PETS_ENABLED } from '../data/featureFlags';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -1008,7 +1009,7 @@ export function HomeScreen() {
               />
             </Pressable>
           </SlideReveal>
-          {equippedPet && (
+          {PETS_ENABLED && equippedPet && (
             <Pressable
               onPress={handlePetTap}
               style={styles.petBesidePlay}
