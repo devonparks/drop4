@@ -9,7 +9,16 @@ export type Player = 1 | 2;
  *  them as occupied (`!== 0`). All existing engine logic flows through
  *  cleanly without per-cell branching. */
 export const WALL = 3 as const;
-export type Cell = 0 | Player | typeof WALL;
+/** Cell value sentinel for the Rainbow power piece (Phase 2 career
+ *  unlock from Venice boss). Counts as EITHER player in checkWin so
+ *  the player can use it to bridge or close a connect-N either side
+ *  could complete. Visually distinct from regular pieces (rainbow
+ *  gradient) so the table reads "this slot belongs to whoever wins
+ *  here." Engine helpers below treat RAINBOW as wildcard for win
+ *  detection only — it doesn't auto-extend the player's count
+ *  outside an active win check. */
+export const RAINBOW = 4 as const;
+export type Cell = 0 | Player | typeof WALL | typeof RAINBOW;
 export type Board = Cell[][];
 export type Difficulty = 'easy' | 'medium' | 'hard';
 type GameStatus = 'idle' | 'playing' | 'won' | 'draw';
@@ -45,6 +54,27 @@ interface GameState {
   // Actions
   newGame: (difficulty: Difficulty, vsAi: boolean, settings?: Partial<CustomGameSettings>) => void;
   dropPiece: (col: number) => boolean;
+  /** Phase 2 power piece: Bomb. Lands in `col` like a normal drop, then
+   *  clears a 3×3 around the landing cell (the landing cell + 8
+   *  neighbors). Wipes player pieces, opponent pieces, AND wall
+   *  obstacles — per the doc, "wipes opponent + your own pieces."
+   *  Counts as the current player's turn (moveCount++, player flips).
+   *  Returns the {col,row} the bomb landed at, or null if the column
+   *  was full. Caller is responsible for the visual explosion FX. */
+  dropBomb: (col: number) => { col: number; row: number } | null;
+  /** Phase 2 power piece: Rainbow. Lands in `col` like a normal drop
+   *  but as cell value RAINBOW (4) instead of the player's color.
+   *  checkWin treats RAINBOW as wildcard so the rainbow extends BOTH
+   *  players' connect chains. Effectively: a hedged drop that closes
+   *  threats from either side. Counts as the current player's turn. */
+  dropRainbow: (col: number) => { col: number; row: number } | null;
+  /** Phase 2 power piece: Heavy. Lands in `col` as the player's piece,
+   *  then pushes adjacent OPPONENT pieces (col-1, col+1 in the same
+   *  row) DOWN by one row when the row below is empty. Per the doc,
+   *  "pushes adjacent opponent pieces down one row." If neighbor row
+   *  below is occupied (by anything), no push occurs there — the
+   *  neighbor stays. Counts as the current player's turn. */
+  dropHeavy: (col: number) => { col: number; row: number } | null;
   undoMove: () => boolean;
   setAiThinking: (thinking: boolean) => void;
   resetScores: () => void;
@@ -73,6 +103,13 @@ function checkWin(board: Board, col: number, row: number, player: Player, connec
     [1, -1],  // diagonal up-right
   ];
 
+  // Phase 2 power piece — RAINBOW (cell value 4) counts as either
+  // player. So when scanning connect-N for `player`, treat both
+  // `=== player` and `=== RAINBOW` as part of the chain. The
+  // anchor cell (col, row) must be the player's own piece (or a
+  // rainbow they just dropped) — the caller passes their player id.
+  const matchesPlayer = (v: Cell) => v === player || v === RAINBOW;
+
   for (const [dc, dr] of directions) {
     const cells: [number, number][] = [[col, row]];
 
@@ -80,7 +117,7 @@ function checkWin(board: Board, col: number, row: number, player: Player, connec
     for (let i = 1; i < connectCount; i++) {
       const c = col + dc * i;
       const r = row + dr * i;
-      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) {
+      if (c >= 0 && c < cols && r >= 0 && r < rows && matchesPlayer(board[c][r])) {
         cells.push([c, r]);
       } else break;
     }
@@ -89,7 +126,7 @@ function checkWin(board: Board, col: number, row: number, player: Player, connec
     for (let i = 1; i < connectCount; i++) {
       const c = col - dc * i;
       const r = row - dr * i;
-      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) {
+      if (c >= 0 && c < cols && r >= 0 && r < rows && matchesPlayer(board[c][r])) {
         cells.push([c, r]);
       } else break;
     }
@@ -143,6 +180,175 @@ export const useGameStore = create<GameState>((set, get) => ({
       customSettings: s,
       moveHistory: [],
     });
+  },
+
+  dropBomb: (col) => {
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { rows: curRows, cols: curCols } = customSettings;
+    if (status !== 'playing') return null;
+    const row = getLowestEmptyRow(board, col, curRows);
+    if (row === -1) return null;
+    // Save history pre-explosion so undo restores the obliterated zone.
+    const historyEntry = {
+      board: board.map((c) => [...c]),
+      currentPlayer,
+      moveCount,
+    };
+    // Clear the 3×3 around (col, row). Iterate the (-1, 0, +1) offsets
+    // for both axes. Walls (cell value 3) are explicitly destroyable
+    // by bombs — the doc's "wipes opponent + your own pieces"
+    // generalizes to "everything in the blast zone." Then settle
+    // gravity per column so floating pieces fall into the holes.
+    const newBoard = board.map((c) => [...c]);
+    for (let dc = -1; dc <= 1; dc++) {
+      for (let dr = -1; dr <= 1; dr++) {
+        const c = col + dc;
+        const r = row + dr;
+        if (c >= 0 && c < curCols && r >= 0 && r < curRows) {
+          newBoard[c][r] = 0;
+        }
+      }
+    }
+    // Settle each touched column — pieces above the cleared zone fall
+    // down to fill the hole. Skip walls (value 3) since they're
+    // already destroyed by the blast above. For each column scan from
+    // bottom up, collect non-zero values, then refill bottom-up.
+    for (let dc = -1; dc <= 1; dc++) {
+      const c = col + dc;
+      if (c < 0 || c >= curCols) continue;
+      const stack: Cell[] = [];
+      for (let r = curRows - 1; r >= 0; r--) {
+        if (newBoard[c][r] !== 0) stack.push(newBoard[c][r]);
+      }
+      // Refill the column with empties on top + collected pieces on
+      // the bottom (preserving stack order).
+      for (let r = 0; r < curRows; r++) newBoard[c][r] = 0;
+      for (let i = 0; i < stack.length; i++) {
+        newBoard[c][curRows - 1 - i] = stack[i];
+      }
+    }
+    set({
+      board: newBoard,
+      currentPlayer: currentPlayer === 1 ? 2 : 1,
+      moveCount: moveCount + 1,
+      lastMoveCol: col,
+      moveHistory: [...moveHistory, historyEntry],
+    });
+    return { col, row };
+  },
+
+  dropRainbow: (col) => {
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { rows: curRows, cols: curCols, connectCount } = customSettings;
+    if (status !== 'playing') return null;
+    const row = getLowestEmptyRow(board, col, curRows);
+    if (row === -1) return null;
+    const historyEntry = {
+      board: board.map((c) => [...c]),
+      currentPlayer,
+      moveCount,
+    };
+    const newBoard = board.map((c) => [...c]);
+    newBoard[col][row] = RAINBOW;
+    // Rainbow can complete EITHER player's win. Check the current
+    // player first (they tossed it — they get credit if it works).
+    // Then check the opponent — if it just handed them the win, the
+    // game ends in their favor (the rainbow's hedged-bet downside).
+    const winSelf = checkWin(newBoard, col, row, currentPlayer, connectCount, curCols, curRows);
+    const opp: Player = currentPlayer === 1 ? 2 : 1;
+    const winOpp = checkWin(newBoard, col, row, opp, connectCount, curCols, curRows);
+    if (winSelf) {
+      const scores = { ...get().scores };
+      if (currentPlayer === 1) scores.player1++; else scores.player2++;
+      const newStreak = currentPlayer === 1 ? get().winStreak + 1 : 0;
+      set({
+        board: newBoard, status: 'won', winner: currentPlayer, winCells: winSelf,
+        moveCount: moveCount + 1, scores, lastMoveCol: col,
+        winStreak: newStreak,
+        bestStreak: Math.max(newStreak, get().bestStreak),
+        totalGamesPlayed: get().totalGamesPlayed + 1,
+        moveHistory: [...moveHistory, historyEntry],
+      });
+      return { col, row };
+    }
+    if (winOpp) {
+      const scores = { ...get().scores };
+      if (opp === 1) scores.player1++; else scores.player2++;
+      const newStreak = opp === 1 ? get().winStreak + 1 : 0;
+      set({
+        board: newBoard, status: 'won', winner: opp, winCells: winOpp,
+        moveCount: moveCount + 1, scores, lastMoveCol: col,
+        winStreak: newStreak,
+        bestStreak: Math.max(newStreak, get().bestStreak),
+        totalGamesPlayed: get().totalGamesPlayed + 1,
+        moveHistory: [...moveHistory, historyEntry],
+      });
+      return { col, row };
+    }
+    set({
+      board: newBoard,
+      currentPlayer: opp,
+      moveCount: moveCount + 1,
+      lastMoveCol: col,
+      moveHistory: [...moveHistory, historyEntry],
+    });
+    return { col, row };
+  },
+
+  dropHeavy: (col) => {
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { rows: curRows, cols: curCols, connectCount } = customSettings;
+    if (status !== 'playing') return null;
+    const row = getLowestEmptyRow(board, col, curRows);
+    if (row === -1) return null;
+    const historyEntry = {
+      board: board.map((c) => [...c]),
+      currentPlayer,
+      moveCount,
+    };
+    const newBoard = board.map((c) => [...c]);
+    newBoard[col][row] = currentPlayer;
+    // Push adjacent OPPONENT pieces down one row when the row below
+    // them is empty. Per the doc — "pushes adjacent opponent pieces
+    // down one row." Walls + own pieces are immovable. If row+1 is
+    // out of bounds (we landed at the bottom), no push happens.
+    const opp: Player = currentPlayer === 1 ? 2 : 1;
+    if (row + 1 < curRows) {
+      for (const dc of [-1, 1]) {
+        const c = col + dc;
+        if (c < 0 || c >= curCols) continue;
+        if (newBoard[c][row] === opp && newBoard[c][row + 1] === 0) {
+          newBoard[c][row + 1] = opp;
+          newBoard[c][row] = 0;
+        }
+      }
+    }
+    // Check win at the landing cell. The push only moved opponent
+    // pieces into a row that's lower than ours, so it can't form
+    // OUR connect, but it could form theirs — check both.
+    const winSelf = checkWin(newBoard, col, row, currentPlayer, connectCount, curCols, curRows);
+    if (winSelf) {
+      const scores = { ...get().scores };
+      if (currentPlayer === 1) scores.player1++; else scores.player2++;
+      const newStreak = currentPlayer === 1 ? get().winStreak + 1 : 0;
+      set({
+        board: newBoard, status: 'won', winner: currentPlayer, winCells: winSelf,
+        moveCount: moveCount + 1, scores, lastMoveCol: col,
+        winStreak: newStreak,
+        bestStreak: Math.max(newStreak, get().bestStreak),
+        totalGamesPlayed: get().totalGamesPlayed + 1,
+        moveHistory: [...moveHistory, historyEntry],
+      });
+      return { col, row };
+    }
+    set({
+      board: newBoard,
+      currentPlayer: opp,
+      moveCount: moveCount + 1,
+      lastMoveCol: col,
+      moveHistory: [...moveHistory, historyEntry],
+    });
+    return { col, row };
   },
 
   dropPiece: (col) => {

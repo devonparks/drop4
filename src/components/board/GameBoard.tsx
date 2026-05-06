@@ -100,6 +100,35 @@ function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
   );
 }
 
+// Phase 2 power piece — Rainbow. Cell value 4 in the engine. Renders
+// as a multi-color gradient disc so the wildcard reads instantly. No
+// drop-bounce since the player chose where to put it (same beat as a
+// normal placement). The colors mimic a basic rainbow (red→orange→
+// yellow→green→blue→purple) so it's visually unmistakable.
+function RainbowPiece({ isNew, row }: { isNew: boolean; row: number }) {
+  const drop = useSharedValue(isNew ? -CELL_SIZE * (row + 1) : 0);
+  React.useEffect(() => {
+    if (isNew) {
+      drop.value = withSpring(0, { damping: 12, stiffness: 200, mass: 0.8 });
+    }
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: drop.value }],
+  }));
+  return (
+    <Animated.View style={[styles.piece, animStyle]}>
+      <LinearGradient
+        colors={['#ff4081', '#ff8c42', '#ffd54f', '#4caf50', '#3498db', '#9b59b6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.pieceGradient}
+      >
+        <View style={styles.pieceShine} />
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+
 // Concrete-block fill for career "obstacle" levels. Cell value 3 (WALL)
 // renders this in place of a player piece — solid stone-grey square with
 // a subtle inner notch grid so the block reads as "this slot is sealed,
@@ -346,8 +375,14 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
                           BEFORE the piece branch since walls are never
                           a player piece. */}
                       {cell === 3 && <ObstacleBlock />}
-                      {/* Piece if present (excludes walls — `cell === 3`
-                          is handled above; player pieces are 1 or 2). */}
+                      {/* Phase 2 power piece — Rainbow (cell value 4).
+                          Counts as either color in checkWin, so it
+                          renders distinct from regular pieces with a
+                          rainbow gradient hint to telegraph the
+                          wildcard. */}
+                      {cell === 4 && <RainbowPiece isNew={isNew} row={row} />}
+                      {/* Piece if present (excludes walls + rainbows
+                          handled above; player pieces are 1 or 2). */}
                       {(cell === 1 || cell === 2) && (
                         <AnimatedPiece
                           player={cell}

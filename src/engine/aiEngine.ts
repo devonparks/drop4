@@ -86,20 +86,25 @@ function evaluateBoard(board: Board, player: Player, connectN: number): number {
 }
 
 // Check if a move results in a win (dynamic dimensions + connect count)
+// Phase 2 power piece: RAINBOW (cell value 4) counts as either player —
+// matches whichever color we're scanning for. Same wildcard semantics
+// as gameStore.checkWin so the engine and the live game agree on what
+// counts as a connect-N.
 function isWinningMove(board: Board, col: number, row: number, player: Player, connectN: number): boolean {
   const { cols, rows } = getBoardDims(board);
   const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  const matches = (v: any) => v === player || v === 4;
 
   for (const [dc, dr] of directions) {
     let count = 1;
     for (let i = 1; i < connectN; i++) {
       const c = col + dc * i, r = row + dr * i;
-      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) count++;
+      if (c >= 0 && c < cols && r >= 0 && r < rows && matches(board[c][r])) count++;
       else break;
     }
     for (let i = 1; i < connectN; i++) {
       const c = col - dc * i, r = row - dr * i;
-      if (c >= 0 && c < cols && r >= 0 && r < rows && board[c][r] === player) count++;
+      if (c >= 0 && c < cols && r >= 0 && r < rows && matches(board[c][r])) count++;
       else break;
     }
     if (count >= connectN) return true;

@@ -10,17 +10,31 @@ interface CareerProgress {
   };
 }
 
+/** Phase 2 power-piece unlock keys. Each chapter boss win unlocks
+ *  the next power piece per the overhaul doc:
+ *    Brooklyn (L12 Tommy)   → bomb
+ *    Venice   (L24 Sal)     → rainbow
+ *    Harlem   (L36 Warden)  → heavy
+ *  Used as a stable id across the codebase — match against this
+ *  union, not raw strings. */
+export type PowerPieceId = 'bomb' | 'rainbow' | 'heavy';
+
 interface CareerState {
   progress: CareerProgress;
   currentChapter: number;
   // Species unlocked by defeating chapter bosses. 'human' is always unlocked.
   unlockedSpecies: string[];
+  // Phase 2 power pieces unlocked by chapter-boss wins. See PowerPieceId
+  // for the per-boss mapping. Players get 1 use per match per piece in
+  // career mode (set by GameScreen).
+  unlockedPowerPieces: PowerPieceId[];
   // Set when the player beats a chapter boss. CityCompletionCeremony watches
   // this and shows the "CITY CLEARED" reveal. Cleared by acknowledgeCityComplete.
   cityCompletePending: null | {
     bossLevelId: number;
     chapter: number;
     speciesUnlocked: string[];
+    powerPieceUnlocked: PowerPieceId | null;
   };
 
   // Actions
@@ -30,6 +44,7 @@ interface CareerState {
   getTotalStars: () => number;
   getCompletedCount: () => number;
   isSpeciesUnlocked: (species: string) => boolean;
+  isPowerPieceUnlocked: (id: PowerPieceId) => boolean;
   acknowledgeCityComplete: () => void;
   loadFromStorage: () => Promise<void>;
 }
@@ -44,10 +59,20 @@ const BOSS_UNLOCKS: Record<number, string[]> = {
   36: ['skeleton', 'zombie'],
 };
 
+// Phase 2: which power piece unlocks at which boss level. Per the
+// overhaul doc — Brooklyn → Bomb, Venice → Rainbow, Harlem → Heavy.
+// Each piece is a "use once per match" career-only mechanic.
+const BOSS_POWER_PIECE_UNLOCKS: Record<number, PowerPieceId> = {
+  12: 'bomb',
+  24: 'rainbow',
+  36: 'heavy',
+};
+
 export const useCareerStore = create<CareerState>((set, get) => ({
   progress: {},
   currentChapter: 1,
   unlockedSpecies: ['human'],
+  unlockedPowerPieces: [],
   cityCompletePending: null,
 
   completeLevel: (levelId, stars, moves) => {
@@ -93,6 +118,17 @@ export const useCareerStore = create<CareerState>((set, get) => ({
         }));
       }
 
+      // Phase 2: power piece unlocks tied to chapter bosses. Persists
+      // across sessions via the same auto-save subscriber below.
+      const newPowerPiece = BOSS_POWER_PIECE_UNLOCKS[levelId];
+      if (newPowerPiece) {
+        set((state) => ({
+          unlockedPowerPieces: state.unlockedPowerPieces.includes(newPowerPiece)
+            ? state.unlockedPowerPieces
+            : [...state.unlockedPowerPieces, newPowerPiece],
+        }));
+      }
+
       // Trigger the city-completion ceremony for chapter bosses. The reveal
       // is the Candy-Crush-style big moment — players should feel like they
       // CLEARED this city, not just "earned some coins on level 12."
@@ -105,6 +141,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
               bossLevelId: levelId,
               chapter: level.chapter,
               speciesUnlocked: newSpecies ?? [],
+              powerPieceUnlocked: newPowerPiece ?? null,
             },
           });
         }
@@ -131,25 +168,32 @@ export const useCareerStore = create<CareerState>((set, get) => ({
   },
 
   isSpeciesUnlocked: (species) => get().unlockedSpecies.includes(species),
+  isPowerPieceUnlocked: (id) => get().unlockedPowerPieces.includes(id),
 
   loadFromStorage: async () => {
     const saved = await loadState<{
       progress: CareerProgress;
       currentChapter: number;
       unlockedSpecies?: string[];
+      unlockedPowerPieces?: PowerPieceId[];
     }>('career');
     if (saved) {
       const savedUnlocks = saved.unlockedSpecies ?? [];
       // Re-apply boss-based unlocks for completed bosses so older saves get
       // the new species lazily.
       const completedSpecies: string[] = [];
+      const completedPowerPieces: PowerPieceId[] = [];
       for (const [lvl, species] of Object.entries(BOSS_UNLOCKS)) {
         if (saved.progress?.[Number(lvl)]?.completed) completedSpecies.push(...species);
+      }
+      for (const [lvl, piece] of Object.entries(BOSS_POWER_PIECE_UNLOCKS)) {
+        if (saved.progress?.[Number(lvl)]?.completed) completedPowerPieces.push(piece);
       }
       set({
         progress: saved.progress || {},
         currentChapter: saved.currentChapter || 1,
         unlockedSpecies: Array.from(new Set(['human', ...savedUnlocks, ...completedSpecies])),
+        unlockedPowerPieces: Array.from(new Set([...(saved.unlockedPowerPieces ?? []), ...completedPowerPieces])),
       });
     }
   },
@@ -161,5 +205,6 @@ useCareerStore.subscribe((state) => {
     progress: state.progress,
     currentChapter: state.currentChapter,
     unlockedSpecies: state.unlockedSpecies,
+    unlockedPowerPieces: state.unlockedPowerPieces,
   });
 });

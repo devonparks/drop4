@@ -105,6 +105,24 @@ export function GameScreen({ navigation }: Props) {
   // use when the player can already see they're in a tight spot.
   // Future: gem-purchasable second use + drops from boxes.
   const [skipsRemaining, setSkipsRemaining] = useState(1);
+  // Phase 2 power pieces: 1 use per career match each, unlocked by
+  // chapter bosses. Bomb (Brooklyn L12), Rainbow (Venice L24), Heavy
+  // (Harlem L36). Each piece has its own "armed" mode flag — only one
+  // can be armed at a time (toggling one auto-disarms the others).
+  const [bombsRemaining, setBombsRemaining] = useState(1);
+  const [rainbowsRemaining, setRainbowsRemaining] = useState(1);
+  const [heaviesRemaining, setHeaviesRemaining] = useState(1);
+  const [armedPowerPiece, setArmedPowerPiece] = useState<'bomb' | 'rainbow' | 'heavy' | null>(null);
+  // Back-compat alias for the existing handler. Will deprecate once
+  // the rest of the file no longer references bombMode by name.
+  const bombMode = armedPowerPiece === 'bomb';
+  const setBombMode = (next: boolean | ((prev: boolean) => boolean)) => {
+    setArmedPowerPiece((prev) => {
+      const wasOn = prev === 'bomb';
+      const wantOn = typeof next === 'function' ? next(wasOn) : next;
+      return wantOn ? 'bomb' : (prev === 'bomb' ? null : prev);
+    });
+  };
   const hintPulseAnim = useRef(new RNAnimated.Value(0)).current;
   const [thinkingDots, setThinkingDots] = useState(0);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
@@ -809,6 +827,45 @@ export function GameScreen({ navigation }: Props) {
         return;
       }
     }
+    // Phase 2 power pieces — when the player armed Bomb / Rainbow /
+    // Heavy, the next column tap fires the matching gameStore action
+    // instead of dropPiece. Each piece consumes its own counter and
+    // disarms after success; the move flips to the AI inside the
+    // gameStore action so we don't need to manage it here.
+    if (armedPowerPiece === 'bomb' && bombsRemaining > 0) {
+      const result = useGameStore.getState().dropBomb(col);
+      if (result) {
+        setBombsRemaining(prev => prev - 1);
+        setArmedPowerPiece(null);
+        showLastMove(col);
+        haptics.heavy();
+        playSound('whoosh');
+        return;
+      }
+      setArmedPowerPiece(null);
+    } else if (armedPowerPiece === 'rainbow' && rainbowsRemaining > 0) {
+      const result = useGameStore.getState().dropRainbow(col);
+      if (result) {
+        setRainbowsRemaining(prev => prev - 1);
+        setArmedPowerPiece(null);
+        showLastMove(col);
+        haptics.win?.() ?? haptics.tap();
+        playSound('drop');
+        return;
+      }
+      setArmedPowerPiece(null);
+    } else if (armedPowerPiece === 'heavy' && heaviesRemaining > 0) {
+      const result = useGameStore.getState().dropHeavy(col);
+      if (result) {
+        setHeaviesRemaining(prev => prev - 1);
+        setArmedPowerPiece(null);
+        showLastMove(col);
+        haptics.heavy();
+        playSound('drop');
+        return;
+      }
+      setArmedPowerPiece(null);
+    }
     // Center-first challenge: first move in center column
     if (moveCount === 0 && col === Math.floor((customSettings?.cols ?? 7) / 2)) {
       updateChallenge('center_first', 1);
@@ -818,7 +875,7 @@ export function GameScreen({ navigation }: Props) {
     showLastMove(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, params.bossScript]);
+  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, params.bossScript, armedPowerPiece, bombsRemaining, rainbowsRemaining, heaviesRemaining]);
 
   const handleShareScore = async () => {
     haptics.tap();
@@ -859,6 +916,10 @@ export function GameScreen({ navigation }: Props) {
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
     setSkipsRemaining(1);
+    setBombsRemaining(1);
+    setRainbowsRemaining(1);
+    setHeaviesRemaining(1);
+    setArmedPowerPiece(null);
     setDidLevelUp(false);
     setStreakReward(null);
     setCompletedChallengeName(null);
@@ -1264,6 +1325,90 @@ export function GameScreen({ navigation }: Props) {
                 />
                 <Text style={styles.controlLabel}>{skipLabel}</Text>
               </Pressable>
+            );
+          })()}
+
+          {/* Phase 2 power pieces — career-only, unlocked progressively
+              by chapter bosses. Bomb (Brooklyn) clears a 3×3 around
+              the landing cell. Rainbow (Venice) counts as either color
+              for win detection. Heavy (Harlem) pushes adjacent
+              opponent pieces down one row on impact. Each piece arms a
+              single-use mode; only one can be armed at a time
+              (auto-disarms when another is tapped). Visual gold border
+              when armed so the player knows what's about to happen. */}
+          {(() => {
+            const isCareer = params.careerLevelId !== undefined;
+            if (!isCareer || !isVsAi) return null;
+            const isPlayerTurn = currentPlayer === 1 && status === 'playing' && !isAiThinking;
+            const careerStore = useCareerStore.getState();
+            const pieces: Array<{
+              id: 'bomb' | 'rainbow' | 'heavy';
+              icon: string;
+              label: string;
+              color: string;
+              remaining: number;
+              unlocked: boolean;
+            }> = [
+              {
+                id: 'bomb',
+                icon: '💣',
+                label: 'Bomb',
+                color: '#ff4081',
+                remaining: bombsRemaining,
+                unlocked: careerStore.isPowerPieceUnlocked('bomb'),
+              },
+              {
+                id: 'rainbow',
+                icon: '🌈',
+                label: 'Rainbow',
+                color: '#9b59b6',
+                remaining: rainbowsRemaining,
+                unlocked: careerStore.isPowerPieceUnlocked('rainbow'),
+              },
+              {
+                id: 'heavy',
+                icon: '🪨',
+                label: 'Heavy',
+                color: '#a8a8b8',
+                remaining: heaviesRemaining,
+                unlocked: careerStore.isPowerPieceUnlocked('heavy'),
+              },
+            ];
+            return (
+              <>
+                {pieces.filter(p => p.unlocked).map((p) => {
+                  const isArmed = armedPowerPiece === p.id;
+                  const enabled = p.remaining > 0 && isPlayerTurn;
+                  const label = isArmed
+                    ? 'TAP COL'
+                    : p.remaining > 0
+                      ? `${p.label} (${p.remaining})`
+                      : p.label;
+                  return (
+                    <Pressable
+                      key={p.id}
+                      onPress={() => {
+                        if (!enabled) return;
+                        setArmedPowerPiece(prev => (prev === p.id ? null : p.id));
+                        haptics.tap();
+                        playSound('click');
+                      }}
+                      style={[
+                        styles.controlBtn,
+                        !enabled && { opacity: 0.4 },
+                        isArmed && { borderColor: p.color, borderWidth: 2, borderRadius: 8 },
+                      ]}
+                      disabled={!enabled}
+                      accessibilityRole="button"
+                      accessibilityLabel={isArmed ? `${p.label} armed — tap a column to use` : label}
+                      accessibilityState={{ disabled: !enabled, selected: isArmed }}
+                    >
+                      <Text style={[styles.controlIconImg, { fontSize: 26, textAlign: 'center' }]}>{p.icon}</Text>
+                      <Text style={[styles.controlLabel, isArmed && { color: p.color }]}>{label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </>
             );
           })()}
 
@@ -1864,6 +2009,10 @@ export function GameScreen({ navigation }: Props) {
                                   setWasCareerLevel(false);
                                   setFreeHintsRemaining(3);
                                   setSkipsRemaining(1);
+                                  setBombsRemaining(1);
+                                  setRainbowsRemaining(1);
+                                  setHeaviesRemaining(1);
+                                  setArmedPowerPiece(null);
                                   setDidLevelUp(false);
                                   setStreakReward(null);
                                   setCompletedChallengeName(null);
