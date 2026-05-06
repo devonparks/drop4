@@ -986,6 +986,12 @@ export function HomeScreen() {
             The PLAY button is Devon's hand-made GPT button (chunky 3D
             white "PLAY" letters on an orange/yellow gradient pill with
             blue rim) — used directly as a tappable Image. */}
+        {/* PLAY + dog side by side — Devon 2026-05-05: "put it on
+            the right side of the play button." Phone is 390 wide,
+            PLAY at full 340 left no room beside it (dog would
+            overlap). Now: PLAY shrunk to 240 + dog at 130 = 370 px
+            total, fits with 10 px margin. They flex-row align so
+            the row stays balanced. */}
         <View style={styles.menuButtons}>
           <SlideReveal from="bottom" delay={0}>
             <Pressable
@@ -1002,9 +1008,6 @@ export function HomeScreen() {
               />
             </Pressable>
           </SlideReveal>
-          {/* Pet beside PLAY — Devon 2026-05-05: "put it on the right
-              side of the play button." Floats absolute so PLAY stays
-              centered. No shadow/glow frame — just the dog itself. */}
           {equippedPet && (
             <Pressable
               onPress={handlePetTap}
@@ -1014,7 +1017,7 @@ export function HomeScreen() {
               accessibilityHint="Tap to interact with your pet"
             >
               <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                <PetDisplay petId={equippedPet} size={170} isIdle />
+                <PetDisplay petId={equippedPet} size={130} isIdle />
               </Animated.View>
               {showPetHeart && (
                 <Animated.Text
@@ -1410,9 +1413,11 @@ const styles = StyleSheet.create({
   },
   // Menu buttons
   menuButtons: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    gap: 6,
     // paddingTop trimmed back to 10 — with the bigger character (1.8 m)
     // + camera at lookAt 1.1, the feet end up right at the canvas
     // bottom edge, so PLAY only needs a small breathing gap before it
@@ -1426,9 +1431,10 @@ const styles = StyleSheet.create({
   // The PLAY image is 1536×1024 with the button silhouette ~60% of canvas;
   // resizeMode: 'contain' preserves the aspect.
   playBtn: {
-    // Hero PLAY — sized big enough to dominate but not crowd the
-    // character's feet or the loot box row. Devon-tuned at 340x130.
-    width: 340,
+    // Hero PLAY — shrunk 340 → 240 to make room for the dog
+    // companion beside it (Devon 2026-05-05). Stays the dominant
+    // CTA but no longer hogs the entire 390-px phone width.
+    width: 240,
     height: 130,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1559,16 +1565,14 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Pet beside PLAY — floats absolute so PLAY stays centered.
-  // Devon 2026-05-05: prior placement at character's feet had a
-  // heavy amber glow that read as a UI frame; new placement is
-  // bare (no shadow / no border) and anchors to the right edge
-  // of the menuButtons row at PLAY's vertical center.
+  // Pet beside PLAY — flex sibling in the menuButtons row.
+  // Devon 2026-05-05: prior absolute positioning at right:8 of
+  // a 390-px phone overlapped PLAY (340 wide) by ~150 px. Now
+  // a flex sibling: PLAY 240 + pet 130 = 370 px total, fits in
+  // the 390-px phone with breathing room on both sides.
   petBesidePlay: {
-    position: 'absolute',
-    right: 8,
-    top: 20,
-    zIndex: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Version (moved to Settings screen footer)
   // Coin earn animation
