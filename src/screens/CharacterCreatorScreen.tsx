@@ -58,11 +58,13 @@ const LOOK_ICONS = {
 
 export function CharacterCreatorScreen() {
   const navigation = useNavigation<any>();
-  // Route params: optional initialTab so callers (like Customize) can
-  // deep-link into a specific creator tab instead of the default
-  // 'body'. Customize CLOTHES → initialTab='outfit', etc.
+  // Route params: optional initialTab so callers can deep-link into a
+  // specific creator tab. The engine only renders 'body' and 'color' now
+  // (face / hair / outfit live in the Customize hub's catalogs), so the
+  // RootStackParamList narrows the union to those two — anything older
+  // got migrated out.
   const route = useRoute<any>();
-  const initialTab = (route.params?.initialTab ?? 'body') as 'body' | 'face' | 'hair' | 'outfit' | 'color';
+  const initialTab = (route.params?.initialTab ?? 'body') as 'body' | 'color';
   // Styled in-app confirm dialog state. Two callers now:
   //   1. The starter-wardrobe ceremony (one-shot info modal, confirmOnly)
   //   2. The "this part is locked, open boxes to find it" route — there

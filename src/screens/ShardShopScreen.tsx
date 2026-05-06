@@ -25,6 +25,8 @@ import { TopBar } from '../components/ui/TopBar';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
+import { useCharacterStore } from '../stores/characterStore';
+import { usePetStore } from '../stores/petStore';
 import {
   useLootBoxStore,
   SHARD_UNLOCK_COST,
@@ -94,6 +96,43 @@ export function ShardShopScreen() {
   const level = useShopStore((s) => s.level);
   const shards = useLootBoxStore((s) => s.shards);
   const spendShardsForItem = useLootBoxStore((s) => s.spendShardsForItem);
+  // Auto-equip plumbing — when the player explicitly spends shards on a
+  // specific item, equip it immediately so they see the win without
+  // having to navigate to Customize and equip it themselves. Mirrors
+  // CategoryBrowser's behavior so the two unlock surfaces stay aligned.
+  const equipItem = useShopStore((s) => s.equipItem);
+  const setSelectedHomeEmote = useShopStore((s) => s.setSelectedHomeEmote);
+  const setHomeEmoteRandomMode = useShopStore((s) => s.setHomeEmoteRandomMode);
+  const equipPet = useShopStore((s) => s.equipPet);
+  const equipOutfitPack = useCharacterStore((s) => s.equipOutfitPack);
+  const setActivePet = usePetStore((s) => s.setActivePet);
+
+  // Equip the just-unlocked item by category. Pets uses both legacy
+  // shopStore.equipPet (id-based for the avatar slot) and petStore
+  // .setActivePet (the new home-screen companion field). Frames /
+  // boards / pieces / effects / wins all flow through shopStore's
+  // equipItem with the matching equip key. Outfits route through
+  // characterStore.equipOutfitPack which swaps the body slot parts.
+  const autoEquipUnlocked = (item: LootBoxItem) => {
+    switch (item.category) {
+      case 'boards':   equipItem('board', item.id); break;
+      case 'pieces':   equipItem('pieces', item.id); break;
+      case 'effects':  equipItem('dropEffect', item.id); break;
+      case 'wins':     equipItem('winAnimation', item.id); break;
+      case 'frames':   equipItem('boardAccessory', item.id); break;
+      case 'emotes':
+        setSelectedHomeEmote(item.id);
+        setHomeEmoteRandomMode(false);
+        break;
+      case 'outfits':  equipOutfitPack(item.id); break;
+      case 'pets':
+        equipPet(item.id);
+        setActivePet(item.id as any);
+        break;
+      // currency / parts / anything else — no equip slot.
+      default: break;
+    }
+  };
 
   const [activeRarity, setActiveRarity] = useState<LootBoxRarity>('common');
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -383,8 +422,16 @@ export function ShardShopScreen() {
           if (!confirmDialog) return;
           const ok = spendShardsForItem(confirmDialog.item.id);
           setConfirmDialog(null);
-          if (ok) { haptics.win(); playSound('coin'); }
-          else { haptics.error(); }
+          if (ok) {
+            haptics.win();
+            playSound('coin');
+            // Match CategoryBrowser: explicit shard spend implies the
+            // player wanted THIS specific item, so equip it now instead
+            // of leaving them to navigate back to Customize for it.
+            autoEquipUnlocked(confirmDialog.item);
+          } else {
+            haptics.error();
+          }
         }}
         onCancel={() => setConfirmDialog(null)}
       />

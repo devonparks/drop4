@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Animated as RNAnimated, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Animated as RNAnimated, Platform, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { SlideInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { StaggeredEntry } from '../components/animations';
@@ -28,14 +28,69 @@ import { fonts, weight } from '../theme/typography';
 // not just a generic "COLORWAY" chip.
 import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
 import { parseVariantDropId } from '@amg/cosmetic-runtime';
+// Thumbnail sources for the reveal card. Emotes have painted
+// figurines; outfit packs have painted chunky 3D pack covers; AMG
+// parts have rendered Unity thumbnails. Everything else falls back
+// to a rarity-tinted disc (defined in styles below) so the reveal
+// always shows SOMETHING beyond the rarity banner + name.
+import { EMOTE_ICON, PACK_ICON } from '../data/cosmeticIcons';
+import { getPartThumb } from '../data/partThumbs';
+import { OUTFITS } from '../data/outfitRegistry';
+import { OUTFIT_PACK_TO_SIDEKICK } from '../data/amgPackMeta';
+
+/** Resolve the best thumbnail source for a reveal item. Returns an
+ *  Image source when we have painted art for the category, else null
+ *  (caller renders the colored disc fallback). Centralized here so
+ *  every drop type gets the same lookup logic — Emotes → painted
+ *  figurine, Outfits → pack cover, Parts → Unity thumbnail, etc. */
+function thumbnailFor(item: LootBoxItem): any | null {
+  switch (item.category) {
+    case 'emotes':
+      return EMOTE_ICON[item.id] ?? null;
+    case 'outfits': {
+      const meta = OUTFITS[item.id as keyof typeof OUTFITS];
+      const code = meta ? OUTFIT_PACK_TO_SIDEKICK[meta.pack] : null;
+      return code ? PACK_ICON[code] ?? null : null;
+    }
+    case 'pets':
+      // Pets render via a 3D component normally — no painted icon yet.
+      return null;
+    case 'frames':
+    case 'boards':
+    case 'pieces':
+    case 'effects':
+    case 'wins':
+      return null; // Color disc fallback
+    default:
+      return null;
+  }
+}
+
+/** Part variants drop as `partVariant` items — try the Unity thumbnail
+ *  for the underlying part. Splits the variant id back to the part name
+ *  via parseVariantDropId. */
+function partThumbnailFor(item: LootBoxItem): any | null {
+  if (item.type === 'partVariant') {
+    const { partName } = parseVariantDropId(item.id);
+    return getPartThumb(partName) ?? null;
+  }
+  return null;
+}
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#8892b0',
+  // Source-registry tier between common and rare (Mint & Coral, Candy,
+  // Midnight, Monochrome). Reveal + dupe banner now show this tag
+  // verbatim — preserves the catalog branding.
+  uncommon: '#4ade80',
   rare: '#3498db',
   epic: '#9b59b6',
   legendary: '#f1c40f',
+  // Source-registry "above legendary" tier. Maps to legendary for
+  // shard cost but keeps its own visual tag.
+  mythic: '#e94560',
 };
 
 const TIER_STYLES: Record<string, {
@@ -219,7 +274,13 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 // gets shards + a coin refund and the screen makes that visible.
 function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onContinue: () => void }) {
   const { item, isDupe, shardsAwarded, coinRefund, wasPityEpic, wasPityLegendary } = result;
-  const rarityColor = RARITY_COLORS[item.rarity];
+  // Prefer the source-registry rarity tag so the reveal matches what
+  // the player sees in CategoryBrowser (e.g. an Uncommon piece reveals
+  // as "UNCOMMON", not the loot-tier "COMMON" it's accounted as for
+  // shard cost). Falls back to the 4-tier rarity for legacy items
+  // seeded before displayRarity was added.
+  const displayRarity = item.displayRarity ?? item.rarity;
+  const rarityColor = RARITY_COLORS[displayRarity] ?? RARITY_COLORS[item.rarity];
   // Friendly category label per drop type. Replaces the prior raw
   // `item.type.toUpperCase()` which read poorly for compound types
   // ('PARTVARIANT' → 'COLORWAY'). Variant drops (Path A, 2026-05-04)
@@ -277,9 +338,37 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
             </View>
           ) : (
             <View style={[st.revealRarityBanner, { backgroundColor: `${rarityColor}30`, borderColor: `${rarityColor}50` }]}>
-              <Text style={[st.revealRarityText, { color: rarityColor }]}>{item.rarity.toUpperCase()}</Text>
+              <Text style={[st.revealRarityText, { color: rarityColor }]}>{displayRarity.toUpperCase()}</Text>
             </View>
           )}
+
+          {/* Item thumbnail — painted figurine for emotes, painted pack
+              cover for outfits, Unity render for parts, colored disc
+              fallback for boards / pieces / effects / wins / frames.
+              Audit 2026-05-06: previously the reveal had no item visual
+              between the rarity banner and the category chip, which
+              under-celebrated the prize. */}
+          {(() => {
+            const thumb = thumbnailFor(item) ?? partThumbnailFor(item);
+            if (thumb) {
+              return (
+                <Image
+                  source={thumb}
+                  style={[st.revealThumb, { borderColor: rarityColor }]}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
+              );
+            }
+            return (
+              <View
+                style={[
+                  st.revealThumbDisc,
+                  { backgroundColor: `${rarityColor}30`, borderColor: rarityColor },
+                ]}
+              />
+            );
+          })()}
 
           {/* Rarity-tinted category chip stands in for the old emoji icon.
               For partVariant drops we sneak the colorway swatch in front of
@@ -301,7 +390,10 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
           <Text style={[st.revealName, { color: rarityColor }]}>{item.name}</Text>
 
           {/* Dupe payout strip — shows what the player got instead of
-              the duplicate item. Hidden when the item was new. */}
+              the duplicate item. Hidden when the item was new. The
+              shard award uses the 4-tier loot rarity (the actual shard
+              bucket the player gets) — not the granular displayRarity,
+              since shards are awarded in those four buckets. */}
           {isDupe && (shardsAwarded > 0 || coinRefund > 0) && (
             <View style={st.dupePayout}>
               {shardsAwarded > 0 && (
@@ -827,6 +919,28 @@ const st = StyleSheet.create({
   revealRarityBanner: {
     borderRadius: 10, paddingHorizontal: 16, paddingVertical: 4,
     borderWidth: 1, marginBottom: 14,
+  },
+  // Item thumbnail in the reveal card — sized to feel "presented"
+  // without crowding the rarity banner above or the category chip
+  // below. Border tinted by rarity so it reads as an integrated card
+  // element, not a stamp.
+  revealThumb: {
+    width: 88,
+    height: 88,
+    borderRadius: 18,
+    borderWidth: 2,
+    marginBottom: 12,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  // Color-disc fallback when the category has no painted thumbnail
+  // (boards / pieces / effects / wins / frames). Solid disc with a
+  // ring border in the rarity color so the reveal still feels framed.
+  revealThumbDisc: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    marginBottom: 12,
   },
   revealRarityText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 12,

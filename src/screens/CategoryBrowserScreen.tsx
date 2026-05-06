@@ -54,6 +54,15 @@ import { fonts, weight } from '../theme/typography';
 
 // ─── Category definitions ──────────────────────────────────────────
 
+// `boardAccessories` (frames) is included for forward-compat — the
+// browser, the unlock flow, and the equip state all work — but
+// CustomizeScreen intentionally does NOT surface a Frames loadout cell
+// for v1 (see CustomizeScreen CATEGORIES + the comment near the
+// loadout grid). The 8-cell grid is full and adding Frames would
+// either break the 2×4 layout or push past Devon's UX bar. When the
+// frame registry grows or the grid reflows, drop a cell into
+// CATEGORIES with id 'frames' and the navigation already wired here
+// will route correctly.
 export type BrowsableCategory =
   | 'boards' | 'pieces' | 'dropEffects' | 'winAnimations' | 'boardAccessories' | 'pets';
 

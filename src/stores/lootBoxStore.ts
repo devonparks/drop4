@@ -107,6 +107,13 @@ export interface LootBoxItem {
   name: string;
   type: LootItemType;
   rarity: LootBoxRarity;
+  /** Source-registry rarity tag preserved for display. The 4-tier
+   *  `rarity` above collapses 'uncommon' → 'common' and 'mythic' →
+   *  'legendary' for shard-cost accounting, but the reveal screen and
+   *  the cards in CategoryBrowser show the granular tag (e.g. an
+   *  Uncommon piece reveals as "UNCOMMON", not "COMMON"). Falls back
+   *  to `rarity` when not set. */
+  displayRarity?: string;
   /** Currency value for coin/gem drops. Cosmetics ignore this. */
   value?: number;
   /** Cosmetic category surface — "boards", "outfits", etc. — used by
@@ -235,13 +242,17 @@ function emptyByCatRarity(): PoolBucket['byCatRarity'] {
 function shopItemToLoot(item: ShopItem, type: LootItemType, category: LootCategory): LootBoxItem | null {
   const rarity = normalizeRarity(item.rarity);
   if (!rarity) return null;
-  return { id: item.id, name: item.name, type, rarity, category };
+  // Preserve the source rarity (which can be 'uncommon' / 'mythic' /
+  // etc.) so the reveal screen + dupe banner display the same tag the
+  // player saw in CategoryBrowser. The 4-tier `rarity` is internal
+  // accounting only.
+  return { id: item.id, name: item.name, type, rarity, category, displayRarity: item.rarity };
 }
 
 function petToLoot(p: PetMeta): LootBoxItem | null {
   const rarity = normalizeRarity(p.rarity);
   if (!rarity) return null;
-  return { id: p.id, name: p.name, type: 'pet', rarity, category: 'pets' };
+  return { id: p.id, name: p.name, type: 'pet', rarity, category: 'pets', displayRarity: p.rarity };
 }
 
 function emoteToLoot(e: AnimationMeta): LootBoxItem {
@@ -656,6 +667,15 @@ export const useLootBoxStore = create<LootBoxState>((set, get) => ({
   lifetimeOpens: 0,
 
   addBox: (boxId) => {
+    // Defensive: reject ids that don't exist in the LOOT_BOXES catalog
+    // so a fat-fingered call from the daily-reward / dev-hook path
+    // can't create orphan inventory entries that no UI surfaces.
+    // Audit 2026-05-06 caught the dev-hook footgun where addBox('gold')
+    // (vs addBox('gold_box')) silently succeeded.
+    if (!LOOT_BOXES.some((b) => b.id === boxId)) {
+      if (__DEV__) console.warn(`[lootBoxStore] addBox: unknown boxId '${boxId}' — ignored. Valid ids: ${LOOT_BOXES.map(b => b.id).join(', ')}`);
+      return;
+    }
     set((state) => {
       const existing = state.ownedBoxes.find((b) => b.boxId === boxId);
       if (existing) {

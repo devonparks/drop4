@@ -106,7 +106,12 @@ export type RootStackParamList = {
   // Lives in @amg/character-creator and replaces Character3DCreator
   // across every AMG game. Character state persists to
   // characterStore.amgCharacter.
-  AmgCreator: { initialTab?: 'body' | 'face' | 'hair' | 'outfit' | 'color' } | undefined;
+  // Engine's DEFAULT_AVAILABLE_TABS is just ['body', 'color'] — face/hair/outfit
+  // were intentionally pulled into the host game's Customize hub (Clothes
+  // catalog + Hair / Face category browsers). Keeping the union narrow so
+  // stale deep-link calls fail at compile time instead of silently snapping
+  // to 'body' inside the engine.
+  AmgCreator: { initialTab?: 'body' | 'color' } | undefined;
   // Customize-side cosmetic browser. Single screen handles 6 simple
   // categories (boards / pieces / drop FX / win FX / frames / pets);
   // outfits keep the OutfitsCatalog modal, emotes keep AnimationPicker.

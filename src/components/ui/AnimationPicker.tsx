@@ -34,12 +34,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Character3DPortrait } from '../3d/Character3DPortrait';
 import { useShopStore } from '../../stores/shopStore';
+import { useLootBoxStore, getLootItemById, SHARD_UNLOCK_COST } from '../../stores/lootBoxStore';
+import type { LootBoxRarity } from '../../stores/lootBoxStore';
 import { HUMAN_EMOTES } from '../../data/animationRegistry';
 import { EMOTE_ICON, IDLE_ICON } from '../../data/cosmeticIcons';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
+import { ConfirmDialog } from './ConfirmDialog';
 
 type Tab = 'emotes' | 'idles';
 
@@ -92,6 +95,20 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
   const equippedIdle = useShopStore((s) => s.equippedIdle);
   const setEquippedIdle = useShopStore((s) => s.setEquippedIdle);
   const ownedEmotes = useShopStore((s) => s.ownedEmotes);
+  const shards = useLootBoxStore((s) => s.shards);
+  const spendShardsForItem = useLootBoxStore((s) => s.spendShardsForItem);
+
+  // Locked-tap dialog state — same shard-or-box pattern as
+  // CategoryBrowserScreen so the picker behaves like every other
+  // catalog. Affordable shard cost confirms inline; otherwise the
+  // CTA routes to LootBox (Cancel = the secondary action).
+  const [confirmDialog, setConfirmDialog] = React.useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    cancelLabel?: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   // Owned-emote filter — used to decide which tiles are tappable
   // ("equip this") vs locked ("🔒 IN BAGS").
@@ -145,14 +162,64 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
     navigation.dispatch(CommonActions.navigate({ name: 'LootBox' }));
   };
 
-  // Locked-emote tap: route to bags screen so the player can roll for
-  // the missing emote. Closes the picker so the player isn't trapped
-  // behind two modals.
-  const handleLockedTap = () => {
+  // Route to LootBox without affecting the dialog state. Used by the
+  // dialog's secondary CTA + the legacy fallback path when an emote
+  // isn't found in the loot pool (shouldn't happen post-seed).
+  const goToLootBox = () => {
     haptics.tap();
     playSound('click');
     onClose();
     navigation.dispatch(CommonActions.navigate({ name: 'LootBox' }));
+  };
+
+  // Locked-emote tap: offer shard-spend if the player can afford it,
+  // else route to LootBox. Mirrors CategoryBrowserScreen's locked-tap
+  // dialog so emotes have the same unlock affordances as every other
+  // catalog (boards / pieces / effects / wins). Pre-fix this skipped
+  // straight to LootBox even when the player had shards.
+  const handleLockedTap = (emoteId: string, emoteName: string) => {
+    haptics.tap();
+    playSound('click');
+    const item = getLootItemById(emoteId);
+    if (!item) {
+      // Defensive: emote isn't in the loot pool (shouldn't happen for
+      // any HUMAN_EMOTES entry). Fall back to the bags route.
+      goToLootBox();
+      return;
+    }
+    const rarity: LootBoxRarity = (item.rarity === 'common' || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary')
+      ? item.rarity
+      : 'common';
+    const cost = SHARD_UNLOCK_COST[rarity];
+    const have = shards[rarity];
+    const affordable = have >= cost;
+    setConfirmDialog({
+      title: `Unlock ${emoteName}?`,
+      message: affordable
+        ? `Spend ${cost} ${rarity.toUpperCase()} shards to unlock now (you have ${have}). Or open boxes to find it the lucky way.`
+        : `${emoteName} costs ${cost} ${rarity.toUpperCase()} shards (you have ${have}). Open boxes to find it the lucky way.`,
+      confirmLabel: affordable ? `USE ${cost} SHARDS` : 'OPEN BOXES',
+      cancelLabel: affordable ? 'OPEN BOXES' : 'Maybe later',
+      onConfirm: () => {
+        if (affordable) {
+          const ok = spendShardsForItem(emoteId);
+          if (ok) {
+            haptics.win();
+            playSound('coin');
+            // Auto-equip the newly-unlocked emote so the player sees
+            // the win immediately on the home preview — same pattern
+            // CategoryBrowser uses for shard-spend unlocks.
+            setSelectedHomeEmote(emoteId);
+            setHomeEmoteRandomMode(false);
+            setTimeout(onClose, 80);
+            return;
+          }
+        }
+        // Either unaffordable + tapped OPEN BOXES, or the spend
+        // failed for some reason. Route to bags.
+        goToLootBox();
+      },
+    });
   };
 
   // ── Now-playing label ──
@@ -286,7 +353,7 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
                         return (
                           <Pressable
                             key={e.id}
-                            onPress={() => owned ? handleSelectEmote(e.id) : handleLockedTap()}
+                            onPress={() => owned ? handleSelectEmote(e.id) : handleLockedTap(e.id, e.name)}
                             style={[
                               styles.gridCard,
                               selected && styles.gridCardSelected,
@@ -442,6 +509,23 @@ export function AnimationPicker({ visible, onClose, initialTab = 'emotes' }: Ani
           </Pressable>
         </View>
       </View>
+
+      {/* Locked-emote confirm dialog. Same shard-or-box affordance as
+          CategoryBrowserScreen so emotes follow the universal unlock
+          flow. Renders inside the picker modal so the player isn't
+          bounced through nested screens. */}
+      <ConfirmDialog
+        visible={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message}
+        confirmLabel={confirmDialog?.confirmLabel ?? 'OK'}
+        cancelLabel={confirmDialog?.cancelLabel}
+        onConfirm={() => {
+          confirmDialog?.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </PreviewSafeModal>
   );
 }
