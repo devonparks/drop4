@@ -106,7 +106,7 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 - App Store / Google Play screenshots — use web preview at 1920×1080 bucket
 <!-- LegalScreen privacy + terms content shipped (commit f14b12d). Still needs a lawyer review pass + the {{SUPPORT_EMAIL}} / {{COMPANY_ADDRESS}} constants updated with final values before submission. -->
 - App icon final export (1024×1024, no alpha for iOS)
-- Splash screen polish (already has SplashAnimation component)
+<!-- Shipped: SplashAnimation — continuous breath on the amber glow ring (1.4 s in / 1.4 s out, useNativeDriver) so the splash reads as alive during the 1-3 s of font + store + manifest hydration. Drops the orphaned View import as drive-by cleanup of the same change. -->
 - Error boundary coverage — ensure ErrorBoundary wraps every screen, not just root
 - First-launch tutorial: currently WelcomeOverlay is a bullet list. Consider an interactive 3-screen walkthrough
 - Beta tester onboarding — a `/beta` skill or a README section for friends getting TestFlight invites
