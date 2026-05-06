@@ -81,7 +81,11 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 <!-- Streak-recovery shipped as streak freeze (commit 7ae43f0) — 1 charge/week auto-applies on missed day -->
 <!-- Welcome-back bonus shipped (commit 863e8af) — 500 coins + 1 gem on 3+ day return -->
 - Milestone screen in Profile showing progress toward each milestone (bars, percentages) — partially covered by Collection > Awards, could expand
-- Notification to claim daily spin if they opened the app but forgot (1h after last open)
+<!-- Shipped: Notification to claim daily spin — AppState listener schedules a 1h one-shot reminder when player backgrounds with canSpin()=true; cancelled on foreground so they don't get nagged while in-app. -->
+
+### Stale (queue items obsoleted by later work — do not pick up)
+
+<!-- Stale: Shop Clothes tab: collection tab filter chips. The 'clothes' tab in ShopScreen is dead post-2026-05-03 lootbox pivot — rawItems falls through to [], amgManifest is fetched but never rendered, AmgPartCard isn't imported. Customize > ClothesCatalog is the live wardrobe surface. The bucket-chip pattern would belong there if anywhere. -->
 
 ## Open — code quality
 

@@ -17,6 +17,10 @@ import { Platform } from 'react-native';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
 
 const DROP4_CATEGORY = 'drop4-daily';
+// One-shot reminder fired ~1h after the player backgrounds the app with
+// an unclaimed daily spin. Distinct category so it can be cancelled
+// without disturbing the recurring 7-day reminder set.
+const SPIN_REMINDER_CATEGORY = 'drop4-spin-1h';
 
 // Show banner even when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -158,5 +162,63 @@ export async function scheduleDailyReminders(): Promise<void> {
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: sat } as any,
   });
+}
+
+// Rotating copy for the "you opened the app but skipped the spin" nudge.
+// Picked at random per schedule so a player who backgrounds repeatedly
+// without spinning doesn't get the same line each time.
+const SPIN_REMINDER_VARIANTS: ReadonlyArray<{ title: string; body: string }> = [
+  { title: '\u{1F3B0} Your daily spin is still waiting', body: 'You popped in but skipped the wheel — it resets at midnight.' },
+  { title: '\u{1F381} Free spin pending', body: 'One tap to claim today’s reward — coins, gems, even a pet drop.' },
+  { title: '\u{2728} Don’t let your spin reset', body: 'The wheel’s ready when you are. Pop back in before tomorrow.' },
+];
+
+/**
+ * Schedule a one-shot reminder N minutes out. Cancels any prior pending
+ * spin reminder first so we never queue duplicates. No-ops on web or
+ * without permission. Caller is expected to gate on `canSpin()` so we
+ * don't nag players who already claimed today.
+ */
+export async function scheduleSpinReminderIn(minutes: number): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+
+  await cancelSpinReminder();
+
+  const variant = SPIN_REMINDER_VARIANTS[Math.floor(Math.random() * SPIN_REMINDER_VARIANTS.length)];
+  await safeSchedule({
+    content: {
+      title: variant.title,
+      body: variant.body,
+      categoryIdentifier: SPIN_REMINDER_CATEGORY,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: Math.max(60, Math.round(minutes * 60)),
+      repeats: false,
+    } as any,
+  });
+}
+
+/**
+ * Cancel any pending spin reminder. Called when the app foregrounds (we
+ * don't need to nag a player who's already in the app) and could also
+ * be called from the spin-claim path if we want to drop the queued
+ * notification the moment they spin.
+ */
+export async function cancelSpinReminder(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    await Promise.all(
+      scheduled
+        .filter((n) => n.content.categoryIdentifier === SPIN_REMINDER_CATEGORY)
+        .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+    );
+  } catch {
+    /* best-effort */
+  }
 }
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,7 +10,7 @@ import { PhoneFrame } from './src/components/ui/PhoneFrame';
 import { colors } from './src/theme/colors';
 import { preloadSounds } from './src/services/audio';
 import { seedDrop4Variants } from './src/services/seedDrop4Variants';
-import { scheduleDailyReminders } from './src/services/notifications';
+import { scheduleDailyReminders, scheduleSpinReminderIn, cancelSpinReminder } from './src/services/notifications';
 import { useShopStore } from './src/stores/shopStore';
 import { useCareerStore } from './src/stores/careerStore';
 import { useRosterStore } from './src/stores/rosterStore';
@@ -163,6 +163,24 @@ export default function App() {
       }
     }
     prepare();
+  }, []);
+
+  // "You opened the app but skipped the spin" reminder. When the player
+  // backgrounds the app with an unclaimed daily spin, schedule a one-shot
+  // 1-hour notification nudging them back. Coming back to foreground
+  // cancels the pending nudge so they don't get a "claim your spin"
+  // banner while they're already in the game.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'background' || next === 'inactive') {
+        if (useDailySpinStore.getState().canSpin()) {
+          scheduleSpinReminderIn(60).catch(() => { /* best-effort */ });
+        }
+      } else if (next === 'active') {
+        cancelSpinReminder().catch(() => { /* best-effort */ });
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
