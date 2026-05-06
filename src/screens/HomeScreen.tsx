@@ -14,6 +14,7 @@ import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { AnimationPicker } from '../components/ui/AnimationPicker';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { useShopStore } from '../stores/shopStore';
+import { usePetStore } from '../stores/petStore';
 import { useGameStore } from '../stores/gameStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useChallengeStore } from '../stores/challengeStore';
@@ -511,7 +512,16 @@ export function HomeScreen() {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
-  const equippedPet = useShopStore(s => s.equippedPet);
+  // Pet system: prefer the 3D petStore (Polygon Dogs registry); fall
+  // back to the legacy shopStore.equippedPet only when activePetId is
+  // null. The two stores use different id schemes — petStore.activePetId
+  // is `dog_labrador` (matches PETS_3D registry); shopStore.equippedPet
+  // is the legacy `labrador` (2D pet ids). PetDisplay does the right
+  // thing for either one — but Home was passing the legacy id only,
+  // which fails the 3D registry lookup. Fix 2026-05-05.
+  const activePetId3D = usePetStore(s => s.activePetId);
+  const equippedPetLegacy = useShopStore(s => s.equippedPet);
+  const equippedPet = activePetId3D ?? equippedPetLegacy;
   const winStreak = useGameStore(s => s.winStreak);
   const careerCompletedCount = useCareerStore(s => Object.values(s.progress).filter(p => p.completed).length);
   const lastSpinDate = useDailySpinStore(s => s.lastSpinDate);
