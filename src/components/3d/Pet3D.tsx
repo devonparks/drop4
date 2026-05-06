@@ -81,24 +81,20 @@ function PetModel({
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
-    // Hard-normalise the dog to ~0.5 m tall regardless of source GLB
-    // size. Without this, the dog's natural size varies wildly
-    // breed-to-breed and parts of the body fall outside the camera
-    // frustum. This was Devon's "face is cutoff" — head was above
-    // the visible Y range of the camera.
+    // Hard-normalise the dog to ~0.4 m tall regardless of source GLB
+    // size. Smaller than 0.5 to leave headroom in the canvas frame
+    // (Devon 2026-05-05: "the top of the head is cut off"). At 0.4 m
+    // a sitting dog with ears tops out at ~0.45 m; standing dog at
+    // ~0.5 m. Camera FOV at distance 1.5 sees ~0.75 m vertical → dog
+    // fits comfortably with ~0.15 m of breathing room above.
     if (isFinite(size.y) && size.y > 0) {
-      const targetHeight = 0.5;
+      const targetHeight = 0.4;
       const s = targetHeight / size.y;
       clone.scale.setScalar(s);
-      // Recenter using the new scale: bottom of bbox at y=0,
-      // horizontally centered at x=0, depth-centered at z=0.
       clone.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     }
     // Rotate dog 3/4 view (~30°) so we see the FACE + side profile.
-    // Pure front (180°) hides the body shape; pure side (90°) hides
-    // the face. 3/4 is the dog-photography standard pose. Synty
-    // Polygon Dogs ship with head along +Z (forward of model).
-    clone.rotation.y = Math.PI * 0.85; // ~153°, mostly facing camera + slight side
+    clone.rotation.y = Math.PI * 0.85; // ~153°, face + slight side
     return clone;
   }, [gltf]);
 
@@ -220,8 +216,8 @@ export function Pet3D({
         frameloop="always"
         gl={{ antialias: true, alpha: true } as any}
         shadows
-        camera={{ position: [0, cameraHeight, cameraDistance], fov: 28, near: 0.01, far: 100 }}
-        onCreated={(state: any) => state.camera.lookAt(0, 0.25, 0)}
+        camera={{ position: [0, cameraHeight, cameraDistance], fov: 32, near: 0.01, far: 100 }}
+        onCreated={(state: any) => state.camera.lookAt(0, 0.18, 0)}
         style={StyleSheet.absoluteFill as any}
       >
         <ambientLight intensity={0.5} color="#d0d8f0" />

@@ -1017,7 +1017,7 @@ export function HomeScreen() {
               accessibilityHint="Tap to interact with your pet"
             >
               <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                <PetDisplay petId={equippedPet} size={130} isIdle />
+                <PetDisplay petId={equippedPet} size={120} isIdle />
               </Animated.View>
               {showPetHeart && (
                 <Animated.Text
@@ -1413,16 +1413,20 @@ const styles = StyleSheet.create({
   },
   // Menu buttons
   menuButtons: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    gap: 6,
+    paddingHorizontal: 20,
+    gap: 8,
     // paddingTop trimmed back to 10 — with the bigger character (1.8 m)
     // + camera at lookAt 1.1, the feet end up right at the canvas
     // bottom edge, so PLAY only needs a small breathing gap before it
     // starts. Devon: "feet right above the play button."
     paddingTop: 10,
+    // Position relative so the absolutely-positioned pet child anchors
+    // here (not to a higher ancestor). Devon 2026-05-05: "play button
+    // got moved you need to move it back" — restored PLAY to its 340 px
+    // hero width + this row to centered column; pet now floats absolute
+    // beside PLAY without disturbing PLAY's geometry.
+    position: 'relative',
     paddingBottom: 6,
     flexShrink: 0,
   },
@@ -1431,10 +1435,11 @@ const styles = StyleSheet.create({
   // The PLAY image is 1536×1024 with the button silhouette ~60% of canvas;
   // resizeMode: 'contain' preserves the aspect.
   playBtn: {
-    // Hero PLAY — shrunk 340 → 240 to make room for the dog
-    // companion beside it (Devon 2026-05-05). Stays the dominant
-    // CTA but no longer hogs the entire 390-px phone width.
-    width: 240,
+    // Hero PLAY — back at 340x130 per Devon ("play button got moved
+    // you need to move it back"). Dog companion floats absolute on
+    // top of PLAY's right side; transparent dog canvas BG means the
+    // overlap doesn't visually obscure PLAY's text.
+    width: 340,
     height: 130,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1565,14 +1570,16 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Pet beside PLAY — flex sibling in the menuButtons row.
-  // Devon 2026-05-05: prior absolute positioning at right:8 of
-  // a 390-px phone overlapped PLAY (340 wide) by ~150 px. Now
-  // a flex sibling: PLAY 240 + pet 130 = 370 px total, fits in
-  // the 390-px phone with breathing room on both sides.
+  // Pet beside PLAY — absolute, anchored to the right edge of
+  // menuButtons (so PLAY stays centered as the hero). Pet canvas
+  // BG is transparent so the partial overlap with PLAY's right
+  // side reads as "dog standing next to PLAY" — the dog's body
+  // doesn't sit on top of PLAY's text.
   petBesidePlay: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute',
+    right: 4,
+    top: 6,
+    zIndex: 5,
   },
   // Version (moved to Settings screen footer)
   // Coin earn animation
