@@ -1014,7 +1014,7 @@ export function HomeScreen() {
               accessibilityHint="Tap to interact with your pet"
             >
               <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                <PetDisplay petId={equippedPet} size={110} isIdle />
+                <PetDisplay petId={equippedPet} size={170} isIdle />
               </Animated.View>
               {showPetHeart && (
                 <Animated.Text

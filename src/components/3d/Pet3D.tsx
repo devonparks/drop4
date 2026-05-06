@@ -85,6 +85,13 @@ function PetModel({
       clone.position.set(-center.x, -box.min.y, -center.z);
       if (size.y > 3 || size.y < 0.1) clone.scale.setScalar(0.7 / size.y);
     }
+    // Rotate the dog so its FACE points toward the camera. Synty
+    // Polygon Dogs export with head along +Z (forward). Default
+    // camera at +Z looking at origin sees the dog's BACK. Rotating
+    // the model 180° around Y puts the head facing the viewer.
+    // Devon 2026-05-05: "the face is cutoff" — was actually because
+    // the dog's face was on the OPPOSITE side of the camera.
+    clone.rotation.y = Math.PI;
 
     return clone;
   }, [gltf]);
@@ -139,7 +146,7 @@ function PetModel({
 
 export function Pet3D({
   width, height, petGlb, animationGlb, animationLoop = true,
-  cameraDistance = 1.6, cameraHeight = 0.5, autoRotate = false, style,
+  cameraDistance = 1.4, cameraHeight = 0.45, autoRotate = false, style,
   cycleIdles = true,
 }: Pet3DProps) {
   const [loaded, setLoaded] = useState(false);
@@ -171,8 +178,10 @@ export function Pet3D({
   useEffect(() => {
     if (!cycleIdles || animationGlb != null) return;
     if (DOG_IDLE_POOL.length < 2) return;
-    // Random dwell 6-12 s so the cadence feels organic, not metronomic.
-    const ms = 6_000 + Math.random() * 6_000;
+    // Random dwell 4-8 s so the dog visibly cycles. Tighter than the
+    // human's 8-15 s because the dog is the secondary character on
+    // the stage — viewer expects more action from the pet companion.
+    const ms = 4_000 + Math.random() * 4_000;
     const t = setTimeout(() => {
       setIdleIdx((prev) => {
         let next = prev;
@@ -205,8 +214,8 @@ export function Pet3D({
         frameloop="always"
         gl={{ antialias: true, alpha: true } as any}
         shadows
-        camera={{ position: [0, cameraHeight, cameraDistance], fov: 40, near: 0.01, far: 100 }}
-        onCreated={(state: any) => state.camera.lookAt(0, 0.25, 0)}
+        camera={{ position: [0, cameraHeight, cameraDistance], fov: 35, near: 0.01, far: 100 }}
+        onCreated={(state: any) => state.camera.lookAt(0, 0.3, 0)}
         style={StyleSheet.absoluteFill as any}
       >
         <ambientLight intensity={0.5} color="#d0d8f0" />
