@@ -56,3 +56,7 @@ src/assets/images/parts/
 # Local polish loop runtime artifacts
 tools/polish-loop.log
 .STOP_POLISH
+
+# Python build artifacts from tools/
+__pycache__/
+*.pyc
