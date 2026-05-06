@@ -31,6 +31,16 @@ const SPECIES_DISPLAY: Record<string, { label: string; emoji: string; blurb: str
   zombie: { label: 'Zombie Outlaws', emoji: '🧟', blurb: "They don't stay down.".replace(/'/g, '\u2019') },
 };
 
+// Phase 2 power-piece reveal copy. Each chapter boss unlocks one power
+// piece per the careerStore BOSS_POWER_PIECE_UNLOCKS map. Display
+// strings here mirror the in-game button labels so the player sees
+// the same identity in the ceremony and the controls row.
+const POWER_PIECE_DISPLAY: Record<string, { label: string; emoji: string; blurb: string; tint: string }> = {
+  bomb:    { label: 'Bomb Piece',    emoji: '\u{1F4A3}', blurb: 'Drops a 3×3 destroyer. Wipes friend and foe.', tint: '#ff4081' },
+  rainbow: { label: 'Rainbow Piece', emoji: '\u{1F308}', blurb: 'Counts as either color. The hedge that closes wins.', tint: '#9b59b6' },
+  heavy:   { label: 'Heavy Piece',   emoji: '\u{1FAA8}', blurb: 'Lands hard. Pushes adjacent opponent pieces down.', tint: '#a8a8b8' },
+};
+
 export function CityCompletionCeremony() {
   const pending = useCareerStore(s => s.cityCompletePending);
   const acknowledge = useCareerStore(s => s.acknowledgeCityComplete);
@@ -153,6 +163,30 @@ export function CityCompletionCeremony() {
               </View>
             </Animated.View>
           )}
+
+          {/* Phase 2 power-piece unlock block — second card under the
+              species reveal. Tinted by the piece's signature color so
+              the visual language carries from ceremony → controls row.
+              Only renders when the boss-clear actually unlocked one
+              (Brooklyn → bomb, Venice → rainbow, Harlem → heavy). */}
+          {pending.powerPieceUnlocked && POWER_PIECE_DISPLAY[pending.powerPieceUnlocked] && (() => {
+            const meta = POWER_PIECE_DISPLAY[pending.powerPieceUnlocked];
+            return (
+              <Animated.View
+                entering={ZoomIn.delay(1300).duration(600).springify().damping(10)}
+                style={[styles.unlockCard, { borderColor: meta.tint, shadowColor: meta.tint, marginTop: 12 }]}
+              >
+                <Text style={[styles.unlockKicker, { color: meta.tint }]}>NEW POWER PIECE UNLOCKED</Text>
+                <View style={styles.unlockRow}>
+                  <View style={styles.unlockChip}>
+                    <Text style={styles.unlockEmoji}>{meta.emoji}</Text>
+                    <Text style={styles.unlockLabel}>{meta.label}</Text>
+                    <Text style={styles.unlockBlurb}>{meta.blurb}</Text>
+                  </View>
+                </View>
+              </Animated.View>
+            );
+          })()}
 
           {/* Tagline as a prestige footer */}
           <Animated.View entering={FadeIn.delay(1400).duration(400)}>
