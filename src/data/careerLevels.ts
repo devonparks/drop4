@@ -99,12 +99,19 @@ const CHAPTER_1: CareerLevel[] = [
   },
   {
     id: 2,
-    name: 'Getting Started',
-    opponent: 'Beginner Ben',
-    opponentPersonality: "He's learning too!",
-    chapter: 1, type: 'standard', difficulty: 'easy', isBoss: false,
-    settings: {},
-    starThresholds: { three: 8, two: 14 },
+    name: 'Quick Thinking',
+    opponent: 'Speedy Sam',
+    opponentPersonality: 'Plays fast, thinks faster.',
+    chapter: 1, type: 'timed', difficulty: 'easy', isBoss: false,
+    // Career overhaul phase 1 distribution (2026-05-06): pulled forward
+    // from id=4 so the player hits a non-standard variant by their 2nd
+    // match. The doc-recommended cadence ("new mechanic every 2-3
+    // levels") only works if the FIRST variant arrives early. Reward
+    // is +1 Hint instead of coins so the win screen telegraphs the
+    // mechanic shift (timed = pressure → free Hint to relieve it).
+    settings: { timerSeconds: 15 },
+    reward: { type: 'coins', name: '50 Coins + 1 Hint', amount: 50, icon: '⏱️' },
+    starThresholds: { three: 9, two: 15 },
   },
   {
     id: 3,
@@ -118,12 +125,23 @@ const CHAPTER_1: CareerLevel[] = [
   },
   {
     id: 4,
-    name: 'Quick Thinking',
-    opponent: 'Speedy Sam',
-    opponentPersonality: 'Plays fast, thinks faster.',
-    chapter: 1, type: 'timed', difficulty: 'easy', isBoss: false,
-    settings: { timerSeconds: 15 },
-    starThresholds: { three: 9, two: 15 },
+    name: 'First Wall',
+    opponent: 'Beginner Ben',
+    opponentPersonality: "He's set up a tiny wall. Play around it.",
+    chapter: 1, type: 'obstacle', difficulty: 'easy', isBoss: false,
+    // Overhaul phase 1: gentle intro to the obstacle mechanic — only 2
+    // walls in the middle column. Doc said "introduce obstacle as
+    // chapter 1 level 6" but pulling it earlier so a NEW player sees
+    // a new mechanic by level 4, not level 10. Was: standard "Getting
+    // Started" with empty settings.
+    settings: {
+      obstacleCells: [
+        { row: 4, col: 3 },
+        { row: 5, col: 3 },
+      ],
+    },
+    reward: { type: 'coins', name: '100 Coins + 1 Hint', amount: 100, icon: '🧱' },
+    starThresholds: { three: 8, two: 14 },
   },
   {
     id: 5,
@@ -142,6 +160,7 @@ const CHAPTER_1: CareerLevel[] = [
     opponentPersonality: 'Can you win going second?',
     chapter: 1, type: 'go_second', difficulty: 'easy', isBoss: false,
     settings: { playerGoesFirst: false },
+    reward: { type: 'coins', name: '120 Coins', amount: 120, icon: '🪙' },
     starThresholds: { three: 9, two: 15 },
   },
   {
@@ -170,17 +189,27 @@ const CHAPTER_1: CareerLevel[] = [
     opponentPersonality: 'Blink and you lose.',
     chapter: 1, type: 'speed', difficulty: 'medium', isBoss: false,
     settings: { timerSeconds: 5 },
+    // Speed wins reward gems instead of coins — ramps up the value of
+    // a successful blitz. Players come to recognize "fast level → gem
+    // payout" which makes the type telegraph itself before the timer
+    // even starts ticking.
+    reward: { type: 'coins', name: '150 Coins + 1 💎', amount: 150, icon: '⚡' },
     starThresholds: { three: 8, two: 14 },
   },
   {
     id: 9,
-    name: 'Wide Open',
+    name: 'Six-Move Win',
     opponent: 'Big Board Bob',
-    opponentPersonality: 'More space, more possibilities.',
-    chapter: 1, type: 'standard', difficulty: 'easy', isBoss: false,
-    settings: { rows: 8, cols: 9 },
-    reward: { type: 'coins', name: '200 Coins', amount: 200, icon: '🪙' },
-    starThresholds: { three: 10, two: 16 },
+    opponentPersonality: 'Big board. Six moves to win or you lose. Move smart.',
+    chapter: 1, type: 'moves_limit', difficulty: 'easy', isBoss: false,
+    // Overhaul phase 1: was "Wide Open" (standard 8x9 board, no
+    // mechanic). Repurposed as the doc-recommended "target" level —
+    // win in N moves on the larger board. Same opponent + board, new
+    // challenge layer. Win in 6 means the player has to be PURPOSEFUL
+    // every turn, not just play to not lose.
+    settings: { rows: 8, cols: 9, movesLimit: 6 },
+    reward: { type: 'coins', name: '200 Coins + 1 💎', amount: 200, icon: '🎯' },
+    starThresholds: { three: 6, two: 6 },
   },
   {
     id: 10,
@@ -200,6 +229,7 @@ const CHAPTER_1: CareerLevel[] = [
         { row: 2, col: 5 },
       ],
     },
+    reward: { type: 'coins', name: '250 Coins + 1 Hint', amount: 250, icon: '🧱' },
     starThresholds: { three: 9, two: 15 },
   },
   {
@@ -251,6 +281,7 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: 'Five connects. New rules.',
     chapter: 2, type: 'connect5', difficulty: 'medium', isBoss: false,
     settings: { rows: 8, cols: 9, connectCount: 5 },
+    reward: { type: 'coins', name: '300 Coins + 2 💎', amount: 300, icon: '5️⃣' },
     starThresholds: { three: 10, two: 16 },
   },
   {
@@ -269,7 +300,9 @@ const CHAPTER_2: CareerLevel[] = [
         [2,1,1,2,2,1,2],
       ],
     },
-    reward: { type: 'coins', name: '300 Coins', amount: 300, icon: '🪙' },
+    // Puzzle wins reward gems — they're harder solves than rote
+    // Connect 4, so the win screen acknowledges the brain workout.
+    reward: { type: 'coins', name: '300 Coins + 3 💎', amount: 300, icon: '🧩' },
     starThresholds: { three: 4, two: 7 },
   },
   {
@@ -279,6 +312,7 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: 'Think FAST.',
     chapter: 2, type: 'speed', difficulty: 'medium', isBoss: false,
     settings: { timerSeconds: 3 },
+    reward: { type: 'coins', name: '350 Coins + 2 💎', amount: 350, icon: '⚡' },
     starThresholds: { three: 8, two: 14 },
   },
   {
@@ -288,6 +322,7 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: 'Small board, hard bot.',
     chapter: 2, type: 'connect3', difficulty: 'hard', isBoss: false,
     settings: { rows: 5, cols: 5, connectCount: 3 },
+    reward: { type: 'coins', name: '300 Coins', amount: 300, icon: '3️⃣' },
     starThresholds: { three: 5, two: 8 },
   },
   {
@@ -307,16 +342,30 @@ const CHAPTER_2: CareerLevel[] = [
         { row: 5, col: 3 },
       ],
     },
-    reward: { type: 'coins', name: '400 Coins', amount: 400, icon: '🪙' },
+    reward: { type: 'coins', name: '400 Coins + 2 Hints', amount: 400, icon: '🧱' },
     starThresholds: { three: 9, two: 14 },
   },
   {
     id: 18,
-    name: 'Mirror Match',
+    name: 'Maze Walls',
     opponent: 'Copy Cat Clara',
-    opponentPersonality: 'She copies your strategy.',
-    chapter: 2, type: 'standard', difficulty: 'medium', isBoss: false,
-    settings: {},
+    opponentPersonality: 'Three walls form a maze. Find the win line through it.',
+    chapter: 2, type: 'obstacle', difficulty: 'medium', isBoss: false,
+    // Overhaul phase 1: was "Mirror Match" (standard, empty settings).
+    // Repurposed as a 2nd Chapter 2 obstacle level — offset wall
+    // pattern that creates two separate "lanes" the player has to
+    // route through. Harder than the Chapter 1 obstacle (5 walls in a
+    // staggered pattern vs 4 in a clean diagonal).
+    settings: {
+      obstacleCells: [
+        { row: 2, col: 2 },
+        { row: 3, col: 2 },
+        { row: 2, col: 4 },
+        { row: 4, col: 1 },
+        { row: 4, col: 5 },
+      ],
+    },
+    reward: { type: 'coins', name: '400 Coins + 1 Hint', amount: 400, icon: '🧱' },
     starThresholds: { three: 8, two: 13 },
   },
   {
@@ -336,6 +385,7 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: 'Six in a row to win!',
     chapter: 2, type: 'connect6', difficulty: 'medium', isBoss: false,
     settings: { rows: 9, cols: 9, connectCount: 6 },
+    reward: { type: 'coins', name: '500 Coins + 3 💎', amount: 500, icon: '6️⃣' },
     starThresholds: { three: 12, two: 20 },
   },
   {
@@ -345,7 +395,7 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: 'Tick tock...',
     chapter: 2, type: 'timed', difficulty: 'hard', isBoss: false,
     settings: { timerSeconds: 10 },
-    reward: { type: 'coins', name: '500 Coins', amount: 500, icon: '🪙' },
+    reward: { type: 'coins', name: '500 Coins + 2 Hints', amount: 500, icon: '⏱️' },
     starThresholds: { three: 8, two: 14 },
   },
   {
@@ -365,6 +415,7 @@ const CHAPTER_2: CareerLevel[] = [
         [1,2,0,1,2,0,1],
       ],
     },
+    reward: { type: 'coins', name: '450 Coins + 4 💎', amount: 450, icon: '🧩' },
     starThresholds: { three: 5, two: 9 },
   },
   {
@@ -374,7 +425,10 @@ const CHAPTER_2: CareerLevel[] = [
     opponentPersonality: "Twenty moves to win. That's it. No more, no less.",
     chapter: 2, type: 'moves_limit', difficulty: 'hard', isBoss: false,
     settings: { rows: 7, cols: 8, movesLimit: 20 },
-    reward: { type: 'pieces', id: 'fire_ice', name: 'Fire & Ice Pieces', icon: '🔥' },
+    // Target/moves_limit reward — Fire & Ice pieces are a perfect
+    // payoff for the precision required. Bonus gems cement the
+    // "puzzle precision = gem currency" pattern.
+    reward: { type: 'pieces', id: 'fire_ice', name: 'Fire & Ice Pieces + 5 💎', icon: '🔥' },
     starThresholds: { three: 12, two: 16 },
   },
   {
@@ -427,6 +481,7 @@ const CHAPTER_3: CareerLevel[] = [
         [0,0,0,2,0,0,0],
       ],
     },
+    reward: { type: 'coins', name: '550 Coins', amount: 550, icon: '↩' },
     starThresholds: { three: 9, two: 15 },
   },
   {
@@ -436,7 +491,7 @@ const CHAPTER_3: CareerLevel[] = [
     opponentPersonality: 'Five in a row with a five-second clock.',
     chapter: 3, type: 'speed', difficulty: 'hard', isBoss: false,
     settings: { rows: 8, cols: 9, connectCount: 5, timerSeconds: 5 },
-    reward: { type: 'coins', name: '600 Coins', amount: 600, icon: '🪙' },
+    reward: { type: 'coins', name: '600 Coins + 3 💎', amount: 600, icon: '⚡' },
     starThresholds: { three: 10, two: 16 },
   },
   {
@@ -456,6 +511,7 @@ const CHAPTER_3: CareerLevel[] = [
         [0,0,0,0,0,0,0],
       ],
     },
+    reward: { type: 'coins', name: '650 Coins + 5 💎', amount: 650, icon: '🧩' },
     starThresholds: { three: 7, two: 12 },
   },
   {
@@ -465,17 +521,33 @@ const CHAPTER_3: CareerLevel[] = [
     opponentPersonality: 'Fastest game mode.',
     chapter: 3, type: 'speed', difficulty: 'hard', isBoss: false,
     settings: { rows: 5, cols: 5, connectCount: 3, timerSeconds: 3 },
+    reward: { type: 'coins', name: '500 Coins + 2 💎', amount: 500, icon: '⚡' },
     starThresholds: { three: 4, two: 7 },
   },
   {
     id: 29,
-    name: 'Gravity Flip',
+    name: 'Concrete Jungle',
     opponent: 'Upside-Down Uma',
-    opponentPersonality: 'Everything you know is wrong.',
-    chapter: 3, type: 'standard', difficulty: 'hard', isBoss: false,
-    settings: {},
-    reward: { type: 'coins', name: '800 Coins', amount: 800, icon: '🪙' },
-    starThresholds: { three: 7, two: 13 },
+    opponentPersonality: 'Six walls. Three real wins. Find one.',
+    chapter: 3, type: 'obstacle', difficulty: 'hard', isBoss: false,
+    // Overhaul phase 1: was "Gravity Flip" (standard, empty settings,
+    // no actual flip mechanic — name was aspirational). Repurposed as
+    // Chapter 3's first obstacle level — 6 walls in a chaos pattern
+    // that closes off easy lines. The Brooklyn obstacle had 4 walls in
+    // a clean diagonal; this is the harder-city escalation per the
+    // doc ("nastier patterns").
+    settings: {
+      obstacleCells: [
+        { row: 1, col: 2 },
+        { row: 2, col: 1 },
+        { row: 3, col: 3 },
+        { row: 4, col: 5 },
+        { row: 2, col: 5 },
+        { row: 4, col: 2 },
+      ],
+    },
+    reward: { type: 'coins', name: '800 Coins + 2 Hints', amount: 800, icon: '🧱' },
+    starThresholds: { three: 9, two: 14 },
   },
   {
     id: 30,
@@ -505,17 +577,23 @@ const CHAPTER_3: CareerLevel[] = [
     opponentPersonality: 'The hardest combo.',
     chapter: 3, type: 'connect6', difficulty: 'hard', isBoss: false,
     settings: { rows: 9, cols: 9, connectCount: 6, timerSeconds: 10 },
+    reward: { type: 'coins', name: '900 Coins + 4 💎 + 1 Hint', amount: 900, icon: '⛈️' },
     starThresholds: { three: 12, two: 20 },
   },
   {
     id: 32,
-    name: "Veteran's Challenge",
+    name: "Five-Move Win",
     opponent: 'Old Guard Otto',
-    opponentPersonality: 'Been playing since before you were born.',
-    chapter: 3, type: 'connect5', difficulty: 'hard', isBoss: false,
-    settings: { rows: 8, cols: 9, connectCount: 5 },
-    reward: { type: 'coins', name: '1000 Coins', amount: 1000, icon: '🪙' },
-    starThresholds: { three: 10, two: 16 },
+    opponentPersonality: 'Five moves, five connect. Clinical or you lose.',
+    chapter: 3, type: 'moves_limit', difficulty: 'hard', isBoss: false,
+    // Overhaul phase 1: was "Veteran's Challenge" (connect5 standard).
+    // Repurposed as Chapter 3's target/moves_limit — pair the
+    // connect-5 win with a 5-move budget. The single hardest pure
+    // execution challenge before the boss. Wins reward 6 gems
+    // (puzzle precision tier) + 1000 coins.
+    settings: { rows: 8, cols: 9, connectCount: 5, movesLimit: 5 },
+    reward: { type: 'coins', name: '1000 Coins + 6 💎', amount: 1000, icon: '🎯' },
+    starThresholds: { three: 5, two: 5 },
   },
   {
     id: 33,
@@ -524,6 +602,7 @@ const CHAPTER_3: CareerLevel[] = [
     opponentPersonality: "One mistake and you're done.",
     chapter: 3, type: 'speed', difficulty: 'hard', isBoss: false,
     settings: { timerSeconds: 5 },
+    reward: { type: 'coins', name: '850 Coins + 3 💎', amount: 850, icon: '⚰️' },
     starThresholds: { three: 7, two: 12 },
   },
   {
@@ -553,6 +632,7 @@ const CHAPTER_3: CareerLevel[] = [
         [0,0,2,2,0,0,0],
       ],
     },
+    reward: { type: 'coins', name: '1200 Coins + 3 Hints', amount: 1200, icon: '🛡️' },
     starThresholds: { three: 8, two: 14 },
   },
   {
