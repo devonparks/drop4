@@ -273,20 +273,27 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
       {/* Stalled-load retry — surfaced after a 15 s timeout or when
           CompositeCharacter raises onError. Without this the player
           sees an infinite spinner if R2 is slow / down. Tapping rebuilds
-          the CompositeCharacter via a key bump so all the fetches re-fire. */}
+          the CompositeCharacter via a key bump so all the fetches re-fire.
+
+          Note: rendered as <Text onPress=> instead of <Pressable> so it
+          doesn't nest inside the outer character-tap <Pressable> (which
+          rendered as <button><button> on web, firing a React hydration
+          error). Text with onPress is supported by React Native and
+          renders as a non-interactive span/div on web — no button-in-
+          button. Polish 2026-05-06. */}
       {stalled && !loaded && (
         <View style={styles.characterStalledOverlay}>
           <Text style={styles.characterStalledText}>
             Couldn't load your character{'\n'}— check your connection
           </Text>
-          <Pressable
+          <Text
             onPress={() => { haptics.tap(); retry(); }}
-            style={styles.characterRetryBtn}
+            style={[styles.characterRetryBtn, styles.characterRetryText]}
             accessibilityRole="button"
             accessibilityLabel="Retry loading character"
           >
-            <Text style={styles.characterRetryText}>↻ RETRY</Text>
-          </Pressable>
+            ↻ RETRY
+          </Text>
         </View>
       )}
     </View>
