@@ -31,6 +31,7 @@ import Animated, {
 import { useCharacterStore } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useShopStore } from '../../stores/shopStore';
+import { PETS_ENABLED } from '../../data/featureFlags';
 import { useMilestoneStore } from '../../stores/milestoneStore';
 import {
   getNewlyEarnedMilestones,
@@ -144,7 +145,12 @@ export function MilestoneToast() {
     setActive(null);
   };
 
-  const showPet = isPetMilestone(active);
+  // Pet milestones disabled in v1 per PETS_ENABLED feature flag.
+  // When pets re-enable in v1.1 the showcase logic re-activates;
+  // until then, a pet milestone toast falls through to the generic
+  // character-portrait showcase (still celebrates the milestone but
+  // doesn't surface a pet UI we don't support).
+  const showPet = PETS_ENABLED && isPetMilestone(active);
 
   return (
     <PreviewSafeModal transparent visible animationType="none">
