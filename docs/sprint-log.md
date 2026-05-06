@@ -4,6 +4,35 @@ Chronological session-by-session log of what shipped + decisions made.
 
 ---
 
+## 2026-05-06 — strategic shift: career mode is the retention engine
+
+**Decision**: Drop4 ship date is no longer sacred. Bar = "career mode as addicting as Candy Crush / Angry Birds." Quality over calendar.
+
+**Why**: Multiplayer was killed in v1. Without MP, career has to carry retention by itself. The original 36-level "MVP for beta" career is now the FOUNDATION, not the product.
+
+**New v1 scope** (from `docs/CAREER_OVERHAUL.md`):
+- ~200 unique levels across ~15 cities, recipe-generated (NOT 200 hand-typed)
+- Every engine level type in active rotation + 1-2 new wrinkles per city (mirror cols, frozen pieces, double-drop, decoy pieces, survival mode, wild combos)
+- All 3 boss scripts FULLY working (Tommy ✅ shipped, Sal mechanic still pending, Warden ✅ via existing seed)
+- All 3 power pieces with full animations (engine ✅ shipped, animations pending)
+- Per-level intro card + star burst + combo celebrations + per-mechanic FX
+- City-themed background palettes + ambient particles + mascot reactions
+
+**What's NOT changing** (1.1 deferrals stay deferred — date slip is for CAREER ONLY):
+- Express Mode, iOS Live Activities, Pets, Frames-as-cell, Pack identity crests, Power piece box drops, AMG cross-game sync.
+
+**Working target**: mid-to-late June 2026. **Real ship rule**: "when career competes."
+
+**Documents updated**:
+- `~/Desktop/CLAUDE.md` (Game Queue + Career Mode Pattern + Standing Context + "Ship v1" rule)
+- `~/Desktop/Drop4/CLAUDE.md` (v1 Status + new "Career Mode is the Retention Engine" section + Dev Situation)
+- `~/Desktop/Drop4/docs/CAREER_OVERHAUL.md` (full rewrite — Phase 1/2 split is dead, everything is v1.0 scope, 4-phase execution plan A-D)
+- `~/Desktop/Drop4/docs/BETA.md` (no fixed launch date, rolling TestFlight builds, 1.1 roadmap shifted)
+
+**Earlier today (2026-05-06)** before this shift: shipped 8 commits of career overhaul phase 1 + phase 2 work — variant cadence rewrite, type-appropriate rewards, obstacle/target authoring, Skip booster, Tommy boss script + Sal/Warden banners, Bomb/Rainbow/Heavy power piece engine + UI, City Completion Ceremony power-piece reveal card, BETA.md. All of that is now the foundation for the bigger 200-level vision.
+
+---
+
 ## 2026-05-04 — overnight session: lootbox pivot + AMG Engine foundation
 
 **Strategic shift confirmed**: Devon decided Drop4 is no longer the

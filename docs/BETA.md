@@ -77,9 +77,11 @@ That's ~10 minutes a day. Don't grind — natural play is more useful.
 
 ## Known issues (don't bother filing)
 
-These are flagged and either fixed or deferred — please don't waste a bug report on them:
+These are flagged and either fixed or planned — please don't waste a bug report on them:
 
-- Sal's gravity-flip mechanic isn't live yet (banner only). Mechanic ships in 1.1.
+- Sal's gravity-flip mechanic isn't fully live yet (banner shows, mechanic in active dev for v1).
+- Many career mode cities are still empty / coming online — v1 target is ~200 levels across ~15 cities. As the build progresses, more cities will unlock between TestFlight releases.
+- Power piece animations (Bomb explosion, Rainbow shimmer, Heavy push) are in active dev — engine logic works but the visual FX are still landing.
 - Pets are disabled in v1 (PETS_ENABLED=false). They'll return in 1.1.
 - Frames category doesn't have a Customize cell. Reachable only via lootbox drops in v1.
 - Some pack name truncation on small chips ("Apocalypse Outla...") — by design at compact sizes.
@@ -91,11 +93,13 @@ Drop4 collects anonymous gameplay stats (matches played, levels cleared, cosmeti
 
 ## What's next
 
-Beta closes the day before App Store launch. We'll send a final TestFlight build the night before to confirm nothing broke. After launch, the 1.1 update plan includes:
-- Sal's gravity flip mechanic
+There's no fixed launch date. Drop4 ships when career mode is good enough to compete with Candy Crush / Angry Birds, since there's no multiplayer in v1 — career has to carry retention. Working target is mid-to-late June 2026, but quality is the bar, not the calendar.
+
+You'll get rolling TestFlight builds as the career mode expands toward 200 levels across ~15 cities. After launch, the 1.1 update plan includes:
 - Pets re-enabled
 - Power piece drops from boxes (currently career-unlock only)
 - Pack identity crests
-- More career levels
+- iOS Live Activities + Dynamic Island
+- AMG account cross-game sync (Tic Tac Toe / Checkers / Chess will all share your character + cosmetics)
 
 Thanks for testing. Hit Devon up if anything's unclear.

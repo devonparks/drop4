@@ -57,11 +57,35 @@ Premium Connect 4 mobile game built with React Native + Expo. First game in the 
 - **Commit format**: `polish: <scope> — <description>` for the polish loop. `feat:`, `fix:`, `cleanup:` for manual commits.
 - **Polish loop**: `tools/polish-loop.sh` runs autonomously via Claude Max subscription. Reads `docs/POLISH_CHARTER.md` for rules, picks from `docs/POLISH_FOLLOWUPS.md` queue.
 
-## v1 Status (as of April 2026)
+## v1 Status (as of 2026-05-06 strategic shift)
 
 - **Multiplayer: KILLED.** All Firebase services (matchmaking, emotes, friends) deleted. All dead MP variable references have been stripped. Don't re-add MP code.
-- **v1 is single-player only**: AI games (Easy/Medium/Hard), Career Mode (36 levels), Local Play (pass & play).
+- **v1 is single-player only**: AI games (Easy/Medium/Hard), Career Mode, Local Play (pass & play).
 - **Retention hooks shipped**: daily spin, streak escalation (14/30/60/100-day milestones), shop rotation (4 daily featured deals), local push notifications, collection milestones (15 with title rewards).
+
+## Career Mode is the Retention Engine (2026-05-06 decision)
+
+Because there's no multiplayer in v1, **career mode has to carry the entire retention loop**. Bar = "as addicting as Candy Crush / Angry Birds." The original 36-level career was sized for "MVP for beta"; that's now the foundation, not the product.
+
+**v1 career scope:**
+- **~200 unique levels** across **~15 cities**, recipe-generated from a level-template DSL (NOT 200 hand-typed entries — that doesn't scale and isn't how Candy Crush authors theirs either).
+- **Every level type the engine supports** in active rotation: standard, blitz/timed, speed, obstacle, target/moves_limit, jeopardy, puzzle, connect3/5/6, go-second, boss. Each city introduces 1-2 wrinkles on top.
+- **All 3 boss scripts working**, not just banners: Tommy column-parity (✅ shipped), Sal gravity-flip (engine work pending — board column-array reverse + visual rotation + touch-coord remap), Warden seed-threat (✅ shipped via existing presetBoard).
+- **All 3 power pieces working with full animations**: Bomb explosion FX, Rainbow shimmer trail, Heavy push-impact + adjacent-piece slide animation. Engine logic is shipped (`dropBomb` / `dropRainbow` / `dropHeavy`); animations pending.
+- **Per-level intro card** ("TARGET: 6 MOVES" reveal before play starts) so the variant identity registers before the player taps a column.
+- **Per-mechanic celebrations** — star burst on level clear, combo glow on streaks, city-themed background palettes per chapter.
+- **City-complete ceremony** (✅ shipped) — already reveals species + power piece. May want to extend to also reveal a SKIN drop per the overhaul doc.
+
+**Ship rule:** v1 ships when career mode actually competes. Date is target, not gospel. Working target: mid-to-late June 2026. If we hit the bar earlier, ship earlier. If we don't, push.
+
+**What ELSE is still v1.1+** (the date-slip is for CAREER ONLY, not a general scope-loosening):
+- Express Mode (webcam motion-cap)
+- iOS Live Activities / Dynamic Island
+- Pets (still gated by `PETS_ENABLED=false`)
+- Frames category as a Customize cell
+- Pack identity crests
+- Power piece drops from boxes (currently career-unlock only)
+- AMG account cross-game sync
 
 ## Testing
 
@@ -79,4 +103,4 @@ Before starting work, read `amg-router.skill` and load 1-3 relevant skills for t
 
 ## Dev Situation
 
-Solo dev (Devon Parks), working between DoorDash shifts. Keep scope tight. Beta test > polish. No refactors unless they ship real player value.
+Solo dev (Devon Parks), working between DoorDash shifts. Keep scope tight on EVERYTHING EXCEPT career mode — career is the retention engine and gets the AAA treatment. Everywhere else: beta test > polish, no refactors without player value.

@@ -1,245 +1,219 @@
-# Career Mode Overhaul
+# Career Mode Overhaul — v1.0 Vision
+
+> **2026-05-06 strategic shift**: Multiplayer was killed in v1, so career mode IS the retention engine. The original "Phase 1 MVP / Phase 2 v1.1" split is dead. Everything in this doc is v1.0 scope. Ship date is no longer sacred — quality is. Working target: mid-to-late June 2026.
 
 ## Why this exists
 
-Current career = 36 levels of the same Connect 4 rules with rising AI difficulty. Rated Rookie Ron (73) → ??? (87). That's it. The "story" hook is city themes (Brooklyn → Venice Beach → Harlem), but mechanically every level plays identically.
+Drop4 has no multiplayer. That means there's no friend-vs-friend hook, no ladder grind, no clan system. Players have to come back **for the single-player content** or they don't come back.
 
 Reference games (Devon's framing):
-- **Angry Birds** — new birds unlock per world, changing how you solve levels
-- **Candy Crush** — 8+ level types (jelly, timed, ingredients, order, target score, sugar drops, mixed) so no two levels feel the same
-- **"Double Jeopardy"** — high-stakes bonus levels with big multipliers
+- **Candy Crush** — 13,000+ levels across ~330 episodes. ~13 distinct level types in active rotation. Players come back daily because the next level always introduces a wrinkle they haven't seen.
+- **Angry Birds** — new birds unlock per world, each with a distinct ability. Worlds give the SAME mechanics a new visual + thematic identity.
+- **NBA Street Vol. 2** — career = a tour through NYC's parks with named opponents. Personality + place = the hook.
 
-The overhaul is a two-axis change:
-1. **Level variety** — introduce distinct level types within each city
-2. **Progression unlocks** — unlock boosters and power pieces as the player advances through cities
+Drop4's career has to feel like all three. **The bar is "as addicting as Candy Crush," not the calendar.**
 
 ---
 
-## Two-phase plan
+## v1.0 scope
 
-### Phase 1 — MVP (ship before beta)
-Minimum viable overhaul. 3-4 days of work. Adds 4 level types + a simple booster pop.
+### Levels: 200 across ~15 cities
 
-### Phase 2 — Full vision (post-launch update 1.1)
-All 9 level types + power pieces + boss mechanics + ability tree.
-
-Ship phase 1 for beta, flesh out phase 2 after data comes back.
-
----
-
-## Level types
-
-### MVP set (phase 1)
-
-| Type | Rule | Feels like |
-|---|---|---|
-| **standard** | Classic 7×6 Connect 4 | Baseline. |
-| **blitz** | 10-second shot clock per move. Miss = you drop in a random column. | Tilt + pressure. |
-| **obstacle** | Board starts with 3-6 "concrete" cells neither player can play | Puzzle. |
-| **target** | Board seeded with a pre-set position. Win in ≤ N moves or lose. | Candy Crush target levels. |
-
-### Full set (phase 2 — post-launch)
-
-| Type | Rule | Feels like |
-|---|---|---|
-| **bigBoard** | 10×8 board, connect 5 to win | Marathon. |
-| **gravityFlip** | Every 3rd move inverts gravity for that turn | Brain-melter. |
-| **movesLimit** | 12 total moves to land a connect-4 or you lose | Candy Crush moves level. |
-| **jeopardy** | Opponent OVR is the city's top rating, reward 3×. 1 per city. | Double Jeopardy. |
-| **boss** | City finale with a unique scripted mechanic | Boss battle. |
-
----
-
-## Distribution within a city (12 levels)
-
-**Current:** 12 standard levels with rising OVR.
-
-**New (MVP):**
-```
-Level 1:  standard  (OVR 73)  — "First Drop"
-Level 2:  standard  (OVR 71)
-Level 3:  standard  (OVR 74)
-Level 4:  blitz     (OVR 76)  — first non-standard, introduces shot clock
-Level 5:  standard  (OVR 77)
-Level 6:  obstacle  (OVR 72)  — concrete cells
-Level 7:  standard  (OVR 75)
-Level 8:  target    (OVR 78)  — puzzle: win in 6 moves from pre-set
-Level 9:  standard  (OVR 73)
-Level 10: blitz     (OVR 84)  — second blitz, tighter clock
-Level 11: target    (OVR 79)  — puzzle: win in 4 moves
-Level 12: boss      (OVR 87)  — unique mechanic per city
-```
-
-Player hits a new level type every 2-3 matches. No two levels feel identical.
-
-**Full (phase 2):** same 12-level slot distribution but using all 9 level types.
-
----
-
-## Boss mechanics (phase 2)
-
-Each city's level 12 boss has a signature twist:
-
-- **Brooklyn — Tommy Blacktop (OVR 87)**
-  You can only drop in even-numbered columns on even turns, odd on odd turns. Breaks the normal "any column" reflex.
-- **Venice Beach — Sunset Sal (OVR 91)**
-  Gravity flips every 4 moves. Pieces stack upward, then flip and fall back down.
-- **Harlem — The Cathedral Warden (OVR 95)**
-  Board starts with 4 Warden pieces in a threatening diagonal. You have 10 moves to block his connect-4 AND land your own.
-
-Bosses drop a **signature character skin** as a reward (legendary drop). This is what Devon's AMG cosmetics ecosystem leverages.
-
----
-
-## Booster / power-piece system
-
-### Phase 1 — MVP boosters (already partially in code)
-
-Existing boosters in GameScreen:
-- Hint (3/game) ✓
-- Undo (unlimited?) ✓
-
-Add:
-- **Skip** — opponent's turn is skipped. 1/game. Purchased with gems or earned from boxes.
-
-That's it for MVP. Keep the scope tight.
-
-### Phase 2 — Power pieces
-
-Unlocked progressively as player completes cities:
-
-**After Brooklyn:** Bomb Piece — drops as a 3×3 destroyer. Wipes opponent + your own pieces. 1 per match.
-
-**After Venice Beach:** Rainbow Piece — counts as either color. 1 per match.
-
-**After Harlem:** Heavy Piece — on impact, pushes adjacent opponent pieces down one row. 1 per match.
-
-Power pieces slot into the existing emote wheel UI — reuse the radial picker, just swap emotes for power pieces during a career match with boosters enabled.
-
----
-
-## Implementation sketch
-
-### Data model change
-
-`src/data/careerLevels.ts`: add fields to `CareerLevel`:
+The current 36 hand-typed entries don't scale. The path to 200 is a **level recipe DSL**:
 
 ```ts
-export type LevelType =
-  | 'standard' | 'blitz' | 'obstacle' | 'target'   // phase 1
-  | 'bigBoard' | 'gravityFlip' | 'movesLimit' | 'jeopardy' | 'boss';  // phase 2
+// Each city is a recipe. The generator produces full CareerLevel
+// objects from the recipe at module-init time.
+const CITY_RECIPES: CityRecipe[] = [
+  {
+    id: 'brooklyn',
+    name: 'The Rec',
+    state: 'NY',
+    palette: 'streetball',
+    levels: [
+      { slot: 1,  type: 'standard',  diff: 'easy',   name: 'First Drop' },
+      { slot: 2,  type: 'timed',     diff: 'easy',   timer: 15 },
+      { slot: 3,  type: 'standard',  diff: 'easy' },
+      { slot: 4,  type: 'obstacle',  diff: 'easy',   walls: 2 },
+      // ... up to slot 12 boss
+    ],
+  },
+  // ... ~14 more cities
+];
 
-export interface CareerLevel {
-  // ...existing fields
-  type: LevelType;              // already exists as 'standard'|'puzzle'|... — expand enum
-  blitzSeconds?: number;        // for blitz
-  obstacleCells?: Array<{ row: number; col: number }>;  // for obstacle
-  targetMoves?: number;         // for target + movesLimit
-  targetBoard?: string;         // pre-set position (already exists as presetBoard)
-  rewardMultiplier?: number;    // 3 for jeopardy
-  bossScript?: 'tommy' | 'sal' | 'warden';
+function generateLevels(): CareerLevel[] {
+  // Walks recipes, fills in opponent names from a pool, personalities
+  // from templates, star thresholds from difficulty + level type.
 }
 ```
 
-### GameScreen changes
+**Why recipes:** authoring 200 hand-typed entries is ~20 hours of pure typing + impossible to balance + impossible to refactor. Recipes give us:
+- Per-city consistency (Brooklyn levels feel like Brooklyn)
+- Difficulty curves we can tune in one place
+- Opponent name pools that don't repeat across cities by accident
+- The ability to add/remove cities cleanly post-launch
 
-Gate the new mechanics behind `params.levelType`:
+Each city has 12-15 levels (Candy Crush episode size) and ends with a boss.
 
-```ts
-// In GameScreen
-const levelType = params.levelType ?? 'standard';
+### Mechanics: every type the engine supports + 1-2 new wrinkles per city
 
-if (levelType === 'blitz') {
-  // Use existing turn timer, just enable it by default
-  const clockSeconds = params.blitzSeconds ?? 10;
-  // ...
-}
+Already in the engine (DON'T remove):
+- standard, blitz/timed, speed, obstacle, target/moves_limit, jeopardy, puzzle, connect3/5/6, go-second, boss
 
-if (levelType === 'obstacle' && params.obstacleCells) {
-  // Pre-mark cells as locked in the board state
-}
+New wrinkles to introduce one-per-city as the player progresses:
+- **Mirror columns** (city N) — opponent's drop mirrors yours into a different column
+- **Frozen pieces** (city N+2) — pieces the player drops in certain columns can't be moved by anything for 3 turns
+- **Double drop** (city N+3) — every other player turn drops 2 pieces
+- **Decoy pieces** (city N+5) — opponent starts with 1-2 fake pieces that don't count for connect-N (visual + checkWin twist)
+- **Survival mode** (city N+7) — opponent has 5 pieces preplaced and a connect-3 win condition; player has standard connect-4
+- **Wild rules** (city N+10) — combinations of 2-3 of the above
 
-if (levelType === 'target') {
-  // Load params.targetBoard into initial state
-  // Show "Win in N moves" in HUD
-  // Lose condition: reached move N+1 without a win
-}
-```
+Each wrinkle is a small engine extension (~1-2 hours each) using the patterns already proven by `obstacleCells`, `bossScript`, `RAINBOW`/`WALL` cell sentinels.
 
-### Matchup screen changes
+### Bosses: 1 per city = ~15 total scripted mechanics
 
-Add a **LEVEL TYPE BADGE** next to the mode badge:
+Already shipped:
+- ✅ **Tommy Blacktop** (Brooklyn) — column-parity rule (full mechanic)
+- ⏳ **Sunset Sal** (Venice) — gravity flip every 4 moves (banner only — engine pending)
+- ✅ **Cathedral Warden** (Harlem) — 4-piece pyramid seed (existing presetBoard works)
 
-- Standard: no badge
-- Blitz: `⏱️ BLITZ — 10s per move`
-- Obstacle: `🧱 OBSTACLE`
-- Target: `🎯 TARGET — win in 6 moves`
-- Boss: `👑 BOSS BATTLE` (already exists for boss)
+Need authoring + engine work for ~12 more bosses, one per new city. Each gets:
+- A signature mechanic (one new engine wrinkle, NOT a stack of mechanics)
+- A named persona with personality + a chunky 3D portrait
+- A custom matchup banner with their rule
+- A unique reward (legendary skin / power piece / city-themed cosmetic)
+- A page in the City Completion Ceremony
 
-### Reward change
+### Power pieces: full set + animations
 
-Level rewards shift from "always coins" to type-appropriate:
+Engine logic shipped for all 3:
+- ✅ **Bomb** — clears 3×3 around landing cell
+- ✅ **Rainbow** — wildcard cell value 4, counts as either color in checkWin
+- ✅ **Heavy** — pushes adjacent opponent pieces down 1 row
 
-- Standard: coins
-- Blitz: coins + XP bonus (for the pressure)
-- Obstacle: coins + 1 Hint booster
-- Target: gems (puzzle solves are harder)
-- Jeopardy: coins × 3
-- Boss: legendary character skin unlock
+Animations pending:
+- ⏳ **Bomb explosion FX** — particle burst, screen-shake, scorch ring on the cleared cells
+- ⏳ **Rainbow shimmer trail** — gradient fade, particle sparkle as the rainbow piece drops
+- ⏳ **Heavy push animation** — adjacent opponent pieces visually slide down (don't just snap)
+
+Each is ~2-4 hours of focused work using react-native-reanimated 4 + the existing piece-drop animation primitives.
+
+**Future:** Power pieces should drop from boxes too (currently career-unlock only). Defer to v1.1.
+
+### Animation suite: per-mechanic celebration
+
+Existing kit (DON'T re-build):
+- ✅ Spring piece-drop with bounce
+- ✅ Winning-line sparkle sweep (cascaded delay across the 4 pieces)
+- ✅ ConfettiOverlay
+- ✅ StaggeredEntry on screen mounts
+- ✅ CityCompletionCeremony with species + power piece reveal cards
+- ✅ MilestoneToast with 3D hero slot
+
+What's missing (v1 scope):
+- **Per-level intro card** — "TARGET: 6 MOVES" / "🧱 4 OBSTACLES" reveal that slides in for ~1.5s before play starts. Telegraphs the variant identity so players don't have to read the matchup screen carefully.
+- **Star burst on level clear** — the 1/2/3 stars don't just appear; they ZOOM in one at a time with a pop sound and small confetti per star.
+- **Combo/streak celebration** — when the player wins 3+ in a row, fire a "STREAK" banner + bonus coin animation.
+- **Per-mechanic transition FX** — Sal's gravity flip needs the whole board to visually rotate 180° with the pieces still attached.
+- **City-themed background palettes** — each city has a sky gradient (already exists) + ambient particle FX (snow for Cathedral, sand for Venice, neon flicker for Brooklyn, etc.).
+- **Mascot reactions** — when the player lands a clutch win, the opponent's portrait does a defeat animation. When they lose, the opponent gloats. (Reuses existing 3D character animation rig — no new assets needed, just new emote triggers.)
+
+### City progression: arc + identity
+
+15 cities, 12-15 levels each, ~10 minutes per level on average = ~30-40 hours of gameplay just to clear v1.
+
+Each city has:
+- A real-world location (NYC boroughs → LA → Chicago → Atlanta → Houston → Cleveland → ... → world cities)
+- A nickname (The Rec, The Boardwalk, The Cathedral, ...)
+- A vibe (streetball, sun + sand, gothic survival, ...)
+- A boss with a scripted mechanic
+- A skin reward (legendary cosmetic on full clear)
+- A power piece unlock at certain milestone cities (Brooklyn → Bomb, Venice → Rainbow, Harlem → Heavy, then ?)
+- A species unlock at certain bosses (Elven, Goblin, Skeleton, Zombie, then ?)
+
+The narrative arc: small-stakes neighborhood → big-stakes hometowns → coast-to-coast → international tournament → legendary opponents.
 
 ---
 
-## Player-facing progression message
+## What's already shipped (don't redo)
 
-Each city should feel like a new chapter with new tools, not just harder AI:
-
-### City 1: The Rec — Brooklyn, NY
-"Cracked blacktop, real respect. Learn to drop, block, and play the clock. Unlock the Skip booster."
-
-- Teaches: connect-4 basics, hint usage, first taste of timed + obstacle levels
-- Unlock on complete: Skip booster, Brooklyn character skin
-
-### City 2: The Boardwalk — Venice Beach, CA
-"Sun, sand, and speed. Sharpen up or get burned. Unlock the Rainbow Piece."
-
-- Teaches: bigger boards, puzzle-level thinking, moves-limit pressure
-- Unlock on complete: Rainbow Piece, Venice character skin
-
-### City 3: The Cathedral — Harlem, NY
-"Where legends are made. Survive the night. Unlock the Bomb Piece."
-
-- Teaches: everything combined, high OVR opponents, gravity flip
-- Unlock on complete: Bomb Piece, Cathedral boss skin
-
-Players come back every day to see what new mechanic the next level throws at them — the same retention hook Candy Crush uses.
+Per the 8 commits during the 2026-05-06 autonomous run:
+- Engine WALL=3 + RAINBOW=4 cell sentinels
+- ObstacleBlock visual in GameBoard
+- 5 obstacle levels + 3 target levels distributed across the existing 3 chapters
+- Type-appropriate rewards across all 36 levels (obstacle/timed → +Hint, speed/puzzle/target → +gems, etc.)
+- Skip booster (1/match free + 5-gem refills)
+- Tommy column-parity boss script (player + AI both gated)
+- Sal + Warden matchup banners (Sal mechanic still pending)
+- Bomb / Rainbow / Heavy engine actions (`dropBomb` / `dropRainbow` / `dropHeavy`)
+- Power piece UI selector (career-only, gated on boss-clear unlock)
+- careerStore.unlockedPowerPieces with persistence + auto-restore on save load
+- City Completion Ceremony reveals BOTH species AND power piece in matching color tints
 
 ---
 
-## Acceptance criteria
+## What's next (in execution order)
 
-### Phase 1 (MVP — target: ship in beta)
+### Phase A — Foundation (1-2 weeks)
+The engine + content infrastructure that everything else depends on.
 
-- [ ] `CareerLevel.type` enum expanded with blitz/obstacle/target
-- [ ] `ALL_CAREER_LEVELS` data updated so each city has 4 distinct types distributed across its 12 levels
-- [ ] GameScreen reads `params.levelType` and applies: blitz timer, obstacle cells, target-move counter
-- [ ] MatchupScreen shows a level-type badge
-- [ ] Win screen shows type-appropriate reward ("+50 coins + 1 Hint" for obstacle, etc.)
-- [ ] Career city map shows a level-type mini-icon on each unlocked node
-- [ ] Boss level 12 keeps the existing BOSS BATTLE treatment
+1. **Level recipe DSL + generator** — replace hand-typed `careerLevels.ts` with a recipe-driven system. Backward-compat shim so existing level IDs stay stable.
+2. **Sal's gravity-flip mechanic** — column-array reverse + GameBoard visual rotation + touch coord remap. Most complex pending engine piece.
+3. **City framework** — `CAREER_CITIES` data extends to 15 cities with palettes, vibes, opponent rosters, rewards, mascot portraits.
+4. **Per-level intro card** — reusable component that fades in pre-play.
 
-### Phase 2 (post-launch 1.1)
+### Phase B — Content (2-3 weeks)
+Generate the levels + author the bosses.
 
-- [ ] 5 additional level types: bigBoard, gravityFlip, movesLimit, jeopardy, boss
-- [ ] Boss scripts for Tommy, Sal, Warden
-- [ ] Power piece system: Bomb, Rainbow, Heavy
-- [ ] Power piece slot UI during career matches (reuse emote wheel)
-- [ ] City-complete unlock ceremony with skin reveal
+5. **Generate 200 levels via recipes** — Brooklyn / Venice / Harlem (existing) + 12 new cities. Distribute mechanic variety per the recipe-table-driven curve.
+6. **Author 12 new bosses** — name, personality, signature mechanic, matchup banner, ceremony copy.
+7. **Author the new mechanic wrinkles** (mirror, frozen, double-drop, decoy, survival, wild) — 1-2 per new city.
+8. **Star threshold tuning pass** — playtest each level, set the 3-star / 2-star move counts.
+
+### Phase C — Polish (1-2 weeks)
+The stuff that turns "200 working levels" into "200 levels people want to play."
+
+9. **Power piece animations** — bomb explosion, rainbow shimmer, heavy push slide.
+10. **Star burst on level clear** + **combo/streak celebration**.
+11. **City-themed ambient backgrounds** — particle FX, sky gradient variations.
+12. **Mascot reactions** — defeat / gloat animation triggers on opponent portraits.
+13. **AI tuning round** — playtest fresh-player win rates per city, adjust difficulty curves.
+
+### Phase D — Ship (1 week)
+14. **Beta build** → real-device playthroughs → TestFlight to friends.
+15. **Config blockers** (your input): icon JPEG re-export, EAS init, Apple credentials, LegalScreen contact info, App Store screenshots.
+16. **Submission + Apple review.**
+
+Total estimated: **5-7 weeks** for the full vision. Working target ship date: mid-to-late June 2026 if everything stays on track. **The date is a target, not a deadline.**
 
 ---
 
 ## What NOT to do
 
-- **Don't rename the cities.** Brooklyn/Venice/Harlem + The Rec/Boardwalk/Cathedral is already emotional IP. Keep it.
-- **Don't touch the opponent roster.** 12 opponents per city with personality/quotes is working. Add level types on top.
-- **Don't change matchmaking OVR.** The existing 73→87 curve per city is fine — variety comes from level TYPE, not from tougher Hard AI.
-- **Don't ship power pieces in phase 1.** Mechanics bloat before beta is how projects die. Shoot for variety first, systems later.
+- **Don't rename Brooklyn / Venice / Harlem** or rebrand "The Rec / Boardwalk / Cathedral." Existing players (you, beta testers) already have emotional IP attached. Keep them, build around them, place them as the first 3 of 15 cities.
+- **Don't touch the v1 cosmetics pipeline.** It works, it's audited, it's stable. Career-mode work doesn't need to refactor lootboxes / shards / customize.
+- **Don't add multiplayer back.** That's NOT the path. The bet is "we can make single-player good enough that MP isn't missed."
+- **Don't ship before the bar is met.** If we hit June 30 and the animation polish isn't there, push to July. The strategic shift is "quality > date." Don't undo it under deadline pressure.
+- **Don't over-engineer the level recipe DSL.** It's a tool to author 200 levels, not a runtime engine. Keep it simple TS — no codegen, no IDE plugin, no schema files. A function that returns `CareerLevel[]` is enough.
+- **Don't forget the 1.1 deferrals** — they're still deferred. Express Mode, Live Activities, pets, frames-as-cell, pack crests, power-piece box drops, AMG cross-game sync. The date slip is for CAREER ONLY.
+
+---
+
+## Reference: existing engine support summary
+
+For the recipe authoring pass — what each level type needs in `settings`:
+
+| Type | Required settings | Optional |
+|---|---|---|
+| `standard` | none | `presetBoard` |
+| `connect3/5/6` | `connectCount` (3/5/6) | board size |
+| `timed` | `timerSeconds` (10-15) | |
+| `speed` | `timerSeconds` (3-5) | |
+| `go_second` | `playerGoesFirst: false` | optional `presetBoard` head-start |
+| `puzzle` | `presetBoard` | |
+| `boss` | `bossScript: 'tommy' \| 'sal' \| 'warden' \| <new>` | optional `presetBoard` seed |
+| `jeopardy` | `rewardMultiplier: 3` | typically connect5 + bigger board |
+| `moves_limit` | `movesLimit: N` | |
+| `obstacle` | `obstacleCells: Array<{row,col}>` (3-6 cells) | |
+
+New wrinkles will need their own settings keys + engine support. Add as needed.
