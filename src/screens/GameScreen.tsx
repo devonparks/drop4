@@ -98,6 +98,13 @@ export function GameScreen({ navigation }: Props) {
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintCol, setHintCol] = useState<number | null>(null);
   const [freeHintsRemaining, setFreeHintsRemaining] = useState(3);
+  // Career overhaul phase 1 — Skip booster. 1 free per match. When the
+  // player taps it during the AI's turn, we cancel the pending AI move
+  // and flip currentPlayer back to the player. The booster is consumed
+  // even if the AI hasn't started thinking yet — encourages tactical
+  // use when the player can already see they're in a tight spot.
+  // Future: gem-purchasable second use + drops from boxes.
+  const [skipsRemaining, setSkipsRemaining] = useState(1);
   const hintPulseAnim = useRef(new RNAnimated.Value(0)).current;
   const [thinkingDots, setThinkingDots] = useState(0);
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
@@ -822,6 +829,7 @@ export function GameScreen({ navigation }: Props) {
     setShowConfetti(false);
     setWasCareerLevel(false);
     setFreeHintsRemaining(3);
+    setSkipsRemaining(1);
     setDidLevelUp(false);
     setStreakReward(null);
     setCompletedChallengeName(null);
@@ -1166,6 +1174,66 @@ export function GameScreen({ navigation }: Props) {
                   resizeMode="contain"
                 />
                 <Text style={styles.controlLabel}>{hintLabel}</Text>
+              </Pressable>
+            );
+          })()}
+
+          {/* Skip booster (career overhaul phase 1) — 1 free per match;
+              when the player taps it during the AI's turn we cancel the
+              pending move and flip currentPlayer back. Only surfaced
+              for VS-AI matches (skipping a human in local play would be
+              broken UX). Disabled when status isn't 'playing' or when
+              it isn't the AI's turn — visually present but greyed so
+              players can see it exists before they need it. */}
+          {isVsAi && (() => {
+            const gems = useShopStore.getState().gems;
+            // 5 gems for a paid skip after the free one is used. Drop
+            // boxes seed extra skips post-launch (out of scope for
+            // phase 1).
+            const SKIP_GEM_COST = 5;
+            const isAiTurn = currentPlayer === 2 && status === 'playing';
+            const canPay = skipsRemaining > 0 || gems >= SKIP_GEM_COST;
+            const enabled = isAiTurn && canPay;
+            const skipLabel = skipsRemaining > 0
+              ? `Skip (${skipsRemaining})`
+              : gems >= SKIP_GEM_COST
+                ? `Skip 💎${SKIP_GEM_COST}`
+                : 'Skip';
+            return (
+              <Pressable
+                onPress={() => {
+                  if (!enabled) return;
+                  if (skipsRemaining > 0) {
+                    setSkipsRemaining(prev => prev - 1);
+                  } else {
+                    const ok = useShopStore.getState().spendGems(SKIP_GEM_COST);
+                    if (!ok) return;
+                  }
+                  // Cancel the pending AI move + flip player so the
+                  // useEffect that triggers AI sees currentPlayer===1
+                  // and stays inert. setAiThinking(false) clears the
+                  // "Thinking..." status indicator too.
+                  if (aiTimerRef.current) {
+                    clearTimeout(aiTimerRef.current);
+                    aiTimerRef.current = null;
+                  }
+                  useGameStore.setState({ currentPlayer: 1, isAiThinking: false });
+                  haptics.win?.() ?? haptics.tap();
+                  playSound('whoosh');
+                }}
+                style={[styles.controlBtn, !enabled && { opacity: 0.4 }]}
+                disabled={!enabled}
+                accessibilityRole="button"
+                accessibilityLabel={skipLabel}
+                accessibilityHint={isAiTurn ? 'Skip the opponent’s turn' : 'Available during opponent’s turn'}
+                accessibilityState={{ disabled: !enabled }}
+              >
+                <Image
+                  source={require('../assets/images/ui/action-undo.png')}
+                  style={[styles.controlIconImg, { transform: [{ scaleX: -1 }] }]}
+                  resizeMode="contain"
+                />
+                <Text style={styles.controlLabel}>{skipLabel}</Text>
               </Pressable>
             );
           })()}
@@ -1766,6 +1834,7 @@ export function GameScreen({ navigation }: Props) {
                                   setShowConfetti(false);
                                   setWasCareerLevel(false);
                                   setFreeHintsRemaining(3);
+                                  setSkipsRemaining(1);
                                   setDidLevelUp(false);
                                   setStreakReward(null);
                                   setCompletedChallengeName(null);
