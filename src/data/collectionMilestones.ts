@@ -174,10 +174,17 @@ const COLLECTION_MILESTONES: CollectionMilestone[] = [
  * PETS_ENABLED=false so the Awards screen + claim logic don't surface
  * progress players can't actually make. Re-enables automatically when
  * PETS_ENABLED flips to true in v1.1.
+ *
+ * Function (not const) so the filter evaluates at call time. A const
+ * top-level here was hitting a "getActiveMilestones() is not defined"
+ * runtime error in Metro/Hermes bundling — likely a module-init order
+ * issue specific to our bundling setup. Lazy fn dodges it cleanly.
  */
-const ACTIVE_MILESTONES = PETS_ENABLED
-  ? COLLECTION_MILESTONES
-  : COLLECTION_MILESTONES.filter((m) => m.anyPetsTotal === undefined);
+function getActiveMilestones(): CollectionMilestone[] {
+  return PETS_ENABLED
+    ? COLLECTION_MILESTONES
+    : COLLECTION_MILESTONES.filter((m) => m.anyPetsTotal === undefined);
+}
 
 /**
  * Check which milestones the player has newly earned but not yet claimed.
@@ -206,7 +213,7 @@ export function getNewlyEarnedMilestones(
     }
   }
 
-  for (const m of ACTIVE_MILESTONES) {
+  for (const m of getActiveMilestones()) {
     if (claimedIds.includes(m.id)) continue;
 
     let qualifies = false;
@@ -239,7 +246,7 @@ export function getNewlyEarnedMilestones(
       const count =
         outlaws.outfitIds.filter((id) => ownedSet.has(id)).length +
         survivors.outfitIds.filter((id) => ownedSet.has(id)).length;
-      const m = ACTIVE_MILESTONES.find((x) => x.id === 'apocalypse_complete');
+      const m = getActiveMilestones().find((x) => x.id === 'apocalypse_complete');
       if (m && count >= m.requiredCount && !earned.includes(m)) earned.push(m);
     }
   }
@@ -287,7 +294,7 @@ export function getMilestoneProgressList(
     }
   }
 
-  return ACTIVE_MILESTONES.map((m) => {
+  return getActiveMilestones().map((m) => {
     let current = 0;
     const required = m.requiredCount;
 
