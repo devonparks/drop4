@@ -13,6 +13,7 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useCareerStore } from '../stores/careerStore';
 import { BOARD_THEMES, PIECE_THEMES } from '../data/shopCatalog';
 import { PETS } from '../data/pets';
+import { PETS_ENABLED } from '../data/featureFlags';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -159,7 +160,10 @@ export function StatsScreen({ navigation }: Props) {
   const piecesName = useMemo(() =>
     PIECE_THEMES.find(p => p.id === equippedPieces)?.name || 'Classic',
   [equippedPieces]);
+  // Pet row hidden when PETS_ENABLED=false (v1 cut). When pets
+  // re-enable in v1.1, this falls back to the equippedPet lookup.
   const petName = useMemo(() => {
+    if (!PETS_ENABLED) return null;
     if (!equippedPet) return null;
     const pet = PETS.find(p => p.id === equippedPet);
     return pet ? `${pet.name} the ${pet.breed}` : null;
