@@ -932,25 +932,10 @@ export function HomeScreen() {
               </Animated.View>
             </Pressable>
             </BreathingView>
-            {equippedPet && (
-              <Pressable
-                onPress={handlePetTap}
-                style={styles.petPosition}
-                accessibilityRole="button"
-                accessibilityLabel="Equipped pet"
-                accessibilityHint="Double-tap to interact with your pet"
-              >
-                <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                  <PetDisplay petId={equippedPet} size={140} isIdle />
-                </Animated.View>
-                {showPetHeart && (
-                  <Animated.Text
-                    style={[styles.petHeart, { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] }]}
-                    pointerEvents="none"
-                  >{'\u2764\uFE0F'}</Animated.Text>
-                )}
-              </Pressable>
-            )}
+            {/* Pet moved out of the character stage 2026-05-05 per
+                Devon \u2014 was at character's feet with a heavy amber glow
+                that read as a UI frame. Now floats beside the PLAY
+                button below (see menuButtons block). */}
             {/* Calm-Home pass: blue gradient platform overlay removed — it
                 fought the warm orange spotlight baked into the painted bg.
                 Single source of ground glow now. */}
@@ -1017,6 +1002,28 @@ export function HomeScreen() {
               />
             </Pressable>
           </SlideReveal>
+          {/* Pet beside PLAY — Devon 2026-05-05: "put it on the right
+              side of the play button." Floats absolute so PLAY stays
+              centered. No shadow/glow frame — just the dog itself. */}
+          {equippedPet && (
+            <Pressable
+              onPress={handlePetTap}
+              style={styles.petBesidePlay}
+              accessibilityRole="button"
+              accessibilityLabel="Equipped pet"
+              accessibilityHint="Tap to interact with your pet"
+            >
+              <Animated.View style={{ transform: [{ scale: petBounce }] }}>
+                <PetDisplay petId={equippedPet} size={110} isIdle />
+              </Animated.View>
+              {showPetHeart && (
+                <Animated.Text
+                  style={[styles.petHeart, { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] }]}
+                  pointerEvents="none"
+                >{'❤️'}</Animated.Text>
+              )}
+            </Pressable>
+          )}
         </View>
 
         {/* ═══ LOOT BOX ROW ═══
@@ -1552,21 +1559,16 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Pet position — bottom-right of character. Was right: -20 which
-  // clipped 20 px of the 80-px dog off-screen; bumped to size 140
-  // and pulled fully on-stage so wearables / breed details actually
-  // read. 2026-05-05.
-  petPosition: {
+  // Pet beside PLAY — floats absolute so PLAY stays centered.
+  // Devon 2026-05-05: prior placement at character's feet had a
+  // heavy amber glow that read as a UI frame; new placement is
+  // bare (no shadow / no border) and anchors to the right edge
+  // of the menuButtons row at PLAY's vertical center.
+  petBesidePlay: {
     position: 'absolute',
-    bottom: 0,
-    right: 12,
+    right: 8,
+    top: 20,
     zIndex: 5,
-    // Glow effect to make pet pop
-    shadowColor: 'rgba(255,200,80,0.6)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 6,
   },
   // Version (moved to Settings screen footer)
   // Coin earn animation

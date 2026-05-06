@@ -78,3 +78,35 @@ export const DOG_IDLES: AnimationMeta[] = [
   { id: 'dog_sleep',    name: 'Sleep', glb: require('../assets/models/animations/dog/dog_sleep.glb'),    loop: true, category: 'dog_idle' },
 ];
 
+// "Alive" idle pool — cycle the dog through these every 6-12 s so it
+// feels like a real pet shifting around (sniff floor, shake fur,
+// scratch, wag tail) instead of frozen in one pose. Mirrors the same
+// pattern CompositeCharacter uses for human idle cycling. Devon
+// 2026-05-05: "i want the dog to be alive just like the sidekick
+// character." All GLBs already exported — just enumerated here.
+export const DOG_IDLE_POOL: AnimationMeta[] = [
+  // Standing variants — dog is on its feet, doing dog things
+  { id: 'dog_idle',         name: 'Stand',     glb: require('../assets/models/animations/dog/dog_idle.glb'),         loop: true, category: 'dog_idle' },
+  { id: 'dog_sniff',        name: 'Sniff',     glb: require('../assets/models/animations/dog/dog_sniff.glb'),        loop: true, category: 'dog_idle' },
+  { id: 'dog_shake',        name: 'Shake',     glb: require('../assets/models/animations/dog/dog_shake.glb'),        loop: true, category: 'dog_idle' },
+  { id: 'dog_dig',          name: 'Dig',       glb: require('../assets/models/animations/dog/dog_dig.glb'),          loop: true, category: 'dog_idle' },
+  // Sitting variants — dog parked beside the player, chilling
+  { id: 'dog_sit_idle',     name: 'Sit',       glb: require('../assets/models/animations/dog/dog_sit_idle.glb'),     loop: true, category: 'dog_idle' },
+  { id: 'dog_sit_tail_wag', name: 'Tail Wag',  glb: require('../assets/models/animations/dog/dog_sit_tail_wag.glb'), loop: true, category: 'dog_idle' },
+  { id: 'dog_sit_yawn',     name: 'Yawn',      glb: require('../assets/models/animations/dog/dog_sit_yawn.glb'),     loop: true, category: 'dog_idle' },
+  { id: 'dog_sit_scratch',  name: 'Scratch',   glb: require('../assets/models/animations/dog/dog_sit_scratch.glb'),  loop: true, category: 'dog_idle' },
+];
+
+// Dog "emote" pool — one-shot reactions when player taps the dog.
+// Plays once, dog returns to idle pool afterward. Mirrors the
+// character tap-to-emote pattern.
+export const DOG_EMOTE_POOL: AnimationMeta[] = [
+  { id: 'dog_bark',         name: 'Bark',      glb: require('../assets/models/animations/dog/dog_bark.glb'),         loop: false, category: 'dog_action' },
+  { id: 'dog_howl',         name: 'Howl',      glb: require('../assets/models/animations/dog/dog_howl.glb'),         loop: false, category: 'dog_action' },
+  { id: 'dog_beg',          name: 'Beg',       glb: require('../assets/models/animations/dog/dog_beg.glb'),          loop: false, category: 'dog_action' },
+  { id: 'dog_shake_toy',    name: 'Toy',       glb: require('../assets/models/animations/dog/dog_shake_toy.glb'),    loop: false, category: 'dog_action' },
+  { id: 'dog_sit_bark',     name: 'Sit Bark',  glb: require('../assets/models/animations/dog/dog_sit_bark.glb'),     loop: false, category: 'dog_action' },
+  { id: 'dog_sit_howl',     name: 'Sit Howl',  glb: require('../assets/models/animations/dog/dog_sit_howl.glb'),     loop: false, category: 'dog_action' },
+  { id: 'dog_sit_beg',      name: 'Sit Beg',   glb: require('../assets/models/animations/dog/dog_sit_beg.glb'),      loop: false, category: 'dog_action' },
+];
+
