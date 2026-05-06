@@ -291,6 +291,8 @@ export function CareerMapScreen({ navigation }: Props) {
                                 // Career overhaul phase 1.
                                 obstacleCells: lvl.settings.obstacleCells,
                                 levelType: lvl.type,
+                                // Phase 2 boss scripts.
+                                bossScript: lvl.settings.bossScript,
                               });
                               return;
                             }

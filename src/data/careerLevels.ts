@@ -33,6 +33,11 @@ export interface CareerLevel {
     // cells per the design doc; visual contrast comes from GameBoard's
     // ObstacleBlock component.
     obstacleCells?: Array<{ row: number; col: number }>;
+    // ── Phase 2 boss scripts ──
+    // Signature per-city boss mechanics. Only set on the chapter-12
+    // boss levels (Tommy in Brooklyn, Sal in Venice, Warden in Harlem).
+    // GameScreen enforces the rule on both player taps and AI moves.
+    bossScript?: 'tommy' | 'sal' | 'warden';
   };
   // Star thresholds — moves to earn 3 or 2 stars (1 star for any win)
   starThresholds?: { three: number; two: number };
@@ -244,23 +249,17 @@ const CHAPTER_1: CareerLevel[] = [
   },
   {
     id: 12,
-    name: 'BOSS: The Rookie King',
-    opponent: 'King Kyle',
-    opponentPersonality: 'He gets a head start. Two in a row. Block fast.',
+    name: 'BOSS: Tommy Blacktop',
+    opponent: 'Tommy Blacktop',
+    opponentPersonality: "Brooklyn's king. Even cols on even turns, odd on odd turns. Break his rhythm or lose.",
     chapter: 1, type: 'boss', difficulty: 'medium', isBoss: true,
-    // Boss seed — Kyle starts with a 2-piece beachhead at center. Player
-    // has to decide: block (col 2 or col 5) or race? Gives the fight a
-    // tactical opening instead of a vanilla empty-board match. Chapter 1
-    // boss shouldn't be brutal — one blocking move and it's a fair fight.
+    // Phase 2 boss script — Tommy enforces a column-parity rule:
+    // turn 1 (odd) → odd cols only, turn 2 (even) → even cols only.
+    // Both players obey. This breaks the "drop wherever" reflex and
+    // turns every move into a forced-positioning puzzle. Per the
+    // overhaul doc, this is Brooklyn's signature mechanic.
     settings: {
-      presetBoard: [
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,2,2,0,0],
-      ],
+      bossScript: 'tommy',
     },
     reward: { type: 'board', id: 'neon_glow', name: 'Neon Glow Board', icon: '✨' },
     bonusReward: { type: 'pet', id: 'dalmatian', name: 'Dalmatian Pet', icon: '🐕' },
@@ -433,15 +432,17 @@ const CHAPTER_2: CareerLevel[] = [
   },
   {
     id: 24,
-    name: 'BOSS: The Strategist',
-    opponent: 'Grandmaster Grace',
-    opponentPersonality: "Opening book in place. 15s a turn. She's 3 moves ahead.",
+    name: 'BOSS: Sunset Sal',
+    opponent: 'Sunset Sal',
+    opponentPersonality: "Venice Beach. Gravity flips every 4 moves. The board you see is not the board you play.",
     chapter: 2, type: 'boss', difficulty: 'hard', isBoss: true,
-    // Boss seed — Grace opens with a mirrored knight-fork pattern. Timer
-    // forces you to respond without thinking. Connect 5 means you can't
-    // stumble into a win.
+    // Phase 2 boss script — Sal flips gravity every 4 moves. Pieces
+    // that were stacked from the bottom now sit at the top; future
+    // drops fall up until the next flip. Combined with the 15s clock
+    // and connect-5 rule, this is Venice's signature mechanic.
     settings: {
       rows: 7, cols: 8, connectCount: 5, timerSeconds: 15,
+      bossScript: 'sal',
       presetBoard: [
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
@@ -637,15 +638,19 @@ const CHAPTER_3: CareerLevel[] = [
   },
   {
     id: 36,
-    name: 'BOSS: DARK MATTER',
-    opponent: 'The Dark Lord',
-    opponentPersonality: 'Four dark pieces already on the board. You go second. 10-second clock. Survive.',
+    name: 'BOSS: The Cathedral Warden',
+    opponent: 'The Cathedral Warden',
+    opponentPersonality: "Harlem's final boss. The Warden seeded a 4-piece threat. You go second. 10-second clock. Survive the night.",
     chapter: 3, type: 'boss', difficulty: 'hard', isBoss: true,
-    // Boss seed — "The Warden" pattern. Four Dark Lord pieces already
-    // threaten a connect-5 diagonal. You go second under a 10s clock.
-    // Has to be threaded with precise blocks while building your own win.
+    // Phase 2 boss script — the Warden's signature is the threatening
+    // pyramid presetBoard below (4 pieces aligned for a connect-5
+    // win). The bossScript flag activates the matchup banner that
+    // shouts the rule + grants the win the legendary Cathedral skin.
+    // No new mechanic beyond the seed (already supported), but the
+    // identity and ceremony match the doc's Phase 2 vision.
     settings: {
       rows: 9, cols: 9, connectCount: 5, timerSeconds: 10, playerGoesFirst: false,
+      bossScript: 'warden',
       // "The Warden" pattern: seed a pyramid of Dark pieces stacked from
       // the bottom row upward, threatening multiple connect-5 lines.
       // Gravity-legal (no floating pieces). Bottom row has 4 Dark pieces

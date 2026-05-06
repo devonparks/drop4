@@ -415,7 +415,23 @@ export function GameScreen({ navigation }: Props) {
       const currentBoard = useGameStore.getState().board;
       const currentMoveCount = useGameStore.getState().moveCount;
       const { connectCount } = useGameStore.getState().customSettings;
-      const aiCol = getAIMove(currentBoard, difficulty, connectCount);
+      let aiCol = getAIMove(currentBoard, difficulty, connectCount);
+      // Phase 2 boss script — Tommy parity gate also applies to the
+      // AI. If the engine's chosen column violates the rule, scan for
+      // a parity-legal alternative. Fall back to the engine's pick if
+      // no legal cols exist (rare — would mean an entire parity is
+      // full, which Tommy fights would resolve as a draw anyway).
+      if (params.bossScript === 'tommy') {
+        const turn = currentMoveCount + 1;
+        if (aiCol % 2 !== turn % 2) {
+          for (let c = 0; c < currentBoard.length; c++) {
+            if (c % 2 === turn % 2 && currentBoard[c][0] === 0) {
+              aiCol = c;
+              break;
+            }
+          }
+        }
+      }
       recordMove(aiCol, 2, currentMoveCount);
       dropPiece(aiCol);
       showLastMove(aiCol);
@@ -780,6 +796,19 @@ export function GameScreen({ navigation }: Props) {
     if (status !== 'playing' || isAiThinking) return;
 
     if (isVsAi && currentPlayer !== 1) return;
+    // Phase 2 boss script — Tommy Blacktop's column-parity rule. Turn
+    // number = moveCount + 1 (1-indexed). Odd turns require odd cols,
+    // even turns require even cols. Both player AND AI obey (the AI
+    // gate is in the AI useEffect below). Reject + haptic-error
+    // invalid taps so the player learns the rule fast.
+    if (params.bossScript === 'tommy') {
+      const turn = moveCount + 1;
+      if (col % 2 !== turn % 2) {
+        haptics.error();
+        playSound('error');
+        return;
+      }
+    }
     // Center-first challenge: first move in center column
     if (moveCount === 0 && col === Math.floor((customSettings?.cols ?? 7) / 2)) {
       updateChallenge('center_first', 1);
@@ -789,7 +818,7 @@ export function GameScreen({ navigation }: Props) {
     showLastMove(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount]);
+  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, params.bossScript]);
 
   const handleShareScore = async () => {
     haptics.tap();

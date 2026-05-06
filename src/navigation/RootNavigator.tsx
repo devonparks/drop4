@@ -60,6 +60,13 @@ export type MatchupParams = {
   // Level-type tag forwarded so MatchupScreen can render the matching
   // badge (BLITZ / OBSTACLE / TARGET / etc.) without re-deriving it.
   levelType?: string;
+  // Phase 2 boss scripts — per-city signature mechanics. Set on the
+  // chapter-12 boss levels only.
+  // tommy: even cols on even turns, odd cols on odd turns (Brooklyn)
+  // sal: gravity flips every 4 moves (Venice)
+  // warden: scripted opening seed already covered by presetBoard,
+  //         flag here lets the matchup banner shout the rule
+  bossScript?: 'tommy' | 'sal' | 'warden';
 };
 
 export type GameParams = {
@@ -81,6 +88,10 @@ export type GameParams = {
   // Career overhaul phase 1 (obstacle level type) — forwarded so
   // GameScreen can stamp the wall cells onto the initial board.
   obstacleCells?: Array<{ row: number; col: number }>;
+  // Phase 2 boss scripts — see MatchupParams.bossScript for the
+  // per-script semantics. GameScreen reads this to enforce the rule
+  // on player taps + filter the AI's chosen column.
+  bossScript?: 'tommy' | 'sal' | 'warden';
 };
 
 export type RootStackParamList = {

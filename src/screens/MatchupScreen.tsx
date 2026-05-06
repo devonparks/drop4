@@ -148,6 +148,19 @@ export function MatchupScreen({ navigation }: Props) {
     if (params.obstacleCells && params.obstacleCells.length > 0) {
       return { label: `🧱 OBSTACLE · ${params.obstacleCells.length} BLOCKS`, color: '#a8a8b8' };
     }
+    // Phase 2 boss scripts — surface the per-city signature mechanic
+    // ABOVE jeopardy/moves_limit/timed badges so the boss identity
+    // dominates the matchup screen. Tommy / Sal / Warden each get
+    // their own color tied to the city palette.
+    if (params.bossScript === 'tommy') {
+      return { label: '👑 TOMMY · COL PARITY RULE', color: '#ff8c42' };
+    }
+    if (params.bossScript === 'sal') {
+      return { label: '🌅 SAL · GRAVITY FLIPS EVERY 4 MOVES', color: '#ff4081' };
+    }
+    if (params.bossScript === 'warden') {
+      return { label: '⛪ WARDEN · 4-PIECE THREAT SEED', color: '#ba68c8' };
+    }
     if (timerSeconds && timerSeconds <= 5) return { label: `⚡ BLITZ · ${timerSeconds}s/TURN`, color: '#ff4081' };
     if (timerSeconds) return { label: `⏱️ TIMED · ${timerSeconds}s/TURN`, color: '#ff8c42' };
     if (connectCount && connectCount !== 4) return { label: `🎯 CONNECT ${connectCount}`, color: '#4dd0e1' };
@@ -248,6 +261,8 @@ export function MatchupScreen({ navigation }: Props) {
       rewardMultiplier: params.rewardMultiplier,
       // Career overhaul phase 1: obstacle cells.
       obstacleCells: params.obstacleCells,
+      // Phase 2 boss scripts.
+      bossScript: params.bossScript,
     });
   }, [navigation, params, courtName, resetScores]);
 

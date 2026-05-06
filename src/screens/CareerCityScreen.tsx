@@ -335,6 +335,8 @@ export function CareerCityScreen({ navigation, route }: Props) {
             // for the matchup badge.
             obstacleCells: lvl.settings.obstacleCells,
             levelType: lvl.type,
+            // Phase 2 boss scripts.
+            bossScript: lvl.settings.bossScript,
           });
         }}
       />
