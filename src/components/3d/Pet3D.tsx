@@ -17,7 +17,7 @@ import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useGLB } from '../../utils/glbLoader';
 import { colors as themeColors } from '../../theme/colors';
-import { DOG_IDLES } from '../../data/animationRegistry';
+import { DOG_IDLES, DOG_IDLE_POOL } from '../../data/animationRegistry';
 
 interface Pet3DProps {
   width: number;
@@ -29,6 +29,12 @@ interface Pet3DProps {
   cameraHeight?: number;
   autoRotate?: boolean;
   style?: ViewStyle;
+  /** When true (and no explicit animationGlb is set), cycle through
+   *  DOG_IDLE_POOL every 6-12 s so the dog feels alive — sniffs floor,
+   *  shakes fur, scratches, yawns, wags tail. Mirrors the human
+   *  character's idle cycling. Default: true. Set false on static
+   *  surfaces (shop preview thumbnails) where you want one pose. */
+  cycleIdles?: boolean;
 }
 
 function TurntableRig({ children, enabled }: { children: React.ReactNode; enabled: boolean }) {
@@ -134,6 +140,7 @@ function PetModel({
 export function Pet3D({
   width, height, petGlb, animationGlb, animationLoop = true,
   cameraDistance = 1.6, cameraHeight = 0.5, autoRotate = false, style,
+  cycleIdles = true,
 }: Pet3DProps) {
   const [loaded, setLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -146,15 +153,50 @@ export function Pet3D({
     }).start();
   }, [loaded, fadeAnim]);
 
-  // If no explicit animation was requested, pick a stable default idle per
-  // pet based on the numeric require-id hash. Some dogs sit, some stand,
-  // some sleep — feels more alive than a uniform "stand" for everyone.
+  // ── "Alive" idle cycling — Devon 2026-05-05 ──
+  //
+  // Pick a starting idle deterministically per pet (hash of GLB id) so
+  // the same dog opens with the same pose every render. Then advance
+  // through DOG_IDLE_POOL on a 6-12 s timer, so the dog is sniffing /
+  // shaking / digging / yawning instead of frozen in one frame. Same
+  // pattern CompositeCharacter uses for the human idle cycle.
+  // When cycleIdles=false (shop preview thumbnails, NPC roster cards)
+  // the dog stays on its starting pose deterministically.
+  const startingIdleIdx = useMemo(() => {
+    const seed = typeof petGlb === 'number' ? petGlb : 0;
+    return Math.abs(seed) % Math.max(1, DOG_IDLE_POOL.length);
+  }, [petGlb]);
+  const [idleIdx, setIdleIdx] = useState(startingIdleIdx);
+
+  useEffect(() => {
+    if (!cycleIdles || animationGlb != null) return;
+    if (DOG_IDLE_POOL.length < 2) return;
+    // Random dwell 6-12 s so the cadence feels organic, not metronomic.
+    const ms = 6_000 + Math.random() * 6_000;
+    const t = setTimeout(() => {
+      setIdleIdx((prev) => {
+        let next = prev;
+        // Force a different pose each cycle so the dog visibly changes.
+        while (next === prev) next = Math.floor(Math.random() * DOG_IDLE_POOL.length);
+        return next;
+      });
+    }, ms);
+    return () => clearTimeout(t);
+  }, [cycleIdles, animationGlb, idleIdx]);
+
+  // Resolve the active animation GLB. Priority:
+  //   1. Explicit animationGlb prop (caller forces one pose / emote)
+  //   2. Cycling idle from DOG_IDLE_POOL (when cycleIdles=true, default)
+  //   3. Fallback: stable default per-pet pick from DOG_IDLES (3 entries)
   const effectiveAnimGlb = useMemo(() => {
     if (animationGlb != null) return animationGlb;
+    if (cycleIdles && DOG_IDLE_POOL.length > 0) {
+      return DOG_IDLE_POOL[idleIdx % DOG_IDLE_POOL.length]?.glb;
+    }
     if (DOG_IDLES.length === 0) return undefined;
     const seed = typeof petGlb === 'number' ? petGlb : 0;
     return DOG_IDLES[Math.abs(seed) % DOG_IDLES.length]?.glb;
-  }, [animationGlb, petGlb]);
+  }, [animationGlb, cycleIdles, idleIdx, petGlb]);
 
   return (
     <View style={[{ width, height }, style]}>
