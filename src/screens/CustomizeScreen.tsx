@@ -892,7 +892,18 @@ export function CustomizeScreen() {
                 </StaggeredEntry>
               );
             })}
-            <StaggeredEntry index={CATEGORIES.length + 1} delay={30} style={styles.cellOuter}>
+            {/* SHARDS cell takes full row when the cosmetic-cell count
+                is odd (e.g. with PETS_ENABLED=false: 8 cosmetic cells +
+                SHARDS = 9 total → SHARDS lonely on row 5). Stretching
+                to full width balances the grid visually. When pet
+                cells are back (count 9 + SHARDS = 10) the cell remains
+                paired in row 5 with the spare cosmetic cell. Polish
+                2026-05-06. */}
+            <StaggeredEntry
+              index={CATEGORIES.length + 1}
+              delay={30}
+              style={PETS_ENABLED ? styles.cellOuter : styles.cellOuterFull}
+            >
               <ShardsCell
                 shardsTotal={
                   lootShards.common + lootShards.rare + lootShards.epic + lootShards.legendary
@@ -1492,6 +1503,11 @@ const styles = StyleSheet.create({
   },
   cellOuter: {
     width: '48.5%',
+  },
+  // Full-row variant — used by the SHARDS cell when the cosmetic-cell
+  // count is odd so it doesn't sit lonely on the last row.
+  cellOuterFull: {
+    width: '100%',
   },
   cell: {
     flexDirection: 'row',
