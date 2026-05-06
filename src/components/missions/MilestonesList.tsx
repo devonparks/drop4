@@ -6,6 +6,7 @@ import { useCharacterStore } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useMilestoneStore } from '../../stores/milestoneStore';
 import { getMilestoneProgressList, type MilestoneProgress } from '../../data/collectionMilestones';
+import { PETS_ENABLED } from '../../data/featureFlags';
 import { StaggeredEntry } from '../animations';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -68,7 +69,9 @@ export function MilestonesList() {
             <Text style={styles.summarySmall}> / {total}</Text>
           </Text>
           <Text style={styles.summaryHint}>
-            Complete a pack or collect enough outfits / pets to unlock exclusive titles + rewards.
+            {PETS_ENABLED
+              ? 'Complete a pack or collect enough outfits / pets to unlock exclusive titles + rewards.'
+              : 'Complete a pack or collect enough outfits to unlock exclusive titles + rewards.'}
           </Text>
         </LinearGradient>
       </View>

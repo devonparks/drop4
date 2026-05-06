@@ -62,14 +62,14 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 
 - **Daily deal on AMG parts.** shopStore already rotates 4 daily featured deals (legacy outfits). Add a 5th slot that picks a random rare-or-epic AMG part and discounts it 40%. `shopStore.dailyAmgDeal` + `refreshDailyDeals` picks one at rollover.
 
-- **Starter pack unlock ceremony.** First-run onboarding: when the creator mounts for the first time, briefly show a "starter wardrobe unlocked" toast listing the free packs (Modern Civilians 12 outfits, base heads/hair for all 5 species). Sells the "you already own a bunch of cool stuff" hook.
+<!-- Shipped: Starter pack unlock ceremony — CharacterCreatorScreen.tsx fires a ConfirmDialog ("🎁 Starter Wardrobe Unlocked") on first creator mount, gated on characterStore.amgStarterSeen so it's one-shot per player. Discovered already-implemented during queue audit. -->
 
 ## Open — visual / UX polish
 
 - Crossfade outfit mesh when the player switches in the creator (currently hard-cuts on GLB swap)
 <!-- ShopScreen species + collection chips migrated to FilterChip (commit TBD) -->
 <!-- Character3DCreatorScreen species + pack chips migrated to FilterChip (commit TBD) -->
-- Extract the blur backdrop style from modals (EmotePickerModal3D, OutfitPreviewModal, MilestoneToast, HSLColorPicker) into a reusable `<BlurOverlay>` component
+<!-- Obsoleted: BlurOverlay extraction. Item named 4 modals (EmotePickerModal3D, OutfitPreviewModal, MilestoneToast, HSLColorPicker) but only OutfitPreviewModal + MilestoneToast still exist (the others were deleted with the emote-wheel cleanup). Both surviving sites use a trivial 'rgba(0,0,0,0.75)' overlay style — extracting a shared component for 2 trivial sites is more indirection than win. Skip. -->
 - Audit `Animated.Value` uses — some could move to Reanimated `useSharedValue` for native-thread perf
 <!-- ProfileScreen 3D portrait shipped below -->
 <!-- MilestoneToast 3D preview + pulsing glow + confetti shipped below -->
