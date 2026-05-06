@@ -1,5 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { MainTabs } from './MainTabs';
 import { PlayScreen } from '../screens/PlayScreen';
 import { ModePickScreen } from '../screens/ModePickScreen';
@@ -115,6 +117,54 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// ── Per-screen ErrorBoundary plumbing ──────────────────────────────
+//
+// The app is already wrapped in a root ErrorBoundary (App.tsx). That
+// catch-all is great for "the entire navigator threw" but bad for
+// localized failure: one screen exception nukes navigation back to the
+// last good state. Adding a boundary INSIDE each Stack.Screen means a
+// single screen crash leaves the navigator (and bottom tabs) intact —
+// the player taps Try Again or Go Home and recovers without restarting
+// the app. The root boundary still catches anything that escapes (e.g.
+// a throw inside the per-screen retry UI itself).
+
+function ScreenErrorBoundary({ children }: { children: React.ReactNode }) {
+  // useNavigation is valid here because this component renders inside
+  // the NavigationContainer (each Stack.Screen child does).
+  const navigation = useNavigation<any>();
+  return (
+    <ErrorBoundary onGoHome={() => navigation.navigate('MainTabs', { screen: 'Home' })}>
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+// Cache wrapped components by source so React Navigation sees a stable
+// component identity across RootNavigator re-renders. Without this,
+// every re-render hands React Navigation a fresh component, which
+// would defeat its memoization and force a full screen remount.
+const _safeCache = new WeakMap<React.ComponentType<any>, React.ComponentType<any>>();
+
+// Returns ComponentType<any> rather than ComponentType<P> because React
+// Navigation's ScreenComponentType is a wider union that accepts loose
+// prop shapes — preserving P would cause its inference to reject the
+// wrapped component (the screen's `navigation` prop is auto-injected by
+// the navigator and shouldn't be required by the call site).
+function safe<P extends object>(Component: React.ComponentType<P>): React.ComponentType<any> {
+  let cached = _safeCache.get(Component);
+  if (!cached) {
+    const Safe = (props: P) => (
+      <ScreenErrorBoundary>
+        <Component {...props} />
+      </ScreenErrorBoundary>
+    );
+    Safe.displayName = `Safe(${Component.displayName || Component.name || 'Anon'})`;
+    cached = Safe as React.ComponentType<any>;
+    _safeCache.set(Component, cached);
+  }
+  return cached;
+}
+
 export function RootNavigator() {
   return (
     <Stack.Navigator
@@ -125,92 +175,92 @@ export function RootNavigator() {
         contentStyle: { backgroundColor: '#0a0e27' },
       }}
     >
-      <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen name="ModePick" component={ModePickScreen} />
-      <Stack.Screen name="Play" component={PlayScreen} />
+      <Stack.Screen name="MainTabs" component={safe(MainTabs)} />
+      <Stack.Screen name="ModePick" component={safe(ModePickScreen)} />
+      <Stack.Screen name="Play" component={safe(PlayScreen)} />
       <Stack.Screen
         name="Matchup"
-        component={MatchupScreen}
+        component={safe(MatchupScreen)}
         options={{ animation: 'fade', gestureEnabled: false }}
       />
-      <Stack.Screen name="LocalPlay" component={LocalPlayScreen} />
-      <Stack.Screen name="CustomGame" component={CustomGameScreen} />
-      <Stack.Screen name="Career" component={CareerScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Learn" component={LearnScreen} />
+      <Stack.Screen name="LocalPlay" component={safe(LocalPlayScreen)} />
+      <Stack.Screen name="CustomGame" component={safe(CustomGameScreen)} />
+      <Stack.Screen name="Career" component={safe(CareerScreen)} />
+      <Stack.Screen name="Settings" component={safe(SettingsScreen)} />
+      <Stack.Screen name="Learn" component={safe(LearnScreen)} />
       <Stack.Screen
         name="SeasonPass"
-        component={SeasonPassScreen}
+        component={safe(SeasonPassScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="Roster"
-        component={RosterScreen}
+        component={safe(RosterScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="CareerMap"
-        component={CareerMapScreen}
+        component={safe(CareerMapScreen)}
         options={{ animation: 'fade' }}
       />
       <Stack.Screen
         name="CareerCity"
-        component={CareerCityScreen}
+        component={safe(CareerCityScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="Legal"
-        component={LegalScreen}
+        component={safe(LegalScreen)}
         options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen
         name="BoardEditor"
-        component={BoardEditorScreen}
+        component={safe(BoardEditorScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="ReplayViewer"
-        component={ReplayViewerScreen}
+        component={safe(ReplayViewerScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="LootBox"
-        component={LootBoxScreen}
+        component={safe(LootBoxScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="MatchHistory"
-        component={MatchHistoryScreen}
+        component={safe(MatchHistoryScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="Stats"
-        component={StatsScreen}
+        component={safe(StatsScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={safe(ProfileScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="AmgCreator"
-        component={AmgCharacterCreatorScreen}
+        component={safe(AmgCharacterCreatorScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="CategoryBrowser"
-        component={CategoryBrowserScreen}
+        component={safe(CategoryBrowserScreen)}
         options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen
         name="ShardShop"
-        component={ShardShopScreen}
+        component={safe(ShardShopScreen)}
         options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen
         name="Game"
-        component={GameScreen}
+        component={safe(GameScreen)}
         options={{
           animation: 'fade',
           gestureEnabled: false,

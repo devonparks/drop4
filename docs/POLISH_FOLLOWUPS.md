@@ -107,7 +107,7 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 <!-- LegalScreen privacy + terms content shipped (commit f14b12d). Still needs a lawyer review pass + the {{SUPPORT_EMAIL}} / {{COMPANY_ADDRESS}} constants updated with final values before submission. -->
 - App icon final export (1024×1024, no alpha for iOS)
 <!-- Shipped: SplashAnimation — continuous breath on the amber glow ring (1.4 s in / 1.4 s out, useNativeDriver) so the splash reads as alive during the 1-3 s of font + store + manifest hydration. Drops the orphaned View import as drive-by cleanup of the same change. -->
-- Error boundary coverage — ensure ErrorBoundary wraps every screen, not just root
+<!-- Shipped: Per-screen ErrorBoundary coverage — RootNavigator now wraps every Stack.Screen via a `safe()` HOC that mounts a navigation-aware ErrorBoundary inside each route. A single screen crash now leaves the navigator + bottom tabs intact (player taps Try Again or Go Home and recovers without restarting); the existing root boundary in App.tsx still catches anything that escapes. WeakMap-cached so component identity is stable across re-renders. -->
 - First-launch tutorial: currently WelcomeOverlay is a bullet list. Consider an interactive 3-screen walkthrough
 - Beta tester onboarding — a `/beta` skill or a README section for friends getting TestFlight invites
 
