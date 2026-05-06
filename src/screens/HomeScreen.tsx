@@ -286,10 +286,13 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
           <Text style={styles.characterStalledText}>
             Couldn't load your character{'\n'}— check your connection
           </Text>
+          {/* Text with onPress, no accessibilityRole — RN-Web only emits
+              <button> when role="button" is set explicitly. Without it
+              Text renders as <span>/<div>, so it doesn't nest inside
+              the outer <Pressable role=button> as <button><button>. */}
           <Text
             onPress={() => { haptics.tap(); retry(); }}
             style={[styles.characterRetryBtn, styles.characterRetryText]}
-            accessibilityRole="button"
             accessibilityLabel="Retry loading character"
           >
             ↻ RETRY
