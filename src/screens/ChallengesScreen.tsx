@@ -178,14 +178,19 @@ function AchievementGroup({ difficulty, achievements }: { difficulty: Achievemen
 
   return (
     <View style={styles.achGroup}>
-      <Pressable
+      {/* Single PressScale (no nested Pressable) — was previously
+          <Pressable><PressScale>...</PressScale></Pressable> which
+          rendered as <button><button>...</button></button> on web,
+          firing a React hydration error. PressScale already wraps
+          its own Pressable internally so the outer one was redundant.
+          Polish 2026-05-06. */}
+      <PressScale
         onPress={() => { haptics.tap(); playSound('click'); setExpanded(!expanded); }}
-        style={styles.achGroupHeader}
+        containerStyle={styles.achGroupHeader}
         accessibilityRole="button"
         accessibilityLabel={`${meta.label} achievements, ${unlocked} of ${total} unlocked`}
         accessibilityState={{ expanded }}
       >
-        <PressScale>
         <LinearGradient
           colors={[`${meta.colors[0]}20`, `${meta.colors[1]}08`]}
           start={{ x: 0, y: 0 }}
@@ -202,8 +207,7 @@ function AchievementGroup({ difficulty, achievements }: { difficulty: Achievemen
             {expanded ? '▲' : '▼'}
           </Text>
         </LinearGradient>
-        </PressScale>
-      </Pressable>
+      </PressScale>
 
       {expanded && (
         <View style={styles.achGroupList}>
