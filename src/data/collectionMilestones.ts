@@ -11,6 +11,7 @@
  */
 
 import { PACKS } from './outfitRegistry';
+import { PETS_ENABLED } from './featureFlags';
 
 type MilestoneRewardType = 'title' | 'emote' | 'coins' | 'hair_color';
 
@@ -169,6 +170,16 @@ const COLLECTION_MILESTONES: CollectionMilestone[] = [
 ];
 
 /**
+ * Active milestones for v1 — filters out pet milestones when
+ * PETS_ENABLED=false so the Awards screen + claim logic don't surface
+ * progress players can't actually make. Re-enables automatically when
+ * PETS_ENABLED flips to true in v1.1.
+ */
+const ACTIVE_MILESTONES = PETS_ENABLED
+  ? COLLECTION_MILESTONES
+  : COLLECTION_MILESTONES.filter((m) => m.anyPetsTotal === undefined);
+
+/**
  * Check which milestones the player has newly earned but not yet claimed.
  *
  * @param ownedOutfits Current ownedOutfits array from characterStore
@@ -195,7 +206,7 @@ export function getNewlyEarnedMilestones(
     }
   }
 
-  for (const m of COLLECTION_MILESTONES) {
+  for (const m of ACTIVE_MILESTONES) {
     if (claimedIds.includes(m.id)) continue;
 
     let qualifies = false;
@@ -228,7 +239,7 @@ export function getNewlyEarnedMilestones(
       const count =
         outlaws.outfitIds.filter((id) => ownedSet.has(id)).length +
         survivors.outfitIds.filter((id) => ownedSet.has(id)).length;
-      const m = COLLECTION_MILESTONES.find((x) => x.id === 'apocalypse_complete');
+      const m = ACTIVE_MILESTONES.find((x) => x.id === 'apocalypse_complete');
       if (m && count >= m.requiredCount && !earned.includes(m)) earned.push(m);
     }
   }
@@ -276,7 +287,7 @@ export function getMilestoneProgressList(
     }
   }
 
-  return COLLECTION_MILESTONES.map((m) => {
+  return ACTIVE_MILESTONES.map((m) => {
     let current = 0;
     const required = m.requiredCount;
 
