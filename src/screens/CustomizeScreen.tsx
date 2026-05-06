@@ -259,6 +259,22 @@ export function CustomizeScreen() {
   const equippedDropEffectId = useShopStore((s) => s.equipped.dropEffect);
   const equippedWinAnimationId = useShopStore((s) => s.equipped.winAnimation);
   const equippedPetId = usePetStore((s) => s.activePetId);
+  // Loadout-grid label inputs — subscribed (not getState()) so the
+  // cells re-label when the player equips a new outfit / hair / face /
+  // emote. Was a stale-render bug where the useMemo below silently
+  // dropped these from its dep tracking. Polish 2026-05-06.
+  const equippedOutfitId = useCharacterStore((s) => s.equippedOutfitId);
+  const selectedHomeEmote = useShopStore((s) => s.selectedHomeEmote);
+  const homeEmoteRandomMode = useShopStore((s) => s.homeEmoteRandomMode);
+  const equippedHair = useCharacterStore(
+    (s) => (s.amgCharacter as unknown as { parts?: Record<string, string> } | null)?.parts?.Hair ?? null,
+  );
+  const equippedFacialHair = useCharacterStore(
+    (s) => (s.amgCharacter as unknown as { parts?: Record<string, string> } | null)?.parts?.FacialHair ?? null,
+  );
+  const equippedEyebrowLeft = useCharacterStore(
+    (s) => (s.amgCharacter as unknown as { parts?: Record<string, string> } | null)?.parts?.EyebrowLeft ?? null,
+  );
 
   // Locker-stat selectors — three primitive reads so the stat strip
   // recomputes only when the relevant store slice changes.
@@ -527,8 +543,6 @@ export function CustomizeScreen() {
   // grid where each cell shows what's on right now. Maps categoryId →
   // display name so the cell renderer doesn't reach into 4 stores.
   const equippedNames: Record<CategoryId, string | null> = useMemo(() => {
-    const equipped = useShopStore.getState().equipped;
-    const equippedOutfitId = useCharacterStore.getState().equippedOutfitId;
     // Outfit name comes through as e.g. "Fantasy Skeletons 05" — too
     // long for the loadout cell. Strip everything before the last
     // word and pad the index, yielding a tight "Skeletons 05" that
@@ -538,8 +552,8 @@ export function CustomizeScreen() {
     const outfitShort = outfitFull
       ? outfitFull.replace(/^(?:[A-Z][a-z]+\s)?/, '').trim() // drop leading "Modern " / "Fantasy " / "Sci-Fi "
       : null;
-    const dropFx = DROP_EFFECTS.find((f) => f.id === equipped.dropEffect)?.name ?? null;
-    const winFx = WIN_ANIMATIONS.find((w) => w.id === equipped.winAnimation)?.name ?? null;
+    const dropFx = DROP_EFFECTS.find((f) => f.id === equippedDropEffectId)?.name ?? null;
+    const winFx = WIN_ANIMATIONS.find((w) => w.id === equippedWinAnimationId)?.name ?? null;
     const petName = summary.petName;
     // Emote readout — show selected emote name when the player has
     // picked a specific one to play on character tap, else the count
@@ -548,10 +562,8 @@ export function CustomizeScreen() {
     // pinned-to-wheel — pinning is a separate concept). Audit 2026-05-05
     // follow-up.
     const emoteCount = ownedEmotes.length;
-    const selectedEmote = useShopStore.getState().selectedHomeEmote;
-    const homeEmoteRandomMode = useShopStore.getState().homeEmoteRandomMode;
-    const selectedEmoteMeta = selectedEmote && !homeEmoteRandomMode
-      ? HUMAN_EMOTES.find((e) => e.id === selectedEmote)
+    const selectedEmoteMeta = selectedHomeEmote && !homeEmoteRandomMode
+      ? HUMAN_EMOTES.find((e) => e.id === selectedHomeEmote)
       : null;
     // Priority: specific selected emote → "Random" if random mode →
     // owned count. Each conveys real info instead of the misleading
@@ -563,8 +575,6 @@ export function CustomizeScreen() {
     // shows specific item identity like "Outlaws 03"). Was a generic
     // "Hair 01" / "Face" string that gave no pack context. Per audit
     // 2026-05-05 follow-up.
-    const amgChar = useCharacterStore.getState().amgCharacter as unknown as
-      { parts?: Record<string, string> } | null;
     // Helper: turn 'SK_APOC_OUTL_03_02HAIR_HU01' into 'Outlaws 03' using
     // packMeta.shortName when available, else first word of displayName.
     const labelFromPartName = (name: string | null): string | null => {
@@ -576,12 +586,10 @@ export function CustomizeScreen() {
       const short = meta.shortName ?? meta.displayName.split(' ')[0];
       return `${short} ${m[3]}`;
     };
-    const equippedHair = amgChar?.parts?.['Hair'] ?? null;
     const equippedHairLabel = labelFromPartName(equippedHair);
     // Face: pick FacialHair (beard) first, else EyebrowLeft. The cell
     // hints at "what's on" — full grid lives in the FACE catalog.
-    const equippedFace = amgChar?.parts?.['FacialHair'] ?? amgChar?.parts?.['EyebrowLeft'] ?? null;
-    const equippedFaceLabel = labelFromPartName(equippedFace);
+    const equippedFaceLabel = labelFromPartName(equippedFacialHair ?? equippedEyebrowLeft);
 
     return {
       character: playerName,
@@ -597,7 +605,12 @@ export function CustomizeScreen() {
       wins: winFx,
       frames: null,
     };
-  }, [playerName, summary, ownedEmotes]);
+  }, [
+    playerName, summary, ownedEmotes,
+    equippedOutfitId, equippedDropEffectId, equippedWinAnimationId,
+    selectedHomeEmote, homeEmoteRandomMode,
+    equippedHair, equippedFacialHair, equippedEyebrowLeft,
+  ]);
 
   return (
     <ScreenBackground scene="profile">
