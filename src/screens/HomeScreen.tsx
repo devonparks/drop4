@@ -941,7 +941,7 @@ export function HomeScreen() {
                 accessibilityHint="Double-tap to interact with your pet"
               >
                 <Animated.View style={{ transform: [{ scale: petBounce }] }}>
-                  <PetDisplay petId={equippedPet} size={80} isIdle />
+                  <PetDisplay petId={equippedPet} size={140} isIdle />
                 </Animated.View>
                 {showPetHeart && (
                   <Animated.Text
@@ -1552,11 +1552,14 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  // Pet position (bottom-right of character, prominent showcase)
+  // Pet position — bottom-right of character. Was right: -20 which
+  // clipped 20 px of the 80-px dog off-screen; bumped to size 140
+  // and pulled fully on-stage so wearables / breed details actually
+  // read. 2026-05-05.
   petPosition: {
     position: 'absolute',
-    bottom: 2,
-    right: -20,
+    bottom: 0,
+    right: 12,
     zIndex: 5,
     // Glow effect to make pet pop
     shadowColor: 'rgba(255,200,80,0.6)',
