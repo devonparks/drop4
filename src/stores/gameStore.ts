@@ -75,6 +75,18 @@ interface GameState {
    *  below is occupied (by anything), no push occurs there — the
    *  neighbor stays. Counts as the current player's turn. */
   dropHeavy: (col: number) => { col: number; row: number } | null;
+  /** Phase 2 boss script — Sunset Sal (Venice L24). Pieces always
+   *  drop "down" via getLandingRow which respects this flag. When
+   *  true (default), pieces fall from top to bottom of the column.
+   *  When false, pieces fall from bottom to top — the visual board
+   *  flips via GameBoard's gravityDown prop (CSS scaleY -1) so the
+   *  player perceives the opposite gravity. GameScreen toggles this
+   *  every 4 moves on Sal's level. */
+  gravityDown: boolean;
+  /** Toggle gravity direction. Used by Sal's boss-script useEffect
+   *  in GameScreen and exposed for any future "gravity-flip" power
+   *  piece or level type. */
+  flipGravity: () => void;
   undoMove: () => boolean;
   setAiThinking: (thinking: boolean) => void;
   resetScores: () => void;
@@ -88,11 +100,29 @@ function createEmptyBoard(cols: number = COLS, rows: number = ROWS): Board {
   return Array.from({ length: cols }, () => Array(rows).fill(0));
 }
 
-function getLowestEmptyRow(board: Board, col: number, rows: number = ROWS): number {
-  for (let row = rows - 1; row >= 0; row--) {
-    if (board[col][row] === 0) return row;
+/** Find the row a new piece would land on if dropped in `col`. When
+ *  `gravityDown` is true (default), scan from rows-1 down → pieces
+ *  stack from the bottom. When false (Sal boss flip), scan from row 0
+ *  up → pieces stack from the top. Returns -1 if the column has no
+ *  empty cell anywhere — the piece can't land. */
+function getLandingRow(board: Board, col: number, rows: number = ROWS, gravityDown: boolean = true): number {
+  if (gravityDown) {
+    for (let row = rows - 1; row >= 0; row--) {
+      if (board[col][row] === 0) return row;
+    }
+  } else {
+    for (let row = 0; row < rows; row++) {
+      if (board[col][row] === 0) return row;
+    }
   }
   return -1;
+}
+
+/** Back-compat alias — older code paths in this file still call this
+ *  name with the gravityDown=true default. New paths should pass the
+ *  current store's gravityDown explicitly. */
+function getLowestEmptyRow(board: Board, col: number, rows: number = ROWS): number {
+  return getLandingRow(board, col, rows, true);
 }
 
 function checkWin(board: Board, col: number, row: number, player: Player, connectCount: number = 4, cols: number = COLS, rows: number = ROWS): [number, number][] | null {
@@ -138,7 +168,12 @@ function checkWin(board: Board, col: number, row: number, player: Player, connec
 }
 
 function isBoardFull(board: Board): boolean {
-  return board.every(col => col[0] !== 0);
+  // A column is full when NO cell in it is empty. Checking only col[0]
+  // (the original implementation) was correct under fixed downward
+  // gravity but breaks under Sal's flip — pieces can stack from the
+  // top, leaving col[0] occupied while the rest of the column has
+  // empty cells. `every cell !== 0` is gravity-agnostic and correct.
+  return board.every((col) => col.every((cell) => cell !== 0));
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -157,6 +192,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   totalGamesPlayed: 0,
   lastMoveCol: null,
   customSettings: { rows: ROWS, cols: COLS, connectCount: 4, timerSeconds: 0 },
+  gravityDown: true,
   moveHistory: [],
 
   newGame: (difficulty, vsAi, settings) => {
@@ -178,15 +214,18 @@ export const useGameStore = create<GameState>((set, get) => ({
       isVsAi: vsAi,
       lastMoveCol: null,
       customSettings: s,
+      // Reset Sal's gravity flip on every new game so a stale flipped
+      // state from a previous Sal match doesn't leak into the next.
+      gravityDown: true,
       moveHistory: [],
     });
   },
 
   dropBomb: (col) => {
-    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings, gravityDown } = get();
     const { rows: curRows, cols: curCols } = customSettings;
     if (status !== 'playing') return null;
-    const row = getLowestEmptyRow(board, col, curRows);
+    const row = getLandingRow(board, col, curRows, gravityDown);
     if (row === -1) return null;
     // Save history pre-explosion so undo restores the obliterated zone.
     const historyEntry = {
@@ -238,10 +277,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   dropRainbow: (col) => {
-    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings, gravityDown } = get();
     const { rows: curRows, cols: curCols, connectCount } = customSettings;
     if (status !== 'playing') return null;
-    const row = getLowestEmptyRow(board, col, curRows);
+    const row = getLandingRow(board, col, curRows, gravityDown);
     if (row === -1) return null;
     const historyEntry = {
       board: board.map((c) => [...c]),
@@ -296,10 +335,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   dropHeavy: (col) => {
-    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings, gravityDown } = get();
     const { rows: curRows, cols: curCols, connectCount } = customSettings;
     if (status !== 'playing') return null;
-    const row = getLowestEmptyRow(board, col, curRows);
+    const row = getLandingRow(board, col, curRows, gravityDown);
     if (row === -1) return null;
     const historyEntry = {
       board: board.map((c) => [...c]),
@@ -352,7 +391,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   dropPiece: (col) => {
-    const { board, currentPlayer, status, moveHistory, moveCount, customSettings } = get();
+    const { board, currentPlayer, status, moveHistory, moveCount, customSettings, gravityDown } = get();
     const { rows: curRows, cols: curCols, connectCount } = customSettings;
     // Save current state to history before making the move
     const historyEntry = {
@@ -362,7 +401,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
     if (status !== 'playing') return false;
 
-    const row = getLowestEmptyRow(board, col, curRows);
+    const row = getLandingRow(board, col, curRows, gravityDown);
     if (row === -1) return false;
 
     const newBoard = board.map(c => [...c]);
@@ -436,6 +475,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setAiThinking: (thinking) => set({ isAiThinking: thinking }),
+
+  flipGravity: () => set((state) => ({ gravityDown: !state.gravityDown })),
 
   resetScores: () => set({ scores: { player1: 0, player2: 0 } }),
 

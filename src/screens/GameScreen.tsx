@@ -69,6 +69,8 @@ export function GameScreen({ navigation }: Props) {
   const status = useGameStore(s => s.status);
   const winner = useGameStore(s => s.winner);
   const moveCount = useGameStore(s => s.moveCount);
+  const gravityDown = useGameStore(s => s.gravityDown);
+  const flipGravity = useGameStore(s => s.flipGravity);
   const difficulty = useGameStore(s => s.difficulty);
   const isAiThinking = useGameStore(s => s.isAiThinking);
   const isVsAi = useGameStore(s => s.isVsAi);
@@ -343,6 +345,25 @@ export function GameScreen({ navigation }: Props) {
       useGameStore.setState({ status: 'won', winner: 2 });
     }
   }, [moveCount, status, params.movesLimit]);
+
+  // Phase A.3 — Sal's gravity flip. Boss-script 'sal' (Venice L24)
+  // toggles gravityDown every 4 moves. Pieces continue stacking but
+  // in the opposite direction; getLandingRow respects the flag and
+  // GameBoard mirrors the playfield via scaleY(-1). Both player +
+  // AI play through the same flipped state — no asymmetric advantage.
+  // Effect fires on the move 4 → 5 transition (and 8 → 9, etc.) by
+  // gating on moveCount > 0 && moveCount % 4 === 0; depending on
+  // moveCount means we only run on actual move changes, not every
+  // render.
+  useEffect(() => {
+    if (params.bossScript !== 'sal') return;
+    if (status !== 'playing') return;
+    if (moveCount === 0) return;
+    if (moveCount % 4 !== 0) return;
+    flipGravity();
+    haptics.heavy?.() ?? haptics.tap();
+    playSound('whoosh');
+  }, [moveCount, status, params.bossScript, flipGravity]);
 
   // Hint pulse animation — pulsing opacity when hint is shown
   useEffect(() => {
@@ -1245,6 +1266,7 @@ export function GameScreen({ navigation }: Props) {
             onColumnPress={handleColumnPress}
             disabled={status !== 'playing' || isAiThinking || (isVsAi && currentPlayer !== 1)}
             currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
+            gravityDown={gravityDown}
           />
         </RNAnimated.View>
 

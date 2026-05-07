@@ -266,9 +266,16 @@ interface GameBoardProps {
   onColumnPress: (col: number) => void;
   disabled?: boolean;
   currentPlayerColor?: 'red' | 'yellow';
+  /** Phase A.3 — Sal's gravity flip. When false, the board container
+   *  flips vertically (scaleY: -1) so pieces appear to stack from the
+   *  top. Engine logic in gameStore handles the actual landing math
+   *  via getLandingRow; this prop is purely visual. Column tap targets
+   *  are unaffected because columns are X-axis (scaleY only flips Y).
+   *  Defaults to true so non-Sal levels render normally. */
+  gravityDown?: boolean;
 }
 
-export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' }: GameBoardProps) {
+export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red', gravityDown = true }: GameBoardProps) {
   const [hoveredCol, setHoveredCol] = React.useState<number | null>(null);
   const equippedBoard = useShopStore(s => s.equipped.board);
   const equippedPieces = useShopStore(s => s.equipped.pieces);
@@ -352,8 +359,18 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red' 
           <View style={styles.leg} />
         </View>
 
-        {/* Grid */}
-        <View style={styles.grid} pointerEvents="none">
+        {/* Grid — Phase A.3: scaleY(-1) flips the board vertically when
+            Sal's gravity is up. Touch coords are X-only so flipping Y
+            doesn't break column-tap targeting. Pieces stay symmetric
+            (circles) so the visual mirror reads as "the board flipped"
+            without breaking individual piece appearance. */}
+        <View
+          style={[
+            styles.grid,
+            !gravityDown && { transform: [{ scaleY: -1 }] },
+          ]}
+          pointerEvents="none"
+        >
           {Array.from({ length: ROWS }).map((_, row) => (
             <View key={row} style={styles.row}>
               {Array.from({ length: COLS }).map((_, col) => {

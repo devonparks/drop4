@@ -112,12 +112,16 @@ function isWinningMove(board: Board, col: number, row: number, player: Player, c
   return false;
 }
 
-// Get valid columns (not full)
+// Get valid columns (not full). A column is valid when ANY cell in it
+// is empty — gravity-agnostic, so this works under Sal's flipped
+// gravity too. The previous `board[col][0] === 0` only checked the
+// top row which broke under Sal: pieces stack from the top, leaving
+// row 0 occupied while the column still has open mid-cells.
 function getValidCols(board: Board): number[] {
   const { cols } = getBoardDims(board);
   const validCols: number[] = [];
   for (let col = 0; col < cols; col++) {
-    if (board[col][0] === 0) validCols.push(col);
+    if (board[col].some((cell) => cell === 0)) validCols.push(col);
   }
   return validCols;
 }
