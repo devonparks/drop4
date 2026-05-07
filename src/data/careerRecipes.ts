@@ -479,29 +479,94 @@ export const CITY_RECIPES: CityRecipe[] = [
   {
     id: 'compton', name: 'Compton', state: 'CA', nickname: 'The Yard',
     tagline: 'Speed demons only. Blink and lose.',
-    comingSoon: true,
+    unlockedAfterCityId: 'oakland',
     themeColor: '#e74c3c', accentColor: '#ff6b6b',
     skyGradient: ['#2d0a0a', '#8b1e1e', '#e74c3c'],
     mapPosition: { xPct: 22, yPct: 78 },
-    opponents: [], levels: [],
+    // Compton's identity: speed throughout. Almost every level has a
+    // tight clock (3-8s per turn). The few non-timed levels run
+    // shorter boards so games don't drag. Boss is Quick Draw Q —
+    // 3-second clock + scripted seed.
+    opponents: [
+      'Drag Race Drew', 'Burnout Bea', 'Nitrous Nate', 'Skidmark Sky',
+      'Rev Rev Rae', 'Throttle Theo', 'Pop-Off Pip', 'Track Star Tia',
+      'Yard Hawk', 'Streetlight Sam', 'Crash Crew', 'Quick Draw Q',
+    ],
+    levels: [
+      { type: 'speed', difficulty: 'medium', name: 'Welcome to the Yard', opponent: 'Drag Race Drew', personality: '5 seconds. No warmup.', settings: { timerSeconds: 5 } },
+      { type: 'connect3', difficulty: 'medium', name: 'Burnout', opponent: 'Burnout Bea', personality: 'Small board. Fast burn.', settings: { rows: 5, cols: 5, connectCount: 3, timerSeconds: 4 } },
+      { type: 'speed', difficulty: 'medium', name: 'Nitrous', opponent: 'Nitrous Nate', personality: 'Even faster.', settings: { timerSeconds: 4 } },
+      { type: 'standard', difficulty: 'medium', name: 'Pause', opponent: 'Skidmark Sky', personality: 'Catch your breath. Or lose.' },
+      { type: 'speed', difficulty: 'medium', name: 'Rev Up', opponent: 'Rev Rev Rae', personality: '3 seconds. Pure reflex.', settings: { timerSeconds: 3 } },
+      { type: 'connect3', difficulty: 'medium', name: 'Quick Three', opponent: 'Throttle Theo', personality: '3 in a row. 3 second clock.', settings: { rows: 5, cols: 5, connectCount: 3, timerSeconds: 3 } },
+      { type: 'speed', difficulty: 'hard', name: 'Pop Off', opponent: 'Pop-Off Pip', personality: 'Same 3 seconds. Harder bot.', settings: { timerSeconds: 3 } },
+      { type: 'timed', difficulty: 'hard', name: 'Track Star', opponent: 'Track Star Tia', personality: 'Big board. 8-second clock.', settings: { rows: 8, cols: 9, timerSeconds: 8 } },
+      { type: 'speed', difficulty: 'hard', name: 'Yard Hawk', opponent: 'Yard Hawk', personality: 'Connect 5. 5 second clock. Eyes open.', settings: { rows: 8, cols: 9, connectCount: 5, timerSeconds: 5 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Streetlight Stakes', opponent: 'Streetlight Sam', personality: 'Triple coins. Speed. All in.', settings: { connectCount: 5, rewardMultiplier: 3, timerSeconds: 6 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Yard Crash', opponent: 'Crash Crew', personality: 'Wreckage on the track. 5 seconds.', settings: { obstacleCells: [{row:2,col:1},{row:2,col:5},{row:3,col:3},{row:4,col:2},{row:4,col:4}], timerSeconds: 5 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: Quick Draw Q', opponent: 'Quick Draw Q', personality: 'Compton kingpin. 3 second clock. Connect 5. Hesitate and you fold.', settings: { rows: 6, cols: 7, connectCount: 5, timerSeconds: 3, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,2,1,2,1,2,0]] }, reward: { type: 'pieces', id: 'flame', name: 'Flame Pieces', icon: '🔥' }, bonusReward: { type: 'pet', id: 'pit_bull', name: 'Pit Bull', icon: '🐶' } },
+    ],
   },
   {
     id: 'miami', name: 'Miami', state: 'FL', nickname: 'South Beach',
     tagline: 'Tournaments under neon lights.',
-    comingSoon: true,
+    unlockedAfterCityId: 'compton',
     themeColor: '#ff006e', accentColor: '#00f5ff',
     skyGradient: ['#1a0a3e', '#6a0dad', '#ff006e'],
     mapPosition: { xPct: 80, yPct: 85 },
-    opponents: [], levels: [],
+    // Miami's identity: tournaments + jeopardy + flash. Every other
+    // level is a high-stakes match (3x rewards). Boss is the King of
+    // South Beach — connect-5 jeopardy with a clock.
+    opponents: [
+      'Neon Nina', 'Tropic Theo', 'Ocean Drive Owen', 'Palm Park Pia',
+      'Cabana Karim', 'Yacht Yara', 'Beach Boss Bria', 'Rooftop Romeo',
+      'Sunset Cyrus', 'Bayside Brad', 'Skyline Skye', 'King of South Beach',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Welcome to Miami', opponent: 'Neon Nina', personality: 'Bright lights. Brighter games.' },
+      { type: 'jeopardy', difficulty: 'medium', name: 'Triple Tropic', opponent: 'Tropic Theo', personality: 'Triple coins. Connect 5.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'standard', difficulty: 'medium', name: 'Ocean Drive', opponent: 'Ocean Drive Owen', personality: 'Cruise the board.' },
+      { type: 'speed', difficulty: 'medium', name: 'Palm Beach Sprint', opponent: 'Palm Park Pia', personality: '5 seconds. Tropical pace.', settings: { timerSeconds: 5 } },
+      { type: 'puzzle', difficulty: 'medium', name: 'Cabana Riddle', opponent: 'Cabana Karim', personality: 'The position is set. Solve it.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,1,0,0,0],[0,0,2,2,1,0,0],[0,1,2,1,2,1,0],[2,1,1,2,2,1,2]] } },
+      { type: 'jeopardy', difficulty: 'medium', name: 'Yacht Money', opponent: 'Yacht Yara', personality: 'Triple bag. Show out.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'connect5', difficulty: 'hard', name: 'Beach Boss', opponent: 'Beach Boss Bria', personality: 'Five in a row. Eyes on you.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Rooftop Stakes', opponent: 'Rooftop Romeo', personality: 'Triple coins. Up here, only winners.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'timed', difficulty: 'hard', name: 'Sunset Clock', opponent: 'Sunset Cyrus', personality: 'Watch the sun. 8 seconds per turn.', settings: { rows: 7, cols: 8, timerSeconds: 8 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Bayside Walls', opponent: 'Bayside Brad', personality: 'Six walls. Dance through.', settings: { obstacleCells: [{row:1,col:1},{row:1,col:5},{row:3,col:3},{row:4,col:2},{row:4,col:4},{row:2,col:6}] } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Skyline Stakes', opponent: 'Skyline Skye', personality: 'Triple bag. 6-second clock. Show me.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3, timerSeconds: 6 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: King of South Beach', opponent: 'King of South Beach', personality: "South Beach's crown. 5 in a row. Triple bag. 8 second clock. Take it from me.", settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 8, rewardMultiplier: 3, presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,2,1,0,0],[0,0,0,2,1,2,1,0],[0,0,2,1,2,1,2,0],[0,2,1,2,1,2,1,2]] }, reward: { type: 'board', id: 'sunset', name: 'Sunset Board', icon: '🌅' }, bonusReward: { type: 'pet', id: 'flamingo', name: 'Flamingo', icon: '🦩' } },
+    ],
   },
   {
-    id: 'the_void', name: '???', state: '??', nickname: 'The Void',
+    id: 'the_void', name: 'The Void', state: '??', nickname: 'The Void',
     tagline: 'Rumors only. Nobody comes back the same.',
-    comingSoon: true,
+    unlockedAfterCityId: 'miami',
     themeColor: '#e94560', accentColor: '#7b2cbf',
     skyGradient: ['#000000', '#1a0033', '#e94560'],
     mapPosition: { xPct: 50, yPct: 95 },
-    opponents: [], levels: [],
+    // The Void's identity: surreal, weird, unfair. Every level subverts
+    // a normal Connect 4 expectation — go-second + obstacles + connect-6
+    // on tiny boards + brutal puzzles. This is the "you have seen
+    // everything; now we break it" city. Boss is The Void itself.
+    opponents: [
+      'Shade One', 'Echo', 'Mirror', 'The Drift',
+      'Phantom', 'Whisper', 'Static', 'Noise',
+      'The Hollow', 'Threshold', 'The Edge', 'The Void',
+    ],
+    levels: [
+      { type: 'go_second', difficulty: 'hard', name: 'Wrong Foot', opponent: 'Shade One', personality: 'You go second. Always. From here on out.', settings: { playerGoesFirst: false } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Eight Walls', opponent: 'Echo', personality: 'Eight blocks. Three columns left.', settings: { obstacleCells: [{row:1,col:0},{row:1,col:6},{row:2,col:1},{row:2,col:5},{row:3,col:2},{row:3,col:4},{row:4,col:1},{row:4,col:5}] } },
+      { type: 'connect6', difficulty: 'hard', name: 'Six in Tight', opponent: 'Mirror', personality: 'Six in a row. Tight board.', settings: { rows: 7, cols: 7, connectCount: 6 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Drift', opponent: 'The Drift', personality: 'You did not place these. Fix it.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,1,1,2,1,2,0],[2,1,2,1,2,1,2],[1,2,1,2,2,1,1]] }, starThresholds: { three: 3, two: 5 } },
+      { type: 'speed', difficulty: 'hard', name: 'Phantom Limb', opponent: 'Phantom', personality: '3 seconds. The clock is in your head.', settings: { timerSeconds: 3 } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Six Moves Out', opponent: 'Whisper', personality: 'Six moves. The Void counts.', settings: { rows: 7, cols: 8, movesLimit: 6 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Static Stakes', opponent: 'Static', personality: 'Triple bag. Triple risk.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Noise', opponent: 'Noise', personality: 'Walls everywhere. Find a clean line.', settings: { obstacleCells: [{row:1,col:2},{row:2,col:3},{row:1,col:4},{row:3,col:1},{row:3,col:5},{row:4,col:3}] } },
+      { type: 'puzzle', difficulty: 'hard', name: 'The Hollow', opponent: 'The Hollow', personality: 'Empty position. Fill it right.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,2,1,2,1,2,0]] } },
+      { type: 'connect5', difficulty: 'hard', name: 'Threshold', opponent: 'Threshold', personality: 'Five in a row. The line crosses you.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'go_second', difficulty: 'hard', name: 'The Edge', opponent: 'The Edge', personality: 'You go second on a stacked board.', settings: { playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,2,2,0,0],[0,2,2,2,2,2,0]] } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: The Void', opponent: 'The Void', personality: 'You came back. Most do not. Survive the dark.', settings: { rows: 8, cols: 8, connectCount: 5, timerSeconds: 8, playerGoesFirst: false, obstacleCells: [{row:2,col:1},{row:2,col:6},{row:5,col:1},{row:5,col:6}], presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,2,2,0,0,0],[0,0,2,1,1,2,0,0],[0,2,1,2,1,2,1,0],[2,1,2,1,2,1,2,1]] }, reward: { type: 'board', id: 'void_obsidian', name: 'Void Obsidian Board', icon: '🌑' }, bonusReward: { type: 'title', name: 'Voidwalker', icon: '👁️' } },
+    ],
   },
 
   // ─── 10-15 · NEW v1 TEASES (Phase B will fill in real recipes) ────
