@@ -389,29 +389,92 @@ export const CITY_RECIPES: CityRecipe[] = [
   {
     id: 'chicago', name: 'Chicago', state: 'IL', nickname: 'The Cage',
     tagline: 'Puzzle courts. Out-think or get out.',
-    comingSoon: true,
     themeColor: '#3498db', accentColor: '#5dade2',
     skyGradient: ['#0a1e3c', '#1a4a7a', '#3498db'],
     mapPosition: { xPct: 60, yPct: 32 },
-    opponents: [], levels: [],
+    // Chicago's identity: cerebral, puzzle-heavy, locked-position
+    // play. Heavy emphasis on puzzle + obstacle types — every level
+    // is a chess problem disguised as Connect 4. Boss is a puzzle
+    // master with a brutal opening seed.
+    opponents: [
+      'Hustler Hank', 'Pawn Master Pete', 'Puzzle Phyllis', 'Locked-In Lou',
+      'Knight Knox', 'Trapped Tia', 'Position Pete', 'Closed Cara',
+      'Cage Master Carl', 'Riddler Reese', 'The Cipher', 'Big Bear',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Welcome to the Cage', opponent: 'Hustler Hank', personality: 'You think Brooklyn was hard? Think again.' },
+      { type: 'puzzle', difficulty: 'medium', name: 'Open Position', opponent: 'Pawn Master Pete', personality: 'Read the board. Then play it.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,1,0,0,0],[0,0,2,1,0,0,0],[0,1,2,2,1,0,0]] } },
+      { type: 'obstacle', difficulty: 'medium', name: 'Locked Lanes', opponent: 'Puzzle Phyllis', personality: 'Three lanes. One is yours.', settings: { obstacleCells: [{row:2,col:2},{row:3,col:2},{row:2,col:4},{row:3,col:4}] } },
+      { type: 'standard', difficulty: 'medium', name: 'The Slow Game', opponent: 'Locked-In Lou', personality: "Every move is a question. Don't guess." },
+      { type: 'connect5', difficulty: 'medium', name: 'Five Files', opponent: 'Knight Knox', personality: 'Five in a row. Long lines.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'puzzle', difficulty: 'medium', name: 'Endgame Trap', opponent: 'Trapped Tia', personality: "She set this up before you sat down.", settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,2,1,2,0,0],[0,1,2,2,1,2,0],[2,1,1,2,2,1,0],[1,2,2,1,1,2,1]] }, starThresholds: { three: 3, two: 6 } },
+      { type: 'obstacle', difficulty: 'medium', name: 'Six Walls', opponent: 'Position Pete', personality: 'Find the line. Or build a new one.', settings: { obstacleCells: [{row:1,col:1},{row:2,col:2},{row:3,col:3},{row:3,col:5},{row:2,col:4},{row:1,col:5}] } },
+      { type: 'timed', difficulty: 'medium', name: 'Cage Clock', opponent: 'Closed Cara', personality: '12 seconds. Solve fast.', settings: { timerSeconds: 12 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'The Cipher', opponent: 'Cage Master Carl', personality: 'Crack the position. There is one move.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,1,2,0,0,0],[0,2,1,1,2,0,0],[0,1,2,1,2,1,0],[1,2,1,2,1,2,1],[2,1,2,1,2,1,2]] }, starThresholds: { three: 2, two: 4 } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Eight Moves', opponent: 'Riddler Reese', personality: 'Eight moves. No more.', settings: { rows: 7, cols: 8, movesLimit: 8 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Cipher Jeopardy', opponent: 'The Cipher', personality: 'Five in a row. Triple coins. Cracking only.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: Big Bear', opponent: 'Big Bear', personality: "Chicago's puzzle king. Eight pieces deep. Solve or fold.", settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 20, presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,2,1,2,1,0,0],[0,2,1,2,1,2,1,0],[1,2,2,1,1,2,2,1],[2,1,1,2,2,1,1,2]] }, reward: { type: 'board', id: 'matrix', name: 'Matrix Board', icon: '🧠' }, bonusReward: { type: 'pieces', id: 'monochrome', name: 'Monochrome Pieces', icon: '⬛' } },
+    ],
   },
   {
     id: 'detroit', name: 'Detroit', state: 'MI', nickname: 'The Motor',
     tagline: 'Mixed modes, rough crowd. Prove it.',
-    comingSoon: true,
+    unlockedAfterCityId: 'chicago',
     themeColor: '#95a5a6', accentColor: '#bdc3c7',
     skyGradient: ['#1a1a1a', '#4a4a4a', '#95a5a6'],
     mapPosition: { xPct: 70, yPct: 22 },
-    opponents: [], levels: [],
+    // Detroit's identity: every level is a different machine. Maximum
+    // mechanic variety — you never see the same type twice in a row.
+    // Boss is The Mechanic, who runs every wrinkle the player has met.
+    opponents: [
+      'Switch Steve', 'Gear Greta', 'Carburetor Carl', 'Piston Pat',
+      'Wrench Wendy', 'Diesel Dom', 'Spark Plug Sal', 'Throttle Tim',
+      'Tinker Tina', 'Radiator Rae', 'Solder Saul', 'The Mechanic',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Cold Start', opponent: 'Switch Steve', personality: 'Detroit warms you up.' },
+      { type: 'connect3', difficulty: 'medium', name: 'Three Gears', opponent: 'Gear Greta', personality: 'Smaller board. Sharper teeth.', settings: { rows: 5, cols: 5, connectCount: 3 } },
+      { type: 'speed', difficulty: 'medium', name: 'Throttle Up', opponent: 'Carburetor Carl', personality: 'Five seconds. Move.', settings: { timerSeconds: 5 } },
+      { type: 'go_second', difficulty: 'medium', name: 'Push Start', opponent: 'Piston Pat', personality: 'You go second. Catch up.', settings: { playerGoesFirst: false } },
+      { type: 'obstacle', difficulty: 'medium', name: 'Toolbox', opponent: 'Wrench Wendy', personality: 'Tools on the floor. Step around.', settings: { obstacleCells: [{row:3,col:1},{row:3,col:3},{row:3,col:5},{row:4,col:2},{row:4,col:4}] } },
+      { type: 'connect5', difficulty: 'medium', name: 'Long Belt', opponent: 'Diesel Dom', personality: 'Five in a row. Big board.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'timed', difficulty: 'medium', name: 'Spark Time', opponent: 'Spark Plug Sal', personality: '10 seconds per turn.', settings: { timerSeconds: 10 } },
+      { type: 'puzzle', difficulty: 'medium', name: 'Engine Block', opponent: 'Throttle Tim', personality: 'The puzzle was here when you arrived.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,1,2,1,2,1,0],[2,1,1,2,1,2,1],[1,2,2,1,2,1,2]] } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Ten and Done', opponent: 'Tinker Tina', personality: 'Ten moves. Make every one count.', settings: { movesLimit: 10 } },
+      { type: 'speed', difficulty: 'hard', name: 'Overheat', opponent: 'Radiator Rae', personality: '3 seconds. Cool under pressure.', settings: { timerSeconds: 3 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Big Job', opponent: 'Solder Saul', personality: 'Triple bag. Connect 5. Pick a side.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: The Mechanic', opponent: 'The Mechanic', personality: "He's seen every game. He runs every play. Beat the master.", settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 12, obstacleCells: [{row:3,col:1},{row:3,col:6},{row:4,col:3},{row:4,col:4}], presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,2,1,0,0,0],[0,0,2,1,2,1,0,0],[0,1,2,1,2,1,2,0],[2,1,1,2,1,2,1,2]] }, reward: { type: 'board', id: 'gold_court', name: 'Gold Court', icon: '🏆' }, bonusReward: { type: 'pet', id: 'german_shepherd', name: 'German Shepherd', icon: '🐕‍🦺' } },
+    ],
   },
   {
     id: 'oakland', name: 'Oakland', state: 'CA', nickname: 'The Town',
     tagline: 'Connect 6 country. No weak links.',
-    comingSoon: true,
+    unlockedAfterCityId: 'detroit',
     themeColor: '#2ecc71', accentColor: '#58d68d',
     skyGradient: ['#0a2a1e', '#1a5a3e', '#2ecc71'],
     mapPosition: { xPct: 4, yPct: 34 },
-    opponents: [], levels: [],
+    // Oakland's identity: long lines + huge boards. Connect 5 / Connect
+    // 6 / oversized grids dominate. Endurance + spatial awareness.
+    // Boss is The Town's Best — connect-6 on 9×9 with a clock.
+    opponents: [
+      'Long Game Larry', 'Six-Strong Sue', 'Big Board Bo', 'Patience Park',
+      'Marathon Marc', 'Grid Geneva', 'The Stretch', 'Wide Open Wynn',
+      'Endurance Eddie', 'Slow Burn Soraya', 'The Architect', "The Town's Best",
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Welcome to The Town', opponent: 'Long Game Larry', personality: 'Long sentences. Long games.' },
+      { type: 'connect5', difficulty: 'medium', name: 'Five Town', opponent: 'Six-Strong Sue', personality: 'Five in a row. Big board.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'standard', difficulty: 'medium', name: 'Wide Open', opponent: 'Big Board Bo', personality: 'Bigger board, bigger ideas.', settings: { rows: 8, cols: 9 } },
+      { type: 'connect6', difficulty: 'medium', name: 'Six Pack', opponent: 'Patience Park', personality: 'Six in a row. Take your time.', settings: { rows: 9, cols: 9, connectCount: 6 } },
+      { type: 'moves_limit', difficulty: 'medium', name: 'Long Marathon', opponent: 'Marathon Marc', personality: '20 moves to land it.', settings: { rows: 8, cols: 9, movesLimit: 20 } },
+      { type: 'connect5', difficulty: 'medium', name: 'Wider Five', opponent: 'Grid Geneva', personality: 'Bigger grid. Same five.', settings: { rows: 9, cols: 10, connectCount: 5 } },
+      { type: 'connect6', difficulty: 'hard', name: 'The Stretch', opponent: 'The Stretch', personality: 'Long. Slow. Brutal.', settings: { rows: 9, cols: 10, connectCount: 6 } },
+      { type: 'standard', difficulty: 'hard', name: 'Open Floor', opponent: 'Wide Open Wynn', personality: 'No tricks. Just the biggest board you have seen.', settings: { rows: 9, cols: 10 } },
+      { type: 'go_second', difficulty: 'hard', name: 'Catch the Long Line', opponent: 'Endurance Eddie', personality: 'You go second on a 9-wide board. Catch up.', settings: { rows: 9, cols: 9, playerGoesFirst: false } },
+      { type: 'connect5', difficulty: 'hard', name: 'Slow Burn', opponent: 'Slow Burn Soraya', personality: 'No clock. Just five in a row.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'The Architect', opponent: 'The Architect', personality: 'She built this puzzle for you. Solve it.', settings: { rows: 8, cols: 9, connectCount: 5, presetBoard: [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,2,0,0,1,0,0],[0,0,1,1,2,1,2,0,0],[0,2,1,2,1,2,1,2,0],[0,1,2,1,2,1,2,1,0],[2,1,2,1,2,1,1,2,1]] } },
+      { type: 'boss', difficulty: 'hard', name: "BOSS: The Town's Best", opponent: "The Town's Best", personality: 'Connect 6 on the biggest board. 15 second clock. The Town picks its kings.', settings: { rows: 9, cols: 9, connectCount: 6, timerSeconds: 15, presetBoard: [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,2,0,0,0,0,0],[0,0,2,1,2,0,0,0,0],[0,2,1,2,1,2,0,0,0],[2,1,2,1,2,1,2,0,0]] }, reward: { type: 'board', id: 'ice_arena', name: 'Ice Arena Board', icon: '❄️' }, bonusReward: { type: 'pet', id: 'siberian_husky', name: 'Siberian Husky', icon: '🐺' } },
+    ],
   },
   {
     id: 'compton', name: 'Compton', state: 'CA', nickname: 'The Yard',
