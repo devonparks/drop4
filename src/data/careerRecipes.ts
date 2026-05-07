@@ -676,28 +676,94 @@ export const CITY_RECIPES: CityRecipe[] = [
   {
     id: 'philadelphia', name: 'Philadelphia', state: 'PA', nickname: 'The Steps',
     tagline: 'Climb the steps. Or get pushed down them.',
-    comingSoon: true,
+    unlockedAfterCityId: 'cleveland',
     themeColor: '#bdc3c7', accentColor: '#ecf0f1',
     skyGradient: ['#1a1a2a', '#3a3a4a', '#bdc3c7'],
     mapPosition: { xPct: 86, yPct: 35 },
-    opponents: [], levels: [],
+    // Philadelphia's identity: Rocky vibe — comeback story. Six
+    // go_second levels (the most of any city) where the player has
+    // to climb back from a deficit. Boss is The Underdog — you go
+    // second + opponent has 4 preplaced pieces.
+    opponents: [
+      'Heavyweight Hank', 'Step Climber Stax', 'Rocky Reggie', 'Iron Jaw Ivan',
+      'Right Hook Rae', 'Bell Ringer Bria', 'Apollo Asher', 'Clubber Cleo',
+      'Drago Dom', 'Tommy Gunn Tara', 'Italian Stallion Stefan', 'The Underdog',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'First Round', opponent: 'Heavyweight Hank', personality: 'Bell rings. Step up.' },
+      { type: 'go_second', difficulty: 'medium', name: 'First Hit', opponent: 'Step Climber Stax', personality: 'You go second. Take the hit.', settings: { playerGoesFirst: false } },
+      { type: 'standard', difficulty: 'medium', name: 'Rocky Road', opponent: 'Rocky Reggie', personality: 'You ever climbed steps?' },
+      { type: 'go_second', difficulty: 'medium', name: 'Iron Jaw', opponent: 'Iron Jaw Ivan', personality: 'You go second. He starts strong.', settings: { playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0]] } },
+      { type: 'jeopardy', difficulty: 'medium', name: 'Right Hook', opponent: 'Right Hook Rae', personality: 'Triple bag. Land the hook.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'go_second', difficulty: 'medium', name: 'Bell Ringer', opponent: 'Bell Ringer Bria', personality: 'You go second. The bell stings.', settings: { playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,2,2,0,0]] } },
+      { type: 'speed', difficulty: 'medium', name: 'Apollo Speed', opponent: 'Apollo Asher', personality: '5 second clock. Apollo plays fast.', settings: { timerSeconds: 5 } },
+      { type: 'go_second', difficulty: 'hard', name: 'Clubber', opponent: 'Clubber Cleo', personality: 'You go second. He has a head start.', settings: { playerGoesFirst: false } },
+      { type: 'connect5', difficulty: 'hard', name: 'Drago', opponent: 'Drago Dom', personality: 'Five in a row. He breaks people.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'go_second', difficulty: 'hard', name: 'Tommy Gunn', opponent: 'Tommy Gunn Tara', personality: 'You go second. She came up from nothing too.', settings: { playerGoesFirst: false } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Italian Stallion', opponent: 'Italian Stallion Stefan', personality: 'Triple bag. The big fight.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: The Underdog', opponent: 'The Underdog', personality: 'You go second. He starts with four pieces. Climb the steps.', settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 12, playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,2,0,0,0],[0,0,0,2,2,0,0,0],[0,0,2,2,2,2,0,0]] }, reward: { type: 'board', id: 'liberty_bell', name: 'Liberty Bell Board', icon: '🔔' }, bonusReward: { type: 'title', name: 'The Underdog', icon: '🥊' } },
+    ],
   },
   {
     id: 'seattle', name: 'Seattle', state: 'WA', nickname: 'The Rain',
     tagline: 'Gloomy puzzles. The board is wet. So are your odds.',
-    comingSoon: true,
+    unlockedAfterCityId: 'philadelphia',
     themeColor: '#16a085', accentColor: '#48c9b0',
     skyGradient: ['#0a1a2a', '#1a3a5a', '#16a085'],
     mapPosition: { xPct: 12, yPct: 12 },
-    opponents: [], levels: [],
+    // Seattle's identity: gloomy + cerebral + puzzle-heavy. Five
+    // puzzle levels (the most of any city — even more than Chicago).
+    // Heavy use of presetBoards. Boss is The Storm — preset puzzle
+    // with timer.
+    opponents: [
+      'Drizzle Dane', 'Mist Mira', 'Overcast Otto', 'Pour Patel',
+      'Downpour Dakota', 'Cloud Cover Cyrus', 'Fog Freya', 'Squall Sky',
+      'Pacific Pia', 'Cascade Cain', 'Soundwave Sven', 'The Storm',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Light Drizzle', opponent: 'Drizzle Dane', personality: 'It always starts soft.' },
+      { type: 'puzzle', difficulty: 'medium', name: 'Mist', opponent: 'Mist Mira', personality: 'Read the position through the haze.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,1,1,2,0,0],[0,2,2,1,1,2,0],[1,2,1,2,2,1,1]] } },
+      { type: 'puzzle', difficulty: 'medium', name: 'Overcast', opponent: 'Overcast Otto', personality: 'Sky is heavy. So is the board.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,1,2,2,1,1,0],[2,1,1,2,2,1,2],[1,2,2,1,1,2,1]] } },
+      { type: 'obstacle', difficulty: 'medium', name: 'Pour', opponent: 'Pour Patel', personality: 'Five walls. Find the dry path.', settings: { obstacleCells: [{row:1,col:1},{row:2,col:3},{row:1,col:5},{row:4,col:2},{row:4,col:4}] } },
+      { type: 'puzzle', difficulty: 'medium', name: 'Downpour', opponent: 'Downpour Dakota', personality: 'Solve before you drown.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,1,0,0,0],[0,0,2,2,1,0,0],[0,1,1,2,2,1,0],[2,2,1,1,2,2,1],[1,1,2,2,1,1,2]] } },
+      { type: 'standard', difficulty: 'medium', name: 'Cloud Cover', opponent: 'Cloud Cover Cyrus', personality: 'No puzzle. Just gloom.', settings: { rows: 7, cols: 8 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Fog', opponent: 'Fog Freya', personality: 'Six walls. Visibility nil.', settings: { obstacleCells: [{row:1,col:2},{row:2,col:1},{row:2,col:5},{row:3,col:3},{row:4,col:2},{row:4,col:4}] } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Squall', opponent: 'Squall Sky', personality: 'Sudden position. Sudden answer.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,2,0,1,0,0],[0,1,1,2,2,1,0],[0,2,2,1,1,2,0],[1,2,1,2,2,1,2],[2,1,2,1,1,2,1]] }, starThresholds: { three: 3, two: 5 } },
+      { type: 'connect5', difficulty: 'hard', name: 'Pacific Long', opponent: 'Pacific Pia', personality: 'Five in a row. Wide ocean.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Cascade', opponent: 'Cascade Cain', personality: 'Falling pieces. Falling rain.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,1,0,0],[0,2,1,2,2,1,0],[1,1,2,1,2,2,1],[2,1,1,2,1,2,1]] } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Soundwave', opponent: 'Soundwave Sven', personality: '8 moves. Sound the bell.', settings: { rows: 7, cols: 8, movesLimit: 8 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: The Storm', opponent: 'The Storm', personality: 'Connect 5. 10 second clock. Read the storm. Solve the puzzle. Survive.', settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 10, presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,2,1,2,0,0],[0,0,2,1,2,1,2,0],[0,1,2,1,2,1,1,2],[2,1,1,2,1,2,2,1]] }, reward: { type: 'board', id: 'pacific_storm', name: 'Pacific Storm Board', icon: '🌧️' }, bonusReward: { type: 'title', name: 'Stormwalker', icon: '⛈️' } },
+    ],
   },
   {
     id: 'toronto', name: 'Toronto', state: 'ON', nickname: 'The Six',
     tagline: 'Border crossing. New rules apply. Bring everything.',
-    comingSoon: true,
+    unlockedAfterCityId: 'seattle',
     themeColor: '#e74c3c', accentColor: '#ffffff',
     skyGradient: ['#0a0a1a', '#2a1a3a', '#e74c3c'],
     mapPosition: { xPct: 70, yPct: 14 },
-    opponents: [], levels: [],
+    // Toronto's identity: WILD MIX. Every mechanic the player has
+    // earned shows up here, with the hardest variants stacked. The
+    // final 12-level gauntlet of v1. Boss is Six King — connect-6 +
+    // jeopardy + clock + obstacles + go-second. Everything stacked.
+    opponents: [
+      'Border Bea', "North Star Nox", 'Six Side Sky', 'Mosaic Mira',
+      'Polyglot Pria', 'Drake Drago', 'Maple Mac', 'Crown Carrera',
+      'Northern Light Nyx', 'Steel Stadium Sosa', 'Empire Edge', 'Six King',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'hard', name: 'Border', opponent: 'Border Bea', personality: 'New country. Same game. Harder bot.', settings: { rows: 7, cols: 8 } },
+      { type: 'speed', difficulty: 'hard', name: 'North Star', opponent: 'North Star Nox', personality: '4 second clock. The North is fast.', settings: { timerSeconds: 4 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Six Side', opponent: 'Six Side Sky', personality: 'Six walls. The Six.', settings: { obstacleCells: [{row:1,col:1},{row:2,col:2},{row:3,col:3},{row:3,col:4},{row:2,col:5},{row:1,col:6}] } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Mosaic', opponent: 'Mosaic Mira', personality: 'Read the position. Build a line.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,2,0,1,0,0],[0,2,1,2,1,1,0],[0,1,2,1,2,2,0],[2,1,1,2,1,2,1],[1,2,2,1,2,1,2]] }, starThresholds: { three: 3, two: 5 } },
+      { type: 'connect5', difficulty: 'hard', name: 'Polyglot', opponent: 'Polyglot Pria', personality: 'Five in a row. She speaks every game.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Drake Money', opponent: 'Drake Drago', personality: 'Triple bag. Started from the bottom.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'go_second', difficulty: 'hard', name: 'Maple', opponent: 'Maple Mac', personality: 'You go second. He has a 3-piece head start.', settings: { playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,2,2,2,0,0]] } },
+      { type: 'speed', difficulty: 'hard', name: 'Crown Speed', opponent: 'Crown Carrera', personality: '3 second clock. Crowns wait for no one.', settings: { rows: 7, cols: 8, timerSeconds: 3 } },
+      { type: 'connect6', difficulty: 'hard', name: 'Northern Light', opponent: 'Northern Light Nyx', personality: 'Six in a row. Sky is strange up here.', settings: { rows: 9, cols: 9, connectCount: 6 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Steel Stadium', opponent: 'Steel Stadium Sosa', personality: 'Triple bag. Connect 5. 6 second clock.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3, timerSeconds: 6 } },
+      { type: 'obstacle', difficulty: 'hard', name: 'Empire Edge', opponent: 'Empire Edge', personality: 'Eight walls. Find the empire path.', settings: { obstacleCells: [{row:1,col:1},{row:1,col:6},{row:2,col:3},{row:2,col:4},{row:3,col:2},{row:3,col:5},{row:4,col:3},{row:4,col:4}] } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: Six King', opponent: 'Six King', personality: "v1's final boss. Six in a row. Triple bag. 8 second clock. You go second. Six walls. Bring everything.", settings: { rows: 9, cols: 9, connectCount: 6, timerSeconds: 8, rewardMultiplier: 3, playerGoesFirst: false, obstacleCells: [{row:2,col:2},{row:2,col:6},{row:6,col:2},{row:6,col:6}], presetBoard: [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,2,0,0,0,0],[0,0,0,2,1,2,0,0,0],[0,0,2,1,2,1,2,0,0],[0,2,1,2,1,2,1,2,0]] }, reward: { type: 'board', id: 'crown_court', name: 'Crown Court Board', icon: '👑' }, bonusReward: { type: 'title', name: 'Six King', icon: '6️⃣' } },
+    ],
   },
 ];
