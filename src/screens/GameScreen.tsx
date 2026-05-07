@@ -10,6 +10,7 @@ import { PressScale, SlideReveal, Shimmer, CountUp } from '../components/animati
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { LevelIntroCard, deriveIntroFromParams } from '../components/ui/LevelIntroCard';
 import { GlossyButton } from '../components/ui/GlossyButton';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { GameBoard, CELL_SIZE, BOARD_WIDTH } from '../components/board/GameBoard';
@@ -105,6 +106,28 @@ export function GameScreen({ navigation }: Props) {
   // use when the player can already see they're in a tight spot.
   // Future: gem-purchasable second use + drops from boxes.
   const [skipsRemaining, setSkipsRemaining] = useState(1);
+  // Phase A.2 — Per-level intro card. Derives icon/label/rule/tint
+  // from the route params (boss script, obstacle cells, moves limit,
+  // etc.). Standard career levels return null and skip the intro
+  // entirely so we don't fire it for every match. Quick Play / Local
+  // Play also skip — the intro is a career-mode device. Once
+  // dismissed (auto after ~1.8s or on tap), introDone flips and the
+  // player can interact.
+  const introProps = useMemo(() => {
+    if (params.careerLevelId == null) return null;
+    return deriveIntroFromParams(params);
+  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier]);
+  const [introDone, setIntroDone] = useState(() => introProps == null);
+  // GameScreen is a Stack route — React Navigation keeps it mounted
+  // when you navigate away and reuses the instance on re-entry. So
+  // introDone, set true on the FIRST visit, would stay true forever
+  // and the next career level would skip its intro. Reset it whenever
+  // the level ID (or its variant params) changes — that's the signal
+  // a new match has started, regardless of mount status.
+  useEffect(() => {
+    setIntroDone(introProps == null);
+  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier, introProps]);
+
   // Phase 2 power pieces: 1 use per career match each, unlocked by
   // chapter bosses. Bomb (Brooklyn L12), Rainbow (Venice L24), Heavy
   // (Harlem L36). Each piece has its own "armed" mode flag — only one
@@ -812,6 +835,10 @@ export function GameScreen({ navigation }: Props) {
 
   const handleColumnPress = useCallback((col: number) => {
     if (status !== 'playing' || isAiThinking) return;
+    // Block taps while the intro card is still on-screen — feels weird
+    // for a piece to drop while the "TARGET: 6 MOVES" reveal is still
+    // animating in. Players can tap the intro to skip it.
+    if (!introDone) return;
 
     if (isVsAi && currentPlayer !== 1) return;
     // Phase 2 boss script — Tommy Blacktop's column-parity rule. Turn
@@ -875,7 +902,7 @@ export function GameScreen({ navigation }: Props) {
     showLastMove(col);
     haptics.drop();
     playSound('drop');
-  }, [status, isAiThinking, currentPlayer, isVsAi, moveCount, params.bossScript, armedPowerPiece, bombsRemaining, rainbowsRemaining, heaviesRemaining]);
+  }, [status, isAiThinking, introDone, currentPlayer, isVsAi, moveCount, params.bossScript, armedPowerPiece, bombsRemaining, rainbowsRemaining, heaviesRemaining]);
 
   const handleShareScore = async () => {
     haptics.tap();
@@ -2120,6 +2147,23 @@ export function GameScreen({ navigation }: Props) {
         }}
         onCancel={() => setQuitConfirmVisible(false)}
       />
+
+      {/* Phase A.2 — Per-level intro card. Telegraphs the variant
+          identity ("🧱 4 OBSTACLES" / "🎯 WIN IN 6 MOVES" / "TOMMY'S
+          RULE") for ~1.8s before play opens. Standard career levels
+          (and Quick Play / Local Play) skip the intro entirely —
+          deriveIntroFromParams returns null and we never mount this.
+          On dismiss (auto-after-1.8s or tap), introDone flips and
+          handleColumnPress's intro gate releases. */}
+      {introProps && !introDone && (
+        <LevelIntroCard
+          icon={introProps.icon}
+          label={introProps.label}
+          rule={introProps.rule}
+          tint={introProps.tint}
+          onComplete={() => setIntroDone(true)}
+        />
+      )}
     </ScreenBackground>
   );
 }
