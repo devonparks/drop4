@@ -440,4 +440,68 @@ export const CITY_RECIPES: CityRecipe[] = [
     mapPosition: { xPct: 50, yPct: 95 },
     opponents: [], levels: [],
   },
+
+  // ─── 10-15 · NEW v1 TEASES (Phase B will fill in real recipes) ────
+  // Six more cities to hit the 15-city v1 target. Each picks up an
+  // unclaimed region of the map + a distinct vibe so the player has
+  // a sense of "the world keeps opening up." Same comingSoon=true
+  // pattern — Phase B authors 12 levels each, generator emits IDs
+  // 109+ in order (city 10 starts at L109 = (10-1)*12 + 1).
+  {
+    id: 'atlanta', name: 'Atlanta', state: 'GA', nickname: 'The Trap',
+    tagline: 'Hip-hop streetball. Loud, fast, and undefeated at home.',
+    comingSoon: true,
+    themeColor: '#9b00b9', accentColor: '#d92aff',
+    skyGradient: ['#1a0033', '#3a0066', '#9b00b9'],
+    mapPosition: { xPct: 75, yPct: 72 },
+    opponents: [], levels: [],
+  },
+  {
+    id: 'houston', name: 'Houston', state: 'TX', nickname: 'The Yard',
+    tagline: 'Texas heat, slow burn. Outlast or be cooked.',
+    comingSoon: true,
+    themeColor: '#ff5f1f', accentColor: '#ffb800',
+    skyGradient: ['#3d1a00', '#8a3a00', '#ff5f1f'],
+    mapPosition: { xPct: 50, yPct: 82 },
+    opponents: [], levels: [],
+  },
+  {
+    id: 'cleveland', name: 'Cleveland', state: 'OH', nickname: 'The Lake',
+    // Easter egg for the Kingpin universe — Cleveland is Devon's
+    // hometown + the Kingpin Bible's setting. Nothing here makes
+    // sense yet; it will when Kingpin ships years from now.
+    tagline: 'Cold court, real ones only. 755 Broadway never forgot.',
+    comingSoon: true,
+    themeColor: '#a36b3a', accentColor: '#d49a5e',
+    skyGradient: ['#1a0e1a', '#3a2e1a', '#a36b3a'],
+    mapPosition: { xPct: 65, yPct: 27 },
+    opponents: [], levels: [],
+  },
+  {
+    id: 'philadelphia', name: 'Philadelphia', state: 'PA', nickname: 'The Steps',
+    tagline: 'Climb the steps. Or get pushed down them.',
+    comingSoon: true,
+    themeColor: '#bdc3c7', accentColor: '#ecf0f1',
+    skyGradient: ['#1a1a2a', '#3a3a4a', '#bdc3c7'],
+    mapPosition: { xPct: 86, yPct: 35 },
+    opponents: [], levels: [],
+  },
+  {
+    id: 'seattle', name: 'Seattle', state: 'WA', nickname: 'The Rain',
+    tagline: 'Gloomy puzzles. The board is wet. So are your odds.',
+    comingSoon: true,
+    themeColor: '#16a085', accentColor: '#48c9b0',
+    skyGradient: ['#0a1a2a', '#1a3a5a', '#16a085'],
+    mapPosition: { xPct: 12, yPct: 12 },
+    opponents: [], levels: [],
+  },
+  {
+    id: 'toronto', name: 'Toronto', state: 'ON', nickname: 'The Six',
+    tagline: 'Border crossing. New rules apply. Bring everything.',
+    comingSoon: true,
+    themeColor: '#e74c3c', accentColor: '#ffffff',
+    skyGradient: ['#0a0a1a', '#2a1a3a', '#e74c3c'],
+    mapPosition: { xPct: 70, yPct: 14 },
+    opponents: [], levels: [],
+  },
 ];
