@@ -578,20 +578,66 @@ export const CITY_RECIPES: CityRecipe[] = [
   {
     id: 'atlanta', name: 'Atlanta', state: 'GA', nickname: 'The Trap',
     tagline: 'Hip-hop streetball. Loud, fast, and undefeated at home.',
-    comingSoon: true,
+    unlockedAfterCityId: 'the_void',
     themeColor: '#9b00b9', accentColor: '#d92aff',
     skyGradient: ['#1a0033', '#3a0066', '#9b00b9'],
     mapPosition: { xPct: 75, yPct: 72 },
-    opponents: [], levels: [],
+    // Atlanta's identity: high-energy, high-stakes, fast money. Mix of
+    // jeopardy + speed + tournament-style. Boss is the Trap King with
+    // a stacked seed and triple coins.
+    opponents: [
+      'Drip Daniel', 'Hustle Henry', 'Bass Boost Bria', 'Stack Cassidy',
+      'Boom Bap Brent', 'Glow Up Gia', 'Real Recognize Rey', 'Drip Drum',
+      'Slick Sosa', "Top Floor Tony", 'Heir Apparent', 'Trap King',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Welcome to the Trap', opponent: 'Drip Daniel', personality: 'Just the warm-up. Atlanta plays for keeps.' },
+      { type: 'jeopardy', difficulty: 'medium', name: 'Hustle Money', opponent: 'Hustle Henry', personality: 'Triple bag right out the gate.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'speed', difficulty: 'medium', name: 'Bass Drop', opponent: 'Bass Boost Bria', personality: '5 second clock. Read the beat.', settings: { timerSeconds: 5 } },
+      { type: 'standard', difficulty: 'medium', name: 'Stack', opponent: 'Stack Cassidy', personality: 'Stack the wins.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,1,0,0,0],[0,0,2,2,1,0,0],[0,1,2,1,2,1,0]] } },
+      { type: 'jeopardy', difficulty: 'medium', name: 'Boom Bap', opponent: 'Boom Bap Brent', personality: 'Triple bag. Hard beat.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'connect5', difficulty: 'medium', name: 'Glow Up', opponent: 'Glow Up Gia', personality: 'Five in a row. Big board.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'obstacle', difficulty: 'medium', name: 'Real Recognize', opponent: 'Real Recognize Rey', personality: 'Five walls. Real ones step around.', settings: { obstacleCells: [{row:1,col:2},{row:2,col:1},{row:3,col:3},{row:4,col:5},{row:2,col:5}] } },
+      { type: 'speed', difficulty: 'hard', name: 'Drip Drum', opponent: 'Drip Drum', personality: '4 second clock. Drum roll.', settings: { timerSeconds: 4 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Slick Stakes', opponent: 'Slick Sosa', personality: 'Triple bag. 6 second clock. Show out.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3, timerSeconds: 6 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Top Floor', opponent: 'Top Floor Tony', personality: 'Solve the position. Then the city is yours.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,1,2,2,1,2,0],[2,1,1,2,2,1,0],[1,2,2,1,1,2,1]] } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Heir Apparent', opponent: 'Heir Apparent', personality: '7 moves to take the throne.', settings: { rows: 7, cols: 8, movesLimit: 7 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: Trap King', opponent: 'Trap King', personality: "Atlanta's crown. 5 in a row. Triple bag. 5 second clock. Earn it.", settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 5, rewardMultiplier: 3, presetBoard: [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,1,2,0,0],[0,0,0,2,1,2,1,0],[0,0,2,1,2,1,2,0],[0,2,1,2,1,2,1,2]] }, reward: { type: 'pieces', id: 'gold_chain', name: 'Gold Chain Pieces', icon: '⛓️' }, bonusReward: { type: 'title', name: 'Trap Lord', icon: '👑' } },
+    ],
   },
   {
     id: 'houston', name: 'Houston', state: 'TX', nickname: 'The Yard',
+    // Note: 'The Yard' nickname is shared with Compton — both cities
+    // earned it for different reasons (Compton: speed, Houston: slow
+    // burn). Acceptable cross-city nickname collision; the city.name
+    // ('Compton' vs 'Houston') is the disambiguator everywhere.
     tagline: 'Texas heat, slow burn. Outlast or be cooked.',
-    comingSoon: true,
+    unlockedAfterCityId: 'atlanta',
     themeColor: '#ff5f1f', accentColor: '#ffb800',
     skyGradient: ['#3d1a00', '#8a3a00', '#ff5f1f'],
     mapPosition: { xPct: 50, yPct: 82 },
-    opponents: [], levels: [],
+    // Houston's identity: endurance + go-second + moves-limit. The
+    // counter to Compton's speed cult — long, patient, deliberate
+    // games. Boss is Houston King — 30-move endurance match.
+    opponents: [
+      'Slow Roll Sage', 'Endurance Earl', 'Patient Pez', 'Long Haul Hank',
+      'Stalker Stella', 'Cool Hand Cody', 'Marathon Mara', 'Steady Steve',
+      'Late Bloomer Lena', 'Iron Lung Iris', 'Final Answer Felix', 'Houston King',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Welcome to the Yard', opponent: 'Slow Roll Sage', personality: "We do this slow down here." },
+      { type: 'go_second', difficulty: 'medium', name: 'Patient Start', opponent: 'Endurance Earl', personality: 'You go second. Wait for it.', settings: { playerGoesFirst: false } },
+      { type: 'moves_limit', difficulty: 'medium', name: 'Patient Twelve', opponent: 'Patient Pez', personality: '12 moves. Plenty of time. Use them.', settings: { rows: 7, cols: 8, movesLimit: 12 } },
+      { type: 'standard', difficulty: 'medium', name: 'Long Haul', opponent: 'Long Haul Hank', personality: 'Big board. Big game.', settings: { rows: 8, cols: 9 } },
+      { type: 'go_second', difficulty: 'medium', name: 'Stalker', opponent: 'Stalker Stella', personality: 'You go second. She watches.', settings: { playerGoesFirst: false } },
+      { type: 'moves_limit', difficulty: 'medium', name: 'Cool Hand', opponent: 'Cool Hand Cody', personality: '15 moves. No clock. Cool head wins.', settings: { rows: 8, cols: 9, movesLimit: 15 } },
+      { type: 'connect5', difficulty: 'medium', name: 'Five-Step Marathon', opponent: 'Marathon Mara', personality: 'Five in a row. Take all day.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'standard', difficulty: 'hard', name: 'Steady', opponent: 'Steady Steve', personality: 'No tricks. Just stamina.', settings: { rows: 8, cols: 9 } },
+      { type: 'go_second', difficulty: 'hard', name: 'Late Bloomer', opponent: 'Late Bloomer Lena', personality: 'You go second. She has 3 pieces already.', settings: { playerGoesFirst: false, presetBoard: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,2,2,2,0,0]] } },
+      { type: 'moves_limit', difficulty: 'hard', name: 'Iron Lung', opponent: 'Iron Lung Iris', personality: '10 moves. Hold your breath.', settings: { rows: 8, cols: 9, movesLimit: 10 } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Final Answer', opponent: 'Final Answer Felix', personality: 'There is one move that wins. Find it.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,1,1,2,0,0],[0,2,1,2,1,1,0],[1,1,2,1,2,2,1],[2,1,2,2,1,1,2]] }, starThresholds: { three: 1, two: 2 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: Houston King', opponent: 'Houston King', personality: 'Connect 6 on a 9-wide board. 30 moves. The patient king.', settings: { rows: 9, cols: 9, connectCount: 6, movesLimit: 30 }, reward: { type: 'board', id: 'desert_dawn', name: 'Desert Dawn Board', icon: '🌵' }, bonusReward: { type: 'pet', id: 'longhorn', name: 'Longhorn', icon: '🐂' } },
+    ],
   },
   {
     id: 'cleveland', name: 'Cleveland', state: 'OH', nickname: 'The Lake',
@@ -599,11 +645,33 @@ export const CITY_RECIPES: CityRecipe[] = [
     // hometown + the Kingpin Bible's setting. Nothing here makes
     // sense yet; it will when Kingpin ships years from now.
     tagline: 'Cold court, real ones only. 755 Broadway never forgot.',
-    comingSoon: true,
+    unlockedAfterCityId: 'houston',
     themeColor: '#a36b3a', accentColor: '#d49a5e',
     skyGradient: ['#1a0e1a', '#3a2e1a', '#a36b3a'],
     mapPosition: { xPct: 65, yPct: 27 },
-    opponents: [], levels: [],
+    // Cleveland's identity: foundational + obstacle-heavy. The "real
+    // basketball" city — no flash, no tricks, just a clean fight on
+    // a hard board. Boss is 755 (Easter egg) — connect-5 on standard
+    // board with a Cleveland-themed obstacle pattern.
+    opponents: [
+      'Lake Effect Larry', 'East Cle Eli', 'Tremont Tasha', 'Coventry Cyrus',
+      'West Side Wynn', 'Slavic Village Stas', 'Old Brooklyn Otto',
+      "Charlie Everbrush", 'Bedford Bree', 'Glenville Greg', "Murray Hill Mac", '755',
+    ],
+    levels: [
+      { type: 'standard', difficulty: 'medium', name: 'Cold Open', opponent: 'Lake Effect Larry', personality: 'No flash. Just real ones.' },
+      { type: 'obstacle', difficulty: 'medium', name: 'East Side Walls', opponent: 'East Cle Eli', personality: 'Three walls. East side rules.', settings: { obstacleCells: [{row:3,col:1},{row:3,col:5},{row:4,col:3}] } },
+      { type: 'standard', difficulty: 'medium', name: 'Tremont Stand', opponent: 'Tremont Tasha', personality: 'Stand your ground.' },
+      { type: 'go_second', difficulty: 'medium', name: 'Coventry Catch-Up', opponent: 'Coventry Cyrus', personality: 'You go second. Catch up.', settings: { playerGoesFirst: false } },
+      { type: 'obstacle', difficulty: 'medium', name: 'West Side Five', opponent: 'West Side Wynn', personality: 'Five walls. Five wins.', settings: { obstacleCells: [{row:1,col:1},{row:2,col:2},{row:3,col:3},{row:4,col:4},{row:5,col:5}] } },
+      { type: 'connect5', difficulty: 'medium', name: 'Long Winter', opponent: 'Slavic Village Stas', personality: 'Five in a row. Lake winter long.', settings: { rows: 8, cols: 9, connectCount: 5 } },
+      { type: 'standard', difficulty: 'medium', name: 'Old Brooklyn', opponent: 'Old Brooklyn Otto', personality: 'Same name. Different city. Same respect.' },
+      { type: 'obstacle', difficulty: 'hard', name: 'Charlie Everbrush', opponent: 'Charlie Everbrush', personality: 'You will hear this name again. Six walls.', settings: { obstacleCells: [{row:1,col:1},{row:1,col:5},{row:3,col:2},{row:3,col:4},{row:4,col:1},{row:4,col:5}] } },
+      { type: 'puzzle', difficulty: 'hard', name: 'Bedford', opponent: 'Bedford Bree', personality: 'The position is set. Read the lake.', settings: { presetBoard: [[0,0,0,0,0,0,0],[0,0,0,2,0,0,0],[0,0,2,1,2,0,0],[0,1,2,2,1,1,0],[2,1,1,2,2,1,2],[1,2,2,1,1,2,1]] } },
+      { type: 'standard', difficulty: 'hard', name: 'Glenville', opponent: 'Glenville Greg', personality: 'No tricks. East 105th rules.', settings: { rows: 7, cols: 8 } },
+      { type: 'jeopardy', difficulty: 'hard', name: 'Murray Hill Stakes', opponent: 'Murray Hill Mac', personality: 'Triple bag. East 12th. Bring it.', settings: { rows: 7, cols: 8, connectCount: 5, rewardMultiplier: 3 } },
+      { type: 'boss', difficulty: 'hard', name: 'BOSS: 755', opponent: '755', personality: '755 Broadway never forgot. The address you didnt know was an address. Connect 5. Eight walls. Survive the cold.', settings: { rows: 7, cols: 8, connectCount: 5, timerSeconds: 12, obstacleCells: [{row:1,col:0},{row:1,col:7},{row:2,col:2},{row:2,col:5},{row:4,col:1},{row:4,col:6},{row:5,col:3},{row:5,col:4}] }, reward: { type: 'board', id: 'lake_effect', name: 'Lake Effect Board', icon: '🏞️' }, bonusReward: { type: 'title', name: '755', icon: '🔢' } },
+    ],
   },
   {
     id: 'philadelphia', name: 'Philadelphia', state: 'PA', nickname: 'The Steps',
