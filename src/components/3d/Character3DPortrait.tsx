@@ -12,10 +12,10 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { View, ViewStyle, StyleSheet, ActivityIndicator, Text, Animated } from 'react-native';
+import { View, ViewStyle, StyleSheet, ActivityIndicator, Text, Animated, Platform } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import { CompositeCharacter, type CharacterState, type ContentSource } from '@amg/character-runtime';
+import { CompositeCharacter, FrameThrottle, type CharacterState, type ContentSource } from '@amg/character-runtime';
 import { useCharacterStore } from '../../stores/characterStore';
 import { colors as themeColors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
@@ -129,7 +129,16 @@ export function Character3DPortrait({
     >
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
         <Canvas
-          frameloop="always"
+          // iOS perf 2026-05-15: r3f-native runs the render loop on the JS
+          // thread; iOS Hermes is interpreted (no JIT) so a 12-mesh skinned
+          // character at 60 FPS pegs JS to ~7 FPS — measured via RN Perf
+          // Monitor. Switching to `demand` + a 30 Hz FrameThrottle below
+          // halves the per-second JS cost. Animations play at full authored
+          // speed because the mixer ticks at a sustainable rate instead of
+          // chasing 60 and falling behind. See FrameThrottle.tsx in
+          // @amg/character-runtime for the full rationale.
+          // Android can JIT and holds 60 FPS — left as `always` there.
+          frameloop={Platform.OS === 'ios' ? 'demand' : 'always'}
           gl={{ antialias: true, alpha: true } as any}
           shadows
           camera={{ position: CAMERA_PRESETS[cameraPreset].pos, fov: 42, near: 0.01, far: 1000 }}
@@ -139,6 +148,7 @@ export function Character3DPortrait({
           }}
           style={StyleSheet.absoluteFill as any}
         >
+          {Platform.OS === 'ios' && <FrameThrottle fps={30} />}
           {/* Three-point lighting — Audit C-1 fix 2026-05-05 PM:
               boosted ambient 0.55 → 0.65 + warm rim 1.4 → 1.8 so
               characters pop against dark UI on every screen

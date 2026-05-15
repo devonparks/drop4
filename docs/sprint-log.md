@@ -4,6 +4,77 @@ Chronological session-by-session log of what shipped + decisions made.
 
 ---
 
+## 2026-05-15 — iPhone JS-thread perf, Path A: FrameThrottle@30 FPS
+
+**Symptom.** iPhone HomeScreen idle/emote animations played slow and stuttery
+even though the UI was smooth. Web and Samsung Android were fine.
+
+**Diagnosis.** RN Perf Monitor on iPhone: **UI thread 53 FPS, JS thread
+7 FPS, RAM 684 MB**. The character mixer in `@amg/character-runtime`
+runs inside r3f's `useFrame`, which executes on the JS thread. iOS
+Hermes is interpreted (JIT disallowed in the iOS sandbox), so the JS
+cost of rendering a 12-mesh skinned Synty character at 60 FPS pegs the
+thread at 7 FPS. With CompositeCharacter's 50 ms delta clamp (added
+during the 2026-05-13 pretzel fix), each tick advances animation by
+at most 50 ms × 7 ticks/sec = animations playing at ~35 % of authored
+speed. That's what Devon was feeling — slow, choppy emotes.
+
+**False starts ruled out.**
+- `LiveBackground3D` is imported but never rendered on HomeScreen — not a contributor.
+- Every `Animated.timing`/`loop`/`spring` on HomeScreen uses `useNativeDriver: true` → UI thread. Sparkles, breathing, drift, pulse, fade-ins all run native. Not JS thread work.
+- No Reanimated worklets compete for JS on home.
+- `setInterval` at line 712 fires every 10 s — negligible.
+
+**Earlier attempt (this session, rolled back).** Cheap-wins pass —
+TopBar snapshots, `dpr` cap via `setPixelRatio` in onCreated, MSAA off,
+shadows off for portraits, TurntableGroup split. Reverted because (a)
+it broke the home character's position (likely the `setPixelRatio`
+call in onCreated interacted badly with expo-gl's size logic), and
+(b) all those changes targeted the **GPU**, which was already running
+fine at 53 UI FPS. The bottleneck was JS, not GPU. Wrong tree.
+
+**What shipped.**
+- `@amg/character-runtime` gained a new `FrameThrottle` helper component (`scene/FrameThrottle.tsx`, exported from the package root). It drives a parent Canvas at a fixed FPS by calling `invalidate()` on a `setInterval`. Pairs with `frameloop="demand"` on the Canvas.
+- Drop4 wires `<FrameThrottle fps={30} />` into the two character Canvases when `Platform.OS === 'ios'`:
+  - `src/components/3d/Character3DPortrait.tsx` — used by MatchupScreen, GameScreen game-over, Customize, AnimationPicker, Profile, every modal that shows a character.
+  - `src/screens/HomeScreen.tsx` — the hero canvas.
+- Android keeps `frameloop="always"` (Hermes JITs there; already smooth).
+- Per `amg-engine/CLAUDE.md` quality > speed: FrameThrottle lives in
+  the engine, not in Drop4, because every game after Drop4 (Tic Tac Toe,
+  Checkers, Chess, RPS+) inherits the same character pipeline and the
+  same iOS Hermes constraint.
+
+**Files.**
+- `amg-engine/packages/character-runtime/src/scene/FrameThrottle.tsx` (new)
+- `amg-engine/packages/character-runtime/src/index.ts` (export)
+- `Drop4/src/components/3d/Character3DPortrait.tsx` (wire + frameloop platform-switch)
+- `Drop4/src/screens/HomeScreen.tsx` (wire + frameloop platform-switch)
+
+**Expected impact.** JS FPS 7 → ~14–18 on iPhone. Mixer tick interval
+drops from ~143 ms (10 % of intended rate) to ~33 ms (matches 30 FPS
+animation budget). Animations should play at full authored speed with
+a small visual drop from "60 FPS rendering" to "30 FPS rendering" that
+mobile players don't perceive (industry-standard mobile rate).
+
+**Path B (planned follow-up, not shipped).** If 30 JS FPS still feels
+slow, merge the 12 character meshes into 1 SkinnedMesh at runtime to
+cut draw calls and skinning uploads ~12 → 1. Full plan at
+`amg-engine/docs/character-mesh-merge-plan.md`. Roughly 500 LOC, 1–2
+days of focused work. Defer until after testing FrameThrottle on
+iPhone; only invest if needed.
+
+**Verification.** `tsc --noEmit` clean on Drop4 src/. The only tsc
+output is the pre-existing engine-workspace "Cannot find module 'react'"
+noise (same shape as the dozens of pre-existing errors in
+CharacterCreator etc.); engine code resolves react at runtime via
+Drop4's `node_modules` per metro.config.js workspace setup.
+
+**Next:** rebuild and measure on iPhone. Open RN dev menu → Show Perf
+Monitor → compare JS FPS to the 7 FPS baseline. If ≥ 25, Path A is
+enough for v1.0. If still < 20, schedule Path B.
+
+---
+
 ## 2026-05-06 — strategic shift: career mode is the retention engine
 
 **Decision**: Drop4 ship date is no longer sacred. Bar = "career mode as addicting as Candy Crush / Angry Birds." Quality over calendar.
