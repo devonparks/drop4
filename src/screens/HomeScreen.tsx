@@ -7,7 +7,7 @@ import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import { CompositeCharacter, FrameThrottle, type CharacterState, type ContentSource } from '@amg/character-runtime';
+import { CompositeCharacter, type CharacterState, type ContentSource } from '@amg/character-runtime';
 import { LiveBackground3D } from '../components/3d/LiveBackground3D';
 import { useCharacterStore } from '../stores/characterStore';
 import { HUMAN_EMOTES } from '../data/animationRegistry';
@@ -200,13 +200,11 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
     <View style={{ width: 520, height: 620 }}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
         <Canvas
-          // iOS perf 2026-05-15 — see @amg/character-runtime/scene/FrameThrottle.tsx
-          // for the full why. tldr: r3f-native renders on JS thread, iOS Hermes
-          // is interpreted, a 12-mesh skinned character at 60 FPS pegs JS to
-          // ~7 FPS, animations end up playing at ~35 % speed. Throttling to
-          // 30 FPS on iOS lets the mixer keep up so animations play at full
-          // authored speed.
-          frameloop={Platform.OS === 'ios' ? 'demand' : 'always'}
+          // frameloop="always" — demand mode was causing r3f native to intercept
+          // ALL screen touches (not just the canvas area), making the entire app
+          // unresponsive on iOS. The mesh merge (Path B, 2026-05-22) already cuts
+          // per-frame cost ~6x so demand mode is no longer needed for perf.
+          frameloop="always"
           gl={{ antialias: true, alpha: true } as any}
           shadows
           camera={{ position: [0, 1.1, 3.2], fov: 42, near: 0.01, far: 1000 }}
@@ -218,7 +216,6 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
           onCreated={(canvasState: any) => { canvasState.camera.lookAt(0, 1.1, 0); }}
           style={StyleSheet.absoluteFill as any}
         >
-          {Platform.OS === 'ios' && <FrameThrottle fps={30} />}
           {/* Three-point lighting matches the legacy Character3D so the
               premium silhouette read carries over to the AMG path. */}
           <ambientLight intensity={0.55} color="#c0ccf0" />
