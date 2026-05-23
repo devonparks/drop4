@@ -4,6 +4,83 @@ Chronological session-by-session log of what shipped + decisions made.
 
 ---
 
+## 2026-05-15 — iPhone + Android JS-thread perf, Path B: character mesh merge
+
+**Trigger.** Devon: "the android ran horribly. i just want to focus on
+ios dev first … but its the same exact app but my android is old so the
+ios handles it a little better but its the same issue." Path A
+(`FrameThrottle@30 FPS`, shipped earlier today) cut per-second JS work
+in half but didn't move per-frame cost, and 12 SkinnedMesh skinning
+uploads + draw calls per frame on Hermes interpreted JS was the
+ceiling. Path B collapses that.
+
+**What shipped (engine-side, no Drop4 src/ changes).** All of the work
+lives in `amg-engine/packages/character-runtime` — Drop4's wiring of
+`Character3DPortrait.tsx` + `HomeScreen.tsx` from earlier today
+(`<FrameThrottle fps={30} />` on iOS + `frameloop="demand"`) is
+unchanged. The merge runs invisibly inside `CompositeCharacter` after
+the existing graft/rebind step. From Drop4's perspective the character
+renders the same; one Canvas, one CompositeCharacter, but inside
+there's now 1 SkinnedMesh instead of 12.
+
+See `amg-engine/docs/sprint-log.md` entry from today for the full file
+list + implementation notes.
+
+**Expected impact.**
+- JS FPS on iPhone: 7 (baseline) → ≥ 25 sustained (target). Throttled
+  to 30 FPS via FrameThrottle, so 25–30 is the realistic top.
+- Per-frame JS work for the character: 12 mesh traversals + 12
+  skinning uploads + 12 draw calls → 1 + 1 + 1.
+- Android (Samsung): same direction; the per-frame collapse should
+  recover smoothness on Devon's older device.
+
+**No visual compromise.** Sidekick part materials only differ in
+`.color`; roughness + metalness + textures + normals are uniform.
+Vertex-color baking produces pixel-equivalent PBR output. Eyes/teeth
+fixed colors and the eye-iris dark override (`#162033`) all flow
+through `resolveSlotColor` and bake into COLOR_0 the same way.
+
+**Known behavioral change.** Sidekick emote GLBs carry morph-target
+animation tracks (browFurrow, mouthOpen, etc.) that referenced
+specific per-part mesh names. After merge, those mesh names are gone
+→ tracks silently no-op. Effect: emotes' baked-in face expressions
+(e.g. dab's "scream face") no longer play. Body bone animation is
+unaffected. Slider + expression morphs continue working — they're
+written by `applyBlendshapes` to the merged mesh's union
+`morphTargetInfluences`. This actually eliminates the
+"scream-face-stuck-after-dab" bug the existing 0.8 s override window
+in `CompositeCharacter` was already working around. The override
+window stays in place (removing it is orthogonal) but it's
+structurally unnecessary now.
+
+**Validation plan (Devon to execute).**
+1. `cd Drop4 && npx expo start --port 8082`
+2. iPhone: EAS dev client → `exp://192.168.1.86:8082`. Shake → Perf
+   Monitor. Compare JS FPS to the 7 FPS pre-FrameThrottle baseline
+   and the post-FrameThrottle reading (whatever that was).
+3. Android (Samsung SM-A136U): `a` in Metro. Same perf check.
+4. Visual: HomeScreen character looks identical (skin tone, hair
+   color, eyes have pupils, teeth white, outfit colors match).
+5. Customize → swap an outfit. Verify part swap works (it now
+   re-merges; ~50 ms hidden under the existing swap fade).
+6. Emote button (dab / wave / clap / bow). Verify body animation
+   plays. Facial expression baked in the clip will be absent —
+   not a regression, see "Known behavioral change".
+
+**Files (engine, uncommitted on working tree).**
+- `amg-engine/packages/character-runtime/src/scene/merge.ts` (NEW)
+- `amg-engine/packages/character-runtime/src/scene/tint.ts` (modified — exports + applyTints branch)
+- `amg-engine/packages/character-runtime/src/scene/CompositeCharacter.tsx` (modified — full-rebuild + part-swap call merge)
+- `amg-engine/packages/character-runtime/src/index.ts` (modified — new exports)
+- `amg-engine/packages/character-runtime/src/scene/__tests__/merge.spec.md` (NEW — test cases documented as spec; engine workspace has no jest runner yet)
+
+**Type-check.** `npx tsc --noEmit` from Drop4 — 0 errors in Drop4 src/.
+Engine-workspace tsc noise (`Cannot find module 'three'` etc.) is the
+same pattern as yesterday's run, expected per metro.config.js
+workspace setup.
+
+---
+
 ## 2026-05-15 — iPhone JS-thread perf, Path A: FrameThrottle@30 FPS
 
 **Symptom.** iPhone HomeScreen idle/emote animations played slow and stuttery

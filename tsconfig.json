@@ -30,7 +30,20 @@
       "react-native-reanimated": ["./node_modules/react-native-reanimated"],
       "react-native-reanimated/*": ["./node_modules/react-native-reanimated/*"],
       "expo-linear-gradient": ["./node_modules/expo-linear-gradient"],
-      "expo-linear-gradient/*": ["./node_modules/expo-linear-gradient/*"]
+      "expo-linear-gradient/*": ["./node_modules/expo-linear-gradient/*"],
+      // AMG identity layer packages (scaffolded 2026-05-13)
+      "@amg/types": ["../amg-engine/packages/types/src/index"],
+      "@amg/types/*": ["../amg-engine/packages/types/src/*"],
+      "@amg/account": ["../amg-engine/packages/account/src/index"],
+      "@amg/account/*": ["../amg-engine/packages/account/src/*"],
+      "@amg/wallet": ["../amg-engine/packages/wallet/src/index"],
+      "@amg/wallet/*": ["../amg-engine/packages/wallet/src/*"],
+      "@amg/inventory": ["../amg-engine/packages/inventory/src/index"],
+      "@amg/inventory/*": ["../amg-engine/packages/inventory/src/*"],
+      "@amg/game-state": ["../amg-engine/packages/game-state/src/index"],
+      "@amg/game-state/*": ["../amg-engine/packages/game-state/src/*"],
+      "@amg/iap": ["../amg-engine/packages/iap/src/index"],
+      "@amg/iap/*": ["../amg-engine/packages/iap/src/*"]
     }
   },
   "include": [

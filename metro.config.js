@@ -27,6 +27,12 @@ config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules || {}),
   '@amg/character-runtime': path.join(amgEngineRoot, 'packages', 'character-runtime'),
   '@amg/character-creator': path.join(amgEngineRoot, 'packages', 'character-creator'),
+  '@amg/types': path.join(amgEngineRoot, 'packages', 'types'),
+  '@amg/account': path.join(amgEngineRoot, 'packages', 'account'),
+  '@amg/wallet': path.join(amgEngineRoot, 'packages', 'wallet'),
+  '@amg/inventory': path.join(amgEngineRoot, 'packages', 'inventory'),
+  '@amg/game-state': path.join(amgEngineRoot, 'packages', 'game-state'),
+  '@amg/iap': path.join(amgEngineRoot, 'packages', 'iap'),
 };
 
 // Metro walks up from the importing file looking for node_modules.
