@@ -26,6 +26,7 @@ type AchievementCondition =
   | { type: 'fast_win'; moves: number }
   | { type: 'hard_wins'; count: number }
   | { type: 'cosmetics'; count: number }
+  | { type: 'camos_owned'; count: number }
   | { type: 'pets_owned'; count: number }
   | { type: 'legendary_pet' };
 
@@ -45,6 +46,7 @@ interface GameStats {
   lastGameMoves: number;
   hardWins: number;
   ownedCosmetics: number;
+  ownedCamos: number;
   ownedPets: string[];
 }
 
@@ -68,6 +70,8 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     condition: { type: 'cosmetics', count: 5 }, reward: { type: 'coins', value: 150 }, difficulty: 'common', points: 10 },
   { id: 'pet_owner', name: 'Pet Owner', description: 'Own your first pet', icon: '🐕',
     condition: { type: 'pets_owned', count: 1 }, reward: { type: 'coins', value: 100 }, difficulty: 'common', points: 10 },
+  { id: 'camo_3', name: 'Fresh Coat', description: 'Collect 3 camo colorways', icon: '🎨',
+    condition: { type: 'camos_owned', count: 3 }, reward: { type: 'coins', value: 100 }, difficulty: 'common', points: 10 },
 
   // Rare (25 pts) — mid-game grind
   { id: 'win_50', name: 'Veteran', description: 'Win 50 games', icon: '⭐',
@@ -88,6 +92,8 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     condition: { type: 'cosmetics', count: 15 }, reward: { type: 'coins', value: 500 }, difficulty: 'rare', points: 25 },
   { id: 'dog_collector', name: 'Dog Collector', description: 'Own 5 different pets', icon: '🐾',
     condition: { type: 'pets_owned', count: 5 }, reward: { type: 'coins', value: 500 }, difficulty: 'rare', points: 25 },
+  { id: 'camo_12', name: 'Paint Job', description: 'Collect 12 camo colorways', icon: '🌈',
+    condition: { type: 'camos_owned', count: 12 }, reward: { type: 'coins', value: 500 }, difficulty: 'rare', points: 25 },
 
   // Hard (50 pts) — endgame prestige
   { id: 'win_100', name: 'Legend', description: 'Win 100 games', icon: '👑',
@@ -98,6 +104,8 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     condition: { type: 'level', level: 25 }, reward: { type: 'title', value: 'Master' }, difficulty: 'hard', points: 50 },
   { id: 'best_in_show', name: 'Best in Show', description: 'Own a Legendary pet', icon: '🏆',
     condition: { type: 'legendary_pet' }, reward: { type: 'title', value: 'Best in Show' }, difficulty: 'hard', points: 50 },
+  { id: 'camo_all', name: 'Master Painter', description: 'Collect all 24 camo colorways', icon: '🖌️',
+    condition: { type: 'camos_owned', count: 24 }, reward: { type: 'title', value: 'Master Painter' }, difficulty: 'hard', points: 50 },
 ];
 
 const LEGENDARY_PET_IDS = ['hellhound', 'robot', 'scifi'];
@@ -112,6 +120,7 @@ function checkCondition(condition: AchievementCondition, stats: GameStats): bool
     case 'fast_win': return stats.lastGameMoves > 0 && stats.lastGameMoves <= condition.moves;
     case 'hard_wins': return stats.hardWins >= condition.count;
     case 'cosmetics': return stats.ownedCosmetics >= condition.count;
+    case 'camos_owned': return stats.ownedCamos >= condition.count;
     case 'pets_owned': return stats.ownedPets.length >= condition.count;
     case 'legendary_pet': return stats.ownedPets.some(id => LEGENDARY_PET_IDS.includes(id));
     default: return false;
