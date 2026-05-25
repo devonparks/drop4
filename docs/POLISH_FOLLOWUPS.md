@@ -50,7 +50,7 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 
 - **Creator: lock overlay on part thumbnails.** In `@amg/character-creator`'s `PartGrid` component (packages/character-creator/src/controls/PartGrid.tsx), when a part is NOT in `ownedParts`, render a darkened overlay + padlock icon + price chip ('500 🪙') using the same `getPartPrice` price. Tapping a locked part already calls `onLockedTap(partName)` which fires the handleLockedPart buy flow in Drop4. This is UI only — the data is already wired.
 
-- **Creator: rarity-tinted border on part cards.** Thin 2-px border matching `RARITY_COLORS[rarity]` around every part thumbnail in the creator's Outfit / Hair / Face pickers. Subtle but sells the economy.
+<!-- Shipped: Creator rarity-tinted border on part cards — already implemented in both PartGrid (getRarityColor prop, border logic lines 158-166) and AmgPartCard (borderColor from adapter.getRarityColor, line 177). Drop4's cosmeticAdapter.ts wires getRarityColor. Verified live 2026-05-25. -->
 
 - **Shop: preview modal on long-press.** Tapping a shop card adds to cart / buys; long-press opens a `<CharacterPreviewModal>` that mounts a `<CompositeCharacter>` rendering the current player wearing JUST this part swapped in. Helps players decide before spending.
 
