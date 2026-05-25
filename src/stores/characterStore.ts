@@ -179,6 +179,21 @@ const STARTER_OUTFITS = [
 
 const DEFAULT_EQUIPPED_OUTFIT = 'human_modern_civilians_01';
 
+// ── Helpers ───────────────────────────────────────────────────────────
+
+/** Count unique camo variant IDs across all owned parts. Deduplicates
+ *  because the same variantId can appear on multiple parts — we only
+ *  count distinct colorways the player has collected. */
+export function countUniqueCamos(
+  ownedPartVariants: Record<string, string[]>,
+): number {
+  const seen = new Set<string>();
+  for (const ids of Object.values(ownedPartVariants)) {
+    for (const id of ids) seen.add(id);
+  }
+  return seen.size;
+}
+
 // ── Store ──────────────────────────────────────────────────────────────
 
 export const useCharacterStore = create<CharacterStoreState>((set, get) => ({

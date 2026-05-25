@@ -28,7 +28,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useCharacterStore } from '../../stores/characterStore';
+import { useCharacterStore, countUniqueCamos } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useShopStore } from '../../stores/shopStore';
 import { PETS_ENABLED } from '../../data/featureFlags';
@@ -78,14 +78,7 @@ export function MilestoneToast() {
   const unlockTitle = useMilestoneStore((s) => s.unlockTitle);
   const addCoins = useShopStore((s) => s.addCoins);
 
-  // Unique camo count — deduplicate variantIds across all parts.
-  const uniqueCamoCount = useMemo(() => {
-    const seen = new Set<string>();
-    for (const ids of Object.values(ownedPartVariants)) {
-      for (const id of ids) seen.add(id);
-    }
-    return seen.size;
-  }, [ownedPartVariants]);
+  const uniqueCamoCount = useMemo(() => countUniqueCamos(ownedPartVariants), [ownedPartVariants]);
 
   const [queue, setQueue] = useState<CollectionMilestone[]>([]);
   const [active, setActive] = useState<CollectionMilestone | null>(null);

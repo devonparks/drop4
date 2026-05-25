@@ -31,7 +31,7 @@ import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 import { useChallengeStore } from '../stores/challengeStore';
 import { useSeasonStore } from '../stores/seasonStore';
 import { useCareerStore } from '../stores/careerStore';
-import { useCharacterStore } from '../stores/characterStore';
+import { useCharacterStore, countUniqueCamos } from '../stores/characterStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useLootBoxStore } from '../stores/lootBoxStore';
 import { useReplayStore } from '../stores/replayStore';
@@ -632,9 +632,6 @@ export function GameScreen({ navigation }: Props) {
       }
       const shopState = useShopStore.getState();
       const careerState = useCareerStore.getState();
-      const charState = useCharacterStore.getState();
-      const camoSet = new Set<string>();
-      for (const ids of Object.values(charState.ownedPartVariants)) { for (const id of ids) camoSet.add(id); }
       const newAchievements = checkAchievements({
         totalWins,
         currentStreak: useGameStore.getState().winStreak,
@@ -645,7 +642,7 @@ export function GameScreen({ navigation }: Props) {
         lastGameMoves: moveCount,
         hardWins: matchHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: shopState.owned.boards.length + shopState.owned.pieces.length + shopState.owned.dropEffects.length + shopState.ownedEmotes.length,
-        ownedCamos: camoSet.size,
+        ownedCamos: countUniqueCamos(useCharacterStore.getState().ownedPartVariants),
         ownedPets: shopState.ownedPets,
       });
       // First Win special celebration
@@ -741,9 +738,6 @@ export function GameScreen({ navigation }: Props) {
       const lossHistory = useMatchHistoryStore.getState();
       const lossShop = useShopStore.getState();
       const lossCareer = useCareerStore.getState();
-      const lossChar = useCharacterStore.getState();
-      const lossCamos = new Set<string>();
-      for (const ids of Object.values(lossChar.ownedPartVariants)) { for (const id of ids) lossCamos.add(id); }
       const lossNewAchs = checkAchievements({
         totalWins: lossHistory.matches.filter(m => m.result === 'win').length,
         currentStreak: useGameStore.getState().winStreak,
@@ -754,7 +748,7 @@ export function GameScreen({ navigation }: Props) {
         lastGameMoves: 0, // speed achievements only count on wins
         hardWins: lossHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: lossShop.owned.boards.length + lossShop.owned.pieces.length + lossShop.owned.dropEffects.length + lossShop.ownedEmotes.length,
-        ownedCamos: lossCamos.size,
+        ownedCamos: countUniqueCamos(useCharacterStore.getState().ownedPartVariants),
         ownedPets: lossShop.ownedPets,
       });
       if (lossNewAchs.length > 0) {
@@ -802,9 +796,6 @@ export function GameScreen({ navigation }: Props) {
       const drawHistory = useMatchHistoryStore.getState();
       const drawShop = useShopStore.getState();
       const drawCareer = useCareerStore.getState();
-      const drawChar = useCharacterStore.getState();
-      const drawCamos = new Set<string>();
-      for (const ids of Object.values(drawChar.ownedPartVariants)) { for (const id of ids) drawCamos.add(id); }
       const drawNewAchs = checkAchievements({
         totalWins: drawHistory.matches.filter(m => m.result === 'win').length,
         currentStreak: useGameStore.getState().winStreak,
@@ -815,7 +806,7 @@ export function GameScreen({ navigation }: Props) {
         lastGameMoves: 0,
         hardWins: drawHistory.matches.filter(m => m.result === 'win' && m.difficulty === 'hard').length,
         ownedCosmetics: drawShop.owned.boards.length + drawShop.owned.pieces.length + drawShop.owned.dropEffects.length + drawShop.ownedEmotes.length,
-        ownedCamos: drawCamos.size,
+        ownedCamos: countUniqueCamos(useCharacterStore.getState().ownedPartVariants),
         ownedPets: drawShop.ownedPets,
       });
       if (drawNewAchs.length > 0) {

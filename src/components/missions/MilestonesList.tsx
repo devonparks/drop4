@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCharacterStore } from '../../stores/characterStore';
+import { useCharacterStore, countUniqueCamos } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useMilestoneStore } from '../../stores/milestoneStore';
 import { getMilestoneProgressList, type MilestoneProgress } from '../../data/collectionMilestones';
@@ -33,14 +33,7 @@ export function MilestonesList() {
   const ownedPets = usePetStore((s) => s.ownedPets);
   const claimedIds = useMilestoneStore((s) => s.claimedIds);
 
-  // Unique camo count — deduplicate variantIds across all parts.
-  const uniqueCamoCount = useMemo(() => {
-    const seen = new Set<string>();
-    for (const ids of Object.values(ownedPartVariants)) {
-      for (const id of ids) seen.add(id);
-    }
-    return seen.size;
-  }, [ownedPartVariants]);
+  const uniqueCamoCount = useMemo(() => countUniqueCamos(ownedPartVariants), [ownedPartVariants]);
 
   const { earnedUnclaimed, inProgress, claimed, notStarted, total, claimedCount } = useMemo(() => {
     const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount);
