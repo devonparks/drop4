@@ -16,14 +16,16 @@ import { PressScale, StaggeredEntry, PulseGlow } from '../components/animations'
 const ICON_COLORS: Record<string, [string, string]> = {
   '🏆': ['#f4a623', '#e08d00'],
   '⭐': ['#f1c40f', '#d4ac0d'],
-  '⭐⭐': ['#3498db', '#2176ae'],
+  '⭐���': ['#3498db', '#2176ae'],
   '⭐⭐⭐': ['#9b59b6', '#7d4192'],
   '🎮': ['#1abc9c', '#15967d'],
   '🎯': ['#e74c3c', '#c0392b'],
   '🔥': ['#ff6b35', '#cc5500'],
   '⚡': ['#f39c12', '#d68910'],
-  '👥': ['#27ae60', '#1e8a4e'],
+  '���': ['#27ae60', '#1e8a4e'],
   '🛍': ['#e84393', '#c23076'],
+  '🎨': ['#e67e22', '#d35400'],
+  '🌈': ['#9b59b6', '#8e44ad'],
 };
 
 function getIconColors(icon: string): [string, string] {

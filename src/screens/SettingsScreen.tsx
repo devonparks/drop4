@@ -168,9 +168,9 @@ export function SettingsScreen({ navigation }: Props) {
           {[
             { icon: '🎭', text: '30 emotes + Fortnite-style emote wheel in lobby' },
             { icon: '🎮', text: '36 career levels with boss battles & puzzle modes' },
-            { icon: '🎨', text: '152 outfits across 12 packs + 16 pets' },
+            { icon: '🎨', text: '152 outfits across 12 packs + 24 camo colorways' },
             { icon: '🎰', text: 'Daily FREE SPIN wheel with coin & gem rewards' },
-            { icon: '🏆', text: '15 collection milestones with unique title rewards' },
+            { icon: '🏆', text: '16 collection milestones with unique title rewards' },
             { icon: '⭐', text: 'Season Pass with 50 tiers of exclusive rewards' },
             { icon: '🎁', text: 'Loot boxes, challenges & achievement system' },
           ].map((item, i) => (
