@@ -13,7 +13,7 @@
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { View, ViewStyle, StyleSheet, ActivityIndicator, Text, Animated, Platform } from 'react-native';
-import { Canvas, useFrame } from '@react-three/fiber/native';
+import { Canvas, useFrame, useThree } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { CompositeCharacter, FrameThrottle, type CharacterState, type ContentSource } from '@amg/character-runtime';
 import { useCharacterStore } from '../../stores/characterStore';
@@ -54,9 +54,31 @@ function TurntableGroup({ enabled, children }: { enabled: boolean; children: Rea
   return <group ref={ref}>{children}</group>;
 }
 
+// r3f's Canvas only reads the `camera` prop on mount — passing a new
+// camera prop on re-render doesn't move the actual camera. The Customize
+// subscreen swaps cameraPreset (body ↔ face) as the player drills into
+// different tabs, so we need an imperative updater. CameraController
+// runs inside the Canvas, grabs the active camera via useThree(), and
+// writes position + lookAt every time the preset changes.
+//
+// 2026-05-23: bug was the camera was stuck on the first preset rendered
+// (face) — switching tabs never zoomed back out to body. Fixed here.
+function CameraController({ preset }: { preset: 'body' | 'face' }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    const cfg = CAMERA_PRESETS[preset];
+    camera.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
+    camera.lookAt(cfg.lookAt[0], cfg.lookAt[1], cfg.lookAt[2]);
+    camera.updateProjectionMatrix();
+  }, [preset, camera]);
+  return null;
+}
+
 export interface Character3DPortraitProps {
-  width: number;
-  height: number;
+  /** Explicit pixel width. Omit or pass 0 for fill-parent mode. */
+  width?: number;
+  /** Explicit pixel height. Omit or pass 0 for fill-parent mode. */
+  height?: number;
   /** Override character — omit to use local player's amgCharacter. */
   customization?: CharacterState;
   /** Play a specific animation id (e.g. 'emote_dab', 'idle_base'). When
@@ -89,13 +111,20 @@ const CAMERA_PRESETS = {
 };
 
 export function Character3DPortrait({
-  width, height, customization,
+  width: propWidth = 0, height: propHeight = 0, customization,
   animationId,
   mode = 'display', autoRotate, showFloor = true, onTap, style,
   cameraPreset = 'body',
 }: Character3DPortraitProps) {
   const playerCharacter = useCharacterStore((s) => s.amgCharacter) as unknown as CharacterState | null;
   const base = customization ?? playerCharacter;
+
+  // Fill-parent mode: when width/height aren't provided, use flex:1
+  // so the Canvas fills its container naturally. Eliminates stale
+  // measurements after navigation transitions (BAGS → back).
+  const fillMode = !propWidth || !propHeight;
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const displayWidth = fillMode ? layoutWidth : propWidth;
 
   const [loaded, setLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -111,12 +140,13 @@ export function Character3DPortrait({
 
   const shouldRotate = autoRotate ?? (mode === 'creator');
 
+  const containerStyle = fillMode
+    ? [styles.fillContainer, style]
+    : [{ width: propWidth, height: propHeight }, style];
+
   if (!stateForRender) {
-    // Player save hasn't hydrated yet (App.tsx seeds amgCharacter on
-    // boot, but the Portrait can mount during that gap). Show the same
-    // loading affordance as before so layout doesn't shift.
     return (
-      <View style={[{ width, height }, style, styles.loadingOverlay]}>
+      <View style={[containerStyle, styles.loadingOverlay]}>
         <ActivityIndicator color={themeColors.orange} size="small" />
       </View>
     );
@@ -124,8 +154,11 @@ export function Character3DPortrait({
 
   return (
     <View
-      style={[{ width, height }, style]}
+      style={containerStyle}
       onTouchEnd={onTap ? () => onTap() : undefined}
+      onLayout={fillMode ? (e) => {
+        setLayoutWidth(Math.round(e.nativeEvent.layout.width));
+      } : undefined}
     >
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
         <Canvas
@@ -149,6 +182,7 @@ export function Character3DPortrait({
           style={StyleSheet.absoluteFill as any}
         >
           {Platform.OS === 'ios' && <FrameThrottle fps={30} />}
+          <CameraController preset={cameraPreset} />
           {/* Three-point lighting — Audit C-1 fix 2026-05-05 PM:
               boosted ambient 0.55 → 0.65 + warm rim 1.4 → 1.8 so
               characters pop against dark UI on every screen
@@ -206,9 +240,9 @@ export function Character3DPortrait({
               only on large hero contexts (Customize/Home/Matchup). */}
           <ActivityIndicator
             color={themeColors.orange}
-            size={width < 140 ? 'small' : 'large'}
+            size={displayWidth > 0 && displayWidth < 140 ? 'small' : 'large'}
           />
-          {width >= 140 && (
+          {displayWidth >= 140 && (
             <Text style={styles.loadingText}>Loading character…</Text>
           )}
         </View>
@@ -218,6 +252,10 @@ export function Character3DPortrait({
 }
 
 const styles = StyleSheet.create({
+  fillContainer: {
+    width: '100%' as any,
+    height: '100%' as any,
+  },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',

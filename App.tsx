@@ -33,6 +33,7 @@ import { seedAmgCharacter, mergeMissingFaceSlots } from './src/utils/characterMi
 import { buildAmgBodyForOutfit } from './src/data/npcCustomizations';
 import type { CharacterState } from '@amg/character-runtime';
 import { usePetStore } from './src/stores/petStore';
+import { useDevModeStore } from './src/stores/devModeStore';
 import { DailyRewardPopup } from './src/components/ui/DailyRewardPopup';
 import { MilestoneToast } from './src/components/ui/MilestoneToast';
 import { CityCompletionCeremony } from './src/components/ui/CityCompletionCeremony';
@@ -109,6 +110,11 @@ export default function App() {
         // openBox can roll variant drops alongside the original
         // outfit-pack drops. Idempotent — safe across hot reloads.
         seedDrop4Variants();
+
+        // Dev mode: re-grant everything if it was enabled in a previous session.
+        // Runs AFTER all stores are hydrated so the grant pass sees real data.
+        await useDevModeStore.getState().loadFromStorage();
+
         // Auto-refresh daily challenges if stale
         const challengeState = useChallengeStore.getState();
         const today = new Date().toDateString();

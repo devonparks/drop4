@@ -182,19 +182,17 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
 
   const revealedRef = useRef(false);
   const handleTap = () => {
-    if (revealedRef.current) return; // Prevent double-reveal
+    if (revealedRef.current) return;
     haptics.tap();
     playSound('click');
-    setTapCount(prev => {
-      const next = prev + 1;
-      if (next >= 3 && !revealedRef.current) {
-        revealedRef.current = true;
-        haptics.heavy();
-        playSound('whoosh');
-        onReveal();
-      }
-      return next;
-    });
+    const next = tapCount + 1;
+    setTapCount(next);
+    if (next >= 3 && !revealedRef.current) {
+      revealedRef.current = true;
+      haptics.heavy();
+      playSound('whoosh');
+      onReveal();
+    }
   };
 
   return (
@@ -296,6 +294,7 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
     pet: 'PET',
     emote: 'EMOTE',
     partVariant: 'COLORWAY',
+    tintColor: 'COLOR',
     coins: 'COINS',
     gems: 'GEMS',
   } as const;
@@ -379,6 +378,15 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
               const { variantId } = parseVariantDropId(item.id);
               const variant = DEFAULT_PALETTE.find((v) => v.id === variantId);
               if (!variant) return null;
+              // Duo-chrome variants get a split swatch; solid variants get a disc.
+              if (variant.accent) {
+                return (
+                  <View style={st.revealVariantSwatch}>
+                    <View style={[st.revealSwatchHalf, { backgroundColor: variant.color, borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }]} />
+                    <View style={[st.revealSwatchHalf, { backgroundColor: variant.accent, borderTopRightRadius: 8, borderBottomRightRadius: 8 }]} />
+                  </View>
+                );
+              }
               return (
                 <View
                   style={[st.revealVariantSwatch, { backgroundColor: variant.color }]}
@@ -960,15 +968,20 @@ const st = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
     letterSpacing: 1.4,
   },
-  // Tiny color disc shown inside the chip for partVariant drops, so
-  // the player sees the actual colorway they rolled (not just the
-  // word COLORWAY).
+  // Color disc shown inside the chip for partVariant drops, so the
+  // player sees the actual colorway they rolled (not just the word
+  // COLORWAY). Duo-chrome variants use a left/right split.
   revealVariantSwatch: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.6)',
+    overflow: 'hidden' as const,
+    flexDirection: 'row' as const,
+  },
+  revealSwatchHalf: {
+    flex: 1,
   },
   revealName: { fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 24, textAlign: 'center' },
   // Dupe-payout strip — visible only when isDupe, shows the shard +

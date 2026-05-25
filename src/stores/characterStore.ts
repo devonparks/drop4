@@ -23,6 +23,9 @@ import { STARTER_HUMAN_CHARACTER } from '@amg/character-runtime/types';
 import { saveState, loadState } from '../services/storage';
 import { isStarterPack, packPrefixFromPartName } from '../data/amgPartPricing';
 import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
+import { STARTER_TINT_COLORS } from '../data/colorRegistry';
+import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
+import { DEFAULT_COLORS_BY_SPECIES } from '@amg/character-runtime/types';
 
 // AMG character state in the store stays loosely typed (Record<string,
 // unknown>) so the store doesn't take a hard import dep on the runtime
@@ -91,12 +94,22 @@ interface CharacterStoreState {
    *  the creator and the Goku-gallery picker. */
   equippedOutfitVariant: string;
 
+  /** Unlockable tint color ownership. Each id is a color registry entry
+   *  like 'tint_hair_c53030'. Starter colors are implicitly owned (checked
+   *  via STARTER_TINT_COLORS set) and never appear here. */
+  ownedTintColors: string[];
+
   // ── Actions ──
   setAmgCharacter: (next: AmgCharacterState) => void;
   /** Equip a single AMG part (Torso, Hair, AttachmentBack, etc.) into
    *  the named slot without touching anything else. Lets the shop equip
    *  in-place after a buy without bouncing the player to the creator. */
   equipAmgPart: (slot: string, partName: string) => void;
+  /** Unequip a slot — reverts to starter default if the slot is
+   *  required (body parts), or removes the part entirely for optional
+   *  slots (beard, hats, accessories). For hero-slot subs, also
+   *  reverts companion slots. */
+  unequipSlot: (slot: string, companionSlots?: string[]) => void;
   /** Equip a specific color variant of a part. Auto-equips the part
    *  too if it's not already in the active loadout. */
   equipPartVariant: (slot: string, partName: string, variantId: string) => void;
@@ -120,6 +133,15 @@ interface CharacterStoreState {
   /** All variant ids the player owns for the given part (includes ''
    *  default when the base part is owned). */
   ownedVariantsForPart: (partName: string) => string[];
+  /** Apply a camo variant to the entire outfit (CoD model). Sets
+   *  equippedOutfitVariant AND updates the outfit color properties so
+   *  the 3D renderer shows the variant colors immediately. Pass '' to
+   *  revert to the player's manual tint colors. */
+  setOutfitVariant: (variantId: string) => void;
+  /** Unlock a tint color from the color registry (loot box grant). */
+  unlockTintColor: (colorId: string) => void;
+  /** True when the player owns this tint color (or it's a starter). */
+  isTintColorOwned: (colorId: string) => boolean;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -135,6 +157,7 @@ interface PersistedCharacter {
   ownedPartVariants?: Record<string, string[]>;
   equippedPartVariant?: Record<string, string>;
   equippedOutfitVariant?: string;
+  ownedTintColors?: string[];
   /** Legacy field — pre-Path-A migration. Read once on load to recover the
    *  player's last-equipped outfit; never written. After the first load
    *  the migrated value lives in `equippedOutfitId`. */
@@ -168,6 +191,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
   ownedPartVariants: {},
   equippedPartVariant: {},
   equippedOutfitVariant: DEFAULT_VARIANT_ID,
+  ownedTintColors: [],
 
   setAmgCharacter: (next) => set({ amgCharacter: next }),
 
@@ -178,6 +202,27 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
       amgCharacter: {
         ...baseChar,
         parts: { ...baseChar.parts, [slot]: partName },
+      } as unknown as AmgCharacterState,
+    };
+  }),
+
+  unequipSlot: (slot, companionSlots) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    const baseChar = current ?? STARTER_HUMAN_CHARACTER;
+    const nextParts: Record<string, string> = { ...(baseChar.parts as Record<string, string>) };
+    const starterParts = STARTER_HUMAN_CHARACTER.parts as Record<string, string>;
+    const slotsToRevert = [slot, ...(companionSlots ?? [])];
+    for (const sl of slotsToRevert) {
+      if (starterParts[sl]) {
+        nextParts[sl] = starterParts[sl];
+      } else {
+        delete nextParts[sl];
+      }
+    }
+    return {
+      amgCharacter: {
+        ...baseChar,
+        parts: nextParts,
       } as unknown as AmgCharacterState,
     };
   }),
@@ -292,6 +337,70 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     };
   }),
 
+  // ── Tint color ownership API ──────────────────────────────────
+  // Unlockable material tint colors (Hair 01, Outfit 01 Primary, etc.)
+  // from the color registry. Starter colors are always owned via
+  // STARTER_TINT_COLORS — no unlock needed. Non-starter colors drop
+  // from loot boxes and are tracked here.
+
+  unlockTintColor: (colorId) => set((s) => {
+    if (s.ownedTintColors.includes(colorId)) return s;
+    return { ownedTintColors: [...s.ownedTintColors, colorId] };
+  }),
+
+  isTintColorOwned: (colorId) => {
+    if (STARTER_TINT_COLORS.has(colorId)) return true;
+    return get().ownedTintColors.includes(colorId);
+  },
+
+  // ── Outfit variant ("camo") API ──────────────────────────────────
+  // CoD-camo model: selecting a variant applies its color scheme to the
+  // entire outfit at once. The variant's `color` → Primary, `accent`
+  // (or color if no accent) → Secondary, color → Tertiary. Selecting
+  // the default variant ('') leaves colors untouched so the player's
+  // manual tint picks stay.
+  setOutfitVariant: (variantId) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    if (!current) return { equippedOutfitVariant: variantId };
+
+    // Default variant — restore the species-default outfit colors so
+    // the character doesn't keep the last variant's tint forever.
+    if (!variantId || variantId === '') {
+      const species = (current as any).species ?? 'Human';
+      const defaults = DEFAULT_COLORS_BY_SPECIES[species as keyof typeof DEFAULT_COLORS_BY_SPECIES]
+        ?? DEFAULT_COLORS_BY_SPECIES.Human;
+      const colors = {
+        ...(current.colors ?? {}),
+        'Outfit 01 Primary': defaults['Outfit 01 Primary'],
+        'Outfit 01 Secondary': defaults['Outfit 01 Secondary'],
+        'Outfit 01 Tertiary': defaults['Outfit 01 Tertiary'],
+      };
+      return {
+        amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+        equippedOutfitVariant: '',
+      };
+    }
+
+    // Look up the variant's color scheme in the palette.
+    const variant = DEFAULT_PALETTE.find((v) => v.id === variantId);
+    if (!variant) return { equippedOutfitVariant: variantId };
+
+    // Apply: color → Primary (torso/arms), accent|color → Secondary
+    // (hips/legs), color → Tertiary (feet). Duo-chrome variants get
+    // a two-tone look; solid variants are uniform across all regions.
+    const colors = {
+      ...(current.colors ?? {}),
+      'Outfit 01 Primary': variant.color,
+      'Outfit 01 Secondary': variant.accent ?? variant.color,
+      'Outfit 01 Tertiary': variant.accent ? variant.color : variant.color,
+    };
+
+    return {
+      amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+      equippedOutfitVariant: variantId,
+    };
+  }),
+
   markAmgStarterSeen: () => set({ amgStarterSeen: true }),
 
   loadFromStorage: async () => {
@@ -321,6 +430,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         ownedPartVariants: saved.ownedPartVariants ?? {},
         equippedPartVariant: saved.equippedPartVariant ?? {},
         equippedOutfitVariant: saved.equippedOutfitVariant ?? DEFAULT_VARIANT_ID,
+        ownedTintColors: saved.ownedTintColors ?? [],
       });
     }
   },
@@ -338,5 +448,6 @@ useCharacterStore.subscribe((state) => {
     ownedPartVariants: state.ownedPartVariants,
     equippedPartVariant: state.equippedPartVariant,
     equippedOutfitVariant: state.equippedOutfitVariant,
+    ownedTintColors: state.ownedTintColors,
   });
 });

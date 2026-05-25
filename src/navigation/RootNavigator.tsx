@@ -23,7 +23,9 @@ import { MatchHistoryScreen } from '../screens/MatchHistoryScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { MatchupScreen } from '../screens/MatchupScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { CharacterCreatorScreen as AmgCharacterCreatorScreen } from '../screens/CharacterCreatorScreen';
+// CharacterCreatorScreen / AmgCreator route deleted 2026-05-23 —
+// character editing is now inlined into the Customize tab's KITS
+// subscreen (KitsSubscreen.tsx). The legacy modal is gone.
 // Customize-side cosmetic screens added in the 2026-05-03 pivot. Both
 // live as stack screens (vs slide-up sheets) so the player gets a
 // proper full-screen browse + filter UI for "lots of content."
@@ -121,16 +123,9 @@ export type RootStackParamList = {
   // TopBar) rather than a bottom tab — the 4-tab redesign removed Profile
   // from the tab bar.
   Profile: undefined;
-  // The new AMG Studios character creator (Sims-tier tabbed editor).
-  // Lives in @amg/character-creator and replaces Character3DCreator
-  // across every AMG game. Character state persists to
-  // characterStore.amgCharacter.
-  // Engine's DEFAULT_AVAILABLE_TABS is just ['body', 'color'] — face/hair/outfit
-  // were intentionally pulled into the host game's Customize hub (Clothes
-  // catalog + Hair / Face category browsers). Keeping the union narrow so
-  // stale deep-link calls fail at compile time instead of silently snapping
-  // to 'body' inside the engine.
-  AmgCreator: { initialTab?: 'body' | 'color' } | undefined;
+  // AmgCreator route removed 2026-05-23 — character editing (species,
+  // skin tone, hair, face, outfits) is now inlined into the Customize
+  // tab's KITS subscreen. No standalone modal.
   // Customize-side cosmetic browser. Single screen handles 6 simple
   // categories (boards / pieces / drop FX / win FX / frames / pets);
   // outfits keep the OutfitsCatalog modal, emotes keep AnimationPicker.
@@ -265,11 +260,6 @@ export function RootNavigator() {
       <Stack.Screen
         name="Profile"
         component={safe(ProfileScreen)}
-        options={{ animation: 'fade_from_bottom' }}
-      />
-      <Stack.Screen
-        name="AmgCreator"
-        component={safe(AmgCharacterCreatorScreen)}
         options={{ animation: 'fade_from_bottom' }}
       />
       <Stack.Screen

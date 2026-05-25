@@ -59,6 +59,7 @@ import {
   DUPE_COIN_REFUND as ENGINE_DUPE_COIN_REFUND,
   DUPE_SHARDS_AWARDED as ENGINE_DUPE_SHARDS_AWARDED,
 } from '@amg/cosmetic-runtime';
+import { ALL_TINT_COLORS, TINT_SLOT_LABEL, type TintColor } from '../data/colorRegistry';
 
 // ─── Rarity ────────────────────────────────────────────────────────────
 //
@@ -97,6 +98,7 @@ export type LootItemType =
   | 'board' | 'pieces' | 'dropFx' | 'winFx' | 'frame'
   | 'outfit' | 'pet' | 'emote'
   | 'partVariant'   // Path A variants (2026-05-04) — (partName, variantId) tuple drops
+  | 'tintColor'     // Unlockable material tint colors (2026-05-24) — per-slot color unlocks
   | 'coins' | 'gems';
 
 export interface LootBoxItem {
@@ -357,6 +359,19 @@ function buildPool(): PoolBucket {
   for (const p of Object.values(PETS)) if (p.price > 0) add(petToLoot(p));
   for (const e of HUMAN_EMOTES) if ((e.price ?? 0) > 0) add(emoteToLoot(e));
 
+  // Tint colors — per-slot unlockable material colors. Starters are
+  // free (always owned), so they're excluded from the drop pool.
+  for (const tc of ALL_TINT_COLORS) {
+    if (tc.starter) continue;
+    add({
+      id: tc.id,
+      name: `${tc.name} (${TINT_SLOT_LABEL[tc.slot]})`,
+      type: 'tintColor',
+      rarity: tc.rarity as LootBoxRarity,
+      category: 'outfits',
+    });
+  }
+
   // Currency always fills its bucket regardless of "free" filter.
   for (const c of COIN_FILLERS) {
     byCatRarity.currency[c.rarity].push(c);
@@ -600,6 +615,7 @@ export function isLootItemOwned(item: LootBoxItem): boolean {
     }
     case 'pet':     return usePetStore.getState().ownedPets.includes(item.id as PetId);
     case 'emote':   return useShopStore.getState().ownedEmotes.includes(item.id);
+    case 'tintColor': return useCharacterStore.getState().isTintColorOwned(item.id);
     case 'coins':
     case 'gems':    return false; // currency is never a "dupe"
   }
@@ -622,6 +638,7 @@ function grantItem(item: LootBoxItem): void {
     }
     case 'pet':     usePetStore.getState().unlockPet(item.id as PetId); break;
     case 'emote':   shop.purchaseEmote(item.id, 0); break;
+    case 'tintColor': useCharacterStore.getState().unlockTintColor(item.id); break;
     case 'coins':   if (item.value) shop.addCoins(item.value); break;
     case 'gems':    if (item.value) shop.addGems(item.value); break;
   }

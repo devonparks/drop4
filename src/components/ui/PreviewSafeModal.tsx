@@ -64,6 +64,8 @@ export function PreviewSafeModal({
 const styles = StyleSheet.create({
   webOverlay: {
     ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
     zIndex: 1000,
-  },
+  } as any,
 });

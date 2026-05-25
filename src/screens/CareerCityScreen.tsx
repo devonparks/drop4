@@ -250,12 +250,19 @@ export function CareerCityScreen({ navigation, route }: Props) {
         </PressScale>
 
         <PressScale
-          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('AmgCreator'); }}
+          onPress={() => {
+            haptics.tap();
+            playSound('click');
+            // AmgCreator route deleted 2026-05-23 — character editing
+            // lives in the Customize tab's KITS subscreen now. Route to
+            // the tab; player taps KITS to land on STYLE.
+            navigation.navigate('MainTabs', { screen: 'Customize' } as any);
+          }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel="Customize"
-          accessibilityHint="Open the character creator"
+          accessibilityHint="Open the customize tab"
         >
           <View style={styles.hudBtnBgCalm}>
             <Text style={[styles.hudBtnIcon, { fontSize: 18 }]}>✎</Text>

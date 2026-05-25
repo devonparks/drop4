@@ -111,13 +111,31 @@ const SPECIES_FILTERS: Array<{ id: 'All' | Species; label: string; manifestKey: 
 // turns them into shopping categories the player can navigate without
 // a manual.
 
-// Slot buckets now come from @amg/cosmetic-ui — see DEFAULT_SLOT_BUCKETS
-// imported above. Kept the alias so the existing JSX references
-// (SLOT_BUCKETS.find / SLOT_BUCKETS.map) don't have to be renamed
-// every site. If a Drop4-specific override is needed later (e.g. an
-// extra bucket not present in TTT), define a new array here that
-// extends DEFAULT_SLOT_BUCKETS.
-const SLOT_BUCKETS: SlotBucket[] = DEFAULT_SLOT_BUCKETS;
+// 2026-05-23: Drop4 overrides the engine's hair / face buckets so
+// FacialHair (beards, stubble, sideburns) lives with Hair instead of
+// Face. Devon's frustration: "facial hair is on the face section but
+// i feel like it should be apart of hair." Engine default is left
+// alone — every other AMG game keeps the FACE-includes-beards taxonomy
+// until they explicitly opt into Drop4's grouping. Once a second game
+// adopts this we lift the override into the engine package proper.
+const SLOT_BUCKETS: SlotBucket[] = DEFAULT_SLOT_BUCKETS.map((b) => {
+  if (b.id === 'hair') {
+    return {
+      ...b,
+      label: 'HAIR & BEARD',
+      slots: ['Hair', 'FacialHair'],
+      blurb: 'Cuts, styles, sideburns, beards.',
+    };
+  }
+  if (b.id === 'face') {
+    return {
+      ...b,
+      slots: b.slots.filter((s) => s !== 'FacialHair'),
+      blurb: 'Brows and ears.',
+    };
+  }
+  return b;
+});
 
 // ─── Manifest fetch (shared with ShopScreen) ────────────────────────
 //
@@ -399,7 +417,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title} accessibilityRole="header">
-              {title ?? 'CLOTHES'}
+              {title ?? 'WARDROBE'}
             </Text>
             <Text style={styles.subtitle}>
               {subtitle ?? (
@@ -413,7 +431,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             onPress={onClose}
             style={styles.closeBtn}
             accessibilityRole="button"
-            accessibilityLabel="Close clothes catalog"
+            accessibilityLabel="Close wardrobe"
           >
             <Text style={styles.closeBtnText}>×</Text>
           </Pressable>
@@ -648,7 +666,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
             onPress={() => { haptics.tap(); playSound('click'); onClose(); }}
             style={styles.doneBtn}
             accessibilityRole="button"
-            accessibilityLabel="Close clothes catalog"
+            accessibilityLabel="Close wardrobe"
           >
             <LinearGradient
               colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}

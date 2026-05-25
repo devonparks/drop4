@@ -197,7 +197,7 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   if (!stateForRender) return null;
 
   return (
-    <View style={{ width: 520, height: 620 }}>
+    <View style={{ width: 520, height: 620 }} pointerEvents="none">
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
         <Canvas
           // frameloop="always" — demand mode was causing r3f native to intercept
@@ -205,8 +205,7 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
           // unresponsive on iOS. The mesh merge (Path B, 2026-05-22) already cuts
           // per-frame cost ~6x so demand mode is no longer needed for perf.
           frameloop="always"
-          gl={{ antialias: true, alpha: true } as any}
-          shadows
+          gl={{ antialias: false, alpha: true } as any}
           camera={{ position: [0, 1.1, 3.2], fov: 42, near: 0.01, far: 1000 }}
           // lookAt y at 1.1 — frames a 1.8 m character so feet sit
           // ~3 % from the canvas bottom (right above PLAY) and the
@@ -223,16 +222,6 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
             position={[2.5, 4, 3]}
             intensity={1.3}
             color="#fff4e0"
-            castShadow
-            shadow-mapSize-width={512}
-            shadow-mapSize-height={512}
-            shadow-camera-near={0.1}
-            shadow-camera-far={20}
-            shadow-camera-left={-2}
-            shadow-camera-right={2}
-            shadow-camera-top={2}
-            shadow-camera-bottom={-1}
-            shadow-bias={-0.0005}
           />
           <directionalLight position={[-2, 2, 1.5]} intensity={0.6} color="#a8c8f0" />
           <directionalLight position={[0, 3, -3]} intensity={1.4} color="#ff9a5a" />
@@ -255,12 +244,6 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
             />
           </RotatingGroup>
 
-          {/* Floor plate — invisible shadow-receiver so the directional
-              key light has somewhere to drop the character's shadow. */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow>
-            <circleGeometry args={[1.5, 48]} />
-            <shadowMaterial transparent opacity={0.4} />
-          </mesh>
         </Canvas>
       </Animated.View>
 

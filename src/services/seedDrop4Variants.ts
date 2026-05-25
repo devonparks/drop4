@@ -17,10 +17,15 @@
  *   - Each game decides for itself whether the variant economy
  *     applies; smaller games may opt out entirely.
  *
- * Math (current Drop4 catalog):
- *   152 outfit packs × ~6 main slots × 9 non-default colorways
- *   ≈ 8,200 variant drops appended on top of the existing ~245-item
- *   pool. Memory footprint: ~1MB of objects, fine for mobile.
+ * Math (current Drop4 catalog, 25-variant palette):
+ *   152 outfit packs × ~6 main slots × 24 non-default colorways
+ *   ≈ 21,888 variant drops appended on top of the existing ~245-item
+ *   pool. Memory footprint: ~2.5MB of objects, fine for mobile.
+ *
+ * Rarity distribution per part (CoD-camo model):
+ *   8 common + 6 uncommon (→ common bucket) = 14 common drops
+ *   4 rare + 3 epic + 3 legendary = 10 premium drops
+ *   "Everybody has the hoodie but nobody has the Gold version."
  *
  * Intended caller: App.tsx after `useCharacterStore.loadFromStorage()`
  * resolves. Calling it again is a no-op (appendItemsToPool dedups
@@ -34,19 +39,18 @@ import {
 } from '../stores/lootBoxStore';
 import { OUTFIT_SHOP_ITEMS } from '../data/cosmeticsShopCatalog';
 import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
-import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
-import type { ShopItem } from '../data/shopCatalog';
+import { DEFAULT_PALETTE, type VariantDef } from '@amg/cosmetic-ui';
 
-/** Map a 7-tier ShopItem rarity onto the lootbox 4-tier rarity.
- *  Mirrors the helper in lootBoxStore (kept inline to avoid the
- *  circular import). */
-function shopItemToLootRarity(rarity: ShopItem['rarity']): LootBoxRarity {
+/** Map a 5-tier VariantDef rarity onto the lootbox 4-tier rarity.
+ *  CoD-camo model: variant rarity determines drop weight independent
+ *  of the pack the part belongs to. A "Gold" camo is legendary whether
+ *  it's on a common hoodie or an epic jacket. */
+function variantToLootRarity(rarity: VariantDef['rarity']): LootBoxRarity {
   switch (rarity) {
     case 'rare': return 'rare';
     case 'epic': return 'epic';
-    case 'legendary':
-    case 'mythic': return 'legendary';
-    default: return 'common'; // common, uncommon, darkmatter (filtered earlier)
+    case 'legendary': return 'legendary';
+    default: return 'common'; // common, uncommon → common bucket
   }
 }
 
@@ -60,13 +64,15 @@ export function seedDrop4Variants(): { seeded: number; skipped: number } {
   // For each catalogued outfit pack:
   //   - resolve its body parts (Torso / Hips / Legs / Feet / etc.)
   //   - for each non-default colorway in DEFAULT_PALETTE, mint a
-  //     variant drop at the pack's rarity tier
+  //     variant drop at the VARIANT's rarity tier (CoD-camo model:
+  //     Gold is always legendary regardless of which pack the part
+  //     belongs to — "everybody has the hoodie but nobody has the
+  //     Gold version")
   for (const pack of OUTFIT_SHOP_ITEMS) {
     const bodyParts = buildAmgBodyForOutfit(pack.id);
     const partNames = Object.values(bodyParts).filter(
       (n): n is string => typeof n === 'string',
     );
-    const lootRarity = shopItemToLootRarity(pack.rarity);
 
     for (const partName of partNames) {
       for (const variant of DEFAULT_PALETTE) {
@@ -81,7 +87,7 @@ export function seedDrop4Variants(): { seeded: number; skipped: number } {
         const item = mintPartVariantItem(
           partName,
           variant.id,
-          lootRarity,
+          variantToLootRarity(variant.rarity),
           // Display name: "Apocalypse Outlaws · Crimson"
           `${pack.name.replace(/ \d+$/, '')} · ${variant.label}`,
         );

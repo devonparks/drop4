@@ -1637,10 +1637,24 @@ export function GameScreen({ navigation }: Props) {
             <Animated.View style={styles.goCard}>
              <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
 
-              {/* Top: Mode label */}
-              <View style={styles.goModeRow}>
-                <Text style={styles.goModeText} accessibilityRole="header">
-                  {isSeriesMode ? `BEST OF ${totalGames} — GAME ${seriesGame}` : isVsAi ? `VS ${diffLabel.toUpperCase()} BOT` : 'LOCAL MATCH'}
+              {/* Top: Mode label — color-coded by mode so career/vs-AI/local have distinct identities */}
+              <View style={[styles.goModeRow,
+                wasCareerLevel
+                  ? { backgroundColor: 'rgba(241,196,15,0.12)', borderBottomColor: 'rgba(241,196,15,0.3)' }
+                  : isVsAi
+                  ? { backgroundColor: 'rgba(155,89,182,0.1)', borderBottomColor: 'rgba(155,89,182,0.25)' }
+                  : { backgroundColor: 'rgba(26,188,156,0.1)', borderBottomColor: 'rgba(26,188,156,0.25)' },
+              ]}>
+                <Text style={[styles.goModeText,
+                  wasCareerLevel ? { color: '#f1c40f' } : isVsAi ? { color: '#b06cc7' } : { color: colors.teal },
+                ]} accessibilityRole="header">
+                  {wasCareerLevel
+                    ? `LEVEL ${params.careerLevelId} — CAREER`
+                    : isSeriesMode
+                    ? `BEST OF ${totalGames} — GAME ${seriesGame}`
+                    : isVsAi
+                    ? `VS ${diffLabel.toUpperCase()} BOT`
+                    : 'LOCAL MATCH'}
                 </Text>
               </View>
 
@@ -1769,8 +1783,8 @@ export function GameScreen({ navigation }: Props) {
               {/* Game Speed Badge */}
               {(() => {
                 const speed = moveCount <= 8 ? { label: 'BLITZ', color: '#e74c3c', emoji: '\u26A1' }
-                  : moveCount <= 14 ? { label: 'FAST', color: colors.orange, emoji: '\uD83D\uDE80' }
-                  : moveCount <= 24 ? { label: 'STANDARD', color: colors.teal, emoji: '\u23F1\uFE0F' }
+                  : moveCount <= 14 ? { label: 'QUICK', color: colors.orange, emoji: '\uD83D\uDE80' }
+                  : moveCount <= 24 ? { label: 'STEADY', color: colors.teal, emoji: '\u23F1\uFE0F' }
                   : { label: 'MARATHON', color: '#9b59b6', emoji: '\uD83C\uDFC3' };
                 return (
                   <View style={[styles.goSpeedBadge, { borderColor: `${speed.color}30` }]}>
@@ -1798,6 +1812,18 @@ export function GameScreen({ navigation }: Props) {
                         Column {lastMove.col + 1}, Move {Math.ceil((lastMove.moveNumber + 1) / 2)}
                       </Text>
                     </View>
+                  </View>
+                );
+              })()}
+
+              {/* Career star rating — hero element for career wins, shown before coins */}
+              {wasCareerLevel && status === 'won' && winner === 1 && (() => {
+                const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+                const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
+                return (
+                  <View style={styles.goCareerStarHero}>
+                    <AnimatedStarRating earned={earnedStars} size={40} delay={200} />
+                    <Text style={styles.goCareerStarVerdict}>{verdict}</Text>
                   </View>
                 );
               })()}
@@ -1878,18 +1904,7 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={[styles.goEventText, { color: colors.teal }]}>Challenge: {completedChallengeName}</Text>
                   </View>
                 )}
-                {wasCareerLevel && status === 'won' && winner === 1 && (() => {
-                  const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
-                  const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
-                  return (
-                    <View style={[styles.goEventRow, styles.goStarBlock, { borderColor: 'rgba(241,196,15,0.5)' }]}>
-                      <AnimatedStarRating earned={earnedStars} size={32} delay={300} />
-                      <Text style={[styles.goEventText, styles.goStarVerdict, { color: '#ffd93d' }]}>
-                        {verdict}
-                      </Text>
-                    </View>
-                  );
-                })()}
+                {/* Career star verdict is now shown as a hero block above rewards — removed from here */}
                 {/* Career part unlock celebration — fires when a career win
                     grants a board / pieces / pet / emote / title (non-coin
                     rewards). The reward itself was already granted server-side
@@ -2030,7 +2045,7 @@ export function GameScreen({ navigation }: Props) {
                 ) : (
                   <>
                     <GlossyButton
-                      label={isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
+                      label={wasCareerLevel ? 'RETRY LEVEL' : isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
                       icon="🔄"
                       variant="orange"
                       onPress={handleRematch}
@@ -2088,13 +2103,23 @@ export function GameScreen({ navigation }: Props) {
                         })}
                       </View>
                     )}
-                    <GlossyButton
-                      label="NEW GAME"
-                      icon="🎮"
-                      variant="green"
-                      onPress={() => navigation.navigate('Play')}
-                      style={{ marginTop: 8 }}
-                    />
+                    {wasCareerLevel ? (
+                      <GlossyButton
+                        label="CAREER MAP"
+                        icon="🗺️"
+                        variant="green"
+                        onPress={() => navigation.navigate('CareerMap' as any)}
+                        style={{ marginTop: 8 }}
+                      />
+                    ) : (
+                      <GlossyButton
+                        label="NEW GAME"
+                        icon="🎮"
+                        variant="green"
+                        onPress={() => navigation.navigate('Play')}
+                        style={{ marginTop: 8 }}
+                      />
+                    )}
                     <GlossyButton
                       label="HOME"
                       icon="🏠"
@@ -3098,6 +3123,29 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(255,215,0,0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+  },
+  // Hero career star block — shown above rewards, replaces buried row
+  goCareerStarHero: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginHorizontal: 12,
+    marginTop: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(241,196,15,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.3)',
+  },
+  goCareerStarVerdict: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 15,
+    color: '#ffd93d',
+    letterSpacing: 2,
+    marginTop: 10,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   goStreakRow: {
     flexDirection: 'row',

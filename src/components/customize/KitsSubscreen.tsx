@@ -19,9 +19,9 @@
 // characterStore.equipPartVariant or LootBox navigation.
 // ═══════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import {
   CategorySubscreen,
@@ -57,6 +57,12 @@ import {
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { KITS_TIERS, type KitsSubId } from '../../data/drop4Categories';
+import {
+  TINT_COLORS_BY_SLOT,
+  TINT_SLOT_PROPERTY,
+  type TintSlot,
+} from '../../data/colorRegistry';
+import { DEFAULT_PALETTE, type VariantDef } from '@amg/cosmetic-ui';
 
 const AMG_MANIFEST_URL =
   'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/manifest.json';
@@ -80,42 +86,42 @@ const BODY_PRESETS: { label: string; blendshapes: BlendshapeState }[] = [
   { label: 'Bulky',    blendshapes: { feminine: 0.2, weight:  0.4, muscle: 0.9 } },
 ];
 
-// ── Color palettes for outfit / hair tinting ────────────────────────
-// The tint system (tint.ts) already maps part codes → color properties
-// (e.g. Torso → 'Outfit 01 Primary'). These palettes give the player
-// a swatch row so they can colorize equipped clothes and hair at
-// runtime, just like Skin tone but for outfits.
+// ── Unlockable tint color mapping ────────────────────────────────────
+// Maps KitsSubId → TintSlot so the swatch row knows which colors to
+// render. Hair and Beard share the same slot (both tint 'Hair 01').
+// Subs without a tint slot (species, skin, hats, etc.) get no swatches.
 
-const OUTFIT_COLORS = [
-  '#f0f0f0', '#2c2c2c', '#4a5568', '#c53030',
-  '#2b6cb0', '#276749', '#975a16', '#6b46c1',
-  '#d69e2e', '#2d3748', '#38a169', '#d53f8c',
-  '#dd6b20', '#319795', '#718096', '#e53e3e',
-];
-
-const HAIR_COLORS = [
-  '#1a1a2e', '#3d2914', '#6b4423', '#8b6340',
-  '#c4956a', '#deb887', '#f0e68c', '#e8e8e8',
-  '#8b2020', '#cc3333', '#ff6b6b', '#4a69bd',
-  '#6c5ce7', '#2ecc71', '#e67e22', '#95a5a6',
-];
-
-/** Maps each slot-mapped sub to the Sidekick ColorProperty it tints. */
-const COLOR_PROP_FOR_SUB: Partial<Record<KitsSubId, string>> = {
-  hairstyle: 'Hair 01',
-  beard:     'Hair 01',
-  tops:      'Outfit 01 Primary',
-  pants:     'Outfit 01 Secondary',
-  shoes:     'Outfit 01 Tertiary',
+const KITS_SUB_TO_TINT_SLOT: Partial<Record<KitsSubId, TintSlot>> = {
+  hairstyle: 'hair',
+  beard:     'hair',
+  tops:      'tops',
+  pants:     'pants',
+  shoes:     'shoes',
 };
 
-/** Palette to show for each sub (hair subs get hair colors, outfit subs get outfit colors). */
-const PALETTE_FOR_SUB: Partial<Record<KitsSubId, string[]>> = {
-  hairstyle: HAIR_COLORS,
-  beard:     HAIR_COLORS,
-  tops:      OUTFIT_COLORS,
-  pants:     OUTFIT_COLORS,
-  shoes:     OUTFIT_COLORS,
+/** Outfit subs that get the CoD-camo variant picker instead of (or
+ *  in addition to) the flat tint color row. The variant picker shows
+ *  all 24 non-default palette variants with rarity borders, duo-chrome
+ *  split swatches, and lock/owned state. */
+const OUTFIT_CAMO_SUBS: Set<KitsSubId> = new Set(['tops', 'pants', 'shoes']);
+
+/** Rarity-keyed border + glow colors for the camo variant picker.
+ *  Matches the lootbox reveal screen's tier treatments. */
+const VARIANT_RARITY_COLOR: Record<string, string> = {
+  common:    'rgba(255,255,255,0.2)',
+  uncommon:  'rgba(46,204,113,0.5)',
+  rare:      'rgba(74,105,189,0.7)',
+  epic:      'rgba(155,89,182,0.7)',
+  legendary: 'rgba(241,196,15,0.8)',
+};
+
+/** Rarity-coded border colors for locked swatches so the player can
+ *  see at a glance which colors are common vs legendary in loot boxes. */
+const RARITY_BORDER: Record<string, string> = {
+  common:    'rgba(255,255,255,0.2)',
+  rare:      'rgba(74,105,189,0.6)',
+  epic:      'rgba(155,89,182,0.6)',
+  legendary: 'rgba(241,196,15,0.6)',
 };
 
 interface Props {
@@ -124,14 +130,61 @@ interface Props {
 
 export function KitsSubscreen({ onClose }: Props) {
   const navigation = useNavigation<any>();
+
+  // Force Canvas remount after returning from LootBox. React Navigation
+  // on web hides the previous screen, which destroys the WebGL context.
+  // Changing the key forces a fresh Canvas with a new context.
+  const [canvasKey, setCanvasKey] = useState(0);
+  const didMount = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!didMount.current) {
+        didMount.current = true;
+        return;
+      }
+      setCanvasKey((k) => k + 1);
+    }, []),
+  );
+
+  // Web: React Navigation's tab wrapper acquires a non-zero scrollLeft
+  // when CategorySubscreen mounts (browser auto-scroll-into-view on
+  // focus). This pushes the left rail and back button off-screen.
+  // Attach scroll listeners on every ancestor that suppress horizontal
+  // scroll so the browser can never shift the layout.
+  const rootRef = useRef<View>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const node = (rootRef.current as unknown) as HTMLElement | null;
+    if (!node) return;
+    const handlers: Array<[HTMLElement, () => void]> = [];
+    let el: HTMLElement | null = node;
+    while (el) {
+      const target = el;
+      const handler = () => {
+        if (target.scrollLeft !== 0) target.scrollLeft = 0;
+      };
+      target.addEventListener('scroll', handler, { passive: true });
+      handlers.push([target, handler]);
+      handler();
+      el = el.parentElement;
+    }
+    return () => {
+      for (const [t, h] of handlers) t.removeEventListener('scroll', h);
+    };
+  }, []);
+
   const amgCharacter = useCharacterStore(
     (s) => s.amgCharacter,
   ) as unknown as CharacterState | null;
   const setAmgCharacter = useCharacterStore((s) => s.setAmgCharacter);
   const isAmgPartOwned = useCharacterStore((s) => s.isAmgPartOwned);
+  const isTintColorOwned = useCharacterStore((s) => s.isTintColorOwned);
   const equipPartVariant = useCharacterStore((s) => s.equipPartVariant);
   const unequipSlot = useCharacterStore((s) => s.unequipSlot);
   const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
+  const setOutfitVariant = useCharacterStore((s) => s.setOutfitVariant);
+  const equippedOutfitVariant = useCharacterStore((s) => s.equippedOutfitVariant);
+  const isPartVariantOwned = useCharacterStore((s) => s.isPartVariantOwned);
   const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
   const waitingBoxes = useMemo(
     () => selectWaitingBoxCount({ ownedBoxes } as any),
@@ -191,8 +244,12 @@ export function KitsSubscreen({ onClose }: Props) {
   // otherwise filters to just that species' parts. Even on 'All' the
   // sort ranks the player's own species first so they see their
   // matching items at the top without an extra tap.
-  const [speciesFilter, setSpeciesFilter] = useState<'All' | SpeciesKey>('All');
   const playerSpecies: SpeciesKey = amgCharacter?.species ?? 'Human';
+  // Default to the player's own species so they only see compatible
+  // parts (especially hair/beard/brows which are modeled per-species
+  // and sit wrong on the wrong head shape). 'All' is one tap away
+  // in the VIEW ALL modal for players who want to browse everything.
+  const [speciesFilter, setSpeciesFilter] = useState<'All' | SpeciesKey>(playerSpecies);
 
   // VIEW ALL modal — full-screen browser with proper-sized chips and a
   // multi-column grid. The 110-px narrow right column couldn't fit a
@@ -242,6 +299,7 @@ export function KitsSubscreen({ onClose }: Props) {
     cameraPreset: 'body' | 'face';
   }) => (
     <Character3DPortrait
+      key={canvasKey}
       width={opts.width}
       height={opts.height}
       cameraPreset={opts.cameraPreset}
@@ -358,24 +416,56 @@ export function KitsSubscreen({ onClose }: Props) {
     // via filterManifestForSub) so the most relevant items surface
     // at the top without an extra tap. Players who need to narrow
     // further open the modal.
-    const colorProp = COLOR_PROP_FOR_SUB[sub];
-    const palette = PALETTE_FOR_SUB[sub];
+    const tintSlot = KITS_SUB_TO_TINT_SLOT[sub];
+    const showCamoPicker = OUTFIT_CAMO_SUBS.has(sub);
+
+    // Resolve the hero part for the active sub so we can check variant
+    // ownership against it. The camo picker shows "owned" for variants
+    // the player has unlocked on ANY part in their equipped outfit.
+    const heroSlotName = HERO_SLOTS[sub]?.hero;
+    const equippedHeroPart = heroSlotName
+      ? ((amgCharacter as any)?.parts as Record<string, string> | undefined)?.[heroSlotName]
+      : undefined;
 
     return (
       <View style={{ width: '100%' }}>
-        {colorProp && palette && (
-          <ColorPickerRow
-            label={sub === 'hairstyle' || sub === 'beard' ? 'HAIR COLOR' : 'COLOR'}
-            palette={palette}
-            activeColor={amgCharacter?.colors?.[colorProp]}
-            onPick={(hex) => {
+        {showCamoPicker && (
+          <VariantCamoRow
+            activeVariantId={equippedOutfitVariant}
+            equippedPartName={equippedHeroPart}
+            isVariantOwned={isPartVariantOwned}
+            onPickOwned={(variantId) => {
+              haptics.win();
+              playSound('click');
+              setOutfitVariant(variantId);
+            }}
+            onPickLocked={() => {
+              haptics.tap();
+              playSound('click');
+              navigation.navigate('LootBox' as never);
+            }}
+          />
+        )}
+        {tintSlot && !showCamoPicker && (
+          <UnlockableColorRow
+            slot={tintSlot}
+            label={tintSlot === 'hair' ? 'HAIR COLOR' : 'COLOR'}
+            activeColor={amgCharacter?.colors?.[TINT_SLOT_PROPERTY[tintSlot]]}
+            isOwned={isTintColorOwned}
+            onPickOwned={(hex) => {
               if (!amgCharacter) return;
               haptics.tap();
               playSound('click');
+              const prop = TINT_SLOT_PROPERTY[tintSlot];
               setAmgCharacter({
                 ...amgCharacter,
-                colors: { ...(amgCharacter.colors ?? {}), [colorProp]: hex },
+                colors: { ...(amgCharacter.colors ?? {}), [prop]: hex },
               } as unknown as Record<string, unknown>);
+            }}
+            onPickLocked={() => {
+              haptics.tap();
+              playSound('click');
+              navigation.navigate('LootBox' as never);
             }}
           />
         )}
@@ -423,7 +513,7 @@ export function KitsSubscreen({ onClose }: Props) {
   })();
 
   return (
-    <>
+    <View ref={rootRef} style={{ flex: 1 }}>
       <CategorySubscreen
         title="Kits"
         onClose={onClose}
@@ -551,7 +641,7 @@ export function KitsSubscreen({ onClose }: Props) {
           }}
         />
       </PreviewSafeModal>
-    </>
+    </View>
   );
 }
 
@@ -989,45 +1079,60 @@ function SkinPicker({
   );
 }
 
-function ColorPickerRow({
+function UnlockableColorRow({
+  slot,
   label,
-  palette,
   activeColor,
-  onPick,
+  isOwned,
+  onPickOwned,
+  onPickLocked,
 }: {
+  slot: TintSlot;
   label: string;
-  palette: string[];
   activeColor?: string;
-  onPick: (hex: string) => void;
+  isOwned: (colorId: string) => boolean;
+  onPickOwned: (hex: string) => void;
+  onPickLocked: () => void;
 }) {
+  const colors = TINT_COLORS_BY_SLOT[slot];
   return (
     <View style={styles.colorPickerWrap}>
       <Text style={styles.colorPickerLabel}>{label}</Text>
       <View style={styles.colorPickerGrid}>
-        {palette.map((hex) => {
+        {colors.map((tc) => {
+          const owned = tc.starter || isOwned(tc.id);
           const active =
+            owned &&
             activeColor != null &&
-            hex.toLowerCase() === activeColor.toLowerCase();
+            tc.hex.toLowerCase() === activeColor.toLowerCase();
           return (
             <Pressable
-              key={hex}
-              onPress={() => onPick(hex)}
+              key={tc.id}
+              onPress={() => (owned ? onPickOwned(tc.hex) : onPickLocked())}
               style={[
                 styles.colorSwatch,
                 {
-                  backgroundColor: hex,
+                  backgroundColor: tc.hex,
+                  opacity: owned ? 1 : 0.35,
                   borderColor: active
                     ? '#ffb347'
-                    : 'rgba(255,255,255,0.18)',
+                    : !owned
+                      ? RARITY_BORDER[tc.rarity] ?? 'rgba(255,255,255,0.18)'
+                      : 'rgba(255,255,255,0.18)',
                   borderWidth: active ? 2 : 1,
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Color ${hex}${active ? ', selected' : ''}`}
+              accessibilityLabel={`${tc.name}${active ? ', selected' : ''}${!owned ? ', locked' : ''}`}
               accessibilityState={{ selected: active }}
             >
               {active && (
                 <Text style={styles.colorCheck}>{'✓'}</Text>
+              )}
+              {!owned && (
+                <View style={styles.colorLockOverlay}>
+                  <Text style={styles.colorLockIcon}>{'🔒'}</Text>
+                </View>
               )}
             </Pressable>
           );
@@ -1036,6 +1141,219 @@ function ColorPickerRow({
     </View>
   );
 }
+
+// ─── CoD-camo variant picker ───────────────────────────────────────
+// Shows all 24 non-default palette variants as a compact swatch grid.
+// Duo-chrome variants render as split discs (left = hero, right = accent).
+// Each swatch has a rarity-coded border. Owned variants are bright and
+// tappable; locked variants are dimmed with a lock icon. The active
+// variant (equippedOutfitVariant) gets an orange highlight + check.
+
+function VariantCamoRow({
+  activeVariantId,
+  equippedPartName,
+  isVariantOwned,
+  onPickOwned,
+  onPickLocked,
+}: {
+  activeVariantId: string;
+  equippedPartName?: string;
+  isVariantOwned: (partName: string, variantId: string) => boolean;
+  onPickOwned: (variantId: string) => void;
+  onPickLocked: () => void;
+}) {
+  // Non-default variants only (skip index 0 = Default).
+  const variants = DEFAULT_PALETTE.filter((v) => v.id !== '');
+
+  // Resolve the active variant's display name for the header badge.
+  const activeLabel = activeVariantId
+    ? (DEFAULT_PALETTE.find((v) => v.id === activeVariantId)?.label ?? 'Unknown')
+    : 'Default';
+  const activeRarity = activeVariantId
+    ? (DEFAULT_PALETTE.find((v) => v.id === activeVariantId)?.rarity ?? 'common')
+    : 'common';
+  const activeBadgeColor = VARIANT_RARITY_COLOR[activeRarity] ?? 'rgba(255,255,255,0.2)';
+
+  return (
+    <View style={camoStyles.wrap}>
+      <View style={camoStyles.headerRow}>
+        <Text style={camoStyles.label}>CAMOS</Text>
+        <View style={[camoStyles.activeBadge, { borderColor: activeBadgeColor }]}>
+          <Text style={camoStyles.activeBadgeText}>{activeLabel.toUpperCase()}</Text>
+        </View>
+      </View>
+      <View style={camoStyles.grid}>
+        {/* "Default" swatch — resets to base outfit colors */}
+        {(() => {
+          const isActive = !activeVariantId || activeVariantId === '';
+          return (
+            <Pressable
+              onPress={() => onPickOwned('')}
+              style={[
+                camoStyles.swatch,
+                {
+                  borderColor: isActive ? '#ffb347' : 'rgba(255,255,255,0.25)',
+                  borderWidth: isActive ? 2 : 1,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Default color${isActive ? ', selected' : ''}`}
+              accessibilityState={{ selected: isActive }}
+            >
+              <View style={[camoStyles.swatchFill, { backgroundColor: '#7f8c8d' }]} />
+              {isActive && <Text style={camoStyles.check}>{'✓'}</Text>}
+            </Pressable>
+          );
+        })()}
+
+        {variants.map((v) => {
+          // A variant is "owned" if the player owns it for ANY part in
+          // their current outfit. Dev mode grants everything.
+          const owned = equippedPartName
+            ? isVariantOwned(equippedPartName, v.id)
+            : false;
+          const isActive = activeVariantId === v.id;
+          const rarityBorder = VARIANT_RARITY_COLOR[v.rarity] ?? 'rgba(255,255,255,0.2)';
+          // Premium rarities (rare+) get a thicker border even when not active
+          const isRarePlus = v.rarity === 'rare' || v.rarity === 'epic' || v.rarity === 'legendary';
+
+          return (
+            <Pressable
+              key={v.id}
+              onPress={() => (owned ? onPickOwned(v.id) : onPickLocked())}
+              style={[
+                camoStyles.swatch,
+                {
+                  borderColor: isActive ? '#ffb347' : rarityBorder,
+                  borderWidth: isActive ? 2 : (isRarePlus ? 1.5 : 1),
+                  opacity: owned ? 1 : 0.35,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`${v.label} camo (${v.rarity})${isActive ? ', selected' : ''}${!owned ? ', locked' : ''}`}
+              accessibilityState={{ selected: isActive }}
+            >
+              {v.accent ? (
+                // Duo-chrome: diagonal split swatch for visual punch
+                <View style={camoStyles.splitFill}>
+                  <View style={[camoStyles.splitDiagTop, { backgroundColor: v.color }]} />
+                  <View style={[camoStyles.splitDiagBottom, { backgroundColor: v.accent }]} />
+                </View>
+              ) : (
+                // Solid color
+                <View style={[camoStyles.swatchFill, { backgroundColor: v.color }]} />
+              )}
+              {isActive && <Text style={camoStyles.check}>{'✓'}</Text>}
+              {!owned && (
+                <View style={camoStyles.lockOverlay}>
+                  <Text style={camoStyles.lockIcon}>{'🔒'}</Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const camoStyles = StyleSheet.create({
+  wrap: {
+    width: '100%',
+    marginBottom: 6,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+    paddingHorizontal: 2,
+  },
+  label: {
+    fontWeight: '900',
+    fontSize: 8,
+    letterSpacing: 1.2,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  activeBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  activeBadgeText: {
+    fontWeight: '900',
+    fontSize: 7,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  swatch: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  swatchFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  splitFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  splitDiagTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: '50%',
+  },
+  splitDiagBottom: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  check: {
+    fontWeight: '900',
+    fontSize: 12,
+    color: '#ffffff',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    zIndex: 1,
+  },
+  lockOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 7,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  lockIcon: {
+    fontSize: 10,
+  },
+});
 
 // ─── Manifest filter ────────────────────────────────────────────────
 
@@ -1083,10 +1401,18 @@ function filterManifestForSub(
     ? new Set([heroConfig.hero])
     : new Set(slots);
 
+  // Head-area parts (hair, beard, brows) are modeled per-species and
+  // sit incorrectly on the wrong head shape (e.g. goblin hair floats
+  // above a human head). Force species match for these subs regardless
+  // of the user's species filter setting.
+  const HEAD_AREA_SUBS: KitsSubId[] = ['hairstyle', 'beard', 'brows'];
+  const forceSpecies = HEAD_AREA_SUBS.includes(sub);
+
   return manifest
     .filter((p) => {
       if (!allowedSlots.has(p.slot)) return false;
-      if (speciesFilter !== 'All' && p.species !== speciesFilter) return false;
+      if (forceSpecies && p.species !== playerSpecies) return false;
+      if (!forceSpecies && speciesFilter !== 'All' && p.species !== speciesFilter) return false;
       return true;
     })
     .sort((a, b) => {
@@ -1306,6 +1632,19 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  colorLockOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 6,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  colorLockIcon: {
+    fontSize: 9,
   },
   // State tiles (loading / error / empty).
   stateTile: {

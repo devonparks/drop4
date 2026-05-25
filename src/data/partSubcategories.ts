@@ -40,8 +40,11 @@ export const SUB_CATEGORIES: Record<TopBucket, string[]> = {
   tops:        ['All', 'Hoodies', 'Shirts', 'Jackets', 'Armor', 'Tanks', 'Sweaters', 'Other'],
   pants:       ['All', 'Pants', 'Cargos', 'Jeans', 'Shorts', 'Skirts', 'Robes', 'Other'],
   shoes:       ['All', 'Sneakers', 'Boots', 'Sandals', 'Dress', 'Other'],
-  hair:        ['All', 'Short', 'Medium', 'Long', 'Buzzed', 'Styled', 'Other'],
-  face:        ['All', 'Brows', 'Beards', 'Stubble', 'Sideburns', 'Ears', 'Other'],
+  // 2026-05-23: FacialHair moved from FACE into HAIR per Devon — beards
+  // and hairstyles read as one grooming choice in real life, so the
+  // catalog mirrors that. Beard / Stubble / Sideburns sub-tabs live here.
+  hair:        ['All', 'Short', 'Medium', 'Long', 'Buzzed', 'Styled', 'Beards', 'Stubble', 'Sideburns', 'Other'],
+  face:        ['All', 'Brows', 'Ears', 'Other'],
   hats:        ['All', 'Caps', 'Helmets', 'Crowns', 'Hoods', 'Beanies', 'Other'],
   accessories: ['All', 'Backpacks', 'Belts', 'Pauldrons', 'Knee Pads', 'Bracers', 'Other'],
 };
@@ -117,7 +120,10 @@ const SLOT_TO_BUCKET: Record<string, TopBucket> = {
   EyebrowRight:         'face',
   EarLeft:              'face',
   EarRight:             'face',
-  FacialHair:           'face',
+  // 2026-05-23: FacialHair lives in HAIR now (was 'face'). Beards
+  // are a grooming choice, not a facial-feature choice — pairing them
+  // with hairstyles matches what Devon expected to find on the same tab.
+  FacialHair:           'hair',
   AttachmentHead:       'hats',
   AttachmentFace:       'accessories',
   AttachmentBack:       'accessories',
@@ -142,7 +148,17 @@ const SLOT_TO_BUCKET: Record<string, TopBucket> = {
 // For v1 we lean on the 4-letter pack-name suffix when present. As
 // the catalog grows Devon can add per-part overrides below.
 
-function hairSubcategoryFor(partName: string): string {
+function hairSubcategoryFor(partName: string, slot: string): string {
+  // FacialHair parts (now living in the HAIR bucket as of 2026-05-23)
+  // get beard-flavored sub-tags. Stubble / Sideburns are name-pattern
+  // hints; default beard slot reads as 'Beards' so the player always
+  // has a bucket to land in.
+  if (slot === 'FacialHair') {
+    const lower = partName.toLowerCase();
+    if (lower.includes('stubble') || lower.includes('5o')) return 'Stubble';
+    if (lower.includes('sideburn') || lower.includes('side_burn')) return 'Sideburns';
+    return 'Beards';
+  }
   // Synty hair name patterns mostly encode length in the first segment.
   // No reliable pattern across all 5 species — default to 'Styled' so
   // every hair is buy-able. Refine here as variants get authored.
@@ -156,7 +172,6 @@ function hairSubcategoryFor(partName: string): string {
 
 function faceSubcategoryFor(slot: string): string {
   if (slot === 'EyebrowLeft' || slot === 'EyebrowRight') return 'Brows';
-  if (slot === 'FacialHair') return 'Beards';
   if (slot === 'EarLeft' || slot === 'EarRight') return 'Ears';
   return 'Other';
 }
@@ -184,8 +199,10 @@ export function subcategoryForPart(partName: string, slot: string): string {
   if (!bucket) return 'Other';
 
   // Hair: name-pattern heuristic (no pack tagging — same pack has
-  // multiple hair lengths).
-  if (bucket === 'hair') return hairSubcategoryFor(partName);
+  // multiple hair lengths). Slot-aware so FacialHair (now in this
+  // bucket) routes to Beards / Stubble / Sideburns instead of length
+  // categories.
+  if (bucket === 'hair') return hairSubcategoryFor(partName, slot);
 
   // Face: slot-driven taxonomy (brows / beards / ears).
   if (bucket === 'face') return faceSubcategoryFor(slot);

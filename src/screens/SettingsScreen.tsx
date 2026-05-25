@@ -27,6 +27,7 @@ import { PressScale } from '../components/animations';
 import { haptics, getHapticsEnabled, setHapticsEnabled } from '../services/haptics';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { useDevModeStore } from '../stores/devModeStore';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -78,6 +79,21 @@ export function SettingsScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+  const devModeEnabled = useDevModeStore(s => s.enabled);
+  const toggleDevMode = useDevModeStore(s => s.toggle);
+  // Triple-tap counter for secret dev mode activation on the version badge.
+  const tapCountRef = React.useRef(0);
+  const tapTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleVersionTap = React.useCallback(() => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    if (tapCountRef.current >= 3) {
+      tapCountRef.current = 0;
+      toggleDevMode();
+    } else {
+      tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 600);
+    }
+  }, [toggleDevMode]);
   const playerName = useShopStore(s => s.playerName);
   const lifetimeCoinsEarned = useShopStore(s => s.lifetimeCoinsEarned);
   const matches = useMatchHistoryStore(s => s.matches);
@@ -276,8 +292,27 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
         </StaggeredEntry>
 
+        {/* Dev Mode (visible when active) */}
+        {devModeEnabled && (
+          <StaggeredEntry index={8} delay={60}>
+            <Text style={[styles.sectionTitle, { color: '#2ecc71' }]}>DEV MODE</Text>
+            <View style={[styles.section, { borderColor: 'rgba(46,204,113,0.3)', backgroundColor: 'rgba(46,204,113,0.06)' }]}>
+              <SettingToggle
+                label="Dev Mode (All Unlocked)"
+                value={devModeEnabled}
+                onToggle={toggleDevMode}
+                icon="🔓"
+              />
+              <View style={styles.whatsNewRow}>
+                <Text style={styles.whatsNewIcon}>💰</Text>
+                <Text style={[styles.whatsNewText, { color: '#2ecc71' }]}>999K coins · 9K gems · All items</Text>
+              </View>
+            </View>
+          </StaggeredEntry>
+        )}
+
         {/* Danger Zone */}
-        <StaggeredEntry index={8} delay={60}>
+        <StaggeredEntry index={devModeEnabled ? 9 : 8} delay={60}>
         <View style={styles.dangerDivider} />
         <Text style={styles.dangerTitle} accessibilityRole="header">DANGER ZONE</Text>
         <View style={styles.dangerSection}>
@@ -301,9 +336,18 @@ export function SettingsScreen({ navigation }: Props) {
 
         {/* Version */}
         <View style={styles.footer}>
-          <Text style={styles.versionBadge}>DROP4 v1.0.0</Text>
+          <Pressable onPress={handleVersionTap}>
+            <Text style={[styles.versionBadge, devModeEnabled && { borderColor: 'rgba(46,204,113,0.4)', color: '#2ecc71' }]}>
+              {devModeEnabled ? '🔓 DROP4 v1.0.0-DEV' : 'DROP4 v1.0.0'}
+            </Text>
+          </Pressable>
           <Text style={styles.copyright}>Created by Devon Parks</Text>
           <Text style={styles.copyright}>AMG Studios © 2026</Text>
+          {!devModeEnabled && (
+            <Text style={[styles.copyright, { fontSize: 9, marginTop: 4, color: 'rgba(255,255,255,0.15)' }]}>
+              Triple-tap version to unlock dev mode
+            </Text>
+          )}
         </View>
         </ScrollView>
       </View>
