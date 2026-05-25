@@ -63,9 +63,9 @@ const PAGES: WelcomePage[] = [
     kicker: 'TAKE THE CITY',
     title: 'Career Mode',
     lines: [
-      '36 levels across 3 cities.',
-      'Brooklyn, Venice Beach, Harlem.',
-      'Jeopardy rounds, boss battles, unique seeds.',
+      '180 levels across 15 cities.',
+      'Boss battles, jeopardy rounds, unique seeds.',
+      'Can you conquer every city?',
     ],
     gradient: ['#4dd0e1', '#0288d1'],
   },

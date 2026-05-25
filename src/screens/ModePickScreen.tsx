@@ -22,7 +22,7 @@ import { GlossyButton } from '../components/ui/GlossyButton';
 import { SlideReveal } from '../components/animations';
 import { useShopStore } from '../stores/shopStore';
 import { useCareerStore } from '../stores/careerStore';
-import { ALL_CAREER_LEVELS } from '../data/careerLevels';
+import { ALL_CAREER_LEVELS, CAREER_CITIES } from '../data/careerLevels';
 import { fonts, weight } from '../theme/typography';
 import { colors } from '../theme/colors';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -40,6 +40,7 @@ export function ModePickScreen({ navigation }: Props) {
 
   const completedCareerLevels = Object.values(careerProgress).filter((p) => p?.completed).length;
   const totalCareerLevels = ALL_CAREER_LEVELS.length;
+  const totalCities = CAREER_CITIES.filter((c) => !c.comingSoon).length;
 
   return (
     <ScreenBackground scene="home">
@@ -77,8 +78,8 @@ export function ModePickScreen({ navigation }: Props) {
               label="CAREER"
               subtitle={
                 completedCareerLevels > 0
-                  ? `${completedCareerLevels}/${totalCareerLevels} levels · 3 cities`
-                  : 'Take the city · 3 cities · 36 levels'
+                  ? `${completedCareerLevels}/${totalCareerLevels} levels · ${totalCities} cities`
+                  : `Take the city · ${totalCities} cities · ${totalCareerLevels} levels`
               }
               variant="purple"
               iconRight="›"
