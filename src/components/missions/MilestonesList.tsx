@@ -63,7 +63,7 @@ export function MilestonesList() {
       total: list.length,
       claimedCount: list.filter((p) => p.claimed).length,
     };
-  }, [ownedOutfits, ownedPets, claimedIds]);
+  }, [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount]);
 
   return (
     <Animated.View entering={FadeIn.duration(220)}>
@@ -80,8 +80,8 @@ export function MilestonesList() {
           </Text>
           <Text style={styles.summaryHint}>
             {PETS_ENABLED
-              ? 'Complete a pack or collect enough outfits / pets to unlock exclusive titles + rewards.'
-              : 'Complete a pack or collect enough outfits to unlock exclusive titles + rewards.'}
+              ? 'Complete packs, collect camos, or hit cosmetic goals to unlock exclusive titles + rewards.'
+              : 'Complete packs, collect camos, or hit cosmetic goals to unlock exclusive titles + rewards.'}
           </Text>
         </LinearGradient>
       </View>

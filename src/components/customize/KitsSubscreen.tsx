@@ -56,6 +56,7 @@ import {
 } from '../../stores/lootBoxStore';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
+import { useChallengeStore } from '../../stores/challengeStore';
 import { KITS_TIERS, type KitsSubId } from '../../data/drop4Categories';
 import {
   TINT_COLORS_BY_SLOT,
@@ -438,6 +439,8 @@ export function KitsSubscreen({ onClose }: Props) {
               haptics.win();
               playSound('click');
               setOutfitVariant(variantId);
+              useChallengeStore.getState().updateProgress('equip_camo', 1);
+              useChallengeStore.getState().updateProgress('equip_camo_3', 1);
             }}
             onPickLocked={() => {
               haptics.tap();

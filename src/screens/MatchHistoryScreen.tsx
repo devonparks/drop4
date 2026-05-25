@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 
 type FilterType = 'all' | 'win' | 'loss' | 'draw';
+type ModeFilter = 'all' | 'ai' | 'local' | 'career';
 type SortType = 'newest' | 'oldest' | 'most-coins' | 'most-moves';
 
 const FILTER_OPTIONS: { key: FilterType; label: string; color: string }[] = [
@@ -21,6 +22,13 @@ const FILTER_OPTIONS: { key: FilterType; label: string; color: string }[] = [
   { key: 'win', label: 'Wins', color: colors.green },
   { key: 'loss', label: 'Losses', color: colors.pieceRed },
   { key: 'draw', label: 'Draws', color: colors.textSecondary },
+];
+
+const MODE_FILTER_OPTIONS: { key: ModeFilter; label: string; color: string }[] = [
+  { key: 'all', label: 'All Modes', color: colors.orange },
+  { key: 'career', label: 'Career', color: '#f39c12' },
+  { key: 'ai', label: 'AI', color: '#6c7a89' },
+  { key: 'local', label: 'Local', color: '#8e44ad' },
 ];
 
 const SORT_OPTIONS: { key: SortType; label: string }[] = [
@@ -153,15 +161,21 @@ export function MatchHistoryScreen() {
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
   }, [allMatches]);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [sort, setSort] = useState<SortType>('newest');
   const [page, setPage] = useState(1);
 
   const filteredAndSorted = useMemo(() => {
     let result = [...allMatches];
 
-    // Filter
+    // Filter by result
     if (filter !== 'all') {
       result = result.filter(m => m.result === filter);
+    }
+
+    // Filter by mode
+    if (modeFilter !== 'all') {
+      result = result.filter(m => m.mode === modeFilter);
     }
 
     // Sort
@@ -182,7 +196,7 @@ export function MatchHistoryScreen() {
     }
 
     return result;
-  }, [allMatches, filter, sort]);
+  }, [allMatches, filter, modeFilter, sort]);
 
   const pagedMatches = useMemo(() => {
     return filteredAndSorted.slice(0, page * PAGE_SIZE);
@@ -238,9 +252,9 @@ export function MatchHistoryScreen() {
             </View>
             </StaggeredEntry>
 
-            {/* Filters */}
+            {/* Result filter */}
             <StaggeredEntry index={2} delay={60}>
-            <Text style={styles.sectionLabel} accessibilityRole="header">FILTER</Text>
+            <Text style={styles.sectionLabel} accessibilityRole="header">RESULT</Text>
             <View style={styles.chipRow}>
               {FILTER_OPTIONS.map(opt => (
                 <FilterChip
@@ -254,8 +268,24 @@ export function MatchHistoryScreen() {
             </View>
             </StaggeredEntry>
 
-            {/* Sort */}
+            {/* Mode filter */}
             <StaggeredEntry index={3} delay={60}>
+            <Text style={styles.sectionLabel} accessibilityRole="header">MODE</Text>
+            <View style={styles.chipRow}>
+              {MODE_FILTER_OPTIONS.map(opt => (
+                <FilterChip
+                  key={opt.key}
+                  label={opt.label}
+                  active={modeFilter === opt.key}
+                  color={opt.color}
+                  onPress={() => { haptics.select(); playSound('click'); setModeFilter(opt.key); setPage(1); }}
+                />
+              ))}
+            </View>
+            </StaggeredEntry>
+
+            {/* Sort */}
+            <StaggeredEntry index={4} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">SORT BY</Text>
             <View style={styles.chipRow}>
               {SORT_OPTIONS.map(opt => (
@@ -270,7 +300,7 @@ export function MatchHistoryScreen() {
             </StaggeredEntry>
 
             {/* Results count */}
-            <StaggeredEntry index={4} delay={60}>
+            <StaggeredEntry index={5} delay={60}>
             <Text style={styles.resultsCount}>
               Showing {pagedMatches.length} of {filteredAndSorted.length} matches
             </Text>
@@ -283,8 +313,12 @@ export function MatchHistoryScreen() {
             <Text style={styles.emptyIcon}>{'\uD83C\uDFAE'}</Text>
             <Text style={styles.emptyTitle}>No matches yet</Text>
             <Text style={styles.emptyDesc}>
-              {filter === 'all'
+              {filter === 'all' && modeFilter === 'all'
                 ? 'Play some games and your match history will appear here.'
+                : modeFilter !== 'all' && filter !== 'all'
+                ? `No ${filter === 'draw' ? 'draws' : filter + 's'} in ${modeFilter} mode.`
+                : modeFilter !== 'all'
+                ? `No ${modeFilter} games found. Play a ${modeFilter} game to see it here.`
                 : `No ${filter === 'draw' ? 'draws' : filter + 's'} found.`}
             </Text>
           </Animated.View>

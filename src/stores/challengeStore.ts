@@ -56,6 +56,9 @@ const CHALLENGE_POOL: Omit<Challenge, 'progress' | 'completed'>[] = [
   { id: 'play_local', title: 'Social Gamer', description: 'Play a local multiplayer game', icon: '👥', target: 1, reward: 40 },
   { id: 'shop_visit', title: 'Window Shopping', description: 'Visit the shop', icon: '🛍', target: 1, reward: 15 },
   { id: 'try_custom', title: 'Remix', description: 'Play a custom game mode', icon: '🔧', target: 1, reward: 40 },
+  // Camo / customization
+  { id: 'equip_camo', title: 'Fresh Paint', description: 'Equip a camo colorway', icon: '🎨', target: 1, reward: 30 },
+  { id: 'equip_camo_3', title: 'Color Swap', description: 'Try 3 different camos', icon: '🌈', target: 3, reward: 75 },
 ];
 
 function pickRandomChallenges(count: number): Challenge[] {
