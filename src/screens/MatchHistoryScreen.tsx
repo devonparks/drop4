@@ -326,7 +326,7 @@ export function MatchHistoryScreen() {
         ListFooterComponent={
           hasMore ? (
             <PressScale
-              onPress={() => { haptics.tap(); playSound('click'); loadMore(); }}
+              onPress={() => { playSound('click'); loadMore(); }}
               scaleTo={0.96}
               style={styles.loadMore}
               accessibilityRole="button"

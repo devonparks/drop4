@@ -39,7 +39,7 @@ function SettingRow({ label, icon, value, options, onChange }: {
         {options.map(opt => (
           <PressScale
             key={opt.value}
-            onPress={() => { haptics.tap(); playSound('click'); onChange(opt.value); }}
+            onPress={() => { playSound('click'); onChange(opt.value); }}
             scaleTo={0.94}
             accessibilityRole="button"
             accessibilityLabel={`Set ${label} to ${opt.label}`}

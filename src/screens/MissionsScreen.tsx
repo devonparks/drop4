@@ -87,7 +87,7 @@ function SubTabSwitcher({ tab, onChange }: { tab: MissionsTab; onChange: (t: Mis
       {(['daily', 'milestones'] as MissionsTab[]).map((key) => (
         <PressScale
           key={key}
-          onPress={() => { haptics.tap(); playSound('click'); onChange(key); }}
+          onPress={() => { playSound('click'); onChange(key); }}
           accessibilityRole="tab"
           accessibilityLabel={key === 'daily' ? 'Daily Challenges tab' : 'Milestones tab'}
           accessibilityState={{ selected: tab === key }}

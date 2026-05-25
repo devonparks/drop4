@@ -266,7 +266,7 @@ export function ShardShopScreen() {
               return (
                 <PressScale
                   key={r}
-                  onPress={() => { haptics.tap(); setActiveRarity(r); }}
+                  onPress={() => setActiveRarity(r)}
                   containerStyle={{ flex: 1 }}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}

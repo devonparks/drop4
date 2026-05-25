@@ -187,7 +187,7 @@ function AchievementGroup({ difficulty, achievements }: { difficulty: Achievemen
           its own Pressable internally so the outer one was redundant.
           Polish 2026-05-06. */}
       <PressScale
-        onPress={() => { haptics.tap(); playSound('click'); setExpanded(!expanded); }}
+        onPress={() => { playSound('click'); setExpanded(!expanded); }}
         containerStyle={styles.achGroupHeader}
         accessibilityRole="button"
         accessibilityLabel={`${meta.label} achievements, ${unlocked} of ${total} unlocked`}

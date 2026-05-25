@@ -2151,7 +2151,7 @@ export function GameScreen({ navigation }: Props) {
                   <PressScale
                     scaleTo={0.93}
                     style={styles.quickActionLink}
-                    onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Stats' as any); }}
+                    onPress={() => { playSound('click'); navigation.navigate('Stats' as any); }}
                     accessibilityRole="link"
                     accessibilityLabel="View stats"
                   >
@@ -2161,7 +2161,7 @@ export function GameScreen({ navigation }: Props) {
                   <PressScale
                     scaleTo={0.93}
                     style={styles.quickActionLink}
-                    onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
+                    onPress={() => { playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
                     accessibilityRole="link"
                     accessibilityLabel="Open shop"
                   >

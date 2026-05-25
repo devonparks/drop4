@@ -126,7 +126,7 @@ export function OutfitPreviewModal({
              *  containerStyle, PressScale's outer Pressable has no flex
              *  and both buttons collapse to their text width. */}
             <PressScale
-              onPress={() => { haptics.tap(); onClose(); }}
+              onPress={onClose}
               containerStyle={styles.cancelBtnWrap}
               accessibilityLabel="Close outfit preview"
               accessibilityHint="Dismisses this preview without making changes"

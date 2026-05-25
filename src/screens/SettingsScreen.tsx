@@ -61,7 +61,7 @@ function SettingToggle({ label, value, onToggle, icon, iconImage }: {
 function SettingLink({ label, icon, onPress }: { label: string; icon: string; onPress: () => void }) {
   return (
     <PressScale
-      onPress={() => { playSound('click'); haptics.tap(); onPress(); }}
+      onPress={() => { playSound('click'); onPress(); }}
       scaleTo={0.98}
       accessibilityRole="button"
       accessibilityLabel={label}

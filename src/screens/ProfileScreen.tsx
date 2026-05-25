@@ -373,7 +373,7 @@ export function ProfileScreen() {
         <StaggeredEntry index={3} delay={60}>
         <View style={styles.profileLinks}>
           <PressScale
-            onPress={() => { haptics.tap(); playSound('click'); navigateTo('Stats'); }}
+            onPress={() => { playSound('click'); navigateTo('Stats'); }}
             scaleTo={0.98}
             accessibilityRole="button"
             accessibilityLabel="Stats"
@@ -386,7 +386,7 @@ export function ProfileScreen() {
             </View>
           </PressScale>
           <PressScale
-            onPress={() => { haptics.tap(); playSound('click'); navigateTo('Settings'); }}
+            onPress={() => { playSound('click'); navigateTo('Settings'); }}
             scaleTo={0.98}
             accessibilityRole="button"
             accessibilityLabel="Settings"
@@ -469,7 +469,7 @@ export function ProfileScreen() {
               </View>
               <PressScale
                 scaleTo={0.95}
-                onPress={() => { haptics.tap(); playSound('click'); navigateTo('Challenges'); }}
+                onPress={() => { playSound('click'); navigateTo('Challenges'); }}
                 style={{ alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: 'rgba(255,140,0,0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' }}
                 accessibilityRole="button"
                 accessibilityLabel="View all achievements"
@@ -505,7 +505,7 @@ export function ProfileScreen() {
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]} accessibilityRole="header">RECENT MATCHES</Text>
               <PressScale
                 scaleTo={0.95}
-                onPress={() => { haptics.tap(); playSound('click'); navigateTo('MatchHistory'); }}
+                onPress={() => { playSound('click'); navigateTo('MatchHistory'); }}
                 accessibilityRole="button"
                 accessibilityLabel="View all matches"
                 accessibilityHint="Open the full match history"
