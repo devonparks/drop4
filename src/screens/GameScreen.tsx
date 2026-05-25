@@ -758,6 +758,7 @@ export function GameScreen({ navigation }: Props) {
         }))]);
       }
       addXp(5); // Participation XP on loss
+      setXpEarned(5);
       haptics.error(); playSound('error');
       playSound('lose');
       // Comeback mechanic — grant pity coins on losing streak to keep players engaged
@@ -979,6 +980,8 @@ export function GameScreen({ navigation }: Props) {
     setDoubleCoinsUsed(false);
     setIsFirstWinOfDay(false);
     setComebackCoins(null);
+    setXpEarned(0);
+    setTotalCoinsEarned(0);
     newGame(difficulty, isVsAi);
   };
 
@@ -1874,9 +1877,10 @@ export function GameScreen({ navigation }: Props) {
                     </View>
                   </Shimmer>
                 )}
-                {/* XP gained — count-up paired with the coins so the player
-                    sees both reward currencies pop on match-end. */}
-                {((status === 'won' && winner === 1) || status === 'draw') && xpEarned > 0 && (
+                {/* XP gained — every match earns XP so the player always
+                    sees progress, even on a loss. Reinforces "every game
+                    counts" and keeps the loss screen from feeling empty. */}
+                {xpEarned > 0 && (
                   <View style={[styles.goEventRow, { borderColor: 'rgba(176,108,199,0.3)' }]}>
                     <Text style={styles.goEventIcon}>⭐</Text>
                     <CountUp
@@ -2087,6 +2091,8 @@ export function GameScreen({ navigation }: Props) {
                                   setDailyStreakMultiplier(1);
                                   setDoubleCoinsUsed(false);
                                   setIsFirstWinOfDay(false);
+                                  setXpEarned(0);
+                                  setTotalCoinsEarned(0);
                                   newGame(d, isVsAi);
                                 }
                               }}
