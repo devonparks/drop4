@@ -29,11 +29,21 @@ import { fonts, weight } from '../../theme/typography';
 
 export function MilestonesList() {
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
+  const ownedPartVariants = useCharacterStore((s) => s.ownedPartVariants);
   const ownedPets = usePetStore((s) => s.ownedPets);
   const claimedIds = useMilestoneStore((s) => s.claimedIds);
 
+  // Unique camo count — deduplicate variantIds across all parts.
+  const uniqueCamoCount = useMemo(() => {
+    const seen = new Set<string>();
+    for (const ids of Object.values(ownedPartVariants)) {
+      for (const id of ids) seen.add(id);
+    }
+    return seen.size;
+  }, [ownedPartVariants]);
+
   const { earnedUnclaimed, inProgress, claimed, notStarted, total, claimedCount } = useMemo(() => {
-    const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds);
+    const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount);
     const earnedUnclaimed: MilestoneProgress[] = [];
     const inProgress: MilestoneProgress[] = [];
     const claimed: MilestoneProgress[] = [];

@@ -70,6 +70,7 @@ function pickShowcasePetGlb(
 
 export function MilestoneToast() {
   const ownedOutfits = useCharacterStore((s) => s.ownedOutfits);
+  const ownedPartVariants = useCharacterStore((s) => s.ownedPartVariants);
   const ownedPets = usePetStore((s) => s.ownedPets);
   const activePetId = usePetStore((s) => s.activePetId);
   const claimedIds = useMilestoneStore((s) => s.claimedIds);
@@ -77,12 +78,21 @@ export function MilestoneToast() {
   const unlockTitle = useMilestoneStore((s) => s.unlockTitle);
   const addCoins = useShopStore((s) => s.addCoins);
 
+  // Unique camo count — deduplicate variantIds across all parts.
+  const uniqueCamoCount = useMemo(() => {
+    const seen = new Set<string>();
+    for (const ids of Object.values(ownedPartVariants)) {
+      for (const id of ids) seen.add(id);
+    }
+    return seen.size;
+  }, [ownedPartVariants]);
+
   const [queue, setQueue] = useState<CollectionMilestone[]>([]);
   const [active, setActive] = useState<CollectionMilestone | null>(null);
 
   const earned = useMemo(
-    () => getNewlyEarnedMilestones(ownedOutfits, ownedPets, claimedIds),
-    [ownedOutfits, ownedPets, claimedIds],
+    () => getNewlyEarnedMilestones(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount),
+    [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount],
   );
 
   // When newly-earned milestones appear, append to queue

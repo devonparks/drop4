@@ -31,6 +31,8 @@ export interface CollectionMilestone {
   anyPetsTotal?: number;
   /** Alternative: number of distinct SPECIES */
   uniqueSpeciesCount?: number;
+  /** Alternative: number of unique camo variants owned (across all parts) */
+  anyCamosTotal?: number;
   // Reward
   reward: {
     type: MilestoneRewardType;
@@ -150,6 +152,33 @@ const COLLECTION_MILESTONES: CollectionMilestone[] = [
     reward: { type: 'title', name: 'Shapeshifter', icon: '\u{1FA9E}', value: 'shapeshifter' },
   },
 
+  // Camo collectors — driven by the CoD-weapon-camo variant system.
+  // Counts unique variantIds across ALL owned parts (not per-part).
+  {
+    id: 'camos_5',
+    name: 'Color Collector',
+    description: 'Collect 5 unique camo colorways',
+    requiredCount: 5,
+    anyCamosTotal: 5,
+    reward: { type: 'title', name: 'Collector', icon: '\u{1F3A8}', value: 'collector' },
+  },
+  {
+    id: 'camos_12',
+    name: 'Camo Connoisseur',
+    description: 'Collect 12 unique camo colorways',
+    requiredCount: 12,
+    anyCamosTotal: 12,
+    reward: { type: 'title', name: 'Connoisseur', icon: '\u{1F308}', value: 'connoisseur' },
+  },
+  {
+    id: 'camos_all',
+    name: 'Master Painter',
+    description: 'Collect all 24 camo colorways',
+    requiredCount: 24,
+    anyCamosTotal: 24,
+    reward: { type: 'title', name: 'Master Painter', icon: '\u{1F58C}️', value: 'master_painter' },
+  },
+
   // Pet collectors
   {
     id: 'pets_5',
@@ -198,6 +227,7 @@ export function getNewlyEarnedMilestones(
   ownedOutfits: string[],
   ownedPets: string[],
   claimedIds: string[],
+  uniqueCamoCount = 0,
 ): CollectionMilestone[] {
   const earned: CollectionMilestone[] = [];
   const ownedSet = new Set(ownedOutfits);
@@ -233,6 +263,8 @@ export function getNewlyEarnedMilestones(
       qualifies = ownedPets.length >= m.anyPetsTotal;
     } else if (m.uniqueSpeciesCount !== undefined) {
       qualifies = speciesOwned.size >= m.uniqueSpeciesCount;
+    } else if (m.anyCamosTotal !== undefined) {
+      qualifies = uniqueCamoCount >= m.anyCamosTotal;
     }
 
     if (qualifies) earned.push(m);
@@ -283,6 +315,7 @@ export function getMilestoneProgressList(
   ownedOutfits: string[],
   ownedPets: string[],
   claimedIds: string[],
+  uniqueCamoCount = 0,
 ): MilestoneProgress[] {
   const ownedSet = new Set(ownedOutfits);
 
@@ -318,6 +351,8 @@ export function getMilestoneProgressList(
       current = ownedPets.length;
     } else if (m.uniqueSpeciesCount !== undefined) {
       current = speciesOwned.size;
+    } else if (m.anyCamosTotal !== undefined) {
+      current = uniqueCamoCount;
     }
 
     const fraction =
