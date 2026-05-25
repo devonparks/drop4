@@ -11,6 +11,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
 
 import { useCareerStore } from '../stores/careerStore';
+import { ALL_CAREER_LEVELS, CAREER_CITIES } from '../data/careerLevels';
 import { BOARD_THEMES, PIECE_THEMES } from '../data/shopCatalog';
 import { PETS } from '../data/pets';
 import { PETS_ENABLED } from '../data/featureFlags';
@@ -106,6 +107,8 @@ export function StatsScreen({ navigation }: Props) {
     // Mode breakdown
     const aiGames = matches.filter(m => m.mode === 'ai').length;
     const localGames = matches.filter(m => m.mode === 'local').length;
+    const careerGames = matches.filter(m => m.mode === 'career').length;
+    const careerWins = matches.filter(m => m.mode === 'career' && m.result === 'win').length;
     // Time estimate
     const avgMoves = matches.length > 0
       ? matches.reduce((sum, m) => sum + (m.moves || 20), 0) / matches.length
@@ -137,7 +140,7 @@ export function StatsScreen({ navigation }: Props) {
     return {
       totalGames, wins, losses, draws, winRate, totalCoinsEarned,
       easyWins, mediumWins, hardWins, totalDiffWins,
-      aiGames, localGames,
+      aiGames, localGames, careerGames, careerWins,
       hoursPlayed,
       longestLoseStreak,
       fastestWin, mostCoins,
@@ -171,7 +174,7 @@ export function StatsScreen({ navigation }: Props) {
 
   const {
     easyWins, mediumWins, hardWins, totalDiffWins,
-    aiGames, localGames,
+    aiGames, localGames, careerGames, careerWins,
     hoursPlayed,
     longestLoseStreak,
     fastestWin, mostCoins,
@@ -265,6 +268,7 @@ export function StatsScreen({ navigation }: Props) {
           <View style={styles.card}>
             <View style={styles.modeRow}>
               <ModeItem label="vs AI" count={aiGames} icon="🤖" />
+              <ModeItem label="Career" count={careerGames} icon="🏙️" />
               <ModeItem label="Local" count={localGames} icon="👥" />
             </View>
           </View>
@@ -406,8 +410,17 @@ export function StatsScreen({ navigation }: Props) {
         <StaggeredEntry index={9} delay={60}>
           <SectionTitle title="CAREER" />
           <View style={styles.grid}>
-            <OverviewCard icon="✅" label="Completed" value={completedCount} color={colors.green} />
+            <OverviewCard icon="✅" label="Completed" value={`${completedCount}/${ALL_CAREER_LEVELS.length}`} color={colors.green} />
             <OverviewCard icon="⭐" label="Total Stars" value={totalStars} color={colors.coinGold} />
+            <OverviewCard icon="🏙️" label="Cities" value={`${CAREER_CITIES.filter(c => !c.comingSoon).length}`} color={colors.teal} />
+            {careerGames > 0 && (
+              <OverviewCard
+                icon="📈"
+                label="Career Win %"
+                value={`${Math.round((careerWins / careerGames) * 100)}%`}
+                color={colors.orange}
+              />
+            )}
           </View>
         </StaggeredEntry>
       </ScrollView>
