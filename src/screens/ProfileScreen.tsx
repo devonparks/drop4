@@ -17,6 +17,8 @@ import { useRankedStore, RANKED_TIERS, formatRank } from '../stores/rankedStore'
 import { useChallengeStore } from '../stores/challengeStore';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
+import { useCharacterStore } from '../stores/characterStore';
+import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { Shimmer, PressScale, StaggeredEntry } from '../components/animations';
@@ -51,6 +53,7 @@ function StatCard({ label, value, color = '#ffffff' }: { label: string; value: s
 function EquippedItem({ label, name, rarity }: { label: string; name: string; rarity: string }) {
   const rarityColors: Record<string, string> = {
     common: '#8892b0',
+    uncommon: '#2ecc71',
     rare: '#3498db',
     epic: '#9b59b6',
     legendary: '#f1c40f',
@@ -73,6 +76,7 @@ export function ProfileScreen() {
   const equipped = useShopStore(s => s.equipped);
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedCustomTitle = useShopStore(s => s.equippedCustomTitle);
+  const equippedOutfitVariant = useCharacterStore(s => s.equippedOutfitVariant);
   const navigateTo = (screen: string) => navigation.dispatch(CommonActions.navigate({ name: screen }));
   const winStreak = useGameStore(s => s.winStreak);
   const bestStreak = useGameStore(s => s.bestStreak);
@@ -109,6 +113,13 @@ export function ProfileScreen() {
     const spinUsed = lastSpinDate === todayStr;
     return { gamesToday, completedChallenges, rewardClaimed, spinUsed };
   }, [allMatches, challenges, dailyRewardLastClaim, lastSpinDate]);
+
+  // Equipped camo variant — resolve display name + rarity for the profile card.
+  const camoInfo = useMemo(() => {
+    if (!equippedOutfitVariant) return { name: 'Default', rarity: 'common' };
+    const v = DEFAULT_PALETTE.find((p) => p.id === equippedOutfitVariant);
+    return v ? { name: v.label, rarity: v.rarity } : { name: 'Default', rarity: 'common' };
+  }, [equippedOutfitVariant]);
 
   // Coin milestone
   const milestoneInfo = useMemo(() => getCoinMilestoneInfo(coins), [coins]);
@@ -422,6 +433,7 @@ export function ProfileScreen() {
             <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
             <EquippedItem label="Drop Effect" name="None" rarity="common" />
             <EquippedItem label="Win Animation" name="Basic" rarity="common" />
+            <EquippedItem label="Camo" name={camoInfo.name} rarity={camoInfo.rarity} />
             {PETS_ENABLED && (
               <EquippedItem
                 label="Pet"
