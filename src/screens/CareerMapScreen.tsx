@@ -151,7 +151,6 @@ export function CareerMapScreen({ navigation }: Props) {
               <PressScale
                 onPress={() => {
                   if (unlocked) {
-                    haptics.tap();
                     playSound('whoosh');
                     navigation.navigate('CareerCity', { cityId: city.id });
                   }

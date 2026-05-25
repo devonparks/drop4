@@ -930,7 +930,6 @@ export function GameScreen({ navigation }: Props) {
   }, [status, isAiThinking, introDone, currentPlayer, isVsAi, moveCount, params.bossScript, armedPowerPiece, bombsRemaining, rainbowsRemaining, heaviesRemaining]);
 
   const handleShareScore = async () => {
-    haptics.tap();
     playSound('click');
     const isWin = status === 'won' && winner === 1;
     const isLoss = status === 'won' && winner === 2;
@@ -2070,7 +2069,7 @@ export function GameScreen({ navigation }: Props) {
                               ]}
                               onPress={() => {
                                 if (!isActive) {
-                                  haptics.tap();
+                                  playSound('click');
                                   // Reset state and start new game with the selected difficulty
                                   setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
                                   setShowConfetti(false);

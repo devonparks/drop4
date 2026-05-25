@@ -220,7 +220,6 @@ export function ShardShopScreen() {
                 </View>
                 <PressScale
                   onPress={() => {
-                    haptics.tap();
                     playSound('click');
                     navigation.navigate('LootBox' as never);
                   }}

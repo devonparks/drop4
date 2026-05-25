@@ -1050,7 +1050,6 @@ export function ShopScreen() {
                   {totalBoxes > 0 && (
                     <PressScale
                       onPress={() => {
-                        haptics.tap();
                         playSound('click');
                         navigation.navigate('LootBox' as never);
                       }}
@@ -1073,7 +1072,6 @@ export function ShopScreen() {
                   {totalShards > 0 && (
                     <PressScale
                       onPress={() => {
-                        haptics.tap();
                         playSound('click');
                         navigation.navigate('ShardShop' as never);
                       }}
@@ -1284,7 +1282,6 @@ export function ShopScreen() {
                       key={box.id}
                       scaleTo={0.97}
                       onPress={() => {
-                        haptics.tap();
                         playSound('click');
                         navigation.navigate('LootBox' as never);
                       }}

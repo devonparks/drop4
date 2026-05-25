@@ -369,7 +369,7 @@ export function CareerScreen({ navigation }: Props) {
                 key={ch.id}
                 onPress={() => {
                   if (isUnlocked) {
-                    haptics.tap();
+                    playSound('click');
                     setActiveChapter(ch.id);
                     // Show celebration if chapter is complete and user taps it
                     if (chapterCompletion[ch.id]?.complete) {
@@ -414,7 +414,6 @@ export function CareerScreen({ navigation }: Props) {
             <>
               <PressScale
                 onPress={() => {
-                  haptics.tap();
                   playSound('click');
                   // Switch to the correct chapter tab
                   const targetChapter = CHAPTERS.find(c => c.levels.some(l => l.id === nextUncompletedLevel.id));

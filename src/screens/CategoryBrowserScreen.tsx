@@ -708,7 +708,6 @@ export function CategoryBrowserScreen() {
               {ownershipFilter !== 'locked' && (
                 <PressScale
                   onPress={() => {
-                    haptics.tap();
                     playSound('click');
                     navigation.navigate('LootBox' as never);
                   }}
