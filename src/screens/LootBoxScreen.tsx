@@ -18,6 +18,7 @@ import {
 } from '../stores/lootBoxStore';
 import { LootChest, LootChestTier } from '../components/ui/LootChest';
 import { useShopStore } from '../stores/shopStore';
+import { useCharacterStore, countUniqueCamos } from '../stores/characterStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { PressScale } from '../components/animations';
@@ -412,6 +413,17 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
               )}
             </View>
           )}
+
+          {/* Camo collection progress — fires the collector's brain when
+              they see "12 / 24 Camos" and realize they're halfway there. */}
+          {item.type === 'partVariant' && !isDupe && (() => {
+            const camoCount = countUniqueCamos(useCharacterStore.getState().ownedPartVariants);
+            return (
+              <Text style={st.collectionHint}>
+                {'🎨'} {camoCount} / 24 Camos Collected
+              </Text>
+            );
+          })()}
 
           {/* Shine line */}
           <View style={st.shineLine} />
@@ -1002,6 +1014,11 @@ const st = StyleSheet.create({
     position: 'absolute', top: 0, left: -20, right: -20, height: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
     transform: [{ rotate: '-5deg' }],
+  },
+  collectionHint: {
+    fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 11,
+    color: colors.textMuted, textAlign: 'center', marginTop: 6,
+    letterSpacing: 0.5,
   },
 
   // ── Shard balance strip ────────────────────────────────────────
