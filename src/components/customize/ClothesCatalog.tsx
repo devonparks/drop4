@@ -443,7 +443,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
         {!lockedBucket && (
           <View style={styles.modeRow}>
             <PressScale
-              onPress={() => { haptics.tap(); setMode('parts'); }}
+              onPress={() => setMode('parts')}
               containerStyle={{ flex: 1 }}
               accessibilityRole="tab"
               accessibilityState={{ selected: mode === 'parts' }}
@@ -455,7 +455,7 @@ export function ClothesCatalog({ visible, onClose, lockedBucket, title, subtitle
               </View>
             </PressScale>
             <PressScale
-              onPress={() => { haptics.tap(); setMode('packs'); }}
+              onPress={() => setMode('packs')}
               containerStyle={{ flex: 1 }}
               accessibilityRole="tab"
               accessibilityState={{ selected: mode === 'packs' }}
