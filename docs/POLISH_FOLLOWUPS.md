@@ -94,7 +94,7 @@ Foundation already shipped (commit 18fbbdc): `ownedAmgParts` on characterStore +
 <!-- GameScreen 202 lines of MP code stripped (commit df49f2a) -->
 <!-- StageScreen.tsx deleted — unreachable (commit a9d922b) -->
 <!-- seriesStore.ts deleted — zero importers after MP kill (commit TBD) -->
-- MatchHistoryScreen — does it still render anything meaningful without multiplayer match history? Consider scoping to AI-only or removing
+<!-- Shipped: MatchHistoryScreen — confirmed properly scoped for single-player (ai/local/career badges, no MP refs). Added mode filter chips (Career/AI/Local) and mode-aware empty states (commit bf28dc98). -->
 - Migrate Zustand stores to the new subscribeWithSelector pattern for the milestone detection hook (current implementation polls on render)
 <!-- src/screens/CharacterCreatorScreen.tsx was repurposed (commit a61651a era) as the AMG creator wrapper that bridges RootNavigator to @amg/character-creator. DO NOT delete — it is the live screen behind the 'AmgCreator' route. The OLD 2D creator code that used to live at this path is gone (replaced wholesale). -->
 - (Reserved slot — see comment above re: CharacterCreatorScreen.tsx repurpose; do not re-flag it as unreachable.)
