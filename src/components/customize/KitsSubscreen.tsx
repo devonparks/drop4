@@ -1174,6 +1174,12 @@ function VariantCamoRow({
     : 'common';
   const activeBadgeColor = VARIANT_RARITY_COLOR[activeRarity] ?? 'rgba(255,255,255,0.2)';
 
+  // Collection progress — how many of the total variants does the player own?
+  const ownedCount = equippedPartName
+    ? variants.filter((v) => isVariantOwned(equippedPartName, v.id)).length
+    : 0;
+  const totalCount = variants.length;
+
   return (
     <View style={camoStyles.wrap}>
       <View style={camoStyles.headerRow}>
@@ -1181,6 +1187,7 @@ function VariantCamoRow({
         <View style={[camoStyles.activeBadge, { borderColor: activeBadgeColor }]}>
           <Text style={camoStyles.activeBadgeText}>{activeLabel.toUpperCase()}</Text>
         </View>
+        <Text style={camoStyles.collectionText}>{ownedCount}/{totalCount}</Text>
       </View>
       <View style={camoStyles.grid}>
         {/* "Default" swatch — resets to base outfit colors */}
@@ -1287,6 +1294,12 @@ const camoStyles = StyleSheet.create({
     fontSize: 7,
     letterSpacing: 1,
     color: 'rgba(255,255,255,0.8)',
+  },
+  collectionText: {
+    fontWeight: '800',
+    fontSize: 7,
+    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.35)',
   },
   grid: {
     flexDirection: 'row',
