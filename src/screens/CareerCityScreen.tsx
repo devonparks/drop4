@@ -715,9 +715,19 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
               </Text>
             )}
 
-            {isComplete && currentStars < 3 && (
-              <Text style={styles.modalReplayNudge}>Can you earn more stars?</Text>
-            )}
+            {isComplete && currentStars < 3 && level.starThresholds && bestMoves > 0 && (() => {
+              const th = level.starThresholds;
+              const playerBest = Math.ceil(bestMoves / 2);
+              if (currentStars === 1 && th.two) {
+                const gap = playerBest - th.two;
+                return <Text style={styles.modalReplayNudge}>{gap > 0 ? `${gap} fewer move${gap !== 1 ? 's' : ''} for ★★!` : 'Can you earn more stars?'}</Text>;
+              }
+              if (currentStars === 2 && th.three) {
+                const gap = playerBest - th.three;
+                return <Text style={styles.modalReplayNudge}>{gap > 0 ? `${gap} fewer move${gap !== 1 ? 's' : ''} for ★★★!` : 'Can you earn more stars?'}</Text>;
+              }
+              return <Text style={styles.modalReplayNudge}>Can you earn more stars?</Text>;
+            })()}
 
             {modifierPills.length > 0 && (
               <View style={styles.modalPills}>
