@@ -681,3 +681,107 @@ myPlayer pattern).
 - Drop4 typecheck clean (0 new errors, ~103 pre-existing amg-engine)
 - 43/43 Drop4 tests passing (4 pre-existing amg-engine failures)
 - 14 commits pushed to main this session
+
+---
+
+## Session — 2026-05-26 (Customization Pipeline Audit + Polish)
+
+**Goal:** Full visual audit of EVERY customization option. Fix all amg-engine TS errors.
+Fix per-slot colorway bug. Continuous polish.
+
+### AMG Engine TypeScript Fixes (commit 97af454d)
+- Resolved all 105 pre-existing amg-engine TypeScript errors via path mappings
+- Added peer-dep type resolution aliases in tsconfig.json for react,
+  react-native, three, @react-three/fiber, react-native-reanimated,
+  expo-linear-gradient, and new identity-layer packages (@amg/types,
+  @amg/account, @amg/wallet, @amg/inventory, @amg/game-state, @amg/iap)
+- `npx tsc --noEmit` now fully clean (0 errors)
+
+### Colorway Per-Slot Fix (commit 36715e77)
+- **Bug:** Selecting a colorway on tops/pants/shoes changed ALL THREE
+  outfit slots to that color instead of just the targeted slot
+- **Root cause:** `equipOutfitColorway` had a full-outfit fallback path
+  that set all three color slots when no `targetSlot` was passed, plus
+  persisted state had empty `equippedSlotColorway` with all colors set
+  from the deprecated `equippedOutfitColorway` global
+- **Fix:** Removed full-outfit fallback (no targetSlot = no-op),
+  per-slot path no longer writes deprecated global, added migration
+  in `loadFromStorage` to populate per-slot from global for old saves
+- Verified visually: tops→Ocean, pants→Forest, shoes→Crimson all
+  independent
+
+### Nested Button Fix (commit 83b6f071)
+- **Bug:** BoxOpeningScreen had a Pressable (full-screen tap area) with
+  `accessibilityRole="button"` wrapping another Pressable (Back button)
+  also with `accessibilityRole="button"` — invalid nested `<button>`
+  elements on web causing React DOM hydration warnings
+- **Fix:** Removed `accessibilityRole="button"` from the outer tap area
+  (it's a region, not a semantic button)
+- Verified: zero console errors after fix
+
+### Full Visual Audit Results
+Every customization category tested and verified working:
+- **KITS → HAIR:** 72 hairstyles, 65 beards, 86 brows (L/R split),
+  HAIR COLOR palette shared across all three sub-tabs
+- **KITS → BODY:** 5 species (Human/Elf/Goblin/Skeleton/Zombie),
+  12 skin tones (verified change applies visually), body shape sliders
+  (Masc↔Fem, Weight, Muscle) + 4 presets (Slim/Curvy/Athletic/Bulky)
+- **KITS → OUTFITS:** Tops/Pants/Shoes with per-slot colorway selection
+  (30 colorway presets across 4 rarity tiers)
+- **KITS → ADDONS:** 114 hats/helmets
+- **EMOTES:** Emotes + Idles tabs with dance grid
+- **PIECES:** 17/17 at 100%, rarity filters, equip states
+- **BOARDS:** 20/20 at 100%, rarity filters, equip states
+- **SHOP:** Today's Deals (Free Coins, Watch Ad, 4 featured items),
+  BAGS section (11 box types: Bronze/Silver/Gold/Diamond + 6 themed +
+  Featured), coin balance display
+- **LOOT BOX FLOW:** Full open → tap-3-times → reveal → duplicate
+  refund (shards + coins) → stats update flow verified
+- **DAILY SPIN:** Free spin → wheel animation → prize reveal → collect →
+  Golden Spin upsell → close flow verified
+
+### Status
+- Drop4 typecheck: 0 errors
+- Drop4 tests: 43/45 passing (4 pre-existing amg-engine failures)
+- 3 commits on main this session (97af454d, 36715e77, 83b6f071)
+- Console.log audit: all calls __DEV__-gated
+- No remaining nested button issues in codebase
+- No dead FortniteEmoteWheel code (cleaned in prior session)
+
+### Career City Unlock Chain Fix (commit 657ace4a)
+- **Bug:** Chicago (The Cage) was missing `unlockedAfterCityId` in
+  `careerRecipes.ts`, making it playable from the start while Venice
+  Beach and Harlem were still locked. Players could skip ahead 2 cities.
+- **Fix:** Added `unlockedAfterCityId: 'harlem'` to Chicago's city recipe,
+  restoring the sequential unlock chain: Brooklyn → Venice Beach →
+  Harlem → Chicago → Detroit → … → Toronto (all 15 cities verified)
+- Verified visually: Chicago now shows "Complete Harlem to unlock"
+
+### Full App Audit (continued)
+Screens tested and verified working this session:
+- **Missions → Daily tab:** 3 daily challenges (Color Swap, Remix, Warm Up)
+  + Challenge Bag Progress tracker + 3 weekly challenges (Win 20, 5 career
+  levels, 30 stars) + Complete All bonus
+- **Missions → Milestones tab:** 28 total milestones (8 in progress,
+  16 unlocked/claimed, 4 locked), all rendering correctly with CLAIMED
+  badges, progress bars, title rewards, coin rewards
+- **Career Mode:** Full flow tested: Career Map → City detail → Level
+  detail card → Matchup screen → Game board. All 15 cities render with
+  correct lock chains and prerequisite messages. End-of-content "THE
+  JOURNEY CONTINUES" placeholder present.
+- **Profile Screen:** OVR rating, 3D character portrait, BRONZE rank,
+  title display (MASTER PAINTER), Level 3 XP bar, Daily Goals section
+  (login streak, games played, challenges, spin, streak freeze), Career
+  summary card, Coin Goal (Mogul), quick stats grid (14W/2L/88%), Stats
+  and Settings navigation links
+- **Game Board:** Career level 1 launch confirmed — piece drop, AI
+  response, NPC chat phrases, move counter, star tracking, quit
+  confirmation modal all functional
+
+### Status
+- Drop4 typecheck: 0 errors
+- Drop4 tests: 43/45 passing (4 pre-existing amg-engine failures)
+- 4 commits on main this session (97af454d, 36715e77, 83b6f071, 657ace4a)
+- All POLISH_FOLLOWUPS quick wins exhausted — remaining items are
+  medium-to-large scope (3D thumbnails, preview modals, collection tabs,
+  bulk buy, filter chips)
