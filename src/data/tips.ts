@@ -1,6 +1,7 @@
 // Loading screen tips shown during game transitions
 
 const LOADING_TIPS: string[] = [
+  // Strategy
   'Controlling the center column gives you the most winning opportunities.',
   'A trap is when you have two ways to win and your opponent can only block one.',
   'Always check for your opponent\'s three-in-a-row before making your move.',
@@ -8,15 +9,25 @@ const LOADING_TIPS: string[] = [
   'Odd rows favor the first player. Even rows favor the second player.',
   'The best players think two moves ahead — plan your trap before you set it.',
   'A double trap is unbeatable: three connected with open spaces on both ends.',
-  'Win games to earn coins and unlock exclusive cosmetics in the Shop.',
+  'Diagonal threats are harder to spot than horizontal ones — use that.',
+  'If your opponent takes the center, go adjacent — never go to the edge.',
+  'Blocking isn\'t winning. Force THEM to block YOU.',
+  'On a 7-column board, columns 3, 4, and 5 are involved in the most winning lines.',
+  // Career
+  'Career bosses have special rules — read the level info before you start.',
+  'Replay career levels for 3 stars to earn more career stars overall.',
+  'Each career city introduces new level types — adapt your strategy.',
+  'Obstacle levels create forced plays — use walls to trap the AI.',
+  'Speed rounds punish hesitation. Pre-plan two moves ahead.',
+  'Jeopardy levels pay 3× coins — high risk, high reward.',
+  // Engagement hooks
   'Complete Career Mode to earn player titles and rare board skins.',
   'Daily Challenges refresh every day — complete all 3 for a bonus reward.',
-  'Check your Loot Boxes in your Profile — you might have rewards waiting!',
+  'Weekly challenges pay up to 2,000 coins — check your progress.',
+  'Your login streak earns a coin multiplier — don\'t break the chain!',
+  'Win games to earn coins and unlock exclusive cosmetics in the Shop.',
   'Customize your character and show off your style to opponents.',
-  'Collect outfits, pets, and board skins to build your ultimate style.',
-  'Your win streak earns bonus coins — keep it going!',
   'Try Custom Game to play Connect 3, 5, or 6 on different board sizes.',
-  'The Board Editor lets you create custom puzzle boards to share.',
 ];
 
 export function getRandomTip(): string {
@@ -35,6 +46,9 @@ const GAME_OVER_WIN_QUOTES: string[] = [
   'Champions play one more. Ready for a rematch?',
   'Dominant performance! Your opponent never stood a chance.',
   'Pro tip: diagonal traps are the hardest to spot!',
+  'Clean win. The city is noticing.',
+  'That double trap was textbook. Keep climbing.',
+  'Every win gets you closer to the next boss battle.',
 ];
 
 const GAME_OVER_LOSS_QUOTES: string[] = [
