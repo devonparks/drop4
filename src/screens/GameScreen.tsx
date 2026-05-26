@@ -1276,13 +1276,15 @@ export function GameScreen({ navigation }: Props) {
             {params.movesLimit && status === 'playing' && (() => {
               const used = Math.ceil(moveCount / 2);
               const remaining = Math.max(0, params.movesLimit - used);
+              const isUrgent = remaining <= 3 && remaining > 0;
               return (
-                <Text style={[
+                <RNAnimated.Text style={[
                   styles.movesLimitLabel,
-                  remaining <= 3 && styles.movesLimitLabelWarn,
+                  isUrgent && styles.movesLimitLabelWarn,
+                  isUrgent && { transform: [{ scale: turnPulseAnim }] },
                 ]}>
                   {remaining} move{remaining === 1 ? '' : 's'} left
-                </Text>
+                </RNAnimated.Text>
               );
             })()}
             {/* Live star tracker + move counter for career levels */}
