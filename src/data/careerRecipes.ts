@@ -606,11 +606,7 @@ export const CITY_RECIPES: CityRecipe[] = [
     ],
   },
   {
-    id: 'houston', name: 'Houston', state: 'TX', nickname: 'The Yard',
-    // Note: 'The Yard' nickname is shared with Compton — both cities
-    // earned it for different reasons (Compton: speed, Houston: slow
-    // burn). Acceptable cross-city nickname collision; the city.name
-    // ('Compton' vs 'Houston') is the disambiguator everywhere.
+    id: 'houston', name: 'Houston', state: 'TX', nickname: 'The Furnace',
     tagline: 'Texas heat, slow burn. Outlast or be cooked.',
     unlockedAfterCityId: 'atlanta',
     themeColor: '#ff5f1f', accentColor: '#ffb800',
