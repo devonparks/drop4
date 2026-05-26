@@ -1500,7 +1500,7 @@ export function GameScreen({ navigation }: Props) {
             {/* Center: Expression + Surrender (+ power pieces in career) */}
             <View style={styles.centerColumn}>
               <Pressable
-                onPress={() => { haptics.tap(); setExpressionPanelTab('emojis'); }}
+                onPress={() => { haptics.tap(); playSound('click'); setExpressionPanelTab('emojis'); }}
                 style={styles.categoryBtn}
                 accessibilityRole="button"
                 accessibilityLabel="Open emojis"
@@ -1510,7 +1510,7 @@ export function GameScreen({ navigation }: Props) {
               </Pressable>
 
               <Pressable
-                onPress={() => { haptics.tap(); setExpressionPanelTab('phrases'); }}
+                onPress={() => { haptics.tap(); playSound('click'); setExpressionPanelTab('phrases'); }}
                 style={styles.categoryBtn}
                 accessibilityRole="button"
                 accessibilityLabel="Open phrases"
@@ -1520,7 +1520,7 @@ export function GameScreen({ navigation }: Props) {
               </Pressable>
 
               <Pressable
-                onPress={() => { haptics.tap(); setExpressionPanelTab('emotes'); }}
+                onPress={() => { haptics.tap(); playSound('click'); setExpressionPanelTab('emotes'); }}
                 style={styles.categoryBtn}
                 accessibilityRole="button"
                 accessibilityLabel="Open emotes"
