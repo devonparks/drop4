@@ -95,6 +95,13 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
   { id: 'camo_12', name: 'Paint Job', description: 'Collect 12 camo colorways', icon: '🌈',
     condition: { type: 'camos_owned', count: 12 }, reward: { type: 'coins', value: 500 }, difficulty: 'rare', points: 25 },
 
+  { id: 'career_100', name: 'Star Hunter', description: 'Earn 100 career stars', icon: '💫',
+    condition: { type: 'career_stars', count: 100 }, reward: { type: 'coins', value: 2000 }, difficulty: 'rare', points: 25 },
+  { id: 'games_200', name: 'Die Hard', description: 'Play 200 games', icon: '🎲',
+    condition: { type: 'games', count: 200 }, reward: { type: 'coins', value: 1000 }, difficulty: 'rare', points: 25 },
+  { id: 'win_200', name: 'Dominant', description: 'Win 200 games', icon: '💪',
+    condition: { type: 'wins', count: 200 }, reward: { type: 'coins', value: 2000 }, difficulty: 'rare', points: 25 },
+
   // Hard (50 pts) — endgame prestige
   { id: 'win_100', name: 'Legend', description: 'Win 100 games', icon: '👑',
     condition: { type: 'wins', count: 100 }, reward: { type: 'title', value: 'Legend' }, difficulty: 'hard', points: 50 },
@@ -106,6 +113,12 @@ const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     condition: { type: 'legendary_pet' }, reward: { type: 'title', value: 'Best in Show' }, difficulty: 'hard', points: 50 },
   { id: 'camo_all', name: 'Master Painter', description: 'Collect all 24 camo colorways', icon: '🖌️',
     condition: { type: 'camos_owned', count: 24 }, reward: { type: 'title', value: 'Master Painter' }, difficulty: 'hard', points: 50 },
+  { id: 'career_300', name: 'City Legend', description: 'Earn 300 career stars', icon: '🌟',
+    condition: { type: 'career_stars', count: 300 }, reward: { type: 'title', value: 'City Legend' }, difficulty: 'hard', points: 50 },
+  { id: 'hard_50', name: 'AI Destroyer', description: 'Beat Hard AI 50 times', icon: '🤖',
+    condition: { type: 'hard_wins', count: 50 }, reward: { type: 'title', value: 'AI Destroyer' }, difficulty: 'hard', points: 50 },
+  { id: 'games_500', name: 'No Life', description: 'Play 500 games', icon: '🎮',
+    condition: { type: 'games', count: 500 }, reward: { type: 'title', value: 'No Life' }, difficulty: 'hard', points: 50 },
 ];
 
 const LEGENDARY_PET_IDS = ['hellhound', 'robot', 'scifi'];
