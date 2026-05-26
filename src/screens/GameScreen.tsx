@@ -860,6 +860,27 @@ export function GameScreen({ navigation }: Props) {
       if (status === 'won' && winner === 2 && useMatchHistoryStore.getState().matches.length === 1) {
         setGameOverQuote("Great first try! Tap Rematch to even the score \uD83D\uDCAA");
       }
+      // Career loss: contextual tip based on level type
+      if (status === 'won' && winner === 2 && params.careerLevelId) {
+        const tips: Record<string, string[]> = {
+          timed: ['Watch the timer \u2014 drop fast in safe columns', 'Prioritize blocks over attacks when time is short'],
+          speed: ['Blitz levels reward instinct \u2014 trust your first read', 'Center columns give the most options under pressure'],
+          obstacle: ['Build around the blocks \u2014 they change the winning lines', 'Check which diagonals are still open before committing'],
+          moves_limit: ['Every move counts \u2014 block AND build simultaneously', 'Look for double threats that force the win'],
+          jeopardy: ['High stakes, same rules \u2014 play your best strategy', 'Losing a jeopardy level costs nothing extra, retry freely'],
+          go_second: ['Going second is tough \u2014 focus on blocking early', 'Let them take center, then control the edges'],
+          puzzle: ['Study the preset board \u2014 the solution is always there', 'Think backwards from connect 4 to find the path'],
+          connect3: ['Connect 3 games are fast \u2014 grab the center immediately', 'Diagonal threats are harder to spot on small boards'],
+          connect5: ['Connect 5 needs longer lines \u2014 control the middle rows', 'Horizontal setups are safest on wider boards'],
+          connect6: ['Connect 6 is a marathon \u2014 build wide, not narrow', 'Double open-ended lines are nearly unstoppable'],
+          boss: ['Bosses have unique rules \u2014 read the intro card carefully', 'Focus on their mechanic first, attack second'],
+        };
+        const lt = params.levelType || 'standard';
+        const pool = tips[lt] || tips[params.bossScript ? 'boss' : ''] || [];
+        if (pool.length > 0) {
+          setGameOverQuote(pool[Math.floor(Math.random() * pool.length)]);
+        }
+      }
     }
     // Save replay on game end
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
@@ -1623,6 +1644,9 @@ export function GameScreen({ navigation }: Props) {
                     ? `VS ${diffLabel.toUpperCase()} BOT`
                     : 'LOCAL MATCH'}
                 </Text>
+                {gameOverQuote !== '' && (
+                  <Text style={styles.goQuote}>{gameOverQuote}</Text>
+                )}
               </View>
 
               {/* ── Hero zone: characters side-by-side ── */}
@@ -2333,6 +2357,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textTransform: 'uppercase',
     opacity: 0.8,
+  },
+  goQuote: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 20,
+    fontStyle: 'italic',
   },
   goModeLabel: {
     fontFamily: fonts.body,
