@@ -87,8 +87,8 @@ export function OutfitPreviewModal({
           accessibilityLabel="Close outfit preview"
         />
         <Animated.View entering={SlideInDown.springify().damping(14)} style={styles.card}>
-          <Text style={styles.title}>{outfit.packLabel}</Text>
-          <Text style={styles.subtitle}>#{String(outfit.index).padStart(2, '0')} · {outfit.species.toUpperCase()}</Text>
+          <Text style={styles.title} numberOfLines={1}>{outfit.packLabel}</Text>
+          <Text style={styles.subtitle} numberOfLines={1}>#{String(outfit.index).padStart(2, '0')} · {outfit.species.toUpperCase()}</Text>
 
           {/* 3D preview */}
           <View style={styles.previewWrap}>

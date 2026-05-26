@@ -494,7 +494,7 @@ export function ProfileScreen() {
             <Text style={styles.favOpponentIcon}>{'\uD83C\uDFAF'}</Text>
             <View style={styles.favOpponentTextWrap}>
               <Text style={styles.favOpponentLabel}>MOST PLAYED</Text>
-              <Text style={styles.favOpponentName}>{favOpponent.name} <Text style={styles.favOpponentGames}>({favOpponent.games} game{favOpponent.games !== 1 ? 's' : ''})</Text></Text>
+              <Text style={styles.favOpponentName} numberOfLines={1}>{favOpponent.name} <Text style={styles.favOpponentGames}>({favOpponent.games} game{favOpponent.games !== 1 ? 's' : ''})</Text></Text>
             </View>
           </View>
           </StaggeredEntry>
@@ -605,7 +605,7 @@ export function ProfileScreen() {
                     {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
                   </Text>
                   <View style={styles.matchInfo}>
-                    <Text style={styles.matchOpponent}>vs {match.opponent}</Text>
+                    <Text style={styles.matchOpponent} numberOfLines={1}>vs {match.opponent}</Text>
                     <Text style={styles.matchMeta}>{match.moves} moves</Text>
                   </View>
                   {match.coinsEarned > 0 && (

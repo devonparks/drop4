@@ -195,7 +195,7 @@ export function LearnScreen({ navigation }: Props) {
               setSelected(null);
             }} />
 
-          <ScrollView contentContainerStyle={styles.lessonDetail}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.lessonDetail}>
             <Text style={styles.lessonIcon}>{selected.icon}</Text>
             <Text style={styles.lessonTitle} accessibilityRole="header">{selected.title}</Text>
             <Text style={[styles.diffLabel, { color: DIFF_COLORS[selected.difficulty] }]}>

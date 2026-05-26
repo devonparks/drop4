@@ -81,7 +81,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
           {resultLabels[replay.result]}
         </Text>
         <View>
-          <Text style={rStyles.replayOpponent}>vs {replay.opponent}</Text>
+          <Text style={rStyles.replayOpponent} numberOfLines={1}>vs {replay.opponent}</Text>
           <Text style={rStyles.replayMeta}>{replay.totalMoves} moves • {timeStr}</Text>
         </View>
       </View>
