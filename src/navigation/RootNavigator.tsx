@@ -94,6 +94,9 @@ export type GameParams = {
   // per-script semantics. GameScreen reads this to enforce the rule
   // on player taps + filter the AI's chosen column.
   bossScript?: 'tommy' | 'sal' | 'warden';
+  levelType?: string;
+  timerSeconds?: number;
+  connectCount?: number;
 };
 
 export type RootStackParamList = {

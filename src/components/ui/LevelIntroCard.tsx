@@ -22,6 +22,7 @@
 
 import React, { useCallback, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { boxShadow } from '../../utils/shadow';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -132,7 +133,7 @@ export function LevelIntroCard({ icon, label, rule, tint, onComplete }: LevelInt
           cardStyle,
           {
             borderColor: tint,
-            shadowColor: tint,
+            boxShadow: boxShadow(tint, 0.7, 0, 0, 24),
           } as any,
           { pointerEvents: 'none' },
         ]}
@@ -169,6 +170,8 @@ export function deriveIntroFromParams(params: {
   movesLimit?: number;
   rewardMultiplier?: number;
   levelType?: string;
+  timerSeconds?: number;
+  connectCount?: number;
 }): LevelIntroProps | null {
   // Bosses take precedence — their scripted mechanic is the headline.
   if (params.bossScript === 'tommy') {
@@ -226,8 +229,69 @@ export function deriveIntroFromParams(params: {
       onComplete: () => {},
     };
   }
-  // Standard levels — no intro card. Keep the screen quiet for the
-  // most common case so the intro stays meaningful when it fires.
+  if (params.levelType === 'speed' && params.timerSeconds) {
+    return {
+      icon: '⚡', // ⚡
+      label: `SPEED · ${params.timerSeconds}s PER MOVE`,
+      rule: 'Drop fast or forfeit the turn.',
+      tint: '#ff6b35',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'timed' && params.timerSeconds) {
+    return {
+      icon: '⏱️', // ⏱️
+      label: `TIMED · ${params.timerSeconds}s`,
+      rule: 'Beat the clock.',
+      tint: '#42a5f5',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'connect3') {
+    return {
+      icon: '3️⃣', // 3️⃣
+      label: 'CONNECT 3',
+      rule: 'Small board. Sharp moves only.',
+      tint: '#ce93d8',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'connect5') {
+    return {
+      icon: '5️⃣', // 5️⃣
+      label: 'CONNECT 5',
+      rule: 'Five in a row on a big board. Stretch it.',
+      tint: '#4dd0e1',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'connect6') {
+    return {
+      icon: '6️⃣', // 6️⃣
+      label: 'CONNECT 6',
+      rule: 'Six in a row. The long game.',
+      tint: '#7986cb',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'go_second') {
+    return {
+      icon: '↩️', // ↩️
+      label: 'GOING SECOND',
+      rule: 'Opponent drops first. Play from behind.',
+      tint: '#ffb74d',
+      onComplete: () => {},
+    };
+  }
+  if (params.levelType === 'puzzle') {
+    return {
+      icon: '\u{1F9E9}', // 🧩
+      label: 'PUZZLE START',
+      rule: 'Pre-set board. Read it, solve it.',
+      tint: '#a5d6a7',
+      onComplete: () => {},
+    };
+  }
   return null;
 }
 
@@ -251,9 +315,6 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     paddingHorizontal: 24,
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 24,
     elevation: 18,
     overflow: 'hidden',
   },

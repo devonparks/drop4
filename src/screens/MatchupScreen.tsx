@@ -27,6 +27,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 // ═══════════════════════════════════
@@ -263,6 +264,9 @@ export function MatchupScreen({ navigation }: Props) {
       obstacleCells: params.obstacleCells,
       // Phase 2 boss scripts.
       bossScript: params.bossScript,
+      levelType: params.levelType,
+      timerSeconds: params.timerSeconds,
+      connectCount: params.connectCount,
     });
   }, [navigation, params, courtName, resetScores]);
 
@@ -314,7 +318,7 @@ export function MatchupScreen({ navigation }: Props) {
             <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
           </View>
           {levelBadge && (
-            <View style={[styles.levelTypeBadge, { borderColor: levelBadge.color, shadowColor: levelBadge.color }]}>
+            <View style={[styles.levelTypeBadge, { borderColor: levelBadge.color, boxShadow: boxShadow(levelBadge.color, 0.5, 0, 0, 8) }]}>
               <Text style={[styles.levelTypeBadgeText, { color: levelBadge.color }]}>{levelBadge.label}</Text>
             </View>
           )}
@@ -558,9 +562,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     backgroundColor: 'rgba(0,0,0,0.55)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
+    // boxShadow set dynamically inline
     elevation: 4,
   },
   levelTypeBadgeText: {

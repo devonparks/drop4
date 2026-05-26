@@ -119,7 +119,7 @@ export function GameScreen({ navigation }: Props) {
   const introProps = useMemo(() => {
     if (params.careerLevelId == null) return null;
     return deriveIntroFromParams(params);
-  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier]);
+  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier, params.levelType, params.timerSeconds, params.connectCount]);
   const [introDone, setIntroDone] = useState(() => introProps == null);
   // GameScreen is a Stack route — React Navigation keeps it mounted
   // when you navigate away and reuses the instance on re-entry. So
@@ -129,7 +129,7 @@ export function GameScreen({ navigation }: Props) {
   // a new match has started, regardless of mount status.
   useEffect(() => {
     setIntroDone(introProps == null);
-  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier, introProps]);
+  }, [params.careerLevelId, params.bossScript, params.obstacleCells, params.movesLimit, params.rewardMultiplier, params.levelType, params.timerSeconds, params.connectCount, introProps]);
 
   // Phase 2 power pieces: 1 use per career match each, unlocked by
   // chapter bosses. Bomb (Brooklyn L12), Rainbow (Venice L24), Heavy
@@ -2083,10 +2083,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ffffff',
-    shadowColor: colors.coinGold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
+    boxShadow: '0px 0px 6px rgb(255,215,0)',
   },
   hintBestMoveText: {
     fontFamily: fonts.body,
@@ -2338,10 +2335,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(46,204,113,0.5)',
     zIndex: 200,
-    shadowColor: 'rgba(46,204,113,0.8)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
+    boxShadow: '0px 0px 20px rgba(46,204,113,0.8)',
     elevation: 30,
   },
   celebrationText: {
@@ -2364,10 +2358,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,215,0,0.5)',
     zIndex: 200,
-    shadowColor: 'rgba(255,215,0,0.8)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
+    boxShadow: '0px 0px 20px rgba(255,215,0,0.8)',
     elevation: 30,
   },
   firstWinText: {
@@ -2387,10 +2378,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgDark,
     borderWidth: 1.5,
     borderColor: 'rgba(255,215,0,0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
+    boxShadow: '0px 16px 24px rgba(0,0,0,0.6)',
     elevation: 24,
   },
   goModeRow: {
