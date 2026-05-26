@@ -60,6 +60,9 @@ const GAME_OVER_LOSS_QUOTES: string[] = [
   'Even the pros lose sometimes. Rematch?',
   'Try controlling the center column next round!',
   'Tip: always check for your opponent\'s three-in-a-row first.',
+  'That opponent was tough. Study their pattern and adapt.',
+  'Diagonal threats are sneaky — watch for them next time.',
+  'Losses build muscle. You\'re stronger now than before.',
 ];
 
 const GAME_OVER_DRAW_QUOTES: string[] = [
@@ -68,6 +71,8 @@ const GAME_OVER_DRAW_QUOTES: string[] = [
   'So close! One move could have swung it either way.',
   'A draw is just a rematch waiting to happen!',
   'Great defense from both sides! 🛡️',
+  'Stalemate. The board ran out of room for your rivalry.',
+  'Tied! Next game breaks it.',
 ];
 
 export function getRandomGameOverQuote(result: 'win' | 'loss' | 'draw'): string {
