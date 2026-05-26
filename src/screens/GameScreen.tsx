@@ -324,7 +324,7 @@ export function GameScreen({ navigation }: Props) {
           const board = useGameStore.getState().board;
           const validCols: number[] = [];
           for (let c = 0; c < board.length; c++) {
-            if (board[c][0] === 0) validCols.push(c);
+            if (board[c].some(cell => cell === 0)) validCols.push(c);
           }
           if (validCols.length > 0) {
             const randomCol = validCols[Math.floor(Math.random() * validCols.length)];
