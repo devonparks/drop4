@@ -127,11 +127,11 @@ export function ProfileScreen() {
 
   // Favorite difficulty (most-played)
   const favDifficulty = useMemo(() => {
-    if (allMatches.length === 0) return 'N/A';
+    if (allMatches.length === 0) return 'No games yet';
     const counts: Record<string, number> = {};
     allMatches.forEach(m => { counts[m.difficulty] = (counts[m.difficulty] || 0) + 1; });
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    return top ? top[0].charAt(0).toUpperCase() + top[0].slice(1) : 'N/A';
+    return top ? top[0].charAt(0).toUpperCase() + top[0].slice(1) : 'No games yet';
   }, [allMatches]);
 
   // Favorite opponent (most-played)
