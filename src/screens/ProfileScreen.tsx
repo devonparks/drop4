@@ -17,6 +17,8 @@ import { useChallengeStore } from '../stores/challengeStore';
 import { useDailyRewardStore } from '../stores/dailyRewardStore';
 import { useDailySpinStore } from '../stores/dailySpinStore';
 import { useCharacterStore } from '../stores/characterStore';
+import { useCareerStore } from '../stores/careerStore';
+import { CAREER_CITIES, ALL_CAREER_LEVELS, getCityCompletion, getReputationStars } from '../data/careerLevels';
 import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
@@ -140,6 +142,34 @@ export function ProfileScreen() {
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
     return top ? { name: top[0], games: top[1] } : null;
   }, [allMatches]);
+
+  // Career progress
+  const careerProgress = useCareerStore(s => s.progress);
+  const careerStats = useMemo(() => {
+    const totalLevels = ALL_CAREER_LEVELS.length;
+    const maxStars = totalLevels * 3;
+    let completedCount = 0;
+    let totalStars = 0;
+    let bossesDefeated = 0;
+    for (const [id, p] of Object.entries(careerProgress)) {
+      if (p.completed) completedCount++;
+      totalStars += p.stars;
+      const lvl = ALL_CAREER_LEVELS.find(l => l.id === Number(id));
+      if (lvl?.isBoss && p.completed) bossesDefeated++;
+    }
+    const liveCities = CAREER_CITIES.filter(c => !c.comingSoon);
+    let currentCityName = liveCities[0]?.nickname ?? 'The Rec';
+    for (const city of liveCities) {
+      const comp = getCityCompletion(city, careerProgress);
+      if (comp.fraction < 1) {
+        currentCityName = city.nickname;
+        break;
+      }
+      if (city === liveCities[liveCities.length - 1]) currentCityName = 'All Cleared!';
+    }
+    const repStars = getReputationStars(totalStars);
+    return { completedCount, totalLevels, totalStars, maxStars, bossesDefeated, currentCityName, repStars };
+  }, [careerProgress]);
 
   // Share Profile handler
   const handleShareProfile = async () => {
@@ -334,8 +364,49 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* Coin Milestone */}
+        {/* Career Progress */}
         <StaggeredEntry index={2} delay={60}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">CAREER</Text>
+        <View style={styles.careerCard}>
+          <View style={styles.careerTopRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.careerCityLabel}>CURRENT CITY</Text>
+              <Text style={styles.careerCityName}>{careerStats.currentCityName}</Text>
+            </View>
+            <View style={styles.careerRepBox}>
+              <Text style={styles.careerRepStars}>
+                {'★'.repeat(careerStats.repStars)}{'☆'.repeat(5 - careerStats.repStars)}
+              </Text>
+              <Text style={styles.careerRepLabel}>REPUTATION</Text>
+            </View>
+          </View>
+          <View style={styles.careerProgressOuter}>
+            <LinearGradient
+              colors={[colors.orange, '#ff6600']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.careerProgressFill, { width: `${Math.max(careerStats.totalLevels > 0 ? (careerStats.completedCount / careerStats.totalLevels) * 100 : 0, 4)}%` as any }]}
+            />
+          </View>
+          <View style={styles.careerStatRow}>
+            <View style={styles.careerStatItem}>
+              <Text style={styles.careerStatValue}>{careerStats.completedCount}/{careerStats.totalLevels}</Text>
+              <Text style={styles.careerStatLabel}>Levels</Text>
+            </View>
+            <View style={styles.careerStatItem}>
+              <Text style={[styles.careerStatValue, { color: colors.coinGold }]}>{careerStats.totalStars}/{careerStats.maxStars}</Text>
+              <Text style={styles.careerStatLabel}>Stars</Text>
+            </View>
+            <View style={styles.careerStatItem}>
+              <Text style={[styles.careerStatValue, { color: colors.pieceRed }]}>{careerStats.bossesDefeated}</Text>
+              <Text style={styles.careerStatLabel}>Bosses</Text>
+            </View>
+          </View>
+        </View>
+        </StaggeredEntry>
+
+        {/* Coin Milestone */}
+        <StaggeredEntry index={3} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">COIN GOAL</Text>
         <View style={styles.milestoneCard}>
           {milestoneInfo.currentTitle && (
@@ -365,7 +436,7 @@ export function ProfileScreen() {
         </StaggeredEntry>
 
         {/* Compact links */}
-        <StaggeredEntry index={3} delay={60}>
+        <StaggeredEntry index={4} delay={60}>
         <View style={styles.profileLinks}>
           <PressScale
             onPress={() => { playSound('click'); navigateTo('Stats'); }}
@@ -396,7 +467,7 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-        <StaggeredEntry index={4} delay={60}>
+        <StaggeredEntry index={5} delay={60}>
           <View style={styles.statsGrid}>
             <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
             <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
@@ -419,7 +490,7 @@ export function ProfileScreen() {
         )}
 
         {/* Equipped cosmetics */}
-        <StaggeredEntry index={5} delay={60}>
+        <StaggeredEntry index={6} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">EQUIPPED</Text>
           <View style={styles.equippedGrid}>
             <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
@@ -436,7 +507,7 @@ export function ProfileScreen() {
         </StaggeredEntry>
 
         {/* Achievements — compact summary, full list is in Challenges tab */}
-        <StaggeredEntry index={6} delay={60}>
+        <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ACHIEVEMENTS</Text>
         {(() => {
           const unlocked = achievements.filter(a => a.unlocked).length;
@@ -474,7 +545,7 @@ export function ProfileScreen() {
         </StaggeredEntry>
 
         {/* Streaks */}
-        <StaggeredEntry index={7} delay={60}>
+        <StaggeredEntry index={8} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">STREAKS</Text>
         <View style={styles.statsGrid}>
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />
@@ -1009,6 +1080,87 @@ const styles = StyleSheet.create({
   },
   dailyGoalCheck: {
     fontSize: 16,
+  },
+
+  // Career Progress
+  careerCard: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,140,0,0.06)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.2)',
+  },
+  careerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  careerCityLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+  },
+  careerCityName: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 18,
+    color: colors.orange,
+    marginTop: 1,
+  },
+  careerRepBox: {
+    alignItems: 'center',
+  },
+  careerRepStars: {
+    fontSize: 16,
+    color: colors.coinGold,
+    letterSpacing: 2,
+  },
+  careerRepLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 8,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  careerProgressOuter: {
+    width: '100%',
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  careerProgressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  careerStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  careerStatItem: {
+    alignItems: 'center',
+  },
+  careerStatValue: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  careerStatLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+    marginTop: 1,
   },
 
   // Share Profile button
