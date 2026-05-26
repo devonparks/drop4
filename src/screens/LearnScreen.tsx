@@ -89,6 +89,46 @@ const LESSONS: Lesson[] = [
       'This is the mark of a master player — guaranteed win',
     ],
   },
+  {
+    id: 'diagonal', title: 'Diagonal Mastery', description: 'The hardest threats to spot', icon: '↗',
+    difficulty: 'intermediate',
+    tips: [
+      'Diagonal threats are harder for opponents to see than horizontal ones',
+      'Build diagonals by stacking toward the center from both sides',
+      'A diagonal 3-in-a-row is easy to miss — use it to your advantage',
+      'Combine a diagonal threat with a horizontal one to create unblockable traps',
+    ],
+  },
+  {
+    id: 'go_second', title: 'Going Second', description: 'How to play from behind', icon: '↩',
+    difficulty: 'advanced',
+    tips: [
+      'The first player has a natural advantage — you need to be more precise',
+      'Mirror your opponent\'s opening moves to neutralize their tempo',
+      'Focus on even-numbered rows (2nd, 4th, 6th from bottom) — these favor player 2',
+      'Force trades early to reach a balanced mid-game where your skill matters more',
+    ],
+  },
+  {
+    id: 'speed', title: 'Speed Play', description: 'Win under pressure', icon: '⏱',
+    difficulty: 'intermediate',
+    tips: [
+      'Pre-plan your next TWO moves while your opponent is thinking',
+      'Stick to simple strategies under time pressure — center control wins',
+      'Don\'t try fancy traps when the clock is ticking — play the obvious best move',
+      'If unsure, drop in the center column. It\'s almost never wrong.',
+    ],
+  },
+  {
+    id: 'obstacles', title: 'Obstacle Levels', description: 'Play around the walls', icon: '🧱',
+    difficulty: 'advanced',
+    tips: [
+      'Walls block columns — you can\'t drop pieces through them',
+      'Use walls as anchors for your connections — they can\'t be displaced',
+      'Walls can trap your opponent into bad positions if you plan around them',
+      'Always count available columns before committing to a strategy',
+    ],
+  },
 ];
 
 const DIFF_COLORS: Record<string, string> = {
