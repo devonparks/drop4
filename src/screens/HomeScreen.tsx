@@ -422,6 +422,10 @@ function LootBoxRow({
   const currentCity = nextCareerLevel
     ? CAREER_CITIES.find(c => getLevelsForCity(c.id).some(l => l.id === nextCareerLevel.id))
     : null;
+  const cityLevelIndex = currentCity && nextCareerLevel
+    ? getLevelsForCity(currentCity.id).findIndex(l => l.id === nextCareerLevel.id) + 1
+    : 0;
+  const cityLevelCount = currentCity ? getLevelsForCity(currentCity.id).length : 0;
 
   return (
     <View style={styles.lootBoxRow}>
@@ -449,7 +453,7 @@ function LootBoxRow({
       <LootCard
         iconSrc={require('../assets/images/ui/tab-career.png')}
         label="CAREER"
-        status={nextCareerLevel ? (currentCity?.nickname || `LVL ${nextCareerLevel.id}`) : 'COMPLETE!'}
+        status={nextCareerLevel ? `${cityLevelIndex}/${cityLevelCount} · ${currentCity?.nickname ?? ''}` : 'COMPLETE!'}
         ready={!!nextCareerLevel}
         onPress={onCareerPress}
       />

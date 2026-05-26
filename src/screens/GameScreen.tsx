@@ -1872,6 +1872,10 @@ export function GameScreen({ navigation }: Props) {
                     go_second: 'Going second? Control the center immediately to neutralize the advantage.',
                     puzzle: 'Look for the diagonal. Puzzle boards almost always hinge on one diagonal line.',
                     jeopardy: 'High stakes = aggressive play. Force the AI to react to you.',
+                    standard: 'Center column control wins standard games. Build two threats before attacking.',
+                    connect3: 'Connect 3 is faster — diagonal setups are king. One wrong move and it\'s over.',
+                    connect5: 'Connect 5 takes patience. Build longer chains and keep multiple lines open.',
+                    connect6: 'Connect 6 demands board control. Spread wide early, connect later.',
                   };
                   const tip = tipMap[cl?.type ?? ''] ?? 'Control the center, build diagonal threats, and never leave the AI an open 3.';
                   const careerStore = useCareerStore.getState();
