@@ -17,8 +17,11 @@
       // nodeModulesPaths in metro.config.js); they exist purely so that
       // tsc can find type declarations when compiling amg-engine sources
       // pulled in via the include glob. Without these, npx tsc --noEmit
-      // emits TS2307 "Cannot find module 'react-native'" for every
-      // amg-engine file that imports a peer dep.
+      // emits TS2307 "Cannot find module 'react'" for every amg-engine
+      // file that imports a peer dep.
+      "react": ["./node_modules/@types/react"],
+      "three": ["./node_modules/@types/three"],
+      "three/*": ["./node_modules/@types/three/*"],
       "react-native": ["./node_modules/react-native"],
       "react-native/*": ["./node_modules/react-native/*"],
       "@react-three/fiber": ["./node_modules/@react-three/fiber"],
