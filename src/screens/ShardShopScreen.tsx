@@ -38,6 +38,7 @@ import {
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 
 const RARITY_PALETTE: Record<LootBoxRarity, { color: string; label: string }> = {
   common:    { color: '#8892b0', label: 'COMMON' },
@@ -286,10 +287,7 @@ export function ShardShopScreen() {
                       { borderColor: active ? palette.color : `${palette.color}55` },
                       active && { backgroundColor: `${palette.color}22` },
                       active && {
-                        shadowColor: palette.color,
-                        shadowOpacity: 0.5,
-                        shadowRadius: 8,
-                        shadowOffset: { width: 0, height: 0 },
+                        boxShadow: boxShadow(palette.color, 0.5, 0, 0, 8),
                         elevation: 4,
                       },
                     ]}
@@ -526,10 +524,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#9b59b6',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    boxShadow: '0px 2px 6px rgba(155,89,182,0.4)',
     elevation: 4,
   },
   eduCtaText: {
@@ -587,10 +582,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#3eb489',
-    shadowColor: '#3eb489',
-    shadowOpacity: 0.9,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
+    boxShadow: '0px 0px 4px rgba(62,180,137,0.9)',
   },
 
   // ── Cost banner ────────────────────────────────────────────────
@@ -682,9 +674,7 @@ const styles = StyleSheet.create({
   unlockBtnShell: {
     borderRadius: 10,
     overflow: 'hidden',
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '0px 2px 8px rgba(0,0,0,0.5)',
     elevation: 4,
   },
   unlockBtnLockedShell: {

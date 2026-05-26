@@ -499,10 +499,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(0,0,0,0.5)',
     elevation: 8,
   },
   zoneCardLocked: {
@@ -581,10 +578,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.6)',
   },
   zonePlayText: {
     fontFamily: fonts.body,

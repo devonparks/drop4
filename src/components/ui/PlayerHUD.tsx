@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, withSpring, useSharedValue, withRepeat, withSequence } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
 import { fonts, weight } from '../../theme/typography';
+import { boxShadow } from '../../utils/shadow';
 
 interface PlayerHUDProps {
   name: string;
@@ -55,8 +56,7 @@ export function PlayerHUD({ name, avatar, level, pieceColor, score, isActive, si
         styles.avatarFrame,
         {
           borderColor: isActive ? borderColor : 'rgba(255,255,255,0.2)',
-          shadowColor: isActive ? glowColor : 'transparent',
-          shadowOpacity: isActive ? 1 : 0,
+          boxShadow: isActive ? boxShadow(glowColor, 1, 0, 0, 8) : 'none',
         }
       ]}>
         <LinearGradient
@@ -104,8 +104,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     borderWidth: 3,
     padding: 2,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 8,
     elevation: 6,
     position: 'relative',
   },

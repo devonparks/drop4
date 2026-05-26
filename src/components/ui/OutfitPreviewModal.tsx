@@ -193,8 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 24, padding: 18, gap: 10,
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5, shadowRadius: 20, elevation: 20,
+    boxShadow: '0px 8px 20px rgba(0,0,0,0.5)', elevation: 20,
   },
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 18,
@@ -225,8 +224,7 @@ const styles = StyleSheet.create({
   cancelBtnWrap: { flex: 1 },
   primaryBtnWrap: {
     flex: 2,
-    shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+    boxShadow: '0px 3px 8px rgba(255,140,0,0.5)', elevation: 6,
   },
   cancelBtn: {
     width: '100%',

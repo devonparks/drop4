@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { boxShadow } from '../../utils/shadow';
 
 /**
  * AnimatedRarityBg — Animated background for premium cosmetic items.
@@ -176,7 +177,7 @@ function Dot({ color, size, x, y, w, h, delay }: {
     <Animated.View style={{
       position: 'absolute', left: x * w, top: y * h, width: size, height: size, borderRadius: size / 2,
       backgroundColor: color, opacity: op, transform: [{ translateY: ty }],
-      shadowColor: color, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 3, elevation: 2,
+      boxShadow: boxShadow(color, 0.8, 0, 0, 3), elevation: 2,
     }} />
   );
 }

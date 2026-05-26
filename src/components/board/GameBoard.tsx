@@ -15,6 +15,7 @@ import { BOARD_THEME_VISUALS, BoardThemeVisuals } from '../../data/boardThemeCol
 import { PIECE_SKIN_VISUALS, PieceSkinVisuals } from '../../data/pieceSkinColors';
 import { DarkMatterCamo } from '../effects/DarkMatterCamo';
 import { colors } from '../../theme/colors';
+import { boxShadow } from '../../utils/shadow';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 16, 400);
@@ -88,10 +89,7 @@ function AnimatedPiece({ player, isNew, row = 0, delay = 0, p1Skin, p2Skin }: {
         start={{ x: 0.3, y: 0 }}
         end={{ x: 0.7, y: 1 }}
         style={[styles.pieceGradient, {
-          shadowColor: glowColor,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.8,
-          shadowRadius: 4,
+          boxShadow: boxShadow(glowColor, 0.8, 0, 2, 4),
           elevation: 4,
         }]}
       >
@@ -487,10 +485,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     position: 'relative',
     // Premium floating glow
-    shadowColor: 'rgba(80,140,255,0.5)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
+    boxShadow: '0px 0px 20px rgba(80,140,255,0.5)',
     elevation: 14,
   },
   dropIndicator: {
@@ -515,10 +510,7 @@ const styles = StyleSheet.create({
     padding: BOARD_PADDING,
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(0,0,0,0.35)',
     elevation: 10,
   },
   boardLegs: {
@@ -620,10 +612,7 @@ const styles = StyleSheet.create({
     borderRadius: CELL_SIZE / 2 + 2,
     borderWidth: 2.5,
     borderColor: 'rgba(255,255,255,0.7)',
-    shadowColor: '#ffffff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
+    boxShadow: '0px 0px 6px rgba(255,255,255,0.8)',
     elevation: 6,
   },
   winGlowOuter: {
@@ -636,10 +625,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,215,0,0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.3)',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(255,215,0,0.8)',
     elevation: 8,
   },
   winRing: {
@@ -651,10 +637,7 @@ const styles = StyleSheet.create({
     borderRadius: CELL_SIZE / 2 + 3,
     borderWidth: 2.5,
     borderColor: '#FFD700',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    boxShadow: '0px 0px 8px rgba(255,215,0,1)',
     elevation: 8,
   },
   // Calm-pass polish: bright warm-white flash burst layered over the
@@ -668,10 +651,7 @@ const styles = StyleSheet.create({
     bottom: -10,
     borderRadius: CELL_SIZE / 2 + 10,
     backgroundColor: 'rgba(255,245,210,0.85)',
-    shadowColor: '#fffbe0',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
+    boxShadow: '0px 0px 16px rgba(255,251,224,1)',
     elevation: 10,
   },
   touchLayer: {
@@ -708,10 +688,7 @@ const styles = StyleSheet.create({
     height: 14,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
-    shadowColor: 'rgba(80,140,255,0.3)',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
+    boxShadow: '0px 3px 6px rgba(80,140,255,0.3)',
     elevation: 5,
   },
 });

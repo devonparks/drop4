@@ -470,10 +470,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    boxShadow: '0px 0px 16px rgba(241,196,15,0.5)',
     elevation: 10,
   },
   premiumGradientOuter: {
@@ -588,19 +585,13 @@ const styles = StyleSheet.create({
   rewardClaimable: {
     borderColor: 'rgba(46,204,113,0.6)',
     backgroundColor: 'rgba(46,204,113,0.12)',
-    shadowColor: colors.green,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(39,174,61,0.4)',
     elevation: 6,
   },
   rewardClaimablePremium: {
     borderColor: 'rgba(255,215,0,0.6)',
     backgroundColor: 'rgba(255,215,0,0.1)',
-    shadowColor: colors.coinGold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(255,215,0,0.4)',
     elevation: 6,
   },
   rewardIcon: {

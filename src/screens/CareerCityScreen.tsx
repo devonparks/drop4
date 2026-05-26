@@ -28,6 +28,7 @@ import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CareerCity'>;
@@ -479,7 +480,7 @@ function OpponentNode({
             borderRadius: size / 2,
             borderColor: nodeColor,
             borderWidth: level.isBoss ? 4 : 3,
-            shadowColor: nodeColor,
+            boxShadow: boxShadow(nodeColor, 0.9, 0, 0, 12),
           },
           isLocked && { opacity: 0.55 },
         ]}
@@ -659,7 +660,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             colors={['rgba(40,30,70,0.98)', 'rgba(20,15,40,0.98)']}
             style={styles.modalInner}
           >
-            <View style={[styles.modalRatingRing, { borderColor: city.themeColor, shadowColor: city.themeColor }]}>
+            <View style={[styles.modalRatingRing, { borderColor: city.themeColor, boxShadow: boxShadow(city.themeColor, 0.8, 0, 0, 16) }]}>
               <Text style={[styles.modalRating, { color: city.themeColor }]}>{rating}</Text>
               <Text style={styles.modalRatingLabel}>OVR</Text>
             </View>
@@ -755,10 +756,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
+    boxShadow: '0px 2px 6px rgba(255,140,0,0.6)',
     elevation: 6,
   },
   backBtnBg: {
@@ -836,9 +834,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.6)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
     elevation: 8,
   },
   nodeGradient: {
@@ -908,10 +903,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    shadowColor: '#ffcc50',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+    boxShadow: '0px 0px 4px rgba(255,204,80,0.6)',
     elevation: 4,
   },
   nodeTypeChipText: {
@@ -925,9 +917,7 @@ const styles = StyleSheet.create({
   nodeTypeChipPhase2: {
     borderColor: '#ffd54f',
     backgroundColor: 'rgba(40,20,0,0.95)',
-    shadowColor: '#ffd54f',
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
+    boxShadow: '0px 0px 6px rgba(255,213,79,0.9)',
   },
   nodeTypeChipTextPhase2: {
     color: '#ffd54f',
@@ -971,10 +961,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10,14,32,0.65)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,180,90,0.45)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.5)',
     elevation: 4,
   },
   hudBtnIcon: {
@@ -1018,9 +1005,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 16,
     elevation: 10,
     marginBottom: 12,
   },
@@ -1110,10 +1094,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(255,140,0,0.6)',
     elevation: 10,
   },
   modalPlayBtnBg: {

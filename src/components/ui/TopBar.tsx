@@ -204,10 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    boxShadow: '0px 2px 6px rgba(255,140,0,0.4)',
     elevation: 4,
   },
   backIcon: {
@@ -250,10 +247,7 @@ const styles = StyleSheet.create({
     gap: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,210,120,0.3)', // Soft gold tint on the pill rim
-    shadowColor: 'rgba(0,0,0,0.8)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.4)',
     elevation: 3,
     ...(Platform.OS === 'web' ? ({
       // Subtle inset gold sheen on web so the pill reads as a premium
@@ -294,10 +288,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     padding: 2,
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
+    boxShadow: '0px 0px 8px rgba(241,196,15,0.5)',
     elevation: 6,
   },
   avatarInner: {

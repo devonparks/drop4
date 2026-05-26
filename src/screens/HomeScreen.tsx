@@ -1164,10 +1164,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,160,40,0.45)',
     backgroundColor: 'rgba(255,140,0,0.1)',
-    shadowColor: 'rgba(255,140,0,0.5)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(255,140,0,0.5)',
     elevation: 6,
   },
   // Painted side-button icon (replaces the old 🕺 / 💫 emoji). Sits inside
@@ -1231,10 +1228,7 @@ const styles = StyleSheet.create({
         } as any)
       : {
           backgroundColor: 'rgba(255,150,80,0.12)',
-          shadowColor: '#ff9040',
-          shadowOpacity: 0.7,
-          shadowRadius: 60,
-          shadowOffset: { width: 0, height: 0 },
+          boxShadow: '0px 0px 60px rgba(255,144,64,0.7)',
         }),
   },
   // Pet heart animation
@@ -1306,16 +1300,7 @@ const styles = StyleSheet.create({
   lootCardReady: {
     borderColor: 'rgba(255,200,80,0.85)',
     backgroundColor: 'rgba(40,28,12,0.9)',
-    ...(Platform.OS === 'web'
-      ? ({
-          boxShadow: '0 0 12px 2px rgba(255,180,40,0.4), inset 0 1px 0 rgba(255,230,160,0.5)',
-        } as any)
-      : {
-          shadowColor: '#ff9040',
-          shadowOpacity: 0.7,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 0 },
-        }),
+    boxShadow: '0px 0px 8px rgba(255,144,64,0.7)',
   },
   lootCardIcon: {
     width: 36,

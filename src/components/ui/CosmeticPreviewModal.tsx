@@ -111,7 +111,7 @@ function InGameBoardPreview({ boardThemeId, pieceSkinId }: { boardThemeId: strin
         style={{
           width: W, borderRadius: 10, borderWidth: 1.5, borderColor: theme.frameBorder,
           padding: pad, overflow: 'hidden',
-          shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8,
+          boxShadow: '0px 4px 10px rgba(0,0,0,0.4)', elevation: 8,
         }}
       >
         {/* Top bevel */}
@@ -306,10 +306,7 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    boxShadow: '0px 8px 20px rgba(0,0,0,0.5)',
     elevation: 20,
   },
   rarityStrip: {
@@ -396,10 +393,7 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff8c00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    boxShadow: '0px 2px 8px rgba(255,140,0,0.4)',
     elevation: 6,
   },
   actionBtnText: {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { boxShadow } from '../../utils/shadow';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -402,10 +403,7 @@ function ParticleDot({
         backgroundColor: color,
         opacity,
         transform: [{ translateX }, { translateY }],
-        shadowColor: color,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 4,
+        boxShadow: boxShadow(color, 0.8, 0, 0, 4),
         elevation: 2,
       }}
     />

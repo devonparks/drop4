@@ -235,10 +235,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
     elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    boxShadow: '0px -4px 16px rgba(0,0,0,0.5)',
     ...(Platform.OS === 'web' ? {
       backdropFilter: 'blur(20px)',
       // Subtle inset gold top-edge highlight on web for a premium
@@ -266,10 +263,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     top: -2,
     backgroundColor: 'rgba(255,140,0,0.18)',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(255,140,0,0.6)',
     ...(Platform.OS === 'web' ? ({ filter: 'blur(2px)' } as any) : {}),
   },
   tabIconImg: {

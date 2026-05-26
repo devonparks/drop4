@@ -16,6 +16,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import { boxShadow } from '../../utils/shadow';
 
 // ── Ember particle ────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ function Ember({ config, containerWidth }: { config: EmberConfig; containerWidth
         // Soft glow on web. Native gets a subtle shadow to compensate.
         ...(Platform.OS === 'web'
           ? ({ filter: `blur(${config.size * 0.3}px)` } as any)
-          : { shadowColor: config.color, shadowOpacity: 0.8, shadowRadius: config.size * 0.6, shadowOffset: { width: 0, height: 0 } }),
+          : { boxShadow: boxShadow(config.color, 0.8, 0, 0, config.size * 0.6) }),
       }}
     />
   );
@@ -210,10 +211,7 @@ const styles = StyleSheet.create({
         } as any)
       : {
           backgroundColor: 'rgba(255,200,120,0.12)',
-          shadowColor: '#ffb347',
-          shadowOpacity: 0.4,
-          shadowRadius: 40,
-          shadowOffset: { width: 0, height: 0 },
+          boxShadow: '0px 0px 40px rgba(255,179,71,0.4)',
         }),
   },
 });

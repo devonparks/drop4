@@ -579,8 +579,7 @@ const st = StyleSheet.create({
   headerNeonBorder: {
     position: 'absolute', bottom: 0, left: 0, right: 0, height: 2,
     backgroundColor: '#00d2ff',
-    shadowColor: '#00d2ff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, shadowRadius: 8, elevation: 8,
+    boxShadow: '0px 0px 8px rgba(0,210,255,1)', elevation: 8,
   },
   headerTitle: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 32,
@@ -621,7 +620,7 @@ const st = StyleSheet.create({
   },
   lightDot: {
     position: 'absolute', width: 8, height: 8, borderRadius: 4,
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 4, elevation: 4,
+    boxShadow: '0px 0px 4px rgba(0,0,0,0.8)', elevation: 4,
   },
   pointer: {
     position: 'absolute', top: -2, zIndex: 10, alignItems: 'center',
@@ -647,8 +646,7 @@ const st = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 4, borderColor: '#00d2ff',
     overflow: 'hidden',
-    shadowColor: '#00d2ff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6, shadowRadius: 20, elevation: 12,
+    boxShadow: '0px 0px 20px rgba(0,210,255,0.6)', elevation: 12,
   },
   wheelFrame: {
     ...StyleSheet.absoluteFillObject,
@@ -674,8 +672,7 @@ const st = StyleSheet.create({
   wheelCenter: {
     width: 52, height: 52, borderRadius: 26,
     overflow: 'hidden', zIndex: 5,
-    shadowColor: '#fff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
+    boxShadow: '0px 0px 8px rgba(255,255,255,0.3)', elevation: 6,
   },
   wheelCenterGradient: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
@@ -690,8 +687,7 @@ const st = StyleSheet.create({
     width: WHEEL_SIZE + 20, height: WHEEL_SIZE + 20,
     borderRadius: (WHEEL_SIZE + 20) / 2,
     borderWidth: 2, borderColor: 'rgba(0,210,255,0.15)',
-    shadowColor: '#00d2ff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4, shadowRadius: 24, elevation: 8,
+    boxShadow: '0px 0px 24px rgba(0,210,255,0.4)', elevation: 8,
   },
 
   // ── Bottom info ──
@@ -704,8 +700,7 @@ const st = StyleSheet.create({
   spinBtn: { marginTop: 4 },
   spinBtnGradient: {
     paddingHorizontal: 52, paddingVertical: 14, borderRadius: 22,
-    shadowColor: '#00d2ff', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6, shadowRadius: 14, elevation: 10,
+    boxShadow: '0px 4px 14px rgba(0,210,255,0.6)', elevation: 10,
   },
   spinBtnText: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22,
@@ -748,7 +743,7 @@ const st = StyleSheet.create({
   goldenBtn: { flex: 1 },
   goldenBtnGradient: {
     paddingVertical: 10, borderRadius: 14, alignItems: 'center',
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+    boxShadow: '0px 4px 8px rgba(0,0,0,0.5)', elevation: 6,
   },
   goldenBtnText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13,
@@ -763,8 +758,7 @@ const st = StyleSheet.create({
     alignItems: 'center', backgroundColor: 'rgba(20,10,50,0.97)',
     borderRadius: 20, paddingHorizontal: 32, paddingVertical: 24,
     borderWidth: 2, borderColor: 'rgba(0,210,255,0.4)',
-    shadowColor: '#00d2ff', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6, shadowRadius: 24, elevation: 12, zIndex: 20,
+    boxShadow: '0px 0px 24px rgba(0,210,255,0.6)', elevation: 12, zIndex: 20,
   },
   resultGlow: {
     position: 'absolute', width: 160, height: 160, borderRadius: 80,
@@ -777,8 +771,7 @@ const st = StyleSheet.create({
   collectBtn: { marginTop: 4 },
   collectBtnGradient: {
     paddingHorizontal: 40, paddingVertical: 12, borderRadius: 16,
-    shadowColor: '#27ae3d', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5, shadowRadius: 10, elevation: 6,
+    boxShadow: '0px 4px 10px rgba(39,174,61,0.5)', elevation: 6,
   },
   collectBtnText: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 16, color: '#ffffff', letterSpacing: 1.5 },
 });

@@ -103,12 +103,6 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
       })
     : undefined;
 
-  const animatedShadowOpacity = justUnlocked
-    ? glowAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 0.6],
-      })
-    : undefined;
 
   const bgColor = level.isBoss
     ? 'rgba(231,76,60,0.15)'
@@ -131,7 +125,7 @@ function LevelNode({ level, stars, isUnlocked, onPress, justUnlocked }: {
 
   const NodeWrapper = justUnlocked ? RNAnimated.View : View;
   const wrapperStyle = justUnlocked
-    ? [styles.levelNode, { backgroundColor: bgColor, borderColor: animatedBorderColor, opacity: isUnlocked ? 1 : 0.35, shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: animatedShadowOpacity, shadowRadius: 12, elevation: 8 }] as any
+    ? [styles.levelNode, { backgroundColor: bgColor, borderColor: animatedBorderColor, opacity: isUnlocked ? 1 : 0.35, boxShadow: '0px 0px 12px rgba(255,140,0,0.6)', elevation: 8 }] as any
     : [styles.levelNode, { backgroundColor: bgColor, borderColor, opacity: isUnlocked ? 1 : 0.35 }];
 
   return (

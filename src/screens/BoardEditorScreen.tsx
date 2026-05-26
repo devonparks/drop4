@@ -279,8 +279,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: '40%', left: 20, right: 20,
     backgroundColor: colors.surface, borderRadius: 16, padding: 20,
     borderWidth: 1, borderColor: colors.surfaceBorder,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5, shadowRadius: 16, elevation: 20, zIndex: 100,
+    boxShadow: '0px 8px 16px rgba(0,0,0,0.5)', elevation: 20, zIndex: 100,
   },
   saveTitle: {
     fontFamily: fonts.heading, fontWeight: weight.bold,

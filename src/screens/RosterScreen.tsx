@@ -15,6 +15,7 @@ import { haptics } from '../services/haptics';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -131,7 +132,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
         styles.card,
         {
           borderColor: isEquipped ? colors.greenLight : tierStyle.frameGradient[0],
-          shadowColor: tierStyle.glow,
+          boxShadow: boxShadow(tierStyle.glow, 0.6, 0, 4, 10),
         },
       ]}
     >
@@ -164,7 +165,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
 
         {/* Rating badge — top-left, player-card style */}
         {isUnlocked && (
-          <View style={[styles.ratingBadge, { borderColor: tierStyle.ratingColor, shadowColor: tierStyle.glow }]}>
+          <View style={[styles.ratingBadge, { borderColor: tierStyle.ratingColor, boxShadow: boxShadow(tierStyle.glow, 0.8, 0, 0, 6) }]}>
             <Text style={[styles.ratingNumber, { color: tierStyle.ratingColor }]}>{rating}</Text>
             <Text style={styles.ratingLabel}>OVR</Text>
           </View>
@@ -423,10 +424,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     overflow: 'hidden',
     minHeight: 260,
-    // Shadow for premium elevation; shadowColor set dynamically per tier
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    // boxShadow set dynamically per tier inline
     elevation: 8,
   },
   // The dark backdrop inside the rarity frame — reveals the frame as a border
@@ -461,9 +459,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
+    // boxShadow set dynamically inline
     zIndex: 3,
   },
   ratingNumber: {

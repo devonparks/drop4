@@ -350,10 +350,7 @@ export function StatsScreen({ navigation }: Props) {
                               : colors.textSecondary,
                       },
                       m.result === 'win' && {
-                        shadowColor: colors.green,
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.6,
-                        shadowRadius: 6,
+                        boxShadow: '0px 0px 6px rgba(39,174,61,0.6)',
                         elevation: 4,
                       },
                     ]}

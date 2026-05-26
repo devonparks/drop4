@@ -10,6 +10,7 @@ import { CAREER_CITIES, ALL_CAREER_LEVELS } from '../../data/careerLevels';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { fonts, weight } from '../../theme/typography';
+import { boxShadow } from '../../utils/shadow';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CityCompletionCeremony
@@ -145,7 +146,7 @@ export function CityCompletionCeremony() {
           {pending.speciesUnlocked.length > 0 && (
             <Animated.View
               entering={ZoomIn.delay(1000).duration(600).springify().damping(10)}
-              style={[styles.unlockCard, { borderColor: city.themeColor, shadowColor: city.themeColor }]}
+              style={[styles.unlockCard, { borderColor: city.themeColor, boxShadow: boxShadow(city.themeColor, 0.7, 0, 0, 18) }]}
             >
               <Text style={[styles.unlockKicker, { color: city.accentColor }]}>NEW SPECIES UNLOCKED</Text>
               <View style={styles.unlockRow}>
@@ -174,7 +175,7 @@ export function CityCompletionCeremony() {
             return (
               <Animated.View
                 entering={ZoomIn.delay(1300).duration(600).springify().damping(10)}
-                style={[styles.unlockCard, { borderColor: meta.tint, shadowColor: meta.tint, marginTop: 12 }]}
+                style={[styles.unlockCard, { borderColor: meta.tint, boxShadow: boxShadow(meta.tint, 0.7, 0, 0, 18), marginTop: 12 }]}
               >
                 <Text style={[styles.unlockKicker, { color: meta.tint }]}>NEW POWER PIECE UNLOCKED</Text>
                 <View style={styles.unlockRow}>
@@ -266,9 +267,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 18,
     elevation: 10,
   },
   unlockKicker: {

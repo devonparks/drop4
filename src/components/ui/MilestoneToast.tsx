@@ -123,8 +123,6 @@ export function MilestoneToast() {
   }, [active, glow]);
 
   const cardGlowStyle = useAnimatedStyle(() => ({
-    shadowOpacity: 0.3 + glow.value * 0.5,
-    shadowRadius: 16 + glow.value * 14,
     borderColor: `rgba(255,140,0,${0.35 + glow.value * 0.55})`,
   }));
 
@@ -248,8 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0d1030', borderRadius: 24, padding: 24,
     alignItems: 'center', gap: 12,
     borderWidth: 1.5, borderColor: 'rgba(255,140,0,0.4)',
-    shadowColor: '#ff8c00', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5, shadowRadius: 20, elevation: 20,
+    boxShadow: '0px 4px 20px rgba(255,140,0,0.5)', elevation: 20,
     overflow: 'hidden',
   },
   kicker: {

@@ -24,6 +24,7 @@ import { playSound } from '../services/audio';
 import { PressScale } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 // DEFAULT_PALETTE + parseVariantDropId let us decode a partVariant
 // drop's colorway hex so the reveal screen shows the actual color,
 // not just a generic "COLORWAY" chip.
@@ -236,7 +237,7 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
         {/* Tap progress dots */}
         <View style={st.tapProgress}>
           {[0, 1, 2].map(i => (
-            <View key={i} style={[st.tapDot, tapCount > i && { backgroundColor: tier.tagColor, shadowColor: tier.tagColor }]} />
+            <View key={i} style={[st.tapDot, tapCount > i && { backgroundColor: tier.tagColor, boxShadow: `0px 0px 6px ${tier.tagColor}` }]} />
           ))}
         </View>
 
@@ -245,7 +246,7 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
           <RNAnimated.View style={[st.openingGlow, {
             opacity: pulseAnim,
             backgroundColor: tier.glow,
-            shadowColor: tier.tagColor,
+            boxShadow: `0px 0px 40px ${tier.tagColor}`,
           }]} />
           <View style={[st.openingBox, { borderColor: tier.border }]}>
             <LinearGradient colors={tier.gradient as any} style={st.openingBoxInner}>
@@ -736,7 +737,7 @@ function DropRatesPanel() {
               const pct = total > 0 ? Math.round((rate.w / total) * 100) : 0;
               return (
                 <View key={rate.key} style={st.rateRow}>
-                  <View style={[st.rateDot, { backgroundColor: rate.color, shadowColor: rate.color }]} />
+                  <View style={[st.rateDot, { backgroundColor: rate.color, boxShadow: boxShadow(rate.color, 0.5, 0, 0, 4) }]} />
                   <Text style={[st.rateLabel, { color: rate.color }]}>{rate.label}</Text>
                   <Text style={st.ratePct}>{pct}%</Text>
                 </View>
@@ -841,8 +842,7 @@ const st = StyleSheet.create({
   boxActionArea: { alignItems: 'center', gap: 4 },
   openBtnGradient: {
     paddingHorizontal: 24, paddingVertical: 10, borderRadius: 14,
-    shadowColor: '#27ae3d', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
+    boxShadow: '0px 3px 8px rgba(39,174,61,0.5)', elevation: 6,
   },
   openBtnText: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 15,
@@ -867,7 +867,8 @@ const st = StyleSheet.create({
   rateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   rateDot: {
     width: 12, height: 12, borderRadius: 6,
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 4, elevation: 2,
+    // boxShadow set dynamically inline
+    elevation: 2,
   },
   rateLabel: { fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 12, flex: 1 },
   ratePct: { fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
@@ -903,13 +904,15 @@ const st = StyleSheet.create({
   tapDot: {
     width: 12, height: 12, borderRadius: 6,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6, elevation: 4,
+    // boxShadow set dynamically inline when active
+    elevation: 4,
   },
   openingBoxWrap: { alignItems: 'center', position: 'relative' },
   openingGlow: {
     position: 'absolute', width: 200, height: 200, borderRadius: 100,
     top: -20, alignSelf: 'center',
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 40, elevation: 12,
+    // boxShadow set dynamically inline
+    elevation: 12,
   },
   openingBox: {
     width: 160, height: 180, borderRadius: 24,
@@ -931,7 +934,8 @@ const st = StyleSheet.create({
   revealContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   sparkle: {
     position: 'absolute', width: 6, height: 6, borderRadius: 3,
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 6, elevation: 4,
+    boxShadow: '0px 0px 6px rgba(0,0,0,0.8)',
+    elevation: 4,
   },
   revealCard: {
     width: '85%', alignItems: 'center', backgroundColor: colors.surface,

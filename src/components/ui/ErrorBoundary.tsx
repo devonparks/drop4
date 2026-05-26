@@ -132,10 +132,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    boxShadow: '0px 8px 16px rgba(0,0,0,0.4)',
     elevation: 16,
   },
   iconCircle: {
@@ -202,10 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     width: '100%',
     alignItems: 'center',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: '0px 4px 8px rgba(255,140,0,0.3)',
     elevation: 6,
   },
   retryBtnPressed: {

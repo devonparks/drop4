@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { fonts, weight } from '../../theme/typography';
+import { boxShadow } from '../../utils/shadow';
 
 type RenderContent = (innerSize: number) => React.ReactNode;
 
@@ -101,10 +102,7 @@ export function PortraitFrame({
           height: size,
           borderRadius: size / 2,
           overflow: 'hidden',
-          shadowColor: frame.glow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.9,
-          shadowRadius: 14,
+          boxShadow: boxShadow(frame.glow, 0.9, 0, 4, 14),
           elevation: 10,
         }}
       >
@@ -185,7 +183,7 @@ export function PortraitFrame({
           styles.ratingBadge,
           {
             borderColor: frame.ratingText,
-            shadowColor: frame.glow,
+            boxShadow: boxShadow(frame.glow, 0.95, 0, 0, 8),
             left: -size * 0.04,
             top: size * 0.08,
             width: size * 0.32,
@@ -229,9 +227,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.95,
-    shadowRadius: 8,
     elevation: 12,
   },
   ratingText: {

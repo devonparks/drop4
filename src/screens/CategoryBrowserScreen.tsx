@@ -51,6 +51,7 @@ import {
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
 import { fonts, weight } from '../theme/typography';
+import { boxShadow } from '../utils/shadow';
 
 // ─── Category definitions ──────────────────────────────────────────
 
@@ -213,7 +214,7 @@ function FxSwatch({ rarityColor, kind, dimmed }: { rarityColor: string; kind: 'f
           swatchStyles.fxInner,
           {
             backgroundColor: kind === 'win' ? `${rarityColor}cc` : `${rarityColor}88`,
-            shadowColor: rarityColor,
+            boxShadow: boxShadow(rarityColor, 0.7, 0, 0, 8),
           },
         ]}
       />
@@ -224,7 +225,7 @@ function FxSwatch({ rarityColor, kind, dimmed }: { rarityColor: string; kind: 'f
 function FrameSwatch({ rarityColor, dimmed }: { rarityColor: string; dimmed?: boolean }) {
   return (
     <View style={[swatchStyles.frameWrap, dimmed && swatchStyles.dimmed]}>
-      <View style={[swatchStyles.frameRing, { borderColor: rarityColor, shadowColor: rarityColor }]} />
+      <View style={[swatchStyles.frameRing, { borderColor: rarityColor, boxShadow: boxShadow(rarityColor, 0.5, 0, 0, 6) }]} />
     </View>
   );
 }
@@ -896,10 +897,7 @@ const styles = StyleSheet.create({
   },
   cardEquipped: {
     backgroundColor: 'rgba(241,196,15,0.08)',
-    shadowColor: '#f1c40f',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    boxShadow: '0px 0px 12px rgba(241,196,15,0.4)',
     elevation: 6,
   },
   rarityStrip: {
@@ -1108,9 +1106,7 @@ const swatchStyles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    shadowOpacity: 0.7,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
+    // boxShadow set dynamically inline
     elevation: 6,
   },
 
@@ -1127,9 +1123,7 @@ const swatchStyles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 3,
     backgroundColor: 'transparent',
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
+    // boxShadow set dynamically inline
   },
 
   // Pet: paw glyph on rarity-tinted disc.

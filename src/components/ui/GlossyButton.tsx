@@ -91,10 +91,11 @@ export function GlossyButton({
 
   const buttonContent = (
     <View style={[styles.outerGlow, {
-      shadowColor: colors.glow,
       ...(Platform.OS === 'web' ? {
         boxShadow: `0 4px 20px ${colors.glow}, 0 2px 8px rgba(0,0,0,0.3)`,
-      } as any : {}),
+      } as any : {
+        boxShadow: `0px 4px 12px ${colors.glow}`,
+      }),
     }]}>
       <View style={[styles.gradient, { minHeight: minH, overflow: 'hidden' }]}>
         {/* Painted background (Flux-generated). When present, the gradient
@@ -188,9 +189,6 @@ export function GlossyButton({
 const styles = StyleSheet.create({
   outerGlow: {
     borderRadius: borderRadius.xl + 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
     elevation: 10,
     overflow: 'hidden',
   },

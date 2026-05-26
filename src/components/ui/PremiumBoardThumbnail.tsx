@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BOARD_THEME_VISUALS } from '../../data/boardThemeColors';
+import { boxShadow } from '../../utils/shadow';
 
 // ═══════════════════════════════════════════════════════════════════════
 // PremiumBoardThumbnail
@@ -251,10 +252,7 @@ export function PremiumBoardThumbnail({
           overflow: 'hidden',
           borderWidth: 1,
           borderColor: visual.frameBorder,
-          shadowColor: scene.accent,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.6,
-          shadowRadius: 6,
+          boxShadow: boxShadow(scene.accent, 0.6, 0, 2, 6),
           elevation: 4,
         }}
       >
@@ -423,10 +421,7 @@ function NeonStripes({ height, color }: { height: number; color: string }) {
             height: 1,
             backgroundColor: color,
             opacity: 0.45,
-            shadowColor: color,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.9,
-            shadowRadius: 4,
+            boxShadow: boxShadow(color, 0.9, 0, 0, 4),
           }}
         />
       ))}
@@ -456,10 +451,7 @@ function Flames({ width, height, color }: { width: number; height: number; color
               borderTopLeftRadius: 8,
               borderTopRightRadius: 8,
               opacity: 0.6,
-              shadowColor: '#ffa500',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 1,
-              shadowRadius: 8,
+              boxShadow: '0px 0px 8px rgba(255,165,0,1)',
             }}
           />
         );
@@ -479,9 +471,7 @@ function Flames({ width, height, color }: { width: number; height: number; color
               height: 2,
               borderRadius: 1,
               backgroundColor: '#ffcc66',
-              shadowColor: '#ffcc66',
-              shadowOpacity: 1,
-              shadowRadius: 3,
+              boxShadow: '0px 0px 3px rgba(255,204,102,1)',
             }}
           />
         );
@@ -509,9 +499,7 @@ function Snow({ width, height }: { width: number; height: number }) {
               borderRadius: size / 2,
               backgroundColor: '#e8f6ff',
               opacity: 0.75,
-              shadowColor: '#ffffff',
-              shadowOpacity: 1,
-              shadowRadius: 3,
+              boxShadow: '0px 0px 3px rgba(255,255,255,1)',
             }}
           />
         );
@@ -551,9 +539,7 @@ function Rays({ width, height, color }: { width: number; height: number; color: 
           borderRadius: 8,
           backgroundColor: color,
           opacity: 0.85,
-          shadowColor: color,
-          shadowOpacity: 1,
-          shadowRadius: 10,
+          boxShadow: boxShadow(color, 1, 0, 0, 10),
         }}
       />
     </>
@@ -618,9 +604,7 @@ function Swirl({ width, height, color }: { width: number; height: number; color:
           height: 8,
           borderRadius: 4,
           backgroundColor: color,
-          shadowColor: color,
-          shadowOpacity: 1,
-          shadowRadius: 8,
+          boxShadow: boxShadow(color, 1, 0, 0, 8),
         }}
       />
     </>

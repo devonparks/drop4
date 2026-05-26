@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useShopStore } from '../../stores/shopStore';
 import { BOARD_THEME_VISUALS } from '../../data/boardThemeColors';
+import { boxShadow } from '../../utils/shadow';
 
 const PHONE_WIDTH = 390;
 const PHONE_HEIGHT = 844;
@@ -33,7 +34,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
       {/* Phone housing */}
       <View style={[styles.phone, {
         borderColor: accentColor,
-        shadowColor: accentColor,
+        boxShadow: boxShadow(accentColor, 0.6, 0, 0, 30),
       } as any]}>
         {/* Top bezel with notch */}
         <View style={styles.topBezel}>
@@ -89,11 +90,6 @@ const styles = StyleSheet.create({
     borderColor: '#333', // overridden inline by board accent
     overflow: 'hidden',
     position: 'relative',
-    // Phone glow — color overridden inline by board accent
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 30,
     elevation: 30,
   },
   topBezel: {

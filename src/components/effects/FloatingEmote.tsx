@@ -115,10 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    boxShadow: '0px 4px 12px rgba(0,0,0,0.5)',
     elevation: 10,
   },
   phraseContainer: {

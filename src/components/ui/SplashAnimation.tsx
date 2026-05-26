@@ -100,10 +100,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     backgroundColor: 'rgba(255,140,0,0.08)',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 60,
+    boxShadow: '0px 0px 60px rgba(255,140,0,0.3)',
     elevation: 0,
   },
   logoWrap: {

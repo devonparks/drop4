@@ -270,8 +270,7 @@ const styles = StyleSheet.create({
     width: '85%', maxWidth: 340, backgroundColor: colors.surface,
     borderRadius: 28, padding: 30, alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(255,200,80,0.15)', overflow: 'hidden',
-    shadowColor: 'rgba(255,180,0,0.3)', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, shadowRadius: 30, elevation: 12,
+    boxShadow: '0px 0px 30px rgba(255,180,0,0.3)', elevation: 12,
   },
   glow: { ...StyleSheet.absoluteFillObject, borderRadius: 28 },
   title: {
@@ -311,10 +310,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginTop: 4,
     marginBottom: 6,
-    shadowColor: '#4dd0e1',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
+    boxShadow: '0px 0px 8px rgba(77,208,225,0.6)',
   },
   freezeBannerText: {
     fontFamily: fonts.body, fontWeight: weight.black,
@@ -339,13 +335,11 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     backgroundColor: colors.orange, borderColor: 'rgba(255,140,0,0.5)',
-    shadowColor: colors.orange, shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4, shadowRadius: 4, elevation: 2,
+    boxShadow: '0px 0px 4px rgba(255,140,0,0.4)', elevation: 2,
   },
   dotToday: {
     borderWidth: 2, borderColor: '#ffffff',
-    shadowColor: colors.orange, shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8, shadowRadius: 10, elevation: 6,
+    boxShadow: '0px 0px 10px rgba(255,140,0,0.8)', elevation: 6,
   },
   dotPulseRing: {
     position: 'absolute', width: 40, height: 40, borderRadius: 20,
@@ -359,7 +353,6 @@ const styles = StyleSheet.create({
   dotTextActive: { color: '#ffffff' },
   claimBtnWrap: {
     width: '100%', marginTop: 4,
-    shadowColor: 'rgba(255,140,0,0.5)', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1, shadowRadius: 16, elevation: 8,
+    boxShadow: '0px 4px 16px rgba(255,140,0,0.5)', elevation: 8,
   },
 });

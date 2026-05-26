@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { boxShadow } from '../../utils/shadow';
 
 // ═══════════════════════════════════════════════════════════════════════
 // LootChest — rendered treasure chest, no image assets required.
@@ -127,10 +128,7 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
           overflow: 'hidden',
           borderWidth: 1,
           borderColor: 'rgba(0,0,0,0.55)',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.7,
-          shadowRadius: 4,
+          boxShadow: '0px 2px 4px rgba(0,0,0,0.7)',
         }}
       >
         <LinearGradient
@@ -181,10 +179,7 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
             height: rivet,
             borderRadius: rivet / 2,
             backgroundColor: p.rivet,
-            shadowColor: p.rivet,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.9,
-            shadowRadius: 2,
+            boxShadow: boxShadow(p.rivet, 0.9, 0, 0, 2),
           }}
         />
       ))}
@@ -249,10 +244,7 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
             height: gemSize,
             borderRadius: gemSize / 2,
             backgroundColor: p.gem,
-            shadowColor: p.gemGlow,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 1,
-            shadowRadius: gemSize * 0.6,
+            boxShadow: `0px 0px ${gemSize * 0.6}px ${p.gemGlow}`,
             borderWidth: 1,
             borderColor: 'rgba(255,255,255,0.5)',
             overflow: 'hidden',
@@ -285,10 +277,7 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
             height: 6,
             borderRadius: 3,
             backgroundColor: p.edgeHighlight,
-            shadowColor: p.edgeHighlight,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 1,
-            shadowRadius: 6,
+            boxShadow: `0px 0px 6px ${p.edgeHighlight}`,
           }}
         />
       )}
