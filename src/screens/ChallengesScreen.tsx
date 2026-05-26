@@ -306,17 +306,32 @@ export function ChallengesScreen() {
   // Weekly progress — wins this week + career completions
   const matches = useMatchHistoryStore(s => s.matches);
   const careerProgress = useCareerStore(s => s.progress);
-  const careerCompletedCount = useMemo(
-    () => Object.values(careerProgress).filter(p => p.completed).length,
-    [careerProgress],
+  const weekStart = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }, []);
+
+  const careerCompletedThisWeek = useMemo(
+    () => Object.values(careerProgress).filter(
+      p => p.completed && (p.completedAt ?? 0) >= weekStart
+    ).length,
+    [careerProgress, weekStart],
   );
 
-  const weeklyWins = useMemo(() => {
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7)); // Monday
-    weekStart.setHours(0, 0, 0, 0);
-    return matches.filter(m => m.result === 'win' && m.timestamp >= weekStart.getTime()).length;
-  }, [matches]);
+  const weeklyWins = useMemo(
+    () => matches.filter(m => m.result === 'win' && m.timestamp >= weekStart).length,
+    [matches, weekStart],
+  );
+
+  const weeklyCareerStars = useMemo(
+    () => Object.values(careerProgress).reduce((sum, p) => {
+      if (p.completed && (p.completedAt ?? 0) >= weekStart) sum += p.stars;
+      return sum;
+    }, 0),
+    [careerProgress, weekStart],
+  );
 
   // Daily auto-refresh: if lastRefresh date differs from today, refresh challenges
   useEffect(() => {
@@ -559,7 +574,7 @@ export function ChallengesScreen() {
           {/* Weekly Challenge 2: Complete 5 career levels */}
           {(() => {
             const target = 5;
-            const progress = Math.min(careerCompletedCount, target);
+            const progress = Math.min(careerCompletedThisWeek, target);
             const pct = (progress / target) * 100;
             const done = progress >= target;
             const claimed = weeklyClaimed['career5'] ?? false;
@@ -613,6 +628,71 @@ export function ChallengesScreen() {
                       <View style={[styles.rewardBubble, { borderColor: 'rgba(232,67,147,0.3)', backgroundColor: 'rgba(232,67,147,0.12)' }]}>
                         <Text style={styles.rewardCoin}>🪙</Text>
                         <Text style={[styles.rewardAmount, { color: '#e84393' }]}>2,000</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            );
+          })()}
+
+          {/* Weekly Challenge 3: Earn 30 career stars */}
+          {(() => {
+            const target = 30;
+            const progress = Math.min(weeklyCareerStars, target);
+            const pct = (progress / target) * 100;
+            const done = progress >= target;
+            const claimed = weeklyClaimed['stars30'] ?? false;
+            const canClaim = done && !claimed;
+            return (
+              <View style={[styles.weeklyCard, (done || canClaim) && { borderColor: 'rgba(241,196,15,0.4)' }]}>
+                <View style={styles.cardRow}>
+                  <LinearGradient colors={(done || claimed) ? ['#d4ac0d', '#b7950b'] : ['#f1c40f', '#d4ac0d']} style={styles.iconCircle}>
+                    <Text style={styles.iconEmoji}>⭐</Text>
+                    {claimed && (
+                      <View style={styles.iconCheckOverlay}>
+                        <Text style={styles.iconCheckMark}>✓</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                  <View style={styles.cardCenter}>
+                    <Text style={[styles.cardTitle, claimed && styles.cardTitleDone]}>Earn 30 career stars</Text>
+                    <Text style={styles.cardDesc}>Replay levels for 3-star perfection</Text>
+                    <View style={styles.progressRow}>
+                      <View style={styles.progressBg}>
+                        <LinearGradient
+                          colors={claimed ? ['#27ae3d', '#1e8a30'] : ['#f1c40f', '#d4ac0d']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.progressFill, { width: `${pct}%` }]}
+                        />
+                      </View>
+                      <Text style={[styles.progressText, claimed && { color: colors.green }]}>{progress}/{target}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.cardRight}>
+                    {canClaim ? (
+                      <Pressable
+                        onPress={() => handleClaimWeekly('stars30', 1500)}
+                        {...(Platform.OS === 'web'
+                          ? ({ onClick: () => handleClaimWeekly('stars30', 1500) } as any)
+                          : {})}
+                        style={styles.claimBtnSmall}
+                        accessibilityRole="button"
+                        accessibilityLabel="Claim weekly reward, 1500 coins for earning 30 career stars"
+                      >
+                        <LinearGradient colors={['#f1c40f', '#d4ac0d', '#b7950b']} style={styles.claimBtnGradient}>
+                          <Text style={styles.claimBtnText}>CLAIM</Text>
+                        </LinearGradient>
+                      </Pressable>
+                    ) : claimed ? (
+                      <View style={styles.doneBadge}>
+                        <Text style={styles.doneBadgeCheck}>✓</Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.rewardBubble, { borderColor: 'rgba(241,196,15,0.3)', backgroundColor: 'rgba(241,196,15,0.12)' }]}>
+                        <Text style={styles.rewardCoin}>🪙</Text>
+                        <Text style={[styles.rewardAmount, { color: '#f1c40f' }]}>1,500</Text>
                       </View>
                     )}
                   </View>

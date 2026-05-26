@@ -138,6 +138,11 @@ export function CareerMapScreen({ navigation }: Props) {
             {completedIds.size}
             <Text style={styles.heroStatDim}>/{ALL_CAREER_LEVELS.length}</Text>
           </Text>
+          <Text style={styles.heroStatSep}>·</Text>
+          <Text style={styles.heroStat}>
+            {totalStars}
+            <Text style={styles.heroStatDim}>/{ALL_CAREER_LEVELS.length * 3} ★</Text>
+          </Text>
           <View style={styles.repRow}>
             {[0, 1, 2, 3, 4].map((i) => (
               <Text
@@ -493,6 +498,11 @@ const styles = StyleSheet.create({
   heroStatDim: {
     fontSize: 14,
     color: colors.textMuted,
+    fontWeight: weight.medium,
+  },
+  heroStatSep: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.2)',
     fontWeight: weight.medium,
   },
   repRow: {

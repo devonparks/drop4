@@ -7,6 +7,7 @@ interface CareerProgress {
     stars: number;      // 0-3
     completed: boolean;
     bestMoves: number;
+    completedAt?: number; // epoch ms — when the level was first cleared
   };
 }
 
@@ -88,6 +89,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
             stars: Math.max(stars, current?.stars || 0),
             completed: true,
             bestMoves: current ? Math.min(moves, current.bestMoves) : moves,
+            completedAt: current?.completedAt ?? Date.now(),
           },
         },
       }));
