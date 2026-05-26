@@ -1085,6 +1085,7 @@ export function GameScreen({ navigation }: Props) {
     setDidLevelUp(false);
     setStreakReward(null);
     setCompletedChallengeName(null);
+    setNearChallengeHint(null);
     setStreakBrokenAt(null);
     setDailyStreakMultiplier(1);
     setDoubleCoinsUsed(false);
