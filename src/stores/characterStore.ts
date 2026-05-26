@@ -423,75 +423,48 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
 
   equipOutfitColorway: (colorwayId, targetSlot?) => set((s) => {
     const current = s.amgCharacter as unknown as CharacterState | null;
-    if (!current) return { equippedOutfitColorway: colorwayId };
+    if (!current) return {};
 
     const prevPerSlot = s.equippedSlotColorway;
 
-    // Default colorway — restore species defaults
+    // No targetSlot = no-op. Every UI caller passes a slot; the
+    // old full-outfit fallback is killed because changing a top's
+    // colorway must never touch pants or shoes.
+    if (!targetSlot) return {};
+
+    // Default colorway — restore this slot to species default
     if (!colorwayId || colorwayId === '') {
       const species = (current as any).species ?? 'Human';
       const defaults = DEFAULT_COLORS_BY_SPECIES[species as keyof typeof DEFAULT_COLORS_BY_SPECIES]
         ?? DEFAULT_COLORS_BY_SPECIES.Human;
 
-      // Per-slot reset: only restore the targeted slot's default
-      if (targetSlot) {
-        const colors = {
-          ...(current.colors ?? {}),
-          [targetSlot]: defaults[targetSlot as keyof typeof defaults],
-        };
-        return {
-          amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
-          equippedOutfitColorway: '',
-          equippedSlotColorway: { ...prevPerSlot, [targetSlot]: '' },
-        };
-      }
-
-      // Full reset: restore all three slots
       const colors = {
         ...(current.colors ?? {}),
-        'Tops': defaults['Tops'],
-        'Bottoms': defaults['Bottoms'],
-        'Shoes': defaults['Shoes'],
+        [targetSlot]: defaults[targetSlot as keyof typeof defaults],
       };
       return {
         amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
         equippedOutfitColorway: '',
-        equippedSlotColorway: { 'Tops': '', 'Bottoms': '', 'Shoes': '' },
+        equippedSlotColorway: { ...prevPerSlot, [targetSlot]: '' },
       };
     }
 
     // Look up the colorway preset
     const preset = COLORWAY_BY_ID[colorwayId];
-    if (!preset) return { equippedOutfitColorway: colorwayId };
+    if (!preset) return {};
 
-    // Per-slot colorway: only change the targeted slot's color
-    if (targetSlot) {
-      const colorForSlot = targetSlot === 'Tops' ? preset.primary
-        : targetSlot === 'Bottoms' ? preset.secondary
-        : preset.tertiary;
-      const colors = {
-        ...(current.colors ?? {}),
-        [targetSlot]: colorForSlot,
-      };
-      return {
-        amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
-        equippedOutfitColorway: colorwayId,
-        equippedSlotColorway: { ...prevPerSlot, [targetSlot]: colorwayId },
-      };
-    }
-
-    // Full outfit colorway: update all three slots
+    // Per-slot colorway: ONLY change the targeted slot's color
+    const colorForSlot = targetSlot === 'Tops' ? preset.primary
+      : targetSlot === 'Bottoms' ? preset.secondary
+      : preset.tertiary;
     const colors = {
       ...(current.colors ?? {}),
-      'Tops': preset.primary,
-      'Bottoms': preset.secondary,
-      'Shoes': preset.tertiary,
+      [targetSlot]: colorForSlot,
     };
-
     return {
       amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
-      equippedOutfitColorway: colorwayId,
-      equippedSlotColorway: { 'Tops': colorwayId, 'Bottoms': colorwayId, 'Shoes': colorwayId },
+      // Don't set the deprecated global — per-slot is the only source of truth
+      equippedSlotColorway: { ...prevPerSlot, [targetSlot]: colorwayId },
     };
   }),
 
@@ -594,7 +567,22 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         ownedTintColors: saved.ownedTintColors ?? [],
         ownedOutfitColorways: saved.ownedOutfitColorways ?? {},
         equippedOutfitColorway: saved.equippedOutfitColorway ?? '',
-        equippedSlotColorway: saved.equippedSlotColorway ?? {},
+        // Migrate: if per-slot is empty but the deprecated global has a
+        // value, populate all three slots from the global so the UI shows
+        // the correct colorway labels. Prevents "all red character with no
+        // colorway labels" from old saves that only wrote the global.
+        equippedSlotColorway: (() => {
+          const perSlot = saved.equippedSlotColorway ?? {};
+          const hasPerSlot = Object.values(perSlot).some((v) => !!v);
+          if (!hasPerSlot && saved.equippedOutfitColorway) {
+            return {
+              'Tops': saved.equippedOutfitColorway,
+              'Bottoms': saved.equippedOutfitColorway,
+              'Shoes': saved.equippedOutfitColorway,
+            };
+          }
+          return perSlot;
+        })(),
       });
     }
   },
