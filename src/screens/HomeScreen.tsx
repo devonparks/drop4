@@ -1133,110 +1133,6 @@ const styles = StyleSheet.create({
     marginTop: -38,
     marginBottom: -27,
   },
-  // Neon-sign halo behind the wordmark. A soft magenta glow blob
-  // with a CSS keyframes pulse on web (brightness + scale). On
-  // native we get a static glow via shadowRadius — still reads
-  // premium even without motion.
-  logoHalo: {
-    position: 'absolute',
-    width: 260,
-    height: 100,
-    alignSelf: 'center',
-    top: 5,
-    borderRadius: 130,
-    backgroundColor: 'rgba(255,60,160,0.28)',
-    ...(Platform.OS === 'web' ? ({
-      filter: 'blur(22px)',
-      animationName: 'drop4LogoHalo',
-      animationDuration: '3200ms',
-      animationTimingFunction: 'ease-in-out',
-      animationIterationCount: 'infinite',
-      animationDirection: 'alternate',
-    } as any) : {
-      shadowColor: '#ff3ca0',
-      shadowOpacity: 0.6,
-      shadowRadius: 30,
-      shadowOffset: { width: 0, height: 0 },
-    }),
-  },
-  // Engagement chip row — sits between the character lobby and the mode
-  // buttons, in the same slot the old CUSTOMIZE/SPIN pills occupied.
-  // Only renders when at least one chip has something to show, otherwise
-  // collapses to 0 height so the mode buttons stay put.
-  chipRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
-    marginTop: -2,
-    marginBottom: 6,
-    zIndex: 10,
-  },
-  lootChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingLeft: 4,
-    paddingRight: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-    backgroundColor: 'rgba(10,14,32,0.7)',
-    borderWidth: 1.5,
-    borderColor: '#ffd54f',
-    shadowColor: '#ffd54f',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  lootChipImg: {
-    width: 28,
-    height: 28,
-  },
-  lootChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 14,
-    color: '#ffd54f',
-  },
-  chipCaption: {
-    fontFamily: fonts.body,
-    fontWeight: weight.bold,
-    fontSize: 9,
-    color: 'rgba(255,213,79,0.8)',
-    letterSpacing: 1.2,
-    marginLeft: 3,
-  },
-  spinChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: 'rgba(39,174,61,0.28)',
-    borderWidth: 1.5,
-    borderColor: '#27ae3d',
-    shadowColor: '#34c94d',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  spinChipIcon: {
-    fontSize: 14,
-  },
-  spinChipText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.black,
-    fontSize: 12,
-    color: '#ffffff',
-    letterSpacing: 0.8,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
   // Character lobby
   lobbyArea: {
     // Calm-Home: dropped maxHeight so the character stage absorbs ALL
@@ -1344,62 +1240,6 @@ const styles = StyleSheet.create({
           shadowRadius: 60,
           shadowOffset: { width: 0, height: 0 },
         }),
-  },
-  // Warm spotlight pooling at the character's feet. Bounded Views with
-  // radial gradients WILL clip at their box edges — so we stretch both
-  // glow layers much wider than the visible frame (-40% left, +40% right
-  // on web via left/right instead of width) AND push the gradient fall-
-  // off all the way to 100% so the color reaches full transparency
-  // before the box boundary. Result: no hard edge at any zoom level.
-  footGlowOuter: {
-    position: 'absolute',
-    bottom: 30,
-    left: -120,
-    right: -120,
-    height: 180,
-    ...(Platform.OS === 'web' ? ({
-      backgroundImage: 'radial-gradient(ellipse 55% 50% at 50% 60%, rgba(255,170,80,0.45) 0%, rgba(255,140,60,0.25) 25%, rgba(255,120,40,0.1) 55%, rgba(255,120,40,0) 100%)',
-      filter: 'blur(8px)',
-      mixBlendMode: 'screen',
-    } as any) : {
-      backgroundColor: 'rgba(255,140,60,0.12)',
-      shadowColor: '#ff9040',
-      shadowOpacity: 0.6,
-      shadowRadius: 60,
-      shadowOffset: { width: 0, height: 0 },
-    }),
-  },
-  footGlowInner: {
-    position: 'absolute',
-    bottom: 50,
-    left: -40,
-    right: -40,
-    height: 100,
-    ...(Platform.OS === 'web' ? ({
-      backgroundImage: 'radial-gradient(ellipse 40% 45% at 50% 60%, rgba(255,230,170,0.65) 0%, rgba(255,190,100,0.3) 40%, rgba(255,170,80,0.1) 70%, rgba(255,170,80,0) 100%)',
-      filter: 'blur(6px)',
-      mixBlendMode: 'screen',
-    } as any) : {
-      backgroundColor: 'rgba(255,200,120,0.18)',
-    }),
-  },
-  stagePlatform: {
-    width: 200,
-    height: 16,
-    borderRadius: 100,
-    marginTop: -10,
-    shadowColor: 'rgba(80,140,255,0.6)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  stageRing: {
-    width: 280,
-    height: 6,
-    borderRadius: 140,
-    backgroundColor: 'rgba(100,180,255,0.08)',
-    marginTop: 2,
   },
   // Pet heart animation
   petHeart: {
@@ -1518,22 +1358,6 @@ const styles = StyleSheet.create({
   playBtnImage: {
     width: '100%',
     height: '100%',
-  },
-  // Calm-Home pass: PLAY is the hero, CAREER + LOCAL PLAY share a row
-  // beneath it. menuRowItem flex:1 so the two secondary CTAs split the
-  // available width evenly. menuRowBtn forces the GlossyButton inside
-  // to stretch to fill its flex:1 wrapper — without this, GlossyButton
-  // sized to its text content (CAREER 6 chars vs LOCAL PLAY 10 chars)
-  // and the buttons rendered at noticeably different widths.
-  menuRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  menuRowItem: {
-    flex: 1,
-  },
-  menuRowBtn: {
-    width: '100%',
   },
   // "Tap me!" tooltip
   tapHintBubble: {

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Share, Image, ImageSourc
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
-import { GlossyButton } from '../components/ui/GlossyButton';
 import { PortraitFrame } from '../components/ui/PortraitFrame';
 import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { PetDisplay } from '../components/ui/PetDisplay';
@@ -365,10 +364,6 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* v1: Stats, Achievements, Quick Actions, Match History all removed from Profile.
-            Stats/Achievements moved to Collection tab. Settings accessible from home gear icon.
-            This keeps Profile as a clean single-screen player card with no scrolling. */}
-
         {/* Compact links */}
         <StaggeredEntry index={3} delay={60}>
         <View style={styles.profileLinks}>
@@ -401,8 +396,6 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-        {/* v1 simplified: Stats/Achievements/Quick Actions/Match History removed.
-            See git history for the full Profile implementation if needed for v1.1. */}
         <StaggeredEntry index={4} delay={60}>
           <View style={styles.statsGrid}>
             <StatCard label="Wins" value={lifetimeWins} color={colors.green} />
@@ -431,8 +424,6 @@ export function ProfileScreen() {
           <View style={styles.equippedGrid}>
             <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
             <EquippedItem label="Pieces" name={pieceNames[equipped.pieces] || equipped.pieces} rarity="common" />
-            <EquippedItem label="Drop Effect" name="None" rarity="common" />
-            <EquippedItem label="Win Animation" name="Basic" rarity="common" />
             <EquippedItem label="Camo" name={camoInfo.name} rarity={camoInfo.rarity} />
             {PETS_ENABLED && (
               <EquippedItem
@@ -491,12 +482,6 @@ export function ProfileScreen() {
         </View>
         </StaggeredEntry>
 
-
-        {/* Quick links — compact row */}
-        <View style={styles.quickActions}>
-          <GlossyButton label="📊 Stats" variant="navy" small onPress={() => navigateTo('Stats')} style={{ flex: 1 }} />
-          <GlossyButton label="⚙️ Settings" variant="navy" small onPress={() => navigateTo('Settings')} style={{ flex: 1 }} />
-        </View>
 
         {/* Match History */}
         {recentMatches.length > 0 && (
@@ -791,12 +776,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
     fontSize: 15,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
