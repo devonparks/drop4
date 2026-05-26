@@ -765,8 +765,17 @@ export function GameScreen({ navigation }: Props) {
         setCelebrationText('COMEBACK! \uD83D\uDD25');
       } else if (careerStars === 3) {
         setCelebrationText('PERFECT! \u2B50\u2B50\u2B50');
+      } else if (winStreakNow >= 5) {
+        setCelebrationText('UNSTOPPABLE! \uD83D\uDCAA');
+      } else if (winStreakNow >= 3) {
+        setCelebrationText('ON FIRE! \uD83D\uDD25');
+      } else if (difficulty === 'hard') {
+        setCelebrationText('DOMINANT! \uD83D\uDC51');
+      } else if (totalWins === 1) {
+        setCelebrationText('FIRST WIN! \uD83C\uDF89');
       } else {
-        setCelebrationText('VICTORY! \uD83C\uDF89');
+        const pool = ['VICTORY! \uD83C\uDF89', 'CRUSHED IT! \uD83D\uDCAA', 'TOO EASY! \uD83D\uDE0E', 'GG! \uD83C\uDFC6'];
+        setCelebrationText(pool[Math.floor(Math.random() * pool.length)]);
       }
       haptics.win();
       haptics.coinEarn();
@@ -1066,7 +1075,15 @@ export function GameScreen({ navigation }: Props) {
     const streakLine = streak > 1 ? `\n\u{1F525} ${streak} Win Streak` : '';
     const stats = useMatchHistoryStore.getState().getStats();
     const rateLine = stats.totalGames > 2 ? `\n\u{1F4CA} Win Rate: ${stats.winRate}%` : '';
-    const shareMessage = `\u{1F3AE} Drop4 \u2014 Game Result\n${resultEmoji} ${resultLine} vs ${opponentLabel}\n\u23F1 ${moveCount} moves${speedTag}${coinsLine}${streakLine}${rateLine}\nPlay Drop4: drop4.game`;
+    const careerLine = wasCareerLevel && isWin ? (() => {
+      const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+      const t = cl?.starThresholds ?? { three: 14, two: 24 };
+      const pm = Math.ceil(moveCount / 2);
+      const s = pm <= t.three ? 3 : pm <= t.two ? 2 : 1;
+      return `\n${'\u2B50'.repeat(s)} Career Level ${params.careerLevelId}`;
+    })() : '';
+    const attemptLine = wasCareerLevel && isWin && careerAttempts > 1 ? ` (attempt ${careerAttempts})` : '';
+    const shareMessage = `\u{1F3AE} Drop4 \u2014 Game Result\n${resultEmoji} ${resultLine} vs ${opponentLabel}\n\u23F1 ${moveCount} moves${speedTag}${careerLine}${attemptLine}${coinsLine}${streakLine}${rateLine}\nPlay Drop4: drop4.game`;
 
     if (Platform.OS === 'web') {
       try {
