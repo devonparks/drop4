@@ -715,10 +715,11 @@ function DropRatesPanel() {
             {tiers.map((t) => {
               const active = t === tier;
               return (
-                <Pressable
+                <PressScale
                   key={t}
-                  onPress={() => setTier(t)}
-                  style={[st.tierTab, active && st.tierTabActive]}
+                  onPress={() => { haptics.tap(); playSound('click'); setTier(t); }}
+                  scaleTo={0.95}
+                  containerStyle={[st.tierTab, active && st.tierTabActive]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={`${t} tier drop rates`}
@@ -726,7 +727,7 @@ function DropRatesPanel() {
                   <Text style={[st.tierTabText, active && st.tierTabTextActive]}>
                     {t.toUpperCase()}
                   </Text>
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
