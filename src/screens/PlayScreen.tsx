@@ -151,7 +151,7 @@ export function PlayScreen({ navigation }: Props) {
                 <Text style={styles.careerCtaTitle} numberOfLines={1}>{careerResume.cityName} — {careerResume.level.name}</Text>
               </View>
               <View style={styles.careerCtaRight}>
-                <Text style={styles.careerCtaStars}>{careerResume.totalStars} ★</Text>
+                <Text style={styles.careerCtaStars}>{careerResume.completedCount}/{ALL_CAREER_LEVELS.length}</Text>
                 <Text style={styles.careerCtaArrow}>›</Text>
               </View>
             </PressScale>

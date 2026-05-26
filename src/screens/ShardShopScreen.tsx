@@ -271,7 +271,7 @@ export function ShardShopScreen() {
               return (
                 <PressScale
                   key={r}
-                  onPress={() => setActiveRarity(r)}
+                  onPress={() => { playSound('click'); setActiveRarity(r); }}
                   containerStyle={{ flex: 1 }}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}
@@ -366,7 +366,7 @@ export function ShardShopScreen() {
                       </View>
 
                       <PressScale
-                        onPress={() => handleUnlock(item)}
+                        onPress={() => { playSound('click'); handleUnlock(item); }}
                         disabled={!canAfford}
                         containerStyle={!canAfford ? { opacity: 0.45 } : undefined}
                         accessibilityRole="button"

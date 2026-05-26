@@ -263,6 +263,7 @@ export function SettingsScreen({ navigation }: Props) {
             // Linking.openURL('itms-apps://itunes.apple.com/...') once published
           }} />
           <SettingLink label="Share with Friends" icon="📤" onPress={() => {
+            haptics.tap();
             Share.share({ message: 'Check out Drop4 — the best Connect 4 game! 🎮🔴🟡' });
           }} />
           <SettingLink label="Credits" icon="🏆" onPress={() => {

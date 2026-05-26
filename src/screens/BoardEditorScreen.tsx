@@ -53,6 +53,7 @@ export function BoardEditorScreen({ navigation }: Props) {
     if (!boardName.trim()) return;
     saveBoard(boardName.trim(), 'Custom puzzle board');
     haptics.win();
+    playSound('coin');
     setBoardName('');
     setShowSave(false);
   };
