@@ -1787,6 +1787,13 @@ export function GameScreen({ navigation }: Props) {
                 {isSeriesMode && seriesOver ? (
                   <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
                     onPress={() => navigation.navigate('Play')} />
+                ) : wasCareerLevel && winner === 1 ? (
+                  <GlossyButton
+                    label="NEXT LEVEL"
+                    icon={'▶'}
+                    variant="green"
+                    onPress={() => navigation.navigate('CareerMap' as any)}
+                  />
                 ) : (
                   <GlossyButton
                     label={wasCareerLevel ? 'RETRY LEVEL' : isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
@@ -1799,15 +1806,22 @@ export function GameScreen({ navigation }: Props) {
                   {isSeriesMode && seriesOver ? (
                     <GlossyButton label="HOME" icon={'🏠'} variant="navy"
                       onPress={handleGoHome} style={{ flex: 1 }} />
-                  ) : (
+                  ) : wasCareerLevel ? (
                     <>
-                      {wasCareerLevel ? (
+                      {winner === 1 ? (
+                        <GlossyButton label="REPLAY" icon={'🔄'} variant="orange"
+                          onPress={handleRematch} style={{ flex: 1 }} />
+                      ) : (
                         <GlossyButton label="CAREER MAP" icon={'🗺️'} variant="green"
                           onPress={() => navigation.navigate('CareerMap' as any)} style={{ flex: 1 }} />
-                      ) : (
-                        <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
-                          onPress={() => navigation.navigate('Play')} style={{ flex: 1 }} />
                       )}
+                      <GlossyButton label="HOME" icon={'🏠'} variant="navy"
+                        onPress={handleGoHome} style={{ flex: 1 }} />
+                    </>
+                  ) : (
+                    <>
+                      <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
+                        onPress={() => navigation.navigate('Play')} style={{ flex: 1 }} />
                       <GlossyButton label="HOME" icon={'🏠'} variant="navy"
                         onPress={handleGoHome} style={{ flex: 1 }} />
                     </>
