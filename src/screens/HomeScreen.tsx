@@ -402,9 +402,11 @@ function LootBoxRow({
   })();
   const canSpin = lastSpinDate !== todayStr;
 
+  const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
+  const unopenedBoxCount = ownedBoxes.reduce((sum: number, b: { count: number }) => sum + b.count, 0);
   const totalWins = matches.filter((m) => m.result === 'win').length;
   const winsTowardBox = totalWins % 3;
-  const winBoxReady = totalWins > 0 && winsTowardBox === 0;
+  const winBoxReady = unopenedBoxCount > 0 || (totalWins > 0 && winsTowardBox === 0);
 
   const claimableMissions = challenges.filter(
     (c) => c.progress >= c.target && !c.completed,
@@ -439,7 +441,7 @@ function LootBoxRow({
       <LootCard
         iconSrc={require('../assets/images/ui/loot-bronze.png')}
         label="WIN BOX"
-        status={winBoxReady ? 'READY!' : `${winsTowardBox}/3`}
+        status={unopenedBoxCount > 0 ? `${unopenedBoxCount} OPEN` : `${winsTowardBox}/3`}
         ready={winBoxReady}
         onPress={onLootBoxPress}
       />
@@ -541,10 +543,7 @@ export function HomeScreen() {
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return lastSpinDate !== today;
   })();
-  // Count unopened loot boxes across all tiers — drives the home "N boxes
-  // ready" floating chip. When 0, the chip doesn't render.
-  const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
-  const unopenedBoxCount = ownedBoxes.reduce((sum, b) => sum + b.count, 0);
+  // Loot box count now shown via LootBoxRow's WIN BOX card status.
   const hasSeenTip = useTutorialStore(s => s.hasSeenTip);
   const seenTips = useTutorialStore(s => s.seenTips); // subscribe to seenTips so re-renders reflect markTipSeen
   const justLeveledUp = useShopStore(s => s.justLeveledUp);

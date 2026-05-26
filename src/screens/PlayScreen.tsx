@@ -195,7 +195,9 @@ export function PlayScreen({ navigation }: Props) {
           <StaggeredEntry index={careerResume ? 2 : 1} delay={60}>
           <Text style={styles.statsLine}>
             {stats.totalGames > 0
-              ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
+              ? stats.gamesToday > 0
+                ? `${stats.winRate}% win rate · ${stats.gamesToday} game${stats.gamesToday !== 1 ? 's' : ''} today`
+                : `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
               : 'Choose your difficulty'}
           </Text>
 
