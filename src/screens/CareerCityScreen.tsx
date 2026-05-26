@@ -620,6 +620,9 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
 
   const rating = CAREER_RATINGS[level.id];
 
+  const diffLabel = level.difficulty === 'easy' ? 'EASY' : level.difficulty === 'hard' ? 'HARD' : 'MEDIUM';
+  const diffColor = level.difficulty === 'easy' ? '#4caf50' : level.difficulty === 'hard' ? '#e74c3c' : '#ff9800';
+
   const modifierPills: string[] = [];
   if (level.settings.rewardMultiplier && level.settings.rewardMultiplier >= 2) {
     modifierPills.push(`💰 ${level.settings.rewardMultiplier}× Coins`);
@@ -672,6 +675,10 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             <Text style={styles.modalName} accessibilityRole="header">{level.opponent}</Text>
             <Text style={styles.modalLevelName}>{level.name}</Text>
             <Text style={styles.modalPersonality}>"{level.opponentPersonality}"</Text>
+
+            <View style={[styles.modalPill, { borderColor: diffColor, alignSelf: 'center', marginTop: 8 }]}>
+              <Text style={[styles.modalPillText, { color: diffColor, fontWeight: '800' }]}>{diffLabel}</Text>
+            </View>
 
             {modifierPills.length > 0 && (
               <View style={styles.modalPills}>

@@ -117,6 +117,14 @@ export function MatchupScreen({ navigation }: Props) {
     }
   })();
 
+  const difficultyBadge = params.mode === 'career' ? (() => {
+    switch (difficulty) {
+      case 'easy': return { label: 'EASY', color: '#4caf50' };
+      case 'hard': return { label: 'HARD', color: '#e74c3c' };
+      default: return { label: 'MEDIUM', color: '#ff9800' };
+    }
+  })() : null;
+
   // Board/match info
   const connectCount = params.connectCount || 4;
   const timerSeconds = params.timerSeconds;
@@ -312,11 +320,18 @@ export function MatchupScreen({ navigation }: Props) {
               <Text style={styles.bossBadgeText}>BOSS BATTLE</Text>
             </View>
           )}
-          <View style={[
-            styles.modeBadge,
-            isBossMatch && styles.modeBadgeBoss,
-          ]}>
-            <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={[
+              styles.modeBadge,
+              isBossMatch && styles.modeBadgeBoss,
+            ]}>
+              <Text style={[styles.modeBadgeText, isBossMatch && styles.modeBadgeTextBoss]}>{modeBadge}</Text>
+            </View>
+            {difficultyBadge && (
+              <View style={[styles.modeBadge, { borderColor: difficultyBadge.color, borderWidth: 1.5 }]}>
+                <Text style={[styles.modeBadgeText, { color: difficultyBadge.color }]}>{difficultyBadge.label}</Text>
+              </View>
+            )}
           </View>
           {levelBadge && (
             <View style={[styles.levelTypeBadge, { borderColor: levelBadge.color, boxShadow: boxShadow(levelBadge.color, 0.5, 0, 0, 8) }]}>
