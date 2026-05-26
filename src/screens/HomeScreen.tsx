@@ -170,7 +170,9 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
 
   useEffect(() => {
     if (!loaded) return;
-    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+    const anim = Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true });
+    anim.start();
+    return () => anim.stop();
   }, [loaded, fadeAnim]);
 
   // 15 s safety timeout — if onReady hasn't fired by then, surface the
