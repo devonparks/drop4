@@ -420,6 +420,32 @@ export function StatsScreen({ navigation }: Props) {
             )}
           </View>
         </StaggeredEntry>
+
+        {/* ---------- Career Stars per City ---------- */}
+        {completedCount > 0 && (
+          <StaggeredEntry index={10} delay={60}>
+            <SectionTitle title="STARS BY CITY" />
+            <View style={styles.card}>
+              {CAREER_CITIES.filter(c => !c.comingSoon).map(city => {
+                const cityLevels = ALL_CAREER_LEVELS.filter(l => city.levelIds.includes(l.id));
+                const cityStars = cityLevels.reduce((sum, l) => sum + (careerProgress[l.id]?.stars ?? 0), 0);
+                const cityMax = cityLevels.length * 3;
+                const cityCompleted = cityLevels.filter(l => careerProgress[l.id]?.completed).length;
+                if (cityCompleted === 0) return null;
+                return (
+                  <ProgressBar
+                    key={city.id}
+                    label={`${city.nickname} (${cityCompleted}/${cityLevels.length})`}
+                    value={cityStars}
+                    max={cityMax}
+                    color={city.themeColor}
+                    showPct={false}
+                  />
+                );
+              })}
+            </View>
+          </StaggeredEntry>
+        )}
       </ScrollView>
     </ScreenBackground>
   );
