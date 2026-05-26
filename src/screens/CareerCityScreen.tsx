@@ -631,6 +631,7 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
   const isComplete = !!levelProgress?.completed;
   const currentStars = levelProgress?.stars ?? 0;
   const bestMoves = levelProgress?.bestMoves ?? 0;
+  const attempts = levelProgress?.attempts ?? 0;
 
   const diffLabel = level.difficulty === 'easy' ? 'EASY' : level.difficulty === 'hard' ? 'HARD' : 'MEDIUM';
   const diffColor = level.difficulty === 'easy' ? '#4caf50' : level.difficulty === 'hard' ? '#e74c3c' : '#ff9800';
@@ -701,7 +702,11 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             )}
 
             {isComplete && bestMoves > 0 && (
-              <Text style={styles.modalBestMoves}>Best: {bestMoves} moves</Text>
+              <Text style={styles.modalBestMoves}>Best: {bestMoves} moves{attempts > 0 ? ` · ${attempts} attempt${attempts !== 1 ? 's' : ''}` : ''}</Text>
+            )}
+
+            {!isComplete && attempts >= 2 && (
+              <Text style={styles.modalBestMoves}>Attempt {attempts} — you've got this!</Text>
             )}
 
             {level.starThresholds && (
