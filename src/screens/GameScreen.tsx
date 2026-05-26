@@ -1818,6 +1818,27 @@ export function GameScreen({ navigation }: Props) {
                   );
                 })()}
 
+                {/* Career loss tip */}
+                {wasCareerLevel && winner === 2 && (() => {
+                  const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+                  const tipMap: Record<string, string> = {
+                    timed: 'Focus center columns first — they create the most threats per move.',
+                    speed: 'Pre-plan 2 moves ahead. Speed rounds punish hesitation.',
+                    obstacle: 'Obstacles create forced plays — use them to trap the AI.',
+                    moves_limit: 'Every move must threaten. Build two-way traps early.',
+                    boss: 'Study the boss rule. It limits YOUR options but also limits the AI.',
+                    go_second: 'Going second? Control the center immediately to neutralize the advantage.',
+                    puzzle: 'Look for the diagonal. Puzzle boards almost always hinge on one diagonal line.',
+                    jeopardy: 'High stakes = aggressive play. Force the AI to react to you.',
+                  };
+                  const tip = tipMap[cl?.type ?? ''] ?? 'Control the center, build diagonal threats, and never leave the AI an open 3.';
+                  return (
+                    <View style={styles.goCareerLossTip}>
+                      <Text style={styles.goCareerLossTipText}>{tip}</Text>
+                    </View>
+                  );
+                })()}
+
                 {/* Notable events */}
                 {didLevelUp && (
                   <View style={styles.goEventCompact}>
@@ -3192,6 +3213,25 @@ const styles = StyleSheet.create({
     color: '#ffab40',
     marginTop: 4,
     letterSpacing: 0.5,
+  },
+  goCareerLossTip: {
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(231,76,60,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(231,76,60,0.2)',
+    maxWidth: 300,
+    alignSelf: 'center',
+  },
+  goCareerLossTipText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 11,
+    color: 'rgba(255,200,200,0.8)',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   goStreakRow: {
     flexDirection: 'row',
