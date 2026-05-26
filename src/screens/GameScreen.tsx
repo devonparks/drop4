@@ -156,6 +156,9 @@ export function GameScreen({ navigation }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
   const [activePowerFX, setActivePowerFX] = useState<'bomb' | 'rainbow' | 'heavy' | null>(null);
+  const [gravityFlipFlash, setGravityFlipFlash] = useState(false);
+  const gravityFlashScale = useRef(new RNAnimated.Value(0)).current;
+  const gravityFlashOpacity = useRef(new RNAnimated.Value(0)).current;
   const [showFirstWin, setShowFirstWin] = useState(false);
   const firstWinOpacity = useRef(new RNAnimated.Value(0)).current;
 
@@ -374,6 +377,16 @@ export function GameScreen({ navigation }: Props) {
     flipGravity();
     haptics.heavy?.() ?? haptics.tap();
     playSound('whoosh');
+    setGravityFlipFlash(true);
+    gravityFlashScale.setValue(0.5);
+    gravityFlashOpacity.setValue(1);
+    RNAnimated.parallel([
+      RNAnimated.spring(gravityFlashScale, { toValue: 1.2, speed: 30, bounciness: 12, useNativeDriver: true }),
+      RNAnimated.sequence([
+        RNAnimated.delay(600),
+        RNAnimated.timing(gravityFlashOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]),
+    ]).start(() => setGravityFlipFlash(false));
   }, [moveCount, status, params.bossScript, flipGravity]);
 
   // Hint pulse animation — pulsing opacity when hint is shown
@@ -1393,6 +1406,11 @@ export function GameScreen({ navigation }: Props) {
           {activePowerFX && (
             <PowerPieceFX type={activePowerFX} visible onDone={() => setActivePowerFX(null)} />
           )}
+          {gravityFlipFlash && (
+            <RNAnimated.View style={[styles.gravityFlashOverlay, { opacity: gravityFlashOpacity, transform: [{ scale: gravityFlashScale }] }]} pointerEvents="none">
+              <Text style={styles.gravityFlashText}>{gravityDown ? '⬇️ GRAVITY FLIP!' : '⬆️ GRAVITY FLIP!'}</Text>
+            </RNAnimated.View>
+          )}
         </RNAnimated.View>
 
         {/* Last move indicator — removed, piece drop is self-evident */}
@@ -2098,6 +2116,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.5)',
     marginRight: 2,
+  },
+  gravityFlashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99,
+  },
+  gravityFlashText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 24,
+    color: '#ff4081',
+    letterSpacing: 2,
+    textShadow: '0px 0px 20px rgba(255,64,129,0.8), 0px 2px 4px rgba(0,0,0,0.6)',
   },
   starTrackerStar: {
     fontSize: 14,
