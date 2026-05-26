@@ -165,6 +165,7 @@ export function MatchupScreen({ navigation }: Props) {
     if (timerSeconds && timerSeconds <= 5) return { label: `⚡ BLITZ · ${timerSeconds}s/TURN`, color: '#ff4081' };
     if (timerSeconds) return { label: `⏱️ TIMED · ${timerSeconds}s/TURN`, color: '#ff8c42' };
     if (connectCount && connectCount !== 4) return { label: `🎯 CONNECT ${connectCount}`, color: '#4dd0e1' };
+    if (params.levelType === 'go_second') return { label: '↩️ GOING SECOND', color: '#ffb74d' };
     if (params.presetBoard) return { label: '🧩 PUZZLE START', color: '#ba68c8' };
     if (params.boardSize && params.boardSize !== '6x7' && params.boardSize !== '7x6') return { label: `📏 ${params.boardSize} BOARD`, color: '#81c784' };
     return null;
