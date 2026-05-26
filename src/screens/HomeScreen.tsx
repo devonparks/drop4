@@ -410,6 +410,12 @@ function LootBoxRow({
     (c) => c.progress >= c.target && !c.completed,
   ).length;
 
+  const nearestChallenge = claimableMissions === 0
+    ? challenges
+        .filter(c => !c.completed && c.progress < c.target)
+        .sort((a, b) => (b.progress / b.target) - (a.progress / a.target))[0]
+    : null;
+
   const nextCareerLevel = ALL_CAREER_LEVELS.find(
     (l) => !careerProgress[l.id]?.completed,
   );
@@ -436,7 +442,7 @@ function LootBoxRow({
       <LootCard
         iconSrc={require('../assets/images/ui/challenge-bag.png')}
         label="MISSIONS"
-        status={claimableMissions > 0 ? `${claimableMissions} READY` : 'IN PROGRESS'}
+        status={claimableMissions > 0 ? `${claimableMissions} READY` : nearestChallenge ? `${nearestChallenge.progress}/${nearestChallenge.target}` : 'DONE'}
         ready={claimableMissions > 0}
         onPress={onMissionsPress}
       />

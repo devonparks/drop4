@@ -167,6 +167,7 @@ export function GameScreen({ navigation }: Props) {
   const [streakReward, setStreakReward] = useState<{ coins: number; lootBox?: string; milestone: number } | null>(null);
   const [didLevelUp, setDidLevelUp] = useState(false);
   const [completedChallengeName, setCompletedChallengeName] = useState<string | null>(null);
+  const [nearChallengeHint, setNearChallengeHint] = useState<string | null>(null);
   const [streakBrokenAt, setStreakBrokenAt] = useState<number | null>(null);
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
   const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
@@ -609,6 +610,12 @@ export function GameScreen({ navigation }: Props) {
         c => !c.completed && c.progress >= c.target
       );
       if (justCompleted) setCompletedChallengeName(justCompleted.title);
+      if (!justCompleted) {
+        const near = useChallengeStore.getState().challenges
+          .filter(c => !c.completed && c.progress < c.target && c.progress / c.target >= 0.5)
+          .sort((a, b) => (b.progress / b.target) - (a.progress / a.target))[0];
+        if (near) setNearChallengeHint(`${near.target - near.progress} more for ${near.title}!`);
+      }
       // Season XP — detect tier-up
       const preTier = useSeasonStore.getState().currentTier;
       addSeasonXp(reward);
@@ -1924,6 +1931,14 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={{ fontSize: 14 }}>{'✅'}</Text>
                     <Text style={[styles.goEventCompactText, { color: colors.teal }]}>
                       Challenge Complete: {completedChallengeName}
+                    </Text>
+                  </View>
+                )}
+                {nearChallengeHint && !completedChallengeName && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🎯'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.orange }]}>
+                      {nearChallengeHint}
                     </Text>
                   </View>
                 )}
