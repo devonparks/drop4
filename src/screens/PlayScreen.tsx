@@ -4,13 +4,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
 import { TopBar } from '../components/ui/TopBar';
 import { GlossyButton } from '../components/ui/GlossyButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Difficulty } from '../stores/gameStore';
 import { useMatchHistoryStore } from '../stores/matchHistoryStore';
+import { useCareerStore } from '../stores/careerStore';
+import { ALL_CAREER_LEVELS, CAREER_CITIES, CITY_BY_ID } from '../data/careerLevels';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
-import { StaggeredEntry } from '../components/animations';
+import { StaggeredEntry, PressScale } from '../components/animations';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -81,6 +84,17 @@ export function PlayScreen({ navigation }: Props) {
     return null;
   }, [matches]);
 
+  // Career resume data
+  const careerProgress = useCareerStore(s => s.progress);
+  const careerResume = useMemo(() => {
+    const nextLevel = ALL_CAREER_LEVELS.find(l => !careerProgress[l.id]?.completed);
+    if (!nextLevel) return null;
+    const city = CAREER_CITIES.find(c => c.levelIds.includes(nextLevel.id));
+    const completedCount = Object.values(careerProgress).filter(p => p.completed).length;
+    const totalStars = Object.values(careerProgress).reduce((s, p) => s + p.stars, 0);
+    return { level: nextLevel, cityName: city?.nickname ?? city?.name ?? '', completedCount, totalStars };
+  }, [careerProgress]);
+
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
@@ -104,13 +118,44 @@ export function PlayScreen({ navigation }: Props) {
         />
 
         <View style={styles.mainContent}>
+          {/* Continue Career CTA */}
+          {careerResume && (
+            <StaggeredEntry index={0} delay={60}>
+            <PressScale
+              scaleTo={0.97}
+              onPress={() => {
+                const city = CAREER_CITIES.find(c => c.levelIds.includes(careerResume.level.id));
+                if (city) navigation.navigate('CareerCity', { cityId: city.id });
+              }}
+              style={styles.careerCta}
+              accessibilityRole="button"
+              accessibilityLabel={`Continue career: ${careerResume.level.name} in ${careerResume.cityName}`}
+            >
+              <LinearGradient
+                colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.careerCtaLeft}>
+                <Text style={styles.careerCtaKicker}>CONTINUE CAREER</Text>
+                <Text style={styles.careerCtaTitle} numberOfLines={1}>{careerResume.cityName} — {careerResume.level.name}</Text>
+              </View>
+              <View style={styles.careerCtaRight}>
+                <Text style={styles.careerCtaStars}>{careerResume.totalStars} ★</Text>
+                <Text style={styles.careerCtaArrow}>›</Text>
+              </View>
+            </PressScale>
+            </StaggeredEntry>
+          )}
+
           {/* Screen heading */}
-          <StaggeredEntry index={0} delay={60}>
+          <StaggeredEntry index={careerResume ? 1 : 0} delay={60}>
           <Text style={styles.screenHeading} accessibilityRole="header">QUICK PLAY</Text>
           </StaggeredEntry>
 
           {/* Compact stats line + suggestion */}
-          <StaggeredEntry index={1} delay={60}>
+          <StaggeredEntry index={careerResume ? 2 : 1} delay={60}>
           <Text style={styles.statsLine}>
             {stats.totalGames > 0
               ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
@@ -133,7 +178,7 @@ export function PlayScreen({ navigation }: Props) {
               (W·L stats). First-time players see clean labels without
               flavor copy fighting the painted icons. Matches Home's calm
               button hierarchy. */}
-          <StaggeredEntry index={2} delay={60}>
+          <StaggeredEntry index={careerResume ? 3 : 2} delay={60}>
           <View style={styles.buttonsWrap}>
             <GlossyButton
               label="EASY"
@@ -160,7 +205,7 @@ export function PlayScreen({ navigation }: Props) {
           </StaggeredEntry>
 
           {/* Tip */}
-          <StaggeredEntry index={3} delay={60}>
+          <StaggeredEntry index={careerResume ? 4 : 3} delay={60}>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>{'\uD83D\uDCA1'} {tip}</Text>
           </View>
@@ -171,7 +216,7 @@ export function PlayScreen({ navigation }: Props) {
               top-level tab and ModePick deleted, Local Play moved here
               as a pill since this is where the player decides "how to
               play" — it shares context with the AI difficulty buttons. */}
-          <StaggeredEntry index={4} delay={60}>
+          <StaggeredEntry index={careerResume ? 5 : 4} delay={60}>
           <View style={styles.secondaryWrap}>
             <GlossyButton label="LEARN" variant="navy" icon="📖" small onPress={() => navigation.navigate('Learn')} style={{ flex: 1 }} />
             <GlossyButton label="LOCAL PLAY" variant="navy" icon="👥" small onPress={() => navigation.navigate('LocalPlay')} style={{ flex: 1 }} />
@@ -210,6 +255,33 @@ const styles = StyleSheet.create({
   },
   secondaryWrap: {
     flexDirection: 'row', width: '100%', maxWidth: 340, gap: 8,
+  },
+  careerCta: {
+    width: '100%', maxWidth: 340,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: 14, overflow: 'hidden',
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)',
+    marginBottom: 4,
+  },
+  careerCtaLeft: { flex: 1 },
+  careerCtaKicker: {
+    fontFamily: fonts.body, fontWeight: weight.black,
+    fontSize: 9, color: colors.orange, letterSpacing: 1.5,
+  },
+  careerCtaTitle: {
+    fontFamily: fonts.heading, fontWeight: weight.bold,
+    fontSize: 15, color: '#ffffff', marginTop: 1,
+  },
+  careerCtaRight: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+  },
+  careerCtaStars: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 13, color: colors.coinGold,
+  },
+  careerCtaArrow: {
+    fontSize: 22, color: 'rgba(255,140,0,0.6)', fontWeight: '600',
   },
   tipCard: {
     width: '100%', maxWidth: 340,
