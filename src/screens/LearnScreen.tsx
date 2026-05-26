@@ -129,6 +129,46 @@ const LESSONS: Lesson[] = [
       'Always count available columns before committing to a strategy',
     ],
   },
+  {
+    id: 'bomb', title: 'Bomb Power Piece', description: 'Clear a column to disrupt the board', icon: '💣',
+    difficulty: 'intermediate',
+    tips: [
+      'The Bomb clears an entire column — use it to remove an opponent\'s stack',
+      'Save your Bomb for when the opponent has a strong vertical setup',
+      'Bombing the center column is rarely smart — it helps both players equally',
+      'You only get ONE Bomb per career match — timing is everything',
+    ],
+  },
+  {
+    id: 'rainbow', title: 'Rainbow Power Piece', description: 'A wild piece that counts as both colors', icon: '🌈',
+    difficulty: 'intermediate',
+    tips: [
+      'The Rainbow piece counts for BOTH players — choose placement carefully',
+      'Use it to complete YOUR connection while blocking theirs simultaneously',
+      'Rainbow is strongest when it connects two separate threats at once',
+      'Don\'t waste it early — save it for when you can finish a line',
+    ],
+  },
+  {
+    id: 'heavy', title: 'Heavy Power Piece', description: 'Push down to crush pieces below', icon: '🪨',
+    difficulty: 'advanced',
+    tips: [
+      'The Heavy piece pushes existing pieces down, changing the board layout',
+      'Use it to break an opponent\'s connection by shifting their pieces',
+      'Heavy can create openings below by compressing a column',
+      'Best used on columns where the opponent has built tall stacks',
+    ],
+  },
+  {
+    id: 'bosses', title: 'Boss Battles', description: 'Beat Tommy, Sal, and the Warden', icon: '👑',
+    difficulty: 'advanced',
+    tips: [
+      'Each boss has a unique rule — read the matchup badge carefully before starting',
+      'Tommy\'s column parity rule limits which columns you can use — plan 2 moves ahead',
+      'Sal flips gravity every 4 moves — build from top AND bottom',
+      'The Warden seeds threat pieces — block them early or they snowball',
+    ],
+  },
 ];
 
 const DIFF_COLORS: Record<string, string> = {

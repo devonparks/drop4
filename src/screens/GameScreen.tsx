@@ -185,7 +185,6 @@ export function GameScreen({ navigation }: Props) {
   const [showGameTutorial, setShowGameTutorial] = useState(false);
 
   const [shareCopied, setShareCopied] = useState(false);
-  const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
   const [isFirstWinOfDay, setIsFirstWinOfDay] = useState(false);
   const [isNewBestStreak, setIsNewBestStreak] = useState(false);
@@ -901,10 +900,15 @@ export function GameScreen({ navigation }: Props) {
     // Game count milestone celebration
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
       const totalGamesPlayed = useMatchHistoryStore.getState().matches.length;
-      if (totalGamesPlayed === 10) setMilestoneCelebration('Double digits! \uD83C\uDF89');
+      if (totalGamesPlayed === 3) setMilestoneCelebration('Getting warmed up!');
+      else if (totalGamesPlayed === 5) setMilestoneCelebration('On a roll!');
+      else if (totalGamesPlayed === 10) setMilestoneCelebration('Double digits!');
+      else if (totalGamesPlayed === 25) setMilestoneCelebration('25 games! Hooked yet?');
       else if (totalGamesPlayed === 50) setMilestoneCelebration('50 games! Dedicated player!');
-      else if (totalGamesPlayed === 100) setMilestoneCelebration('Century! \uD83D\uDCAF');
+      else if (totalGamesPlayed === 100) setMilestoneCelebration('Century!');
+      else if (totalGamesPlayed === 250) setMilestoneCelebration('250 games! Veteran status!');
       else if (totalGamesPlayed === 500) setMilestoneCelebration('500 games! True fan!');
+      else if (totalGamesPlayed === 1000) setMilestoneCelebration('1,000 games! Legend!');
     }
     // Set game-over motivational quote
     if ((status === 'won' || status === 'draw') && hasAwardedRef.current) {
@@ -1117,7 +1121,6 @@ export function GameScreen({ navigation }: Props) {
     setNearChallengeHint(null);
     setStreakBrokenAt(null);
     setDailyStreakMultiplier(1);
-    setDoubleCoinsUsed(false);
     setIsFirstWinOfDay(false);
     setIsNewBestStreak(false);
     setComebackCoins(null);
@@ -2176,7 +2179,7 @@ export function GameScreen({ navigation }: Props) {
                               setArmedPowerPiece(null); setDidLevelUp(false);
                               setStreakReward(null); setCompletedChallengeName(null);
                               setStreakBrokenAt(null); setDailyStreakMultiplier(1);
-                              setDoubleCoinsUsed(false); setIsFirstWinOfDay(false);
+                              setIsFirstWinOfDay(false);
                               setXpEarned(0); setTotalCoinsEarned(0);
                               newGame(d, isVsAi);
                             }
