@@ -137,6 +137,15 @@ export function StatsScreen({ navigation }: Props) {
 
     const recentForm = matches.slice(0, 10);
 
+    // Today's session
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    const todayMatches = matches.filter(m => m.timestamp >= todayMs);
+    const todayGames = todayMatches.length;
+    const todayWins = todayMatches.filter(m => m.result === 'win').length;
+    const todayCoins = todayMatches.reduce((sum, m) => sum + (m.coinsEarned || 0), 0);
+
     return {
       totalGames, wins, losses, draws, winRate, totalCoinsEarned,
       easyWins, mediumWins, hardWins, totalDiffWins,
@@ -145,6 +154,7 @@ export function StatsScreen({ navigation }: Props) {
       longestLoseStreak,
       fastestWin, mostCoins,
       recentForm,
+      todayGames, todayWins, todayCoins,
     };
   }, [matches]);
 
@@ -154,6 +164,16 @@ export function StatsScreen({ navigation }: Props) {
 
   const totalStars = useMemo(() => {
     return Object.values(careerProgress).reduce((sum, p) => sum + p.stars, 0);
+  }, [careerProgress]);
+
+  const careerAttemptStats = useMemo(() => {
+    const entries = Object.values(careerProgress);
+    const totalAttempts = entries.reduce((sum, p) => sum + (p.attempts ?? 0), 0);
+    const completed = entries.filter(p => p.completed);
+    const avgAttempts = completed.length > 0
+      ? (completed.reduce((sum, p) => sum + (p.attempts ?? 1), 0) / completed.length).toFixed(1)
+      : '0';
+    return { totalAttempts, avgAttempts };
   }, [careerProgress]);
 
   // Equipped cosmetic display names
@@ -179,6 +199,7 @@ export function StatsScreen({ navigation }: Props) {
     longestLoseStreak,
     fastestWin, mostCoins,
     recentForm,
+    todayGames, todayWins, todayCoins,
   } = stats;
 
   return (
@@ -212,8 +233,20 @@ export function StatsScreen({ navigation }: Props) {
           </View>
         </StaggeredEntry>
 
+        {/* ---------- 1b. Today's Session ---------- */}
+        {todayGames > 0 && (
+          <StaggeredEntry index={2} delay={60}>
+            <SectionTitle title="TODAY" />
+            <View style={styles.grid}>
+              <OverviewCard icon="🎮" label="Games" value={todayGames} />
+              <OverviewCard icon="🏆" label="Wins" value={todayWins} color={colors.green} />
+              <OverviewCard icon="🪙" label="Coins Earned" value={todayCoins.toLocaleString()} color={colors.coinGold} />
+            </View>
+          </StaggeredEntry>
+        )}
+
         {/* ---------- 2. Win/Loss Breakdown ---------- */}
-        <StaggeredEntry index={2} delay={60}>
+        <StaggeredEntry index={todayGames > 0 ? 3 : 2} delay={60}>
           <SectionTitle title="WIN / LOSS BREAKDOWN" />
           <View style={styles.card}>
             {/* Colored bar */}
@@ -416,6 +449,21 @@ export function StatsScreen({ navigation }: Props) {
                 label="Career Win %"
                 value={`${Math.round((careerWins / careerGames) * 100)}%`}
                 color={colors.orange}
+              />
+            )}
+            {careerAttemptStats.totalAttempts > 0 && (
+              <OverviewCard
+                icon="🔄"
+                label="Total Attempts"
+                value={careerAttemptStats.totalAttempts}
+              />
+            )}
+            {completedCount > 0 && Number(careerAttemptStats.avgAttempts) > 0 && (
+              <OverviewCard
+                icon="📊"
+                label="Avg per Level"
+                value={`${careerAttemptStats.avgAttempts}x`}
+                color={colors.teal}
               />
             )}
           </View>

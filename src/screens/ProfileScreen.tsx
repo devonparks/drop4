@@ -480,6 +480,8 @@ export function ProfileScreen() {
             <StatCard label="Losses" value={allMatches.filter(m => m.result === 'loss').length} color={colors.pieceRed} />
             <StatCard label="Win Rate" value={`${winRate}%`} color={colors.orange} />
             <StatCard label="Games" value={totalGames} />
+            <StatCard label="Best Streak" value={bestStreak} color={colors.coinGold} />
+            <StatCard label="Career Stars" value={careerStats.totalStars} color={colors.coinGold} />
             <StatCard label="Coins" value={coins.toLocaleString()} color={colors.coinGold} />
             <StatCard label="Gems" value={gems} color={colors.gemGreen} />
           </View>
@@ -487,6 +489,7 @@ export function ProfileScreen() {
 
         {/* Favorite Opponent */}
         {favOpponent && (
+          <StaggeredEntry index={6} delay={60}>
           <View style={styles.favOpponentCard}>
             <Text style={styles.favOpponentIcon}>{'\uD83C\uDFAF'}</Text>
             <View style={styles.favOpponentTextWrap}>
@@ -494,10 +497,11 @@ export function ProfileScreen() {
               <Text style={styles.favOpponentName}>{favOpponent.name} <Text style={styles.favOpponentGames}>({favOpponent.games} game{favOpponent.games !== 1 ? 's' : ''})</Text></Text>
             </View>
           </View>
+          </StaggeredEntry>
         )}
 
         {/* Equipped cosmetics */}
-        <StaggeredEntry index={6} delay={60}>
+        <StaggeredEntry index={7} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">EQUIPPED</Text>
           <View style={styles.equippedGrid}>
             <EquippedItem label="Board" name={boardNames[equipped.board] || equipped.board} rarity="common" />
@@ -514,7 +518,7 @@ export function ProfileScreen() {
         </StaggeredEntry>
 
         {/* Achievements — compact summary, full list is in Challenges tab */}
-        <StaggeredEntry index={7} delay={60}>
+        <StaggeredEntry index={8} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">ACHIEVEMENTS</Text>
         {(() => {
           const unlocked = achievements.filter(a => a.unlocked).length;
@@ -552,7 +556,7 @@ export function ProfileScreen() {
         </StaggeredEntry>
 
         {/* Streaks */}
-        <StaggeredEntry index={8} delay={60}>
+        <StaggeredEntry index={9} delay={60}>
         <Text style={styles.sectionTitle} accessibilityRole="header">STREAKS</Text>
         <View style={styles.statsGrid}>
           <StatCard label="Current" value={winStreak > 0 ? `🔥 ${winStreak}` : '0'} color={colors.orange} />

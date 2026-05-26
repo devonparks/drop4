@@ -2044,6 +2044,30 @@ export function GameScreen({ navigation }: Props) {
                   </View>
                 )}
 
+                {/* Next level teaser — Candy Crush "one more level" hook */}
+                {wasCareerLevel && winner === 1 && (() => {
+                  const nxt = ALL_CAREER_LEVELS.find(l => l.id === (params.careerLevelId ?? 0) + 1);
+                  if (!nxt) return null;
+                  const nxtCity = CAREER_CITIES.find(c => c.levelIds.includes(nxt.id));
+                  const typeLabel = nxt.isBoss ? `BOSS: ${nxt.opponent}`
+                    : nxt.type === 'speed' ? 'BLITZ'
+                    : nxt.type === 'timed' ? 'TIMED'
+                    : nxt.type === 'moves_limit' ? `TARGET: ${nxt.settings.movesLimit} MOVES`
+                    : nxt.type === 'jeopardy' ? `JEOPARDY ${nxt.settings.rewardMultiplier}×`
+                    : nxt.type === 'puzzle' ? 'PUZZLE'
+                    : nxt.type === 'go_second' ? 'GOING SECOND'
+                    : nxt.settings.connectCount !== 4 ? `CONNECT ${nxt.settings.connectCount}` : '';
+                  return (
+                    <View style={styles.goNextPreview}>
+                      <Text style={styles.goNextPreviewLabel}>UP NEXT</Text>
+                      <Text style={styles.goNextPreviewTitle}>
+                        Level {nxt.id}: {nxt.name}{typeLabel ? ` — ${typeLabel}` : ''}
+                      </Text>
+                      {nxtCity && <Text style={styles.goNextPreviewCity}>{nxtCity.nickname}</Text>}
+                    </View>
+                  );
+                })()}
+
                 {/* Primary CTA */}
                 {isSeriesMode && seriesOver ? (
                   <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
@@ -2747,6 +2771,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     gap: 2,
+  },
+  goNextPreview: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 4,
+    backgroundColor: 'rgba(255,140,0,0.08)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.2)',
+    gap: 2,
+  },
+  goNextPreviewLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black,
+    fontSize: 9,
+    color: colors.orange,
+    letterSpacing: 2,
+  },
+  goNextPreviewTitle: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  goNextPreviewCity: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
   },
   goSecondaryRow: {
     flexDirection: 'row',
