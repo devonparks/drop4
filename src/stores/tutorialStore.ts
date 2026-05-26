@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { saveState, loadState } from '../services/storage';
 import { TUTORIAL_TIPS } from '../data/tutorials';
 
-const TOTAL_TIPS = TUTORIAL_TIPS.length; // 10
+const TOTAL_TIPS = TUTORIAL_TIPS.length;
 const COMPLETION_REWARD = 100;
 
 interface TutorialState {

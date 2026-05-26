@@ -171,12 +171,12 @@ export function SettingsScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle} accessibilityRole="header">WHAT'S NEW IN v1.0.0</Text>
         <View style={styles.section}>
           {[
-            { icon: '🎭', text: '30 emotes + Fortnite-style emote wheel in lobby' },
+            { icon: '🎭', text: '21 emotes + Fortnite-style emote wheel in lobby' },
             { icon: '🎮', text: '180 career levels across 15 cities with boss battles' },
-            { icon: '🎨', text: '152 outfits across 12 packs + 24 camo colorways' },
+            { icon: '🎨', text: '152 outfits across 15 packs + 30 colorways' },
             { icon: '🎰', text: 'Daily FREE SPIN wheel with coin & gem rewards' },
-            { icon: '🏆', text: '31 achievements + 16 collection milestones' },
-            { icon: '⭐', text: 'Season Pass with 50 tiers of exclusive rewards' },
+            { icon: '🏆', text: '31 achievements + 30 collection milestones' },
+            { icon: '⭐', text: 'Season Pass with exclusive cosmetic rewards' },
             { icon: '🎁', text: 'Daily challenges, loot boxes & power pieces' },
           ].map((item, i) => (
             <View key={i} style={styles.whatsNewRow}>

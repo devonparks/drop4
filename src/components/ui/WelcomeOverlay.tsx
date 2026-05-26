@@ -54,7 +54,7 @@ const PAGES: WelcomePage[] = [
     lines: [
       'Thousands of outfit parts. Real Sims-tier creator.',
       '16 collectible pets.',
-      '48 emotes + idle animations.',
+      '21 emotes + idle animations.',
     ],
     gradient: ['#ba68c8', '#6a1b9a'],
   },
