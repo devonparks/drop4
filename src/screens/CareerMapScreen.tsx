@@ -97,6 +97,27 @@ export function CareerMapScreen({ navigation }: Props) {
   []);
 
   const scrollRef = useRef<ScrollView>(null);
+  const nextCityYRef = useRef<number | null>(null);
+  const didAutoScroll = useRef(false);
+
+  const nextCityId = useMemo(() => {
+    if (!nextLevelId) return null;
+    for (const city of activeCities) {
+      const levels = getLevelsForCity(city.id);
+      if (levels.some(l => l.id === nextLevelId)) return city.id;
+    }
+    return null;
+  }, [nextLevelId, activeCities]);
+
+  const handleNextCityLayout = useRef((e: { nativeEvent: { layout: { y: number } } }) => {
+    nextCityYRef.current = e.nativeEvent.layout.y;
+    if (!didAutoScroll.current && scrollRef.current) {
+      didAutoScroll.current = true;
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: Math.max(0, (nextCityYRef.current ?? 0) - 60), animated: true });
+      }, 100);
+    }
+  }).current;
 
   return (
     <ScreenBackground scene="career">
@@ -146,7 +167,7 @@ export function CareerMapScreen({ navigation }: Props) {
           const stats = getCityCompletion(city, progress);
 
           return (
-            <View key={city.id}>
+            <View key={city.id} onLayout={city.id === nextCityId ? handleNextCityLayout : undefined}>
               {/* Zone transition card */}
               <PressScale
                 onPress={() => {
