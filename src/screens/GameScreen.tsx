@@ -1253,8 +1253,12 @@ export function GameScreen({ navigation }: Props) {
             ]}>
               {turnText}
             </RNAnimated.Text>
-            <Text style={styles.vsText}>{isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}</Text>
-            <Text style={styles.boardThemeLabel}>{boardThemeName}</Text>
+            <Text style={styles.vsText}>
+              {params.careerLevelId != null
+                ? `Level ${params.careerLevelId} · vs ${p2Name}`
+                : isVsAi ? `vs ${diffLabel} Bot` : `${p1Name} vs ${p2Name}`}
+            </Text>
+            {!params.careerLevelId && <Text style={styles.boardThemeLabel}>{boardThemeName}</Text>}
             {/* Connect count indicator for non-standard (Connect 3, 5, 6, etc.) */}
             {customSettings && customSettings.connectCount !== 4 && (
               <Text style={styles.connectCountLabel}>Connect {customSettings.connectCount}</Text>
