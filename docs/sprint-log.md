@@ -576,3 +576,61 @@ myPlayer pattern).
 - Drop4 main + engine master both pushed to GitHub
 - Web preview rebuilds the new architecture on next reload
   (port 8086, dev hooks at window.__stores)
+
+---
+
+## 2026-05-26 — Autonomous Polish Sprint
+
+### Per-Slot Colorway System
+- `equipOutfitColorway` now accepts optional `targetSlot` parameter
+- Picking a hoodie color no longer changes pants/shoes colors
+- Added `equippedSlotColorway: Record<string, string>` to characterStore
+- Per-slot tracking persisted via AsyncStorage
+
+### DailyRewardPopup
+- Added X close button (top-right corner) for dismiss without claiming
+- Added 1.2s delayed dismiss with "Claimed!" badge after claiming
+- Players now see the reward land before the modal closes
+
+### HomeScreen SparkleParticle Fix
+- Merged separate fade + drift animation loops into single unified loop
+- Eliminates visible snap-back when two unsynchronized loops drifted
+
+### ChallengesScreen
+- Glow animation switched from `useNativeDriver: false` to `true`
+- Weekly CLAIM buttons wrapped in PressScale + PulseGlow
+- Added haptics.tap() + playSound('click') to weekly claim buttons
+
+### ShopScreen
+- Watch Ad card: "COMING SOON" badge + toast instead of dead button
+- Pet/emote featured deals now route to their handlers (was silently no-op)
+- Owned featured deals show "Already in your locker!" toast
+
+### Sound/Haptics Sweep (17 files)
+- ExpressionPanel + ExpressionHotBar: added playSound('click')
+- PlayScreen: added haptics + click to CTAs
+- ProfileScreen: added haptics to stat/settings links
+- CareerMapScreen/CareerCityScreen: added haptics to navigation
+- LearnScreen: added haptics to lesson cards
+- GameScreen: added click sounds to emoji/phrases/emotes category buttons
+- SettingsScreen: reset button gets PressScale + playSound('error')
+- LootBoxScreen: tier tabs get PressScale + haptics + click sound
+- devModeStore: console.log calls gated behind __DEV__
+
+### Accessibility
+- LootChest: accessibilityRole="image" + descriptive label
+- WelcomeBackPopup: accessibilityRole="summary" on reward block
+- SettingsScreen version badge: accessibilityLabel + hint
+
+### Audit Results
+- Zero ungated console.log calls in production code
+- Zero hardcoded fontFamily (all use fonts.heading/body)
+- Zero TODO/FIXME comments in screens or components
+- All useNativeDriver: false confirmed necessary (color/width)
+- All Pressables have accessibility labels
+- Every haptics.tap() paired with playSound('click')
+
+### Status
+- Drop4 typecheck clean (0 new errors, ~103 pre-existing amg-engine)
+- 43/43 Drop4 tests passing (4 pre-existing amg-engine failures)
+- 3 commits pushed to main: 3cafad3f, 80f49ed0, bc2c46ec
