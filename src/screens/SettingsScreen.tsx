@@ -79,6 +79,7 @@ export function SettingsScreen({ navigation }: Props) {
   const coins = useShopStore(s => s.coins);
   const gems = useShopStore(s => s.gems);
   const level = useShopStore(s => s.level);
+  const bestStreak = useGameStore(s => s.bestStreak);
   const devModeEnabled = useDevModeStore(s => s.enabled);
   const toggleDevMode = useDevModeStore(s => s.toggle);
   // Triple-tap counter for secret dev mode activation on the version badge.
@@ -102,6 +103,8 @@ export function SettingsScreen({ navigation }: Props) {
   const achievements = useAchievementStore(s => s.achievements);
   const careerProgress = useCareerStore(s => s.progress);
   const careerDone = Object.values(careerProgress).filter(p => p.completed).length;
+  const careerStars = Object.values(careerProgress).reduce((sum, p) => sum + p.stars, 0);
+  const winRate = matches.length > 0 ? Math.round((matches.filter(m => m.result === 'win').length / matches.length) * 100) : 0;
   const [soundOn, setSoundOn] = useState(!getMuted());
   const [hapticsOn, setHapticsOn] = useState(getHapticsEnabled());
   const [notificationsOn, setNotificationsOn] = useState(true);
@@ -169,12 +172,12 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           {[
             { icon: '🎭', text: '30 emotes + Fortnite-style emote wheel in lobby' },
-            { icon: '🎮', text: '36 career levels with boss battles & puzzle modes' },
+            { icon: '🎮', text: '180 career levels across 15 cities with boss battles' },
             { icon: '🎨', text: '152 outfits across 12 packs + 24 camo colorways' },
             { icon: '🎰', text: 'Daily FREE SPIN wheel with coin & gem rewards' },
-            { icon: '🏆', text: '16 collection milestones with unique title rewards' },
+            { icon: '🏆', text: '31 achievements + 16 collection milestones' },
             { icon: '⭐', text: 'Season Pass with 50 tiers of exclusive rewards' },
-            { icon: '🎁', text: 'Loot boxes, challenges & achievement system' },
+            { icon: '🎁', text: 'Daily challenges, loot boxes & power pieces' },
           ].map((item, i) => (
             <View key={i} style={styles.whatsNewRow}>
               <Text style={styles.whatsNewIcon}>{item.icon}</Text>
@@ -212,6 +215,18 @@ export function SettingsScreen({ navigation }: Props) {
             <View style={styles.journeyItem}>
               <Text style={[styles.journeyValue, { color: colors.teal }]}>Lv.{level}</Text>
               <Text style={styles.journeyLabel}>Player Level</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: '#3498db' }]}>{winRate}%</Text>
+              <Text style={styles.journeyLabel}>Win Rate</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: '#e74c3c' }]}>{bestStreak}</Text>
+              <Text style={styles.journeyLabel}>Best Streak</Text>
+            </View>
+            <View style={styles.journeyItem}>
+              <Text style={[styles.journeyValue, { color: '#f1c40f' }]}>{careerStars}</Text>
+              <Text style={styles.journeyLabel}>Career Stars</Text>
             </View>
           </View>
         </View>

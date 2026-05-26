@@ -8,6 +8,7 @@ interface CareerProgress {
     completed: boolean;
     bestMoves: number;
     completedAt?: number; // epoch ms — when the level was first cleared
+    attempts?: number;    // total times the player has started this level
   };
 }
 
@@ -39,8 +40,10 @@ interface CareerState {
   };
 
   // Actions
+  incrementAttempt: (levelId: number) => void;
   completeLevel: (levelId: number, stars: number, moves: number) => void;
   getStars: (levelId: number) => number;
+  getAttempts: (levelId: number) => number;
   isLevelUnlocked: (levelId: number) => boolean;
   getTotalStars: () => number;
   getCompletedCount: () => number;
@@ -75,6 +78,24 @@ export const useCareerStore = create<CareerState>((set, get) => ({
   unlockedSpecies: ['human'],
   unlockedPowerPieces: [],
   cityCompletePending: null,
+
+  incrementAttempt: (levelId) => {
+    set(state => {
+      const cur = state.progress[levelId];
+      return {
+        progress: {
+          ...state.progress,
+          [levelId]: {
+            stars: cur?.stars ?? 0,
+            completed: cur?.completed ?? false,
+            bestMoves: cur?.bestMoves ?? 999,
+            completedAt: cur?.completedAt,
+            attempts: (cur?.attempts ?? 0) + 1,
+          },
+        },
+      };
+    });
+  },
 
   completeLevel: (levelId, stars, moves) => {
     const current = get().progress[levelId];
@@ -154,6 +175,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
   acknowledgeCityComplete: () => set({ cityCompletePending: null }),
 
   getStars: (levelId) => get().progress[levelId]?.stars || 0,
+  getAttempts: (levelId) => get().progress[levelId]?.attempts || 0,
 
   isLevelUnlocked: (levelId) => {
     if (levelId === 1) return true; // First level always unlocked

@@ -160,6 +160,13 @@ export function MatchHistoryScreen() {
     const totalCoinsEarned = allMatches.reduce((sum, m) => sum + m.coinsEarned, 0);
     return { wins, losses, draws, totalGames, winRate, totalCoinsEarned };
   }, [allMatches]);
+  const todayStats = useMemo(() => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    const today = allMatches.filter(m => m.timestamp >= d.getTime());
+    const wins = today.filter(m => m.result === 'win').length;
+    const coins = today.reduce((sum, m) => sum + m.coinsEarned, 0);
+    return { games: today.length, wins, coins };
+  }, [allMatches]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [sort, setSort] = useState<SortType>('newest');
@@ -252,8 +259,26 @@ export function MatchHistoryScreen() {
             </View>
             </StaggeredEntry>
 
+            {/* Today's session */}
+            {todayStats.games > 0 && (
+              <StaggeredEntry index={2} delay={60}>
+              <View style={styles.todayBar}>
+                <Text style={styles.todayLabel}>TODAY</Text>
+                <Text style={styles.todayStat}>{todayStats.games} game{todayStats.games !== 1 ? 's' : ''}</Text>
+                <Text style={styles.todayDot}>{'·'}</Text>
+                <Text style={[styles.todayStat, { color: colors.green }]}>{todayStats.wins}W</Text>
+                {todayStats.coins > 0 && (
+                  <>
+                    <Text style={styles.todayDot}>{'·'}</Text>
+                    <Text style={[styles.todayStat, { color: colors.coinGold }]}>+{todayStats.coins} {'🪙'}</Text>
+                  </>
+                )}
+              </View>
+              </StaggeredEntry>
+            )}
+
             {/* Result filter */}
-            <StaggeredEntry index={2} delay={60}>
+            <StaggeredEntry index={todayStats.games > 0 ? 3 : 2} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">RESULT</Text>
             <View style={styles.chipRow}>
               {FILTER_OPTIONS.map(opt => (
@@ -269,7 +294,7 @@ export function MatchHistoryScreen() {
             </StaggeredEntry>
 
             {/* Mode filter */}
-            <StaggeredEntry index={3} delay={60}>
+            <StaggeredEntry index={todayStats.games > 0 ? 4 : 3} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">MODE</Text>
             <View style={styles.chipRow}>
               {MODE_FILTER_OPTIONS.map(opt => (
@@ -285,7 +310,7 @@ export function MatchHistoryScreen() {
             </StaggeredEntry>
 
             {/* Sort */}
-            <StaggeredEntry index={4} delay={60}>
+            <StaggeredEntry index={todayStats.games > 0 ? 5 : 4} delay={60}>
             <Text style={styles.sectionLabel} accessibilityRole="header">SORT BY</Text>
             <View style={styles.chipRow}>
               {SORT_OPTIONS.map(opt => (
@@ -300,7 +325,7 @@ export function MatchHistoryScreen() {
             </StaggeredEntry>
 
             {/* Results count */}
-            <StaggeredEntry index={5} delay={60}>
+            <StaggeredEntry index={todayStats.games > 0 ? 6 : 5} delay={60}>
             <Text style={styles.resultsCount}>
               Showing {pagedMatches.length} of {filteredAndSorted.length} matches
             </Text>
@@ -547,6 +572,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.orange,
     letterSpacing: 0.5,
+  },
+  todayBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,140,0,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.15)',
+    gap: 6,
+  },
+  todayLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: colors.orange,
+    letterSpacing: 1.5,
+    marginRight: 4,
+  },
+  todayStat: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  todayDot: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.2)',
   },
   endText: {
     fontFamily: fonts.body,

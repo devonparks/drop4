@@ -244,6 +244,15 @@ export function GameScreen({ navigation }: Props) {
     }
   }, []);
 
+  // Career attempt counter — track how many times the player has started this level
+  const [careerAttempts, setCareerAttempts] = useState(0);
+  useEffect(() => {
+    if (params.careerLevelId) {
+      useCareerStore.getState().incrementAttempt(params.careerLevelId);
+      setCareerAttempts(useCareerStore.getState().getAttempts(params.careerLevelId));
+    }
+  }, [params.careerLevelId]);
+
   // Expression panel — null = closed, tab key = open to that tab
   const [expressionPanelTab, setExpressionPanelTab] = useState<TabKey | null>(null);
   const [myPlayingEmote, setMyPlayingEmote] = useState<string | null>(null);
@@ -1097,6 +1106,10 @@ export function GameScreen({ navigation }: Props) {
     setComebackCoins(null);
     setXpEarned(0);
     setTotalCoinsEarned(0);
+    if (params.careerLevelId) {
+      useCareerStore.getState().incrementAttempt(params.careerLevelId);
+      setCareerAttempts(useCareerStore.getState().getAttempts(params.careerLevelId));
+    }
     const careerLevel = params.careerLevelId != null
       ? ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId)
       : undefined;
@@ -1720,7 +1733,7 @@ export function GameScreen({ navigation }: Props) {
                   wasCareerLevel ? { color: '#f1c40f' } : isVsAi ? { color: '#b06cc7' } : { color: colors.teal },
                 ]}>
                   {wasCareerLevel
-                    ? `LEVEL ${params.careerLevelId} — CAREER`
+                    ? `LEVEL ${params.careerLevelId}${winner === 2 && careerAttempts > 1 ? ` — ATTEMPT ${careerAttempts}` : ' — CAREER'}`
                     : isSeriesMode
                     ? `BEST OF ${totalGames} — GAME ${seriesGame}`
                     : isVsAi
@@ -1897,6 +1910,13 @@ export function GameScreen({ navigation }: Props) {
                         <View style={styles.goCareerLossTip}>
                           <Text style={styles.goCareerLossTipText}>
                             You had {unusedPieces.join(' + ')} unused — try them on the retry!
+                          </Text>
+                        </View>
+                      )}
+                      {careerAttempts >= 3 && (
+                        <View style={styles.goCareerLossTip}>
+                          <Text style={[styles.goCareerLossTipText, { color: colors.orange }]}>
+                            {careerAttempts >= 5 ? 'Persistence pays off — keep grinding!' : 'Every attempt teaches you something new.'}
                           </Text>
                         </View>
                       )}
