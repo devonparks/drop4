@@ -1470,6 +1470,28 @@ export function GameScreen({ navigation }: Props) {
                 <Text style={styles.categoryLabel}>Emotes</Text>
               </Pressable>
 
+              {/* ── Hint button ── */}
+              {isVsAi && status === 'playing' && currentPlayer === 1 && !isAiThinking && freeHintsRemaining > 0 && hintCol === null && (
+                <Pressable
+                  onPress={() => {
+                    haptics.tap();
+                    playSound('click');
+                    const currentBoard = useGameStore.getState().board;
+                    const { connectCount } = useGameStore.getState().customSettings;
+                    const bestCol = getAIMove(currentBoard, 'hard', connectCount);
+                    setHintCol(bestCol);
+                    setFreeHintsRemaining(prev => prev - 1);
+                    setTimeout(() => setHintCol(null), 3000);
+                  }}
+                  style={styles.categoryBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Get hint, ${freeHintsRemaining} remaining`}
+                >
+                  <Text style={styles.categoryIcon}>💡</Text>
+                  <Text style={styles.categoryLabel}>Hint ({freeHintsRemaining})</Text>
+                </Pressable>
+              )}
+
               {/* ── Power pieces (career only) ── */}
               {(() => {
                 const isCareer = params.careerLevelId !== undefined;
