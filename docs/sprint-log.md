@@ -662,10 +662,22 @@ myPlayer pattern).
 - LocalPlayScreen: P1 → Next focuses P2, P2 → Done starts the game
 - ShopScreen: removed dead TextInput import
 
+**Dialog Consistency**
+- SettingsScreen: replaced native Alert.alert() with styled ConfirmDialog
+  for Restore Purchases and Licenses (visual consistency across web + native)
+- Removed dead Alert import
+
+**User-Facing Text**
+- ProfileScreen: "N/A" → "No games yet" for new players with no match history
+
+**Memory Leak Fixes**
+- Character3DPortrait: fade animation now stops on useEffect cleanup
+- HomeScreen: same fade animation cleanup pattern applied
+
 **Misc**
 - LearnScreen: hidden vertical scroll indicator on lesson detail panel
 
 ### Status
 - Drop4 typecheck clean (0 new errors, ~103 pre-existing amg-engine)
 - 43/43 Drop4 tests passing (4 pre-existing amg-engine failures)
-- 10 commits pushed to main this session
+- 14 commits pushed to main this session
