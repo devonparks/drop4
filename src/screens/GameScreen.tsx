@@ -43,7 +43,7 @@ import { AchievementToast } from '../components/effects/AchievementToast';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { ChatBubble } from '../components/effects/ChatBubble';
-import { ALL_CAREER_LEVELS } from '../data/careerLevels';
+import { ALL_CAREER_LEVELS, type CareerReward } from '../data/careerLevels';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
@@ -165,7 +165,7 @@ export function GameScreen({ navigation }: Props) {
   const [dailyStreakMultiplier, setDailyStreakMultiplier] = useState(1);
   const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
-  const [unlockedCareerRewards, setUnlockedCareerRewards] = useState<Array<{type: string; amount?: number; id?: string}>>([]);
+  const [unlockedCareerRewards, setUnlockedCareerRewards] = useState<CareerReward[]>([]);
   const preLevelRef = useRef(useShopStore.getState().level);
   const preStreakRef = useRef(useGameStore.getState().winStreak);
 
@@ -621,10 +621,12 @@ export function GameScreen({ navigation }: Props) {
         if (levelData?.bonusReward) grantReward(levelData.bonusReward as any);
         // Track non-coin rewards so the rewards block can celebrate the unlock.
         // Coins are already shown via the dedicated count-up.
-        const collected: Array<{type: string; amount?: number; id?: string}> = [];
-        if (careerReward && careerReward.type !== 'coins') collected.push(careerReward);
-        if (levelData?.bonusReward && (levelData.bonusReward as any).type !== 'coins') {
-          collected.push(levelData.bonusReward as any);
+        const collected: CareerReward[] = [];
+        if (levelData?.reward && levelData.reward.type !== 'coins') {
+          collected.push(levelData.reward);
+        }
+        if (levelData?.bonusReward && levelData.bonusReward.type !== 'coins') {
+          collected.push(levelData.bonusReward);
         }
         if (collected.length > 0) setUnlockedCareerRewards(collected);
       }
@@ -1690,14 +1692,14 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={[styles.goEventCompactText, { color: '#b06cc7' }]}>Level Up! Lv {level}</Text>
                   </View>
                 )}
-                {wasCareerLevel && unlockedCareerRewards.length > 0 && (
-                  <View style={styles.goEventCompact}>
-                    <Text style={{ fontSize: 14 }}>{'🎁'}</Text>
+                {wasCareerLevel && unlockedCareerRewards.length > 0 && unlockedCareerRewards.map((r, i) => (
+                  <View key={i} style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{r.icon || '🎁'}</Text>
                     <Text style={[styles.goEventCompactText, { color: '#4caf50' }]}>
-                      {unlockedCareerRewards.length} New Unlock{unlockedCareerRewards.length > 1 ? 's' : ''}!
+                      NEW {r.type.toUpperCase()}: {r.name || r.id || 'Unlocked!'}
                     </Text>
                   </View>
-                )}
+                ))}
                 {streakReward && (
                   <View style={styles.goEventCompact}>
                     <Text style={{ fontSize: 14 }}>{'🔥'}</Text>
