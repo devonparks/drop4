@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import { ROSTER, RosterCharacter } from '../data/characterRoster';
 import { CAREER_RATINGS } from '../data/careerLevels';
 import { useShopStore } from '../stores/shopStore';
 import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
@@ -39,6 +40,7 @@ interface CardProps {
   isUnlocked: boolean;
   isEquipped: boolean;
   onEquip: () => void;
+  onLockedPress?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -101,7 +103,7 @@ function RosterCardPreview({ characterId, size, isEquipped: _isEquipped }: {
   );
 }
 
-function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps) {
+function CharacterCard({ character, isUnlocked, isEquipped, onEquip, onLockedPress }: CardProps) {
   const sigCount = character.signatureEmotes.length;
 
   // Rating + tier lookups. The default_player has no career level so we
@@ -115,8 +117,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
 
   return (
     <PressScale
-      onPress={isUnlocked ? onEquip : undefined}
-      disabled={!isUnlocked}
+      onPress={isUnlocked ? onEquip : onLockedPress}
       scaleTo={0.96}
       accessibilityRole="button"
       accessibilityLabel={
@@ -281,7 +282,25 @@ export function RosterScreen({ navigation }: Props) {
   const handleEquip = (id: string) => {
     if (id === equippedCharacterId) return;
     haptics.tap();
+    playSound('click');
     equipCharacter(id);
+  };
+
+  // Brief toast for locked character taps
+  const [lockedToast, setLockedToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lockedToast) return;
+    const t = setTimeout(() => setLockedToast(null), 1600);
+    return () => clearTimeout(t);
+  }, [lockedToast]);
+
+  const handleLockedPress = (c: RosterCharacter) => {
+    haptics.error?.();
+    playSound('error');
+    const hint = c.unlockedAtCareerLevel != null
+      ? `Unlocks at career level ${c.unlockedAtCareerLevel}`
+      : 'Complete career to unlock';
+    setLockedToast(hint);
   };
 
   return (
@@ -333,6 +352,7 @@ export function RosterScreen({ navigation }: Props) {
                     isUnlocked={unlockedCharacterIds.includes(character.id)}
                     isEquipped={character.id === equippedCharacterId}
                     onEquip={() => handleEquip(character.id)}
+                    onLockedPress={() => handleLockedPress(character)}
                   />
                   </StaggeredEntry>
                 ))}
@@ -343,6 +363,13 @@ export function RosterScreen({ navigation }: Props) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Locked-character toast */}
+      {lockedToast && (
+        <View style={styles.lockedToast} pointerEvents="none">
+          <Text style={styles.lockedToastText}>{lockedToast}</Text>
+        </View>
+      )}
     </ScreenBackground>
   );
 }
@@ -585,5 +612,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     fontWeight: weight.bold,
+  },
+  lockedToast: {
+    position: 'absolute',
+    bottom: 100,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.82)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+  },
+  lockedToastText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 0.3,
   },
 });

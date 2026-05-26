@@ -101,6 +101,14 @@ export function CareerCityScreen({ navigation, route }: Props) {
   const cityStars = levels.reduce((sum, l) => sum + (progress[l.id]?.stars ?? 0), 0);
   const maxStars = levels.length * 3;
 
+  // Brief inline toast for locked-level taps
+  const [lockedToast, setLockedToast] = useState(false);
+  useEffect(() => {
+    if (!lockedToast) return;
+    const t = setTimeout(() => setLockedToast(false), 1400);
+    return () => clearTimeout(t);
+  }, [lockedToast]);
+
   const handleNodePress = (level: CareerLevel) => {
     // Gate: only tappable if all prior levels in this city are completed,
     // OR this level is already completed (replay).
@@ -108,6 +116,8 @@ export function CareerCityScreen({ navigation, route }: Props) {
     const priorIncomplete = levels.slice(0, idx).some((l) => !progress[l.id]?.completed);
     if (priorIncomplete && !progress[level.id]?.completed) {
       haptics.error?.();
+      playSound('error');
+      setLockedToast(true);
       return;
     }
     haptics.tap();
@@ -356,6 +366,13 @@ export function CareerCityScreen({ navigation, route }: Props) {
           });
         }}
       />
+
+      {/* Locked-level toast */}
+      {lockedToast && (
+        <View style={styles.lockedToast} pointerEvents="none">
+          <Text style={styles.lockedToastText}>Complete the previous level first</Text>
+        </View>
+      )}
     </ScreenBackground>
   );
 }
@@ -1237,5 +1254,23 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     fontWeight: weight.bold,
     letterSpacing: 1,
+  },
+  lockedToast: {
+    position: 'absolute',
+    bottom: 100,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.82)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.3)',
+  },
+  lockedToastText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 0.3,
   },
 });
