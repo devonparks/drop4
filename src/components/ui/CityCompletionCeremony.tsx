@@ -121,7 +121,7 @@ export function CityCompletionCeremony() {
             }}
           >
             <Text style={[styles.kickerLabel, { color: city.accentColor }]}>CHAPTER {boss.chapter} · CLEARED</Text>
-            <Text style={[styles.cityNickname, { color: city.themeColor, textShadowColor: city.themeColor + '99' }]}>
+            <Text style={[styles.cityNickname, { color: city.themeColor, textShadow: `0px 0px 18px ${city.themeColor}99` }]}>
               {city.nickname.toUpperCase()}
             </Text>
             <Text style={styles.cityLocation}>{city.name}, {city.state}</Text>
@@ -231,8 +231,6 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 48,
     letterSpacing: 2,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
     textAlign: 'center',
   },
   cityLocation: {
@@ -250,9 +248,7 @@ const styles = StyleSheet.create({
   },
   star: {
     fontSize: 42,
-    textShadowColor: 'rgba(255,215,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadow: '0px 0px 12px rgba(255,215,0,0.5)',
   },
   bossLine: {
     fontFamily: fonts.body,

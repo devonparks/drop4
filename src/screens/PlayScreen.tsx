@@ -193,9 +193,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading, fontWeight: weight.black,
     fontSize: 32, color: '#ffffff',
     letterSpacing: 3,
-    textShadowColor: 'rgba(120,180,255,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(120,180,255,0.5)',
     marginBottom: -2,
   },
   statsLine: {

@@ -147,7 +147,7 @@ export function LevelIntroCard({ icon, label, rule, tint, onComplete }: LevelInt
         <Text
           style={[
             styles.label,
-            { color: tint, textShadowColor: `${tint}88` },
+            { color: tint, textShadow: `0px 0px 14px ${tint}88` },
           ]}
         >
           {label}
@@ -270,8 +270,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     letterSpacing: 2,
     textAlign: 'center',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
   },
   rule: {
     fontFamily: fonts.body,

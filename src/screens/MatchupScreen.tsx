@@ -499,14 +499,11 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 3,
     textTransform: 'uppercase',
-    textShadowColor: 'rgba(100,180,255,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadow: '0px 0px 10px rgba(100,180,255,0.4)',
   },
   courtNameBoss: {
     color: '#e94560',
-    textShadowColor: 'rgba(233,69,96,0.6)',
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(233,69,96,0.6)',
   },
   bossOverlay: {
     ...StyleSheet.absoluteFillObject,

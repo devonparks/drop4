@@ -1953,9 +1953,7 @@ const styles = StyleSheet.create({
     color: '#ffd54f',
     marginTop: 2,
     letterSpacing: 1.2,
-    textShadowColor: 'rgba(255,213,79,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
+    textShadow: '0px 0px 4px rgba(255,213,79,0.6)',
   },
   timerWrap: {
     flexDirection: 'row',
@@ -2072,9 +2070,7 @@ const styles = StyleSheet.create({
     top: 22,
     fontSize: 26,
     color: colors.coinGold,
-    textShadowColor: 'rgba(255,215,0,0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadow: '0px 0px 12px rgba(255,215,0,0.9)',
   },
   hintBestMoveBanner: {
     position: 'absolute',
@@ -2214,9 +2210,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 6,
     textAlign: 'center',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 24,
-    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadow: '0px 0px 24px rgba(255,215,0,0.5)',
   },
   goSubheadline: {
     fontFamily: fonts.body,
@@ -2356,9 +2350,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#2ecc71',
     letterSpacing: 3,
-    textShadowColor: 'rgba(46,204,113,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(46,204,113,0.8)',
     textAlign: 'center',
   },
   firstWinBanner: {
@@ -2384,9 +2376,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#FFD700',
     letterSpacing: 4,
-    textShadowColor: 'rgba(255,200,0,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadow: '0px 0px 20px rgba(255,200,0,0.8)',
   },
   goCard: {
     width: '92%',
@@ -2474,9 +2464,7 @@ const styles = StyleSheet.create({
   },
   goCharNameWinner: {
     color: colors.coinGold,
-    textShadowColor: 'rgba(255,215,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(255,215,0,0.5)',
   },
   goCenterVs: {
     fontFamily: fonts.heading,
@@ -2500,9 +2488,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.coinGold,
     letterSpacing: 3,
-    textShadowColor: 'rgba(255,215,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadow: '0px 0px 10px rgba(255,215,0,0.6)',
   },
   // Center score
   goCenterScore: {
@@ -2525,8 +2511,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 4,
     textAlign: 'center',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadow: '0px 0px 12px',
   },
   goScoreDivider: {
     flexDirection: 'row',
@@ -2892,9 +2877,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.coinGold,
     letterSpacing: 1,
-    textShadowColor: 'rgba(255,215,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadow: '0px 0px 12px rgba(255,215,0,0.5)',
   },
   goEventRow: {
     flexDirection: 'row',
@@ -2932,9 +2915,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 14,
     letterSpacing: 1.5,
-    textShadowColor: 'rgba(255,215,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(255,215,0,0.6)',
   },
   // Hero career star block — shown above rewards, replaces buried row
   goCareerStarHero: {
@@ -2955,9 +2936,7 @@ const styles = StyleSheet.create({
     color: '#ffd93d',
     letterSpacing: 2,
     marginTop: 10,
-    textShadowColor: 'rgba(255,215,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadow: '0px 0px 10px rgba(255,215,0,0.5)',
   },
   goStreakRow: {
     flexDirection: 'row',
@@ -3010,9 +2989,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#f1c40f',
     letterSpacing: 2,
-    textShadowColor: 'rgba(241,196,15,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(241,196,15,0.6)',
   },
   goPersonalBestSub: {
     fontFamily: fonts.body,

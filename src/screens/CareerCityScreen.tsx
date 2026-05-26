@@ -783,9 +783,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#ffffff',
     letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadow: '0px 2px 4px rgba(0,0,0,0.75)',
   },
   headerCity: {
     fontFamily: fonts.body,
@@ -825,9 +823,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingHorizontal: 24,
     marginBottom: 12,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.6)',
   },
   pathWrap: {
     position: 'relative',
@@ -858,9 +854,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
     fontWeight: weight.black,
     fontSize: 28,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadow: '0px 1px 3px rgba(0,0,0,0.8)',
   },
   nodeOvr: {
     fontFamily: fonts.body,
@@ -945,9 +939,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#ffffff',
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadow: '0px 1px 3px rgba(0,0,0,0.85)',
     maxWidth: 110,
   },
 
@@ -989,9 +981,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '900',
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.6)',
   },
   hudBtnLabel: {
     fontFamily: fonts.body,
@@ -999,9 +989,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     color: 'rgba(255,255,255,0.9)',
     letterSpacing: 0.8,
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.85)',
   },
 
   // Modal

@@ -491,9 +491,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 8,
     letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.8)',
   },
   nameBanner: {
     position: 'absolute',

@@ -229,9 +229,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textTransform: 'uppercase',
     letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadow: '0px 2px 4px rgba(0,0,0,0.4)',
   },
   labelSmall: {
     fontSize: 16,

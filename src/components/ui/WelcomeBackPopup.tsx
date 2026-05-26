@@ -201,9 +201,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#ffffff',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(255,200,80,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadow: '0px 0px 12px rgba(255,200,80,0.5)',
   },
   subtitle: {
     fontFamily: fonts.body,

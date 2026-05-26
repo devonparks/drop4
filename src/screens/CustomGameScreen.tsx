@@ -452,9 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: '#ffffff',
     letterSpacing: 3,
-    textShadowColor: 'rgba(231,76,60,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(231,76,60,0.4)',
   },
   subtitle: {
     fontFamily: fonts.body,

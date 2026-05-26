@@ -238,9 +238,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
     fontWeight: weight.black,
     lineHeight: undefined,
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadow: '0px 1px 3px rgba(0,0,0,0.85)',
   },
   ovrText: {
     fontFamily: fonts.body,

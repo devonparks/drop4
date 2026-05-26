@@ -500,8 +500,7 @@ const styles = StyleSheet.create({
   },
   dropArrow: {
     fontSize: 16,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(0,0,0,0.5)',
   },
   darkMatterBg: {
     position: 'absolute',

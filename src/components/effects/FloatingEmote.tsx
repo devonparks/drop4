@@ -143,8 +143,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#ffffff',
     letterSpacing: 1.5,
-    textShadowColor: 'rgba(255,140,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(255,140,0,0.6)',
   },
 });

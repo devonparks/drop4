@@ -447,7 +447,7 @@ function ShopItemCard({ item, isOwned, isEquipped, onPress, index, playerCoins }
                     position: 'absolute', top: 4, right: 6, zIndex: 2,
                     fontFamily: fonts.heading, fontWeight: weight.black, fontSize: 10,
                     color: '#ffffff', letterSpacing: 0.5, opacity: 0.95,
-                    textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+                    textShadow: '0px 1px 2px rgba(0,0,0,0.8)',
                   }}>
                     {String(outfitMeta.index).padStart(2, '0')}
                   </Text>
@@ -1446,7 +1446,7 @@ const s = StyleSheet.create({
   sectionHeaderText: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 16,
     color: '#ffffff', letterSpacing: 1.5,
-    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.3)',
   },
   sectionHeaderRight: {
     fontFamily: fonts.body, fontWeight: weight.semibold, fontSize: 11,

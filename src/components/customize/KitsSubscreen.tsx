@@ -1592,9 +1592,7 @@ const cwStyles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 16,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.7)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadow: '0px 1px 3px rgba(0,0,0,0.7)',
     zIndex: 1,
   },
   lockOverlay: {
@@ -1928,9 +1926,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 11,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.6)',
   },
   colorLockOverlay: {
     position: 'absolute' as const,

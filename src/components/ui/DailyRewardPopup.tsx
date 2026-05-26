@@ -277,8 +277,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 24,
     color: colors.coinGold, letterSpacing: 3,
-    textShadowColor: 'rgba(255,200,0,0.5)', textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(255,200,0,0.5)',
   },
   streak: { fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 13, color: colors.textSecondary, marginTop: 6, marginBottom: 12 },
   // Icon with golden glow
@@ -324,12 +323,11 @@ const styles = StyleSheet.create({
   rewardName: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 22, color: '#ffffff',
     marginBottom: 18, letterSpacing: 0.5,
-    textShadowColor: 'rgba(255,255,255,0.15)', textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
+    textShadow: '0px 0px 6px rgba(255,255,255,0.15)',
   },
   rewardNamePremium: {
     fontSize: 26, color: '#ffd966',
-    textShadowColor: 'rgba(255,180,40,0.7)', textShadowRadius: 14,
+    textShadow: '0px 0px 14px rgba(255,180,40,0.7)',
   },
   streakDots: { flexDirection: 'row', gap: 8, marginBottom: 22 },
   dot: {

@@ -101,9 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     color: '#ffffff',
     letterSpacing: 0.8,
-    textShadowColor: 'rgba(0,0,0,0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.75)',
     zIndex: 1,
   },
 });

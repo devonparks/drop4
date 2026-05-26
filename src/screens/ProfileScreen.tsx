@@ -590,9 +590,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     color: '#ffffff',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(255,200,80,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
+    textShadow: '0px 0px 14px rgba(255,200,80,0.5)',
   },
   playerTitleBadge: {
     marginTop: 2,
@@ -641,9 +639,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 10,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.4)',
   },
   nextRewardHint: {
     fontFamily: fonts.body,

@@ -455,9 +455,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#ffffff',
     letterSpacing: 1,
-    textShadowColor: 'rgba(255,140,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadow: '0px 0px 10px rgba(255,140,0,0.5)',
   },
   heroStats: {
     flexDirection: 'row',
@@ -482,9 +480,7 @@ const styles = StyleSheet.create({
   },
   repStar: {
     fontSize: 16,
-    textShadowColor: 'rgba(255,215,0,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
+    textShadow: '0px 0px 4px rgba(255,215,0,0.4)',
   },
 
   // Scroll
@@ -533,9 +529,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 24,
     letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadow: '0px 1px 4px rgba(0,0,0,0.6)',
   },
   zoneCity: {
     fontFamily: fonts.body,

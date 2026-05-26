@@ -398,9 +398,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 3,
     textAlign: 'center',
-    textShadowColor: 'rgba(241,196,15,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadow: '0px 0px 16px rgba(241,196,15,0.5)',
   },
   tierCountdownRow: {
     flexDirection: 'row',
@@ -501,9 +499,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 18,
     color: colors.coinGold,
-    textShadowColor: 'rgba(241,196,15,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadow: '0px 0px 10px rgba(241,196,15,0.4)',
   },
   premiumDesc: {
     fontFamily: fonts.body,

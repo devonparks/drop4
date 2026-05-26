@@ -585,8 +585,7 @@ const st = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 32,
     color: '#ffffff', letterSpacing: 3,
-    textShadowColor: 'rgba(0,210,255,0.5)', textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    textShadow: '0px 2px 10px rgba(0,210,255,0.5)',
   },
   headerSub: {
     fontFamily: fonts.body, fontWeight: weight.medium, fontSize: 12,
@@ -670,7 +669,7 @@ const st = StyleSheet.create({
   segmentLabel: {
     fontFamily: fonts.body, fontWeight: weight.bold, fontSize: 7,
     color: '#ffffff', textAlign: 'center', width: 54,
-    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.5)',
   },
   wheelCenter: {
     width: 52, height: 52, borderRadius: 26,
@@ -711,7 +710,7 @@ const st = StyleSheet.create({
   spinBtnText: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 22,
     color: '#ffffff', letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+    textShadow: '0px 2px 4px rgba(0,0,0,0.3)',
   },
 
   // ── Countdown ──

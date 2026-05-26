@@ -700,9 +700,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#ffffff',
     letterSpacing: 3,
-    textShadowColor: 'rgba(255,140,0,0.4)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadow: '0px 2px 8px rgba(255,140,0,0.4)',
   },
   subtitle: {
     fontFamily: fonts.body,
@@ -844,9 +842,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#ffffff',
     letterSpacing: 2.5,
-    textShadowColor: 'rgba(155,89,182,0.4)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadow: '0px 2px 8px rgba(155,89,182,0.4)',
   },
   weeklySubtitle: {
     fontFamily: fonts.body,
@@ -1155,9 +1151,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#ffffff',
     letterSpacing: 2.5,
-    textShadowColor: 'rgba(244,166,35,0.4)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadow: '0px 2px 8px rgba(244,166,35,0.4)',
   },
   achSubtitle: {
     fontFamily: fonts.body,

@@ -278,9 +278,7 @@ const styles = StyleSheet.create({
     fontWeight: weight.bold,
     fontSize: 13,
     color: '#ffffff',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0,0,0,0.5)',
     minWidth: 16,
   },
   // plusBtn / plusText styles removed alongside the "+" buy-more badge

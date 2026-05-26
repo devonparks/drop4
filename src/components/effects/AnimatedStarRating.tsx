@@ -122,9 +122,7 @@ function StarShape({ size, filled, gold }: { size: number; filled: boolean; gold
         style={{
           fontSize: size,
           color,
-          textShadowColor: glowColor,
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: size * 0.4,
+          textShadow: `0px 0px ${size * 0.4}px ${glowColor}`,
         }}
       >
         ★

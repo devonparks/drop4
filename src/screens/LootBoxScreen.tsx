@@ -791,7 +791,7 @@ const st = StyleSheet.create({
   title: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 26,
     color: '#ffffff', letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+    textShadow: '0px 1px 3px rgba(0,0,0,0.3)',
   },
   subtitle: {
     fontFamily: fonts.body, fontWeight: weight.regular, fontSize: 12,
@@ -894,7 +894,7 @@ const st = StyleSheet.create({
   openingTitle: {
     fontFamily: fonts.heading, fontWeight: weight.bold, fontSize: 36,
     color: '#ffffff', letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 8,
+    textShadow: '0px 3px 8px rgba(0,0,0,0.5)',
   },
   openingArrow: {
     fontSize: 28, color: 'rgba(255,255,255,0.5)', marginTop: 8,

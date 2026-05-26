@@ -121,8 +121,6 @@ const styles = StyleSheet.create({
   },
   coinEmoji: {
     fontSize: 28,
-    textShadowColor: 'rgba(255,215,0,0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadow: '0px 0px 8px rgba(255,215,0,0.6)',
   },
 });
