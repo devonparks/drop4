@@ -435,6 +435,7 @@ export function CategoryBrowserScreen() {
 
     if (have >= cost) {
       haptics.tap();
+      playSound('click');
       setConfirmDialog({
         title: `Unlock ${item.name}?`,
         message:

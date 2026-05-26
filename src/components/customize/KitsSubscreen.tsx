@@ -1116,7 +1116,7 @@ function BrowseAllModal({
             contentContainerStyle={styles.chipRow}
           >
             <Pressable
-              onPress={() => { haptics.tap(); setColorwayFilter(''); }}
+              onPress={() => { haptics.tap(); playSound('click'); setColorwayFilter(''); }}
               style={[
                 styles.chip,
                 { borderColor: !colorwayFilter ? '#ffb347' : 'rgba(255,255,255,0.18)',
@@ -1134,7 +1134,7 @@ function BrowseAllModal({
               return (
                 <Pressable
                   key={cw.id}
-                  onPress={() => { haptics.tap(); setColorwayFilter(cw.id); }}
+                  onPress={() => { haptics.tap(); playSound('click'); setColorwayFilter(cw.id); }}
                   style={[
                     styles.chip,
                     { borderColor: active ? '#ffb347' : 'rgba(255,255,255,0.18)',
