@@ -303,10 +303,10 @@ export function CareerMapScreen({ navigation }: Props) {
                     // active level.
                     return (
                       <StaggeredEntry key={lvl.id} index={idx}>
-                        <Pressable
+                        <PressScale
                           disabled={isLocked}
+                          scaleTo={0.95}
                           onPress={() => {
-                            haptics.tap();
                             playSound('click');
                             if (isNext) {
                               newGame(lvl.difficulty, true, {
@@ -367,7 +367,7 @@ export function CareerMapScreen({ navigation }: Props) {
                             stars={stars}
                             city={city}
                           />
-                        </Pressable>
+                        </PressScale>
                       </StaggeredEntry>
                     );
                   })}

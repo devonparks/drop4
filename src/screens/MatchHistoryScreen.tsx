@@ -122,7 +122,7 @@ const MatchRow = React.memo(function MatchRow({ match, index }: { match: MatchRe
 
       {/* Match info */}
       <View style={styles.matchInfo}>
-        <Text style={styles.opponent}>vs {match.opponent}</Text>
+        <Text style={styles.opponent} numberOfLines={1}>vs {match.opponent}</Text>
         <View style={styles.matchMetaRow}>
           <View style={[styles.modeBadge, { backgroundColor: modeBadge.color + '20', borderColor: modeBadge.color + '40' }]}>
             <Text style={[styles.modeBadgeText, { color: modeBadge.color }]}>{modeBadge.label}</Text>
