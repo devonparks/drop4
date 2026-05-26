@@ -554,15 +554,10 @@ function OpponentNode({
         {/* Level-type chip — small badge so players can tell a timed level,
             puzzle, or big-board level apart from a normal match at a glance.
             Boss already has rays/crown treatment so skip the chip there. */}
-        {!isLocked && !level.isBoss && (() => {
-          // Phase 2 types (jeopardy, moves_limit) take priority — they're
-          // the most distinct experiences, so the chip should name them
-          // even if the level also happens to be a big board or timed.
+        {!level.isBoss && (() => {
           const icon =
             level.type === 'jeopardy' || level.settings.rewardMultiplier ? '💰' :
             level.type === 'moves_limit' || level.settings.movesLimit ? '🎯' :
-            // Career overhaul phase 1: obstacle chip — concrete-block
-            // glyph reads instantly against the existing icon language.
             level.type === 'obstacle' || (level.settings.obstacleCells && level.settings.obstacleCells.length > 0) ? '🧱' :
             level.type === 'speed' || (level.settings.timerSeconds && level.settings.timerSeconds <= 5) ? '⚡' :
             level.type === 'timed' || level.settings.timerSeconds ? '⏱️' :
@@ -576,7 +571,7 @@ function OpponentNode({
           if (!icon) return null;
           const isPhase2 = level.type === 'jeopardy' || level.type === 'moves_limit' || level.type === 'obstacle';
           return (
-            <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2, { pointerEvents: 'none' }]}>
+            <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2, isLocked && { opacity: 0.4 }, { pointerEvents: 'none' }]}>
               <Text style={[styles.nodeTypeChipText, isPhase2 && styles.nodeTypeChipTextPhase2]}>{icon}</Text>
             </View>
           );
