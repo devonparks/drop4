@@ -1983,6 +1983,14 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {winner === 1 && personalBest !== null && moveCount < personalBest && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'⚡'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: '#00bcd4' }]}>
+                      NEW BEST: {moveCount} moves (was {personalBest})
+                    </Text>
+                  </View>
+                )}
 
                 {/* Series complete */}
                 {isSeriesMode && seriesOver && (
