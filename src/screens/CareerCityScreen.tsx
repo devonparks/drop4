@@ -613,6 +613,7 @@ interface OpponentCardModalProps {
 
 function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCardModalProps) {
   const slide = useRef(new Animated.Value(0)).current;
+  const progress = useCareerStore((s) => s.progress);
 
   useEffect(() => {
     Animated.spring(slide, {
@@ -626,6 +627,10 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
   if (!level) return null;
 
   const rating = CAREER_RATINGS[level.id];
+  const levelProgress = progress[level.id];
+  const isComplete = !!levelProgress?.completed;
+  const currentStars = levelProgress?.stars ?? 0;
+  const bestMoves = levelProgress?.bestMoves ?? 0;
 
   const diffLabel = level.difficulty === 'easy' ? 'EASY' : level.difficulty === 'hard' ? 'HARD' : 'MEDIUM';
   const diffColor = level.difficulty === 'easy' ? '#4caf50' : level.difficulty === 'hard' ? '#e74c3c' : '#ff9800';
@@ -686,6 +691,28 @@ function OpponentCardModal({ level, city, visible, onClose, onPlay }: OpponentCa
             <View style={[styles.modalPill, { borderColor: diffColor, alignSelf: 'center', marginTop: 8 }]}>
               <Text style={[styles.modalPillText, { color: diffColor, fontWeight: '800' }]}>{diffLabel}</Text>
             </View>
+
+            {isComplete && (
+              <View style={styles.modalStarsRow}>
+                {[0, 1, 2].map((i) => (
+                  <Text key={i} style={[styles.modalStar, { color: i < currentStars ? '#ffd700' : 'rgba(255,255,255,0.2)' }]}>★</Text>
+                ))}
+              </View>
+            )}
+
+            {isComplete && bestMoves > 0 && (
+              <Text style={styles.modalBestMoves}>Best: {bestMoves} moves</Text>
+            )}
+
+            {level.starThresholds && (
+              <Text style={styles.modalStarThresholds}>
+                ★★★ ≤{level.starThresholds.three} moves  ·  ★★ ≤{level.starThresholds.two} moves
+              </Text>
+            )}
+
+            {isComplete && currentStars < 3 && (
+              <Text style={styles.modalReplayNudge}>Can you earn more stars?</Text>
+            )}
 
             {modifierPills.length > 0 && (
               <View style={styles.modalPills}>
@@ -1086,6 +1113,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 12,
+  },
+  modalStarsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 10,
+  },
+  modalStar: {
+    fontSize: 22,
+  },
+  modalBestMoves: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(200,220,255,0.55)',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  modalStarThresholds: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: 'rgba(255,215,0,0.7)',
+    textAlign: 'center',
+    marginTop: 6,
+    letterSpacing: 0.3,
+  },
+  modalReplayNudge: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: colors.orange,
+    textAlign: 'center',
+    marginTop: 4,
   },
   modalPills: {
     flexDirection: 'row',
