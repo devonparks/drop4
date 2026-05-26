@@ -1698,6 +1698,30 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {streakReward && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🔥'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.orange }]}>
+                      {streakReward.milestone} Win Streak! +{streakReward.coins} 🪙{streakReward.lootBox ? ` + ${streakReward.lootBox} Box` : ''}
+                    </Text>
+                  </View>
+                )}
+                {streakBrokenAt && streakBrokenAt >= 3 && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'💔'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: '#e74c3c' }]}>
+                      {streakBrokenAt} Win Streak Broken
+                    </Text>
+                  </View>
+                )}
+                {completedChallengeName && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'✅'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.teal }]}>
+                      Challenge Complete: {completedChallengeName}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Series complete */}
                 {isSeriesMode && seriesOver && (
