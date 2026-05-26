@@ -603,8 +603,9 @@ export function GameScreen({ navigation }: Props) {
       const careerLevelId = params.careerLevelId;
       if (careerLevelId) {
         setWasCareerLevel(true);
-        // Star rating: 3 stars if < 15 moves, 2 if < 25, 1 otherwise
-        const starRating = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+        const lvlData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
+        const th = lvlData?.starThresholds ?? { three: 14, two: 24 };
+        const starRating = moveCount <= th.three ? 3 : moveCount <= th.two ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
         // Award career reward(s)
         const careerReward = params.careerLevelReward;
@@ -706,7 +707,12 @@ export function GameScreen({ navigation }: Props) {
       setShowCoinBurst(true);
       // Win celebration variety
       const playerMoveCount = Math.ceil(moveCount / 2);
-      const careerStars = params.careerLevelId ? (moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1) : 0;
+      const careerStars = (() => {
+        if (!params.careerLevelId) return 0;
+        const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+        const t = cl?.starThresholds ?? { three: 14, two: 24 };
+        return moveCount <= t.three ? 3 : moveCount <= t.two ? 2 : 1;
+      })();
       const wasLosingInSeries = scores.player2 > scores.player1;
       if (playerMoveCount <= 8) {
         setCelebrationText('LIGHTNING WIN! \u26A1');
@@ -1686,7 +1692,9 @@ export function GameScreen({ navigation }: Props) {
 
                 {/* Career star rating */}
                 {wasCareerLevel && status === 'won' && winner === 1 && (() => {
-                  const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+                  const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+                  const t = cl?.starThresholds ?? { three: 14, two: 24 };
+                  const earnedStars = moveCount <= t.three ? 3 : moveCount <= t.two ? 2 : 1;
                   const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
                   return (
                     <View style={styles.goCareerStarCompact}>
