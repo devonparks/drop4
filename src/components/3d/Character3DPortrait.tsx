@@ -130,7 +130,9 @@ export function Character3DPortrait({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!loaded) return;
-    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+    const anim = Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true });
+    anim.start();
+    return () => anim.stop();
   }, [loaded, fadeAnim]);
 
   const stateForRender = useMemo<CharacterState | null>(() => {
