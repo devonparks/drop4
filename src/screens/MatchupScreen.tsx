@@ -28,6 +28,7 @@ import { playSound } from '../services/audio';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { boxShadow } from '../utils/shadow';
+import { ALL_CAREER_LEVELS } from '../data/careerLevels';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 // ═══════════════════════════════════
@@ -404,6 +405,20 @@ export function MatchupScreen({ navigation }: Props) {
                     )}
                   </Animated.View>
                 )}
+
+                {/* Star targets for career levels */}
+                {params.mode === 'career' && params.careerLevelId && (() => {
+                  const lvl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+                  const th = lvl?.starThresholds;
+                  if (!th) return null;
+                  return (
+                    <Animated.View entering={FadeInUp.delay(800).duration(400)} style={styles.starTargets}>
+                      <Text style={styles.starTargetText}>
+                        ★★★ ≤{th.three} moves  ·  ★★ ≤{th.two} moves
+                      </Text>
+                    </Animated.View>
+                  );
+                })()}
               </>
             )}
           </View>
@@ -766,6 +781,18 @@ const styles = StyleSheet.create({
     fontWeight: weight.regular,
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  starTargets: {
+    marginTop: 6,
+    alignItems: 'center',
+  },
+  starTargetText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 10,
+    color: colors.coinGold,
+    letterSpacing: 0.3,
+    opacity: 0.7,
   },
   // ── Bottom area ──
   bottomArea: {
