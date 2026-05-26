@@ -1003,6 +1003,7 @@ export function GameScreen({ navigation }: Props) {
     setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
     setShowConfetti(false);
     setWasCareerLevel(false);
+    setUnlockedCareerRewards([]);
     setFreeHintsRemaining(3);
     setSkipsRemaining(1);
     setBombsRemaining(1);
@@ -1019,7 +1020,17 @@ export function GameScreen({ navigation }: Props) {
     setComebackCoins(null);
     setXpEarned(0);
     setTotalCoinsEarned(0);
-    newGame(difficulty, isVsAi);
+    const careerLevel = params.careerLevelId != null
+      ? ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId)
+      : undefined;
+    const settings = careerLevel ? {
+      rows: careerLevel.settings.rows,
+      cols: careerLevel.settings.cols,
+      connectCount: careerLevel.settings.connectCount,
+      timerSeconds: careerLevel.settings.timerSeconds || 0,
+      startingPlayer: (careerLevel.settings.playerGoesFirst === false ? 2 : 1) as 1 | 2,
+    } : undefined;
+    newGame(settings ? careerLevel!.difficulty : difficulty, isVsAi, settings);
   };
 
   const handleBack = () => {
