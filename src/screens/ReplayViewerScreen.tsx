@@ -194,6 +194,7 @@ export function ReplayViewerScreen() {
           <View style={rStyles.watchHeader}>
             <Pressable
               onPress={() => { haptics.tap(); playSound('click'); setWatching(null); setIsPlaying(false); }}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
               style={rStyles.backBtn}
               accessibilityRole="button"
               accessibilityLabel="Back to replay list"

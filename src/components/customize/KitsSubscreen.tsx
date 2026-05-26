@@ -1079,6 +1079,7 @@ function BrowseAllModal({
               playSound('click');
               onClose();
             }}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             style={browseStyles.closeBtn}
             accessibilityRole="button"
             accessibilityLabel="Close browse"
@@ -1328,6 +1329,7 @@ function SkinPicker({
           <Pressable
             key={hex}
             onPress={() => onPick(hex)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[
               styles.skinSwatchWrap,
               { borderColor: active ? '#ffb347' : 'rgba(255,255,255,0.18)' },
@@ -1379,6 +1381,7 @@ function UnlockableColorRow({
             <Pressable
               key={tc.id}
               onPress={() => (owned ? onPickOwned(tc.hex) : onPickLocked())}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={[
                 styles.colorSwatch,
                 {
@@ -1461,6 +1464,7 @@ function ColorwayPickerModal({
           </Text>
           <Pressable
             onPress={onClose}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             style={cwStyles.closeBtn}
             accessibilityRole="button"
             accessibilityLabel="Close colorway picker"

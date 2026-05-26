@@ -331,6 +331,7 @@ export function DailySpinWheel({ visible, onClose }: DailySpinWheelProps) {
           {(!spinning || showResult) && (
             <Pressable
               style={st.closeBtn}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               onPress={handleClose}
               accessibilityRole="button"
               accessibilityLabel="Close daily spin"

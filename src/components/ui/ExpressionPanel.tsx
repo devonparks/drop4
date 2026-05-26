@@ -151,7 +151,7 @@ export function ExpressionPanel({
             </Pressable>
           ))}
         </View>
-        <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close panel">
+        <Pressable onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close panel">
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
       </View>
