@@ -389,6 +389,7 @@ export const CITY_RECIPES: CityRecipe[] = [
   {
     id: 'chicago', name: 'Chicago', state: 'IL', nickname: 'The Cage',
     tagline: 'Puzzle courts. Out-think or get out.',
+    unlockedAfterCityId: 'harlem',
     themeColor: '#3498db', accentColor: '#5dade2',
     skyGradient: ['#0a1e3c', '#1a4a7a', '#3498db'],
     mapPosition: { xPct: 60, yPct: 32 },
