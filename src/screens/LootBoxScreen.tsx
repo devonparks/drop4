@@ -296,6 +296,9 @@ function ItemRevealScreen({ result, onContinue }: { result: OpenBoxResult; onCon
     emote: 'EMOTE',
     partVariant: 'COLORWAY',
     tintColor: 'COLOR',
+    emoji: 'EMOJI',
+    phrase: 'PHRASE',
+    outfitColorway: 'COLORWAY',
     coins: 'COINS',
     gems: 'GEMS',
   } as const;

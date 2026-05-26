@@ -57,6 +57,8 @@ const CATEGORY_LABELS: Record<LootBoxItem['category'], string> = {
   outfits: 'Outfit Pack',
   pets: 'Pet',
   emotes: 'Emote',
+  emojis: 'Emoji',
+  phrases: 'Phrase',
   currency: 'Currency',
 };
 
@@ -71,6 +73,8 @@ const CATEGORY_COLOR: Record<LootBoxItem['category'], string> = {
   outfits: '#ffb347',
   pets: '#3eb489',
   emotes: '#c997e7',
+  emojis: '#ffd93d',
+  phrases: '#6BCB77',
   currency: '#ffd700',
 };
 
@@ -85,6 +89,8 @@ const CATEGORY_GLYPH: Record<LootBoxItem['category'], string> = {
   outfits: '\u{1F455}', // 👕
   pets:    '\u{1F43E}', // 🐾
   emotes:  '\u{1F483}', // 💃
+  emojis:  '\u{1F60E}', // 😎
+  phrases: '\u{1F4AC}', // 💬
   currency: '\u{1FA99}', // 🪙
 };
 

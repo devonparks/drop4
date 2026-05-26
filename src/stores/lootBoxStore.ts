@@ -60,6 +60,14 @@ import {
   DUPE_SHARDS_AWARDED as ENGINE_DUPE_SHARDS_AWARDED,
 } from '@amg/cosmetic-runtime';
 import { ALL_TINT_COLORS, TINT_SLOT_LABEL, type TintColor } from '../data/colorRegistry';
+import {
+  ALL_EMOJIS, ALL_PHRASES,
+  type EmojiItem, type PhraseItem, type ExpressionRarity,
+} from '../data/expressionCatalog';
+import {
+  getAllOutfitColorwayItems, parseColorwayDropId, isColorwayDropId,
+  type OutfitColorwayItem,
+} from '../data/outfitColorways';
 
 // ─── Rarity ────────────────────────────────────────────────────────────
 //
@@ -97,8 +105,11 @@ function normalizeRarity(r: string | undefined): LootBoxRarity | null {
 export type LootItemType =
   | 'board' | 'pieces' | 'dropFx' | 'winFx' | 'frame'
   | 'outfit' | 'pet' | 'emote'
-  | 'partVariant'   // Path A variants (2026-05-04) — (partName, variantId) tuple drops
-  | 'tintColor'     // Unlockable material tint colors (2026-05-24) — per-slot color unlocks
+  | 'partVariant'      // Path A variants (2026-05-04) — (partName, variantId) tuple drops
+  | 'tintColor'        // Unlockable material tint colors (2026-05-24) — per-slot color unlocks
+  | 'emoji'            // Expression emojis (2026-05-25) — unlockable emoji reactions
+  | 'phrase'           // Expression phrases (2026-05-25) — unlockable quick-chat phrases
+  | 'outfitColorway'   // Per-outfit color variants (2026-05-25) — outfit x colorway presets
   | 'coins' | 'gems';
 
 export interface LootBoxItem {
@@ -128,7 +139,7 @@ export interface LootBoxItem {
  *  filler coin/gem drops so all items share the same shape. */
 export type LootCategory =
   | 'boards' | 'pieces' | 'effects' | 'wins' | 'frames'
-  | 'outfits' | 'pets' | 'emotes' | 'currency';
+  | 'outfits' | 'pets' | 'emotes' | 'emojis' | 'phrases' | 'currency';
 
 // ─── Box catalog ───────────────────────────────────────────────────────
 
@@ -169,6 +180,8 @@ export const LOOT_BOXES: LootBox[] = [
   { id: 'boards_box',  name: 'Boards Box',  tier: 'gold', cost: 750, themedCategory: 'boards',  themedAccent: '#3a78d4', blurb: 'Bias toward board skins.' },
   { id: 'pieces_box',  name: 'Pieces Box',  tier: 'gold', cost: 750, themedCategory: 'pieces',  themedAccent: '#e63946', blurb: 'Bias toward piece skins.' },
   { id: 'emotes_box',  name: 'Emotes Box',  tier: 'gold', cost: 750, themedCategory: 'emotes',  themedAccent: '#c997e7', blurb: 'Bias toward emotes + dances.' },
+  { id: 'emoji_box',   name: 'Emoji Box',   tier: 'gold', cost: 500, themedCategory: 'emojis',  themedAccent: '#ffd93d', blurb: 'Bias toward emoji reactions.' },
+  { id: 'phrase_box',  name: 'Phrase Box',   tier: 'gold', cost: 500, themedCategory: 'phrases', themedAccent: '#6BCB77', blurb: 'Bias toward quick-chat phrases.' },
 
   // Featured (weekly hand-curated rotation, see featuredItemsForWeek)
   { id: 'featured_box', name: 'Featured Box', tier: 'featured', cost: 1500, themedAccent: '#f1c40f', blurb: 'This week’s hand-picked drops.' },
@@ -197,15 +210,17 @@ export const TIER_RARITY_WEIGHTS: Record<LootBoxTier, RarityWeights> = {
 // appears in a generic (non-themed) box. Currency is the filler so a roll
 // that finds zero matching items in pool falls back gracefully.
 const GENERIC_CATEGORY_WEIGHTS: Record<LootCategory, number> = {
-  boards: 14,
-  pieces: 14,
-  effects: 8,
-  wins: 8,
-  frames: 6,
-  outfits: 25,
-  pets: 12,
-  emotes: 12,
-  currency: 1, // small chance of bonus coin even from a non-currency roll
+  boards: 10,
+  pieces: 10,
+  effects: 6,
+  wins: 6,
+  frames: 4,
+  outfits: 22,   // includes outfit colorways — largest pool
+  pets: 8,
+  emotes: 10,
+  emojis: 10,    // expression emojis
+  phrases: 8,    // expression phrases
+  currency: 1,   // small chance of bonus coin even from a non-currency roll
 };
 
 /** Themed boxes bump their target category to ~60% of the category roll
@@ -233,7 +248,7 @@ interface PoolBucket {
 }
 
 function emptyByCatRarity(): PoolBucket['byCatRarity'] {
-  const cats: LootCategory[] = ['boards', 'pieces', 'effects', 'wins', 'frames', 'outfits', 'pets', 'emotes', 'currency'];
+  const cats: LootCategory[] = ['boards', 'pieces', 'effects', 'wins', 'frames', 'outfits', 'pets', 'emotes', 'emojis', 'phrases', 'currency'];
   const out: PoolBucket['byCatRarity'] = {} as PoolBucket['byCatRarity'];
   for (const c of cats) {
     out[c] = { common: [], rare: [], epic: [], legendary: [] };
@@ -264,6 +279,24 @@ function emoteToLoot(e: AnimationMeta): LootBoxItem {
   if (price >= 900) rarity = 'epic';
   else if (price >= 400) rarity = 'rare';
   return { id: e.id, name: e.name, type: 'emote', rarity, category: 'emotes' };
+}
+
+function emojiToLoot(e: EmojiItem): LootBoxItem {
+  return { id: e.id, name: `${e.id} ${e.label}`, type: 'emoji', rarity: e.rarity, category: 'emojis' };
+}
+
+function phraseToLoot(p: PhraseItem): LootBoxItem {
+  return { id: p.id, name: p.id, type: 'phrase', rarity: p.rarity, category: 'phrases' };
+}
+
+function colorwayToLoot(c: OutfitColorwayItem): LootBoxItem {
+  return {
+    id: c.id,
+    name: c.name,
+    type: 'outfitColorway',
+    rarity: c.preset.rarity,
+    category: 'outfits', // colorways bias toward outfit themed box
+  };
 }
 
 // ─── Part-variant drop helpers (Path A, 2026-05-04) ────────────────
@@ -359,6 +392,24 @@ function buildPool(): PoolBucket {
   for (const p of Object.values(PETS)) if (p.price > 0) add(petToLoot(p));
   for (const e of HUMAN_EMOTES) if ((e.price ?? 0) > 0) add(emoteToLoot(e));
 
+  // Emojis — unlockable expression emojis. Starters excluded.
+  for (const emoji of ALL_EMOJIS) {
+    if (emoji.starter) continue;
+    add(emojiToLoot(emoji));
+  }
+
+  // Phrases — unlockable expression phrases. Starters excluded.
+  for (const phrase of ALL_PHRASES) {
+    if (phrase.starter) continue;
+    add(phraseToLoot(phrase));
+  }
+
+  // Outfit colorways — per-outfit preset color variants.
+  // ~129 human outfits x 15 presets = ~1,935 items.
+  for (const cw of getAllOutfitColorwayItems()) {
+    add(colorwayToLoot(cw));
+  }
+
   // Tint colors — per-slot unlockable material colors. Starters are
   // free (always owned), so they're excluded from the drop pool.
   for (const tc of ALL_TINT_COLORS) {
@@ -397,6 +448,20 @@ export function getLootItemById(id: string): LootBoxItem | null {
   if (id.includes(VARIANT_ID_SEP)) {
     const { partName, variantId } = parseVariantDropId(id);
     return mintPartVariantItem(partName, variantId, 'common');
+  }
+  // Colorway id fallback — synthesizes on-demand for outfit colorway
+  // ids that match the `colorway:outfitId:colorwayId` pattern.
+  if (isColorwayDropId(id)) {
+    const parsed = parseColorwayDropId(id);
+    if (parsed) {
+      return {
+        id,
+        name: `${parsed.outfitId} — ${parsed.colorwayId}`,
+        type: 'outfitColorway' as LootItemType,
+        rarity: 'common' as LootBoxRarity,
+        category: 'outfits' as LootCategory,
+      };
+    }
   }
   return null;
 }
@@ -616,6 +681,21 @@ export function isLootItemOwned(item: LootBoxItem): boolean {
     case 'pet':     return usePetStore.getState().ownedPets.includes(item.id as PetId);
     case 'emote':   return useShopStore.getState().ownedEmotes.includes(item.id);
     case 'tintColor': return useCharacterStore.getState().isTintColorOwned(item.id);
+    case 'emoji': {
+      const emojiItem = ALL_EMOJIS.find(e => e.id === item.id);
+      if (emojiItem?.starter) return true;
+      return useShopStore.getState().ownedEmojis.includes(item.id);
+    }
+    case 'phrase': {
+      const phraseItem = ALL_PHRASES.find(p => p.id === item.id);
+      if (phraseItem?.starter) return true;
+      return useShopStore.getState().ownedPhrases.includes(item.id);
+    }
+    case 'outfitColorway': {
+      const parsed = parseColorwayDropId(item.id);
+      if (!parsed) return false;
+      return useCharacterStore.getState().isOutfitColorwayOwned(parsed.outfitId, parsed.colorwayId);
+    }
     case 'coins':
     case 'gems':    return false; // currency is never a "dupe"
   }
@@ -639,6 +719,13 @@ function grantItem(item: LootBoxItem): void {
     case 'pet':     usePetStore.getState().unlockPet(item.id as PetId); break;
     case 'emote':   shop.purchaseEmote(item.id, 0); break;
     case 'tintColor': useCharacterStore.getState().unlockTintColor(item.id); break;
+    case 'emoji':   shop.purchaseEmoji(item.id, 0); break;
+    case 'phrase':  shop.purchasePhrase(item.id, 0); break;
+    case 'outfitColorway': {
+      const parsed = parseColorwayDropId(item.id);
+      if (parsed) useCharacterStore.getState().unlockOutfitColorway(parsed.outfitId, parsed.colorwayId);
+      break;
+    }
     case 'coins':   if (item.value) shop.addCoins(item.value); break;
     case 'gems':    if (item.value) shop.addGems(item.value); break;
   }
