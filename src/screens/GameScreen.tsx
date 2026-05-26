@@ -1242,6 +1242,20 @@ export function GameScreen({ navigation }: Props) {
                 </Text>
               );
             })()}
+            {/* Live star tracker for career levels */}
+            {params.careerLevelId != null && status === 'playing' && (() => {
+              const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
+              const th = cl?.starThresholds ?? { three: 14, two: 24 };
+              const playerMoves = Math.ceil(moveCount / 2);
+              const projected = playerMoves <= th.three ? 3 : playerMoves <= th.two ? 2 : 1;
+              return (
+                <View style={styles.starTracker}>
+                  {[1, 2, 3].map(i => (
+                    <Text key={i} style={[styles.starTrackerStar, { color: i <= projected ? '#ffd700' : 'rgba(255,255,255,0.2)' }]}>★</Text>
+                  ))}
+                </View>
+              );
+            })()}
             {/* Jeopardy reward multiplier indicator */}
             {params.rewardMultiplier && params.rewardMultiplier >= 2 && status === 'playing' && (
               <Text style={styles.jeopardyLabel}>💰 {params.rewardMultiplier}× JACKPOT</Text>
@@ -2037,6 +2051,16 @@ const styles = StyleSheet.create({
   },
   movesLimitLabelWarn: {
     color: '#ff4081',
+  },
+  starTracker: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 2,
+    marginTop: 2,
+  },
+  starTrackerStar: {
+    fontSize: 14,
+    textShadow: '0px 0px 6px rgba(255,215,0,0.5)',
   },
   jeopardyLabel: {
     fontFamily: fonts.body,
