@@ -10,7 +10,7 @@
  *
  * The tint system in @amg/character-runtime applies these as runtime
  * material overrides via SidekickColorProperty names (e.g. 'Hair 01',
- * 'Outfit 01 Primary'). This registry defines WHICH colors exist and
+ * 'Tops'). This registry defines WHICH colors exist and
  * gates access behind ownership.
  */
 
@@ -43,9 +43,9 @@ export interface TintColor {
 
 export const TINT_SLOT_PROPERTY: Record<TintSlot, string> = {
   hair:  'Hair 01',
-  tops:  'Outfit 01 Primary',
-  pants: 'Outfit 01 Secondary',
-  shoes: 'Outfit 01 Tertiary',
+  tops:  'Tops',
+  pants: 'Bottoms',
+  shoes: 'Shoes',
 };
 
 export const TINT_SLOT_LABEL: Record<TintSlot, string> = {

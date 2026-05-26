@@ -26,6 +26,7 @@ import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
 import { STARTER_TINT_COLORS } from '../data/colorRegistry';
 import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
 import { DEFAULT_COLORS_BY_SPECIES } from '@amg/character-runtime/types';
+import { COLORWAY_BY_ID } from '../data/outfitColorways';
 
 // AMG character state in the store stays loosely typed (Record<string,
 // unknown>) so the store doesn't take a hard import dep on the runtime
@@ -99,6 +100,15 @@ interface CharacterStoreState {
    *  via STARTER_TINT_COLORS set) and never appear here. */
   ownedTintColors: string[];
 
+  /** Per-outfit colorway ownership. Each outfit can have N named colorways
+   *  (e.g. "miami", "stealth", "lakers") unlocked independently. The
+   *  default colorway is always free when the outfit is owned.
+   *  Key = outfitId, value = array of owned colorway preset ids. */
+  ownedOutfitColorways: Record<string, string[]>;
+
+  /** Currently-equipped outfit colorway id. Empty string = default. */
+  equippedOutfitColorway: string;
+
   // ── Actions ──
   setAmgCharacter: (next: AmgCharacterState) => void;
   /** Equip a single AMG part (Torso, Hair, AttachmentBack, etc.) into
@@ -142,6 +152,12 @@ interface CharacterStoreState {
   unlockTintColor: (colorId: string) => void;
   /** True when the player owns this tint color (or it's a starter). */
   isTintColorOwned: (colorId: string) => boolean;
+  /** Unlock a specific colorway for an outfit. */
+  unlockOutfitColorway: (outfitId: string, colorwayId: string) => void;
+  /** True when the player owns this (outfit, colorway) combo. */
+  isOutfitColorwayOwned: (outfitId: string, colorwayId: string) => boolean;
+  /** Apply a colorway to the current outfit — sets Tops/Bottoms/Shoes. */
+  equipOutfitColorway: (colorwayId: string) => void;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -158,6 +174,8 @@ interface PersistedCharacter {
   equippedPartVariant?: Record<string, string>;
   equippedOutfitVariant?: string;
   ownedTintColors?: string[];
+  ownedOutfitColorways?: Record<string, string[]>;
+  equippedOutfitColorway?: string;
   /** Legacy field — pre-Path-A migration. Read once on load to recover the
    *  player's last-equipped outfit; never written. After the first load
    *  the migrated value lives in `equippedOutfitId`. */
@@ -207,6 +225,8 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
   equippedPartVariant: {},
   equippedOutfitVariant: DEFAULT_VARIANT_ID,
   ownedTintColors: [],
+  ownedOutfitColorways: {},
+  equippedOutfitColorway: '',
 
   setAmgCharacter: (next) => set({ amgCharacter: next }),
 
@@ -353,7 +373,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
   }),
 
   // ── Tint color ownership API ──────────────────────────────────
-  // Unlockable material tint colors (Hair 01, Outfit 01 Primary, etc.)
+  // Unlockable material tint colors (Hair 01, Tops, Bottoms, Shoes)
   // from the color registry. Starter colors are always owned via
   // STARTER_TINT_COLORS — no unlock needed. Non-starter colors drop
   // from loot boxes and are tracked here.
@@ -367,6 +387,66 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     if (STARTER_TINT_COLORS.has(colorId)) return true;
     return get().ownedTintColors.includes(colorId);
   },
+
+  // ── Outfit colorway API ─────────────────────────────────────────
+  // Per-outfit preset color variants. Each outfit can have N named
+  // colorways unlocked (Miami, Stealth, etc.). Default is always free
+  // when the outfit is owned. Equipping applies the preset's
+  // Primary/Secondary/Tertiary to the character.
+
+  unlockOutfitColorway: (outfitId, colorwayId) => set((s) => {
+    const existing = s.ownedOutfitColorways[outfitId] ?? [];
+    if (existing.includes(colorwayId)) return s;
+    return {
+      ownedOutfitColorways: {
+        ...s.ownedOutfitColorways,
+        [outfitId]: [...existing, colorwayId],
+      },
+    };
+  }),
+
+  isOutfitColorwayOwned: (outfitId, colorwayId) => {
+    const list = get().ownedOutfitColorways[outfitId];
+    return !!list && list.includes(colorwayId);
+  },
+
+  equipOutfitColorway: (colorwayId) => set((s) => {
+    const current = s.amgCharacter as unknown as CharacterState | null;
+    if (!current) return { equippedOutfitColorway: colorwayId };
+
+    // Default colorway — restore species defaults
+    if (!colorwayId || colorwayId === '') {
+      const species = (current as any).species ?? 'Human';
+      const defaults = DEFAULT_COLORS_BY_SPECIES[species as keyof typeof DEFAULT_COLORS_BY_SPECIES]
+        ?? DEFAULT_COLORS_BY_SPECIES.Human;
+      const colors = {
+        ...(current.colors ?? {}),
+        'Tops': defaults['Tops'],
+        'Bottoms': defaults['Bottoms'],
+        'Shoes': defaults['Shoes'],
+      };
+      return {
+        amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+        equippedOutfitColorway: '',
+      };
+    }
+
+    // Look up the colorway preset
+    const preset = COLORWAY_BY_ID[colorwayId];
+    if (!preset) return { equippedOutfitColorway: colorwayId };
+
+    const colors = {
+      ...(current.colors ?? {}),
+      'Tops': preset.primary,
+      'Bottoms': preset.secondary,
+      'Shoes': preset.tertiary,
+    };
+
+    return {
+      amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+      equippedOutfitColorway: colorwayId,
+    };
+  }),
 
   // ── Outfit variant ("camo") API ──────────────────────────────────
   // CoD-camo model: selecting a variant applies its color scheme to the
@@ -386,9 +466,9 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         ?? DEFAULT_COLORS_BY_SPECIES.Human;
       const colors = {
         ...(current.colors ?? {}),
-        'Outfit 01 Primary': defaults['Outfit 01 Primary'],
-        'Outfit 01 Secondary': defaults['Outfit 01 Secondary'],
-        'Outfit 01 Tertiary': defaults['Outfit 01 Tertiary'],
+        'Tops': defaults['Tops'],
+        'Bottoms': defaults['Bottoms'],
+        'Shoes': defaults['Shoes'],
       };
       return {
         amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
@@ -400,14 +480,11 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     const variant = DEFAULT_PALETTE.find((v) => v.id === variantId);
     if (!variant) return { equippedOutfitVariant: variantId };
 
-    // Apply: color → Primary (torso/arms), accent|color → Secondary
-    // (hips/legs), color → Tertiary (feet). Duo-chrome variants get
-    // a two-tone look; solid variants are uniform across all regions.
     const colors = {
       ...(current.colors ?? {}),
-      'Outfit 01 Primary': variant.color,
-      'Outfit 01 Secondary': variant.accent ?? variant.color,
-      'Outfit 01 Tertiary': variant.accent ? variant.color : variant.color,
+      'Tops': variant.color,
+      'Bottoms': variant.accent ?? variant.color,
+      'Shoes': variant.accent ? variant.color : variant.color,
     };
 
     return {
@@ -430,8 +507,30 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
       const legacyOutfit = saved.customization?.outfitId;
       const equipped = saved.equippedOutfitId
         ?? (legacyOutfit && legacyOutfit !== '' ? legacyOutfit : DEFAULT_EQUIPPED_OUTFIT);
+
+      // Migration: zone-based → per-item color property names.
+      // Old saves have 'Outfit 01 Primary/Secondary/Tertiary'; the tint
+      // system now uses 'Tops'/'Bottoms'/'Shoes'.
+      let migratedChar = saved.amgCharacter ?? null;
+      if (migratedChar) {
+        const colors = (migratedChar as any).colors as Record<string, string> | undefined;
+        if (colors) {
+          const RENAMES: Record<string, string> = {
+            'Outfit 01 Primary': 'Tops',
+            'Outfit 01 Secondary': 'Bottoms',
+            'Outfit 01 Tertiary': 'Shoes',
+          };
+          for (const [oldKey, newKey] of Object.entries(RENAMES)) {
+            if (oldKey in colors && !(newKey in colors)) {
+              colors[newKey] = colors[oldKey];
+              delete colors[oldKey];
+            }
+          }
+        }
+      }
+
       set({
-        amgCharacter: saved.amgCharacter ?? null,
+        amgCharacter: migratedChar,
         // Merge saved + starter so new starter additions land for existing saves.
         ownedOutfits: Array.from(new Set([...STARTER_OUTFITS, ...owned])),
         equippedOutfitId: equipped,
@@ -446,6 +545,8 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         equippedPartVariant: saved.equippedPartVariant ?? {},
         equippedOutfitVariant: saved.equippedOutfitVariant ?? DEFAULT_VARIANT_ID,
         ownedTintColors: saved.ownedTintColors ?? [],
+        ownedOutfitColorways: saved.ownedOutfitColorways ?? {},
+        equippedOutfitColorway: saved.equippedOutfitColorway ?? '',
       });
     }
   },
@@ -464,5 +565,7 @@ useCharacterStore.subscribe((state) => {
     equippedPartVariant: state.equippedPartVariant,
     equippedOutfitVariant: state.equippedOutfitVariant,
     ownedTintColors: state.ownedTintColors,
+    ownedOutfitColorways: state.ownedOutfitColorways,
+    equippedOutfitColorway: state.equippedOutfitColorway,
   });
 });

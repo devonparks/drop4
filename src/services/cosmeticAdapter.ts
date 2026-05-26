@@ -21,6 +21,7 @@ import type {
 } from '@amg/cosmetic-ui';
 import { useCharacterStore } from '../stores/characterStore';
 import { getPartThumb } from '../data/partThumbs';
+import { getCleanPartThumb } from '../data/partThumbsClean';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
@@ -29,16 +30,17 @@ import {
 } from '../data/amgPartPricing';
 import { packMeta } from '../data/amgPackMeta';
 import { getPackIcon } from '../data/cosmeticIcons';
+import { getPartFashionName } from '../data/partFashionNames';
 
 /** The Drop4-specific implementation of the cross-game CosmeticAdapter.
  *  Other games (TTT, RPS+, Chess) implement the same shape against
  *  their own stores + data files. */
 export const drop4CosmeticAdapter: CosmeticAdapter = {
   getPartThumb: (partName: string): ImageSourcePropType | undefined => {
-    // Painted Unity-rendered PNG for the part. Falls through to
-    // undefined when the part isn't in the bundled thumbnail map
-    // (fresh pack added since the last Unity render batch).
-    return getPartThumb(partName);
+    // Full-character renders (clothes on a body) take priority because
+    // isolated torso-only renders look like floating gray blobs.
+    // TODO: Replace with proper male+female mannequin renders from Unity.
+    return getPartThumb(partName) ?? getCleanPartThumb(partName);
   },
 
   getRarity: (partName: string): Rarity => {
@@ -101,5 +103,12 @@ export const drop4CosmeticAdapter: CosmeticAdapter = {
     // Tier 3 — last-resort generic pack icon so cards never render
     // blank when a fresh pack lands without thumbs/cover icons yet.
     return require('../assets/images/ui/pack-humn-base.png');
+  },
+
+  getPartDisplayName: (partName: string): string | undefined => {
+    // Fashion name registry — shows "Puffer Vest" instead of "TORSO #06".
+    // Returns undefined for parts not yet named (card falls back to
+    // slot + variant format).
+    return getPartFashionName(partName);
   },
 };

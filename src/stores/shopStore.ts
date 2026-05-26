@@ -79,6 +79,11 @@ interface ShopState {
   selectedHomeEmote: string | null;
   homeEmoteRandomMode: boolean;
 
+  // Expression system — hot bar favorites + unlockable emojis/phrases
+  hotBarFavorites: string[];
+  ownedEmojis: string[];
+  ownedPhrases: string[];
+
   // Pets
   equippedPet: string | null;
   ownedPets: string[];
@@ -113,6 +118,10 @@ interface ShopState {
   claimStarterPack: () => void;
   unlockCustomTitle: (title: string) => void;
   setEquippedCustomTitle: (title: string | null) => void;
+  // Expression hot bar
+  setHotBarSlot: (slot: number, itemId: string) => void;
+  purchaseEmoji: (emojiId: string, cost: number) => boolean;
+  purchasePhrase: (phraseId: string, cost: number) => boolean;
   // Daily free coin collect (shop screen)
   lastShopCoinCollect: string | null;
   collectDailyShopCoins: () => boolean; // returns false if already collected today
@@ -153,6 +162,11 @@ export const useShopStore = create<ShopState>((set, get) => ({
   // Home emote preferences (new player defaults: random mode on, no selection)
   selectedHomeEmote: null,
   homeEmoteRandomMode: true,
+
+  // Expression system defaults
+  hotBarFavorites: ['😂', '🔥', 'GG', 'Nice!', '😤', '👀'],
+  ownedEmojis: [],
+  ownedPhrases: [],
 
   equippedPet: null,
   ownedPets: [],
@@ -289,6 +303,38 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   setEquippedCustomTitle: (title) => set({ equippedCustomTitle: title }),
 
+  setHotBarSlot: (slot, itemId) => {
+    set((s) => {
+      const newFavs = [...s.hotBarFavorites];
+      if (slot >= 0 && slot < 6) {
+        newFavs[slot] = itemId;
+      }
+      return { hotBarFavorites: newFavs };
+    });
+  },
+
+  purchaseEmoji: (emojiId, cost) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    if (state.ownedEmojis.includes(emojiId)) return false;
+    set((s) => ({
+      coins: s.coins - cost,
+      ownedEmojis: [...s.ownedEmojis, emojiId],
+    }));
+    return true;
+  },
+
+  purchasePhrase: (phraseId, cost) => {
+    const state = get();
+    if (state.coins < cost) return false;
+    if (state.ownedPhrases.includes(phraseId)) return false;
+    set((s) => ({
+      coins: s.coins - cost,
+      ownedPhrases: [...s.ownedPhrases, phraseId],
+    }));
+    return true;
+  },
+
   collectDailyShopCoins: () => {
     const today = (() => {
       const d = new Date();
@@ -342,6 +388,9 @@ export const useShopStore = create<ShopState>((set, get) => ({
         ownedPets: saved.ownedPets ?? [],
         claimedStarterPack: (saved as any).claimedStarterPack ?? false,
         lastShopCoinCollect: (saved as any).lastShopCoinCollect ?? null,
+        hotBarFavorites: (saved as any).hotBarFavorites ?? ['😂', '🔥', 'GG', 'Nice!', '😤', '👀'],
+        ownedEmojis: (saved as any).ownedEmojis ?? [],
+        ownedPhrases: (saved as any).ownedPhrases ?? [],
       });
     }
   },
@@ -417,5 +466,8 @@ useShopStore.subscribe((state) => {
     ownedPets: state.ownedPets,
     claimedStarterPack: state.claimedStarterPack,
     lastShopCoinCollect: state.lastShopCoinCollect,
+    hotBarFavorites: state.hotBarFavorites,
+    ownedEmojis: state.ownedEmojis,
+    ownedPhrases: state.ownedPhrases,
   });
 });

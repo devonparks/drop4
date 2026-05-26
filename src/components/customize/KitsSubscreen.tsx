@@ -20,7 +20,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Image } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { PreviewSafeModal } from '../ui/PreviewSafeModal';
 import {
@@ -28,6 +28,7 @@ import {
   AmgPartCard,
   AmgPartPreviewModal,
   DEFAULT_SLOT_BUCKETS,
+  DEFAULT_PALETTE,
   type AmgManifestPart,
 } from '@amg/cosmetic-ui';
 import {
@@ -54,6 +55,11 @@ import {
   useLootBoxStore,
   selectWaitingBoxCount,
 } from '../../stores/lootBoxStore';
+import {
+  COLORWAY_PALETTE,
+  COLORWAY_BY_ID,
+  type ColorwayPreset,
+} from '../../data/outfitColorways';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
 import { useChallengeStore } from '../../stores/challengeStore';
@@ -63,7 +69,8 @@ import {
   TINT_SLOT_PROPERTY,
   type TintSlot,
 } from '../../data/colorRegistry';
-import { DEFAULT_PALETTE, type VariantDef } from '@amg/cosmetic-ui';
+import { getColorwayThumbUri } from '../../data/colorwayThumbs';
+// DEFAULT_PALETTE + VariantDef removed — camo system killed, colorways only
 
 const AMG_MANIFEST_URL =
   'https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev/manifest.json';
@@ -100,11 +107,9 @@ const KITS_SUB_TO_TINT_SLOT: Partial<Record<KitsSubId, TintSlot>> = {
   shoes:     'shoes',
 };
 
-/** Outfit subs that get the CoD-camo variant picker instead of (or
- *  in addition to) the flat tint color row. The variant picker shows
- *  all 24 non-default palette variants with rarity borders, duo-chrome
- *  split swatches, and lock/owned state. */
-const OUTFIT_CAMO_SUBS: Set<KitsSubId> = new Set(['tops', 'pants', 'shoes']);
+/** Outfit subs that show the colorway button — player picks the outfit
+ *  piece first, then chooses a colorway from a proper picker modal. */
+const OUTFIT_COLORWAY_SUBS: Set<KitsSubId> = new Set(['tops', 'pants', 'shoes']);
 
 /** Rarity-keyed border + glow colors for the camo variant picker.
  *  Matches the lootbox reveal screen's tier treatments. */
@@ -183,9 +188,12 @@ export function KitsSubscreen({ onClose }: Props) {
   const equipPartVariant = useCharacterStore((s) => s.equipPartVariant);
   const unequipSlot = useCharacterStore((s) => s.unequipSlot);
   const ownedAmgParts = useCharacterStore((s) => s.ownedAmgParts);
-  const setOutfitVariant = useCharacterStore((s) => s.setOutfitVariant);
-  const equippedOutfitVariant = useCharacterStore((s) => s.equippedOutfitVariant);
-  const isPartVariantOwned = useCharacterStore((s) => s.isPartVariantOwned);
+  // setOutfitVariant / equippedOutfitVariant / isPartVariantOwned removed
+  // — camo system killed, colorways only
+  const equippedOutfitId = useCharacterStore((s) => s.equippedOutfitId);
+  const equippedOutfitColorway = useCharacterStore((s) => s.equippedOutfitColorway);
+  const isOutfitColorwayOwned = useCharacterStore((s) => s.isOutfitColorwayOwned);
+  const equipOutfitColorway = useCharacterStore((s) => s.equipOutfitColorway);
   const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
   const waitingBoxes = useMemo(
     () => selectWaitingBoxCount({ ownedBoxes } as any),
@@ -222,6 +230,8 @@ export function KitsSubscreen({ onClose }: Props) {
     name: string;
     slot: string;
   } | null>(null);
+  const [previewColorway, setPreviewColorway] = useState<string | null>(null);
+  const closePreview = () => { setPreviewPart(null); setPreviewColorway(null); };
 
   // Selection state — engine manages internally by default; we mirror
   // for renderItems' branching.
@@ -252,6 +262,11 @@ export function KitsSubscreen({ onClose }: Props) {
   // in the VIEW ALL modal for players who want to browse everything.
   const [speciesFilter, setSpeciesFilter] = useState<'All' | SpeciesKey>(playerSpecies);
 
+  // Colorway picker modal — opens after equipping an outfit piece or
+  // when the player taps the COLORWAYS button. Shows the character
+  // preview + large colorway swatches for the equipped outfit.
+  const [colorwayPickerOpen, setColorwayPickerOpen] = useState(false);
+
   // VIEW ALL modal — full-screen browser with proper-sized chips and a
   // multi-column grid. The 110-px narrow right column couldn't fit a
   // readable horizontal chip row + thumbnails, so filtering chips moved
@@ -266,6 +281,14 @@ export function KitsSubscreen({ onClose }: Props) {
   // the right title / item set / chip list without re-running
   // filterManifestForSub inside renderItems' closure.
   const currentSubId = activeSubId as KitsSubId;
+  // Equipped part for the current sub's hero slot — used to sort it
+  // first in the grid (Devon 2026-05-25: "equipped item should show
+  // up first") and to pass to the BrowseAll modal.
+  const currentEquippedPart = useMemo(() => {
+    const heroSlot = HERO_SLOTS[currentSubId]?.hero;
+    if (!heroSlot) return null;
+    return ((amgCharacter as any)?.parts as Record<string, string> | undefined)?.[heroSlot] ?? null;
+  }, [currentSubId, amgCharacter]);
   const currentItems = useMemo(() => {
     if (!manifest) return [];
     return filterManifestForSub(
@@ -274,6 +297,7 @@ export function KitsSubscreen({ onClose }: Props) {
       speciesFilter,
       playerSpecies,
       isAmgPartOwned,
+      currentEquippedPart,
     );
   }, [
     manifest,
@@ -282,6 +306,7 @@ export function KitsSubscreen({ onClose }: Props) {
     playerSpecies,
     isAmgPartOwned,
     ownedAmgParts,
+    currentEquippedPart,
   ]);
   const currentSubSubcats = subSubcatsFor(currentSubId);
   const currentSubSubcat = subSubcatBySub[currentSubId] ?? 'All';
@@ -399,12 +424,17 @@ export function KitsSubscreen({ onClose }: Props) {
       return <LoadingTile />;
     }
 
+    const heroSlot = HERO_SLOTS[sub]?.hero;
+    const equippedName = heroSlot
+      ? ((amgCharacter as any)?.parts as Record<string, string> | undefined)?.[heroSlot] ?? null
+      : null;
     const items = filterManifestForSub(
       manifest,
       sub,
       speciesFilter,
       playerSpecies,
       isAmgPartOwned,
+      equippedName,
     );
     if (items.length === 0) {
       return <EmptyTile message="No items in this category yet." />;
@@ -418,38 +448,16 @@ export function KitsSubscreen({ onClose }: Props) {
     // at the top without an extra tap. Players who need to narrow
     // further open the modal.
     const tintSlot = KITS_SUB_TO_TINT_SLOT[sub];
-    const showCamoPicker = OUTFIT_CAMO_SUBS.has(sub);
-
-    // Resolve the hero part for the active sub so we can check variant
-    // ownership against it. The camo picker shows "owned" for variants
-    // the player has unlocked on ANY part in their equipped outfit.
-    const heroSlotName = HERO_SLOTS[sub]?.hero;
-    const equippedHeroPart = heroSlotName
-      ? ((amgCharacter as any)?.parts as Record<string, string> | undefined)?.[heroSlotName]
-      : undefined;
+    const isOutfitSub = OUTFIT_COLORWAY_SUBS.has(sub);
 
     return (
       <View style={{ width: '100%' }}>
-        {showCamoPicker && (
-          <VariantCamoRow
-            activeVariantId={equippedOutfitVariant}
-            equippedPartName={equippedHeroPart}
-            isVariantOwned={isPartVariantOwned}
-            onPickOwned={(variantId) => {
-              haptics.win();
-              playSound('click');
-              setOutfitVariant(variantId);
-              useChallengeStore.getState().updateProgress('equip_camo', 1);
-              useChallengeStore.getState().updateProgress('equip_camo_3', 1);
-            }}
-            onPickLocked={() => {
-              haptics.tap();
-              playSound('click');
-              navigation.navigate('LootBox' as never);
-            }}
-          />
-        )}
-        {tintSlot && !showCamoPicker && (
+        {/* COLORWAYS button removed from top-level — Devon 2026-05-25:
+            "you shouldnt see colorways until you select a item first."
+            Colorway picker now opens: (a) after equipping an outfit piece
+            (auto-open), or (b) when tapping an already-equipped outfit
+            piece (direct shortcut below in onEquip). */}
+        {tintSlot && !isOutfitSub && (
           <UnlockableColorRow
             slot={tintSlot}
             label={tintSlot === 'hair' ? 'HAIR COLOR' : 'COLOR'}
@@ -489,15 +497,47 @@ export function KitsSubscreen({ onClose }: Props) {
           {items.map((p) => {
             const heroSlot = HERO_SLOTS[currentSubId]?.hero ?? p.slot;
             const parts = (amgCharacter as any)?.parts as Record<string, string> | undefined;
+            const isThisEquipped = parts?.[heroSlot] === p.name;
+            // Outfit colorway tint — if this is the equipped part AND the
+            // player has a non-default outfit colorway active, tint the card
+            // so it visually matches the character's current color scheme.
+            const activeColorway = isThisEquipped && equippedOutfitColorway
+              ? COLORWAY_PALETTE.find((c) => c.id === equippedOutfitColorway)
+              : undefined;
+            // Outfit cards: use the equipped colorway render if active,
+            // otherwise fall back to the 'midnight' default render so
+            // every outfit card shows the new pre-rendered thumbnails
+            // instead of the old flat-color bundled PNGs.
+            const cwThumb = isOutfitSub
+              ? (activeColorway
+                  ? getColorwayThumbUri(p.name, activeColorway.id)
+                  : getColorwayThumbUri(p.name, 'midnight')
+                ) ?? undefined
+              : undefined;
+            const cropZone = cwThumb ? SUB_TO_CROP[currentSubId] : undefined;
             return (
               <AmgPartCard
                 key={p.name}
                 partName={p.name}
                 owned={isAmgPartOwned(p.name)}
-                isEquipped={parts?.[heroSlot] === p.name}
+                isEquipped={isThisEquipped}
+                heroSourceOverride={cwThumb}
+                heroImageCrop={cropZone}
+                colorwayColor={!cwThumb ? activeColorway?.primary : undefined}
+                colorwayLabel={activeColorway?.name}
                 adapter={drop4CosmeticAdapter}
                 size="compact"
-                onEquip={(name) => setPreviewPart({ name, slot: p.slot })}
+                onEquip={(name) => {
+                  // If tapping an already-equipped outfit piece, go
+                  // straight to colorway picker (Devon 2026-05-25:
+                  // "select item → then colorways"). For non-outfit
+                  // subs or non-equipped items, open the normal preview.
+                  if (isOutfitSub && parts?.[heroSlot] === name) {
+                    setColorwayPickerOpen(true);
+                    return;
+                  }
+                  setPreviewPart({ name, slot: p.slot });
+                }}
                 onBuy={(name) => setPreviewPart({ name, slot: p.slot })}
                 hooks={{ playClick: () => playSound('click') }}
               />
@@ -543,6 +583,7 @@ export function KitsSubscreen({ onClose }: Props) {
         visible={viewAllOpen}
         onClose={() => setViewAllOpen(false)}
         title={currentSubLabel}
+        subId={currentSubId}
         items={currentItems}
         speciesFilter={speciesFilter}
         onSpeciesFilterChange={setSpeciesFilter}
@@ -560,7 +601,8 @@ export function KitsSubscreen({ onClose }: Props) {
 
       <PreviewSafeModal
         visible={previewPart !== null}
-        onRequestClose={() => setPreviewPart(null)}
+        onRequestClose={closePreview}
+        webZIndex={1100}
       >
         <AmgPartPreviewModal
           visible={previewPart !== null}
@@ -568,22 +610,42 @@ export function KitsSubscreen({ onClose }: Props) {
           slot={previewPart?.slot ?? null}
           adapter={drop4CosmeticAdapter}
           currentCharacter={amgCharacter}
-          renderCharacterPreview={(swappedCharacter, opts) => (
-            <Character3DPortrait
-              width={opts.width}
-              height={opts.height}
-              customization={swappedCharacter as CharacterState}
-              cameraPreset={
-                opts.slot === 'Hair' || opts.slot === 'FacialHair' ||
-                opts.slot === 'EyebrowLeft' || opts.slot === 'EyebrowRight' ||
-                opts.slot === 'EarLeft' || opts.slot === 'EarRight'
-                  ? 'face'
-                  : 'body'
+          renderCharacterPreview={(swappedCharacter, opts) => {
+            // Apply colorway colors to the preview character so tapping
+            // a colorway thumb in the strip immediately updates the 3D
+            // model's material colors (Tops/Bottoms/Shoes).
+            let previewChar = swappedCharacter as CharacterState;
+            if (previewColorway) {
+              const preset = COLORWAY_BY_ID[previewColorway];
+              if (preset) {
+                previewChar = {
+                  ...previewChar,
+                  colors: {
+                    ...(previewChar.colors ?? {}),
+                    'Tops': preset.primary,
+                    'Bottoms': preset.secondary,
+                    'Shoes': preset.tertiary,
+                  },
+                };
               }
-              showFloor={false}
-            />
-          )}
-          onClose={() => setPreviewPart(null)}
+            }
+            return (
+              <Character3DPortrait
+                width={opts.width}
+                height={opts.height}
+                customization={previewChar}
+                cameraPreset={
+                  opts.slot === 'Hair' || opts.slot === 'FacialHair' ||
+                  opts.slot === 'EyebrowLeft' || opts.slot === 'EyebrowRight' ||
+                  opts.slot === 'EarLeft' || opts.slot === 'EarRight'
+                    ? 'face'
+                    : 'body'
+                }
+                showFloor={false}
+              />
+            );
+          }}
+          onClose={closePreview}
           isCurrentlyEquipped={isCurrentlyEquipped}
           onUnequip={
             isCurrentlyEquipped && previewPart
@@ -595,7 +657,7 @@ export function KitsSubscreen({ onClose }: Props) {
                     previewPart.slot,
                     heroConfig?.companions,
                   );
-                  setPreviewPart(null);
+                  closePreview();
                 }
               : undefined
           }
@@ -623,7 +685,10 @@ export function KitsSubscreen({ onClose }: Props) {
                       }
                     }
                   }
-                  setPreviewPart(null);
+                  if (previewColorway) {
+                    equipOutfitColorway(previewColorway);
+                  }
+                  closePreview();
                 }
               : undefined
           }
@@ -633,9 +698,63 @@ export function KitsSubscreen({ onClose }: Props) {
               ? () => {
                   haptics.tap();
                   playSound('click');
-                  setPreviewPart(null);
+                  closePreview();
                   navigation.navigate('LootBox' as never);
                 }
+              : undefined
+          }
+          renderColorwayStrip={
+            previewPart && OUTFIT_COLORWAY_SUBS.has(currentSubId)
+              ? () => (
+                  <View style={cwStripStyles.wrap}>
+                    <Text style={cwStripStyles.label}>COLORWAYS</Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={cwStripStyles.row}
+                    >
+                      {COLORWAY_PALETTE.map((cw) => {
+                        const thumb = getColorwayThumbUri(previewPart.name, cw.id);
+                        if (!thumb) return null;
+                        const isActive = previewColorway === cw.id;
+                        const rarityBorder = RARITY_BORDER[cw.rarity] ?? 'rgba(255,255,255,0.2)';
+                        return (
+                          <Pressable
+                            key={cw.id}
+                            onPress={() => {
+                              haptics.tap();
+                              playSound('click');
+                              setPreviewColorway(isActive ? null : cw.id);
+                            }}
+                            style={[
+                              cwStripStyles.thumb,
+                              {
+                                borderColor: isActive ? '#f1c40f' : rarityBorder,
+                                borderWidth: isActive ? 2.5 : 1.5,
+                              },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${cw.name} colorway`}
+                            accessibilityState={{ selected: isActive }}
+                          >
+                            <Image
+                              source={thumb}
+                              style={cwStripStyles.thumbImg}
+                              resizeMode="cover"
+                              accessibilityIgnoresInvertColors
+                            />
+                            <View style={[cwStripStyles.thumbDot, { backgroundColor: cw.primary }]} />
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+                    {previewColorway && (
+                      <Text style={cwStripStyles.activeName}>
+                        {COLORWAY_PALETTE.find((c) => c.id === previewColorway)?.name ?? ''}
+                      </Text>
+                    )}
+                  </View>
+                )
               : undefined
           }
           hooks={{
@@ -644,6 +763,33 @@ export function KitsSubscreen({ onClose }: Props) {
           }}
         />
       </PreviewSafeModal>
+
+      <ColorwayPickerModal
+        visible={colorwayPickerOpen}
+        onClose={() => setColorwayPickerOpen(false)}
+        activeColorwayId={equippedOutfitColorway}
+        outfitId={equippedOutfitId}
+        isOwned={isOutfitColorwayOwned}
+        onPick={(colorwayId) => {
+          haptics.win();
+          playSound('click');
+          equipOutfitColorway(colorwayId);
+        }}
+        onGetFromBags={() => {
+          haptics.tap();
+          playSound('click');
+          setColorwayPickerOpen(false);
+          navigation.navigate('LootBox' as never);
+        }}
+        renderPreview={() => (
+          <Character3DPortrait
+            width={200}
+            height={280}
+            cameraPreset="body"
+            showFloor={false}
+          />
+        )}
+      />
     </View>
   );
 }
@@ -818,10 +964,18 @@ function SubSubcatChips({
 // after equipping). The browse modal owns its own filter state for
 // sub-sub-cat (the parent supplies the active value + setter) so
 // changes here persist when the modal closes.
+// Sub → body crop zone for full-body mannequin renders.
+const SUB_TO_CROP: Partial<Record<KitsSubId, 'torso' | 'hips' | 'feet' | 'head'>> = {
+  tops: 'torso',
+  pants: 'hips',
+  hats: 'head',
+};
+
 function BrowseAllModal({
   visible,
   onClose,
   title,
+  subId,
   items,
   speciesFilter,
   onSpeciesFilterChange,
@@ -835,6 +989,7 @@ function BrowseAllModal({
   visible: boolean;
   onClose: () => void;
   title: string;
+  subId: KitsSubId;
   items: AmgManifestPart[];
   speciesFilter: 'All' | SpeciesKey;
   onSpeciesFilterChange: (v: 'All' | SpeciesKey) => void;
@@ -845,6 +1000,12 @@ function BrowseAllModal({
   onPickPart: (name: string, slot: string) => void;
   equippedPartName?: string | null;
 }) {
+  // Colorway filter — '' = base (no tint), or a COLORWAY_PALETTE id.
+  // When active, every card gets that colorway's tint and ownership
+  // reflects per-part×colorway variant unlocks.
+  const [colorwayFilter, setColorwayFilter] = useState<string>('');
+  const isPartVariantOwned = useCharacterStore((s) => s.isPartVariantOwned);
+
   // `items` is already species-filtered by the parent — apply the
   // sub-sub-cat narrow here so changing the chip updates instantly
   // without re-running the parent's manifest filter.
@@ -854,6 +1015,12 @@ function BrowseAllModal({
       (p) => subcategoryForPart(p.name, p.slot) === activeSubSubcat,
     );
   }, [items, subSubcats, activeSubSubcat]);
+
+  // Active colorway preset (cached for the render pass).
+  const activeColorway = useMemo(
+    () => colorwayFilter ? COLORWAY_PALETTE.find((c) => c.id === colorwayFilter) : undefined,
+    [colorwayFilter],
+  );
 
   return (
     // PreviewSafeModal (not Modal): RN's Modal portals to document.body
@@ -906,12 +1073,60 @@ function BrowseAllModal({
           </View>
         )}
 
+        {/* Colorway filter — browse items in a specific colorway tint.
+            Each part × colorway is a separate collectible. "Base" = no tint. */}
+        <View style={browseStyles.filterSection}>
+          <Text style={browseStyles.filterLabel}>COLORWAY</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            <Pressable
+              onPress={() => { haptics.tap(); setColorwayFilter(''); }}
+              style={[
+                styles.chip,
+                { borderColor: !colorwayFilter ? '#ffb347' : 'rgba(255,255,255,0.18)',
+                  backgroundColor: !colorwayFilter ? 'rgba(255,140,0,0.22)' : 'rgba(10,14,32,0.7)' },
+              ]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: !colorwayFilter }}
+            >
+              <Text style={[styles.chipText, { color: !colorwayFilter ? '#ffffff' : 'rgba(255,255,255,0.75)' }]}>
+                Base
+              </Text>
+            </Pressable>
+            {COLORWAY_PALETTE.map((cw) => {
+              const active = colorwayFilter === cw.id;
+              return (
+                <Pressable
+                  key={cw.id}
+                  onPress={() => { haptics.tap(); setColorwayFilter(cw.id); }}
+                  style={[
+                    styles.chip,
+                    { borderColor: active ? '#ffb347' : 'rgba(255,255,255,0.18)',
+                      backgroundColor: active ? 'rgba(255,140,0,0.22)' : 'rgba(10,14,32,0.7)' },
+                  ]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                >
+                  <View style={[styles.colorwayDot, { backgroundColor: cw.primary }]} />
+                  <Text style={[styles.chipText, { color: active ? '#ffffff' : 'rgba(255,255,255,0.75)' }]}>
+                    {cw.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Result count strip — gives the player feedback that filters
             actually did something ("23 results" vs "0 results"). */}
         <View style={browseStyles.countStrip}>
           <Text style={browseStyles.countText}>
             {filtered.length}{' '}
             {filtered.length === 1 ? 'item' : 'items'}
+            {activeColorway ? ` · ${activeColorway.name}` : ''}
           </Text>
         </View>
 
@@ -930,20 +1145,38 @@ function BrowseAllModal({
               </Text>
             </View>
           ) : (
-            filtered.map((p) => (
-              <View key={p.name} style={browseStyles.gridCell}>
-                <AmgPartCard
-                  partName={p.name}
-                  owned={isOwned(p.name)}
-                  isEquipped={p.name === equippedPartName}
-                  adapter={drop4CosmeticAdapter}
-                  size="compact"
-                  onEquip={(name) => onPickPart(name, p.slot)}
-                  onBuy={(name) => onPickPart(name, p.slot)}
-                  hooks={{ playClick: () => playSound('click') }}
-                />
-              </View>
-            ))
+            filtered.map((p) => {
+              // Ownership: base mode checks part ownership, colorway
+              // mode checks per-part×colorway variant ownership.
+              const owned = colorwayFilter
+                ? isPartVariantOwned(p.name, colorwayFilter)
+                : isOwned(p.name);
+              const isOutfit = OUTFIT_COLORWAY_SUBS.has(subId);
+              const cwThumb = colorwayFilter
+                ? getColorwayThumbUri(p.name, colorwayFilter) ?? undefined
+                : isOutfit
+                  ? getColorwayThumbUri(p.name, 'midnight') ?? undefined
+                  : undefined;
+              const cropZone = cwThumb ? SUB_TO_CROP[subId] : undefined;
+              return (
+                <View key={p.name} style={browseStyles.gridCell}>
+                  <AmgPartCard
+                    partName={p.name}
+                    owned={owned}
+                    isEquipped={p.name === equippedPartName}
+                    adapter={drop4CosmeticAdapter}
+                    size="compact"
+                    onEquip={(name) => onPickPart(name, p.slot)}
+                    onBuy={(name) => onPickPart(name, p.slot)}
+                    hooks={{ playClick: () => playSound('click') }}
+                    heroSourceOverride={cwThumb}
+                    heroImageCrop={cropZone}
+                    colorwayColor={!cwThumb ? activeColorway?.primary : undefined}
+                    colorwayLabel={activeColorway?.name}
+                  />
+                </View>
+              );
+            })
           )}
         </ScrollView>
       </View>
@@ -1145,215 +1378,223 @@ function UnlockableColorRow({
   );
 }
 
-// ─── CoD-camo variant picker ───────────────────────────────────────
-// Shows all 24 non-default palette variants as a compact swatch grid.
-// Duo-chrome variants render as split discs (left = hero, right = accent).
-// Each swatch has a rarity-coded border. Owned variants are bright and
-// tappable; locked variants are dimmed with a lock icon. The active
-// variant (equippedOutfitVariant) gets an orange highlight + check.
+// ─── Colorway picker modal ──────────────────────────────────────────
+// (VariantCamoRow was deleted — camos merged into colorways)
+// Full-screen modal with character preview + large tappable colorway
+// swatches (48px — well above Apple's 44px minimum touch target).
+// Opens after equipping an outfit piece OR via the COLORWAYS button.
+// Player flow: pick outfit → pick colorway. Sequential, not parallel.
+//
+// NOTE: The old VariantCamoRow lived here before — it showed 24 per-part
+// camo variants inline. That system was redundant with colorways (both
+// changed the same 3 material properties). Camos are killed; colorways
+// are the one unified outfit color system now.
 
-function VariantCamoRow({
-  activeVariantId,
-  equippedPartName,
-  isVariantOwned,
-  onPickOwned,
-  onPickLocked,
+function ColorwayPickerModal({
+  visible,
+  onClose,
+  activeColorwayId,
+  outfitId,
+  isOwned,
+  onPick,
+  onGetFromBags,
+  renderPreview,
 }: {
-  activeVariantId: string;
-  equippedPartName?: string;
-  isVariantOwned: (partName: string, variantId: string) => boolean;
-  onPickOwned: (variantId: string) => void;
-  onPickLocked: () => void;
+  visible: boolean;
+  onClose: () => void;
+  activeColorwayId: string;
+  outfitId: string;
+  isOwned: (outfitId: string, colorwayId: string) => boolean;
+  onPick: (colorwayId: string) => void;
+  onGetFromBags: () => void;
+  renderPreview: () => React.ReactNode;
 }) {
-  // Non-default variants only (skip index 0 = Default).
-  const variants = DEFAULT_PALETTE.filter((v) => v.id !== '');
-
-  // Resolve the active variant's display name for the header badge.
-  const activeLabel = activeVariantId
-    ? (DEFAULT_PALETTE.find((v) => v.id === activeVariantId)?.label ?? 'Unknown')
-    : 'Default';
-  const activeRarity = activeVariantId
-    ? (DEFAULT_PALETTE.find((v) => v.id === activeVariantId)?.rarity ?? 'common')
-    : 'common';
-  const activeBadgeColor = VARIANT_RARITY_COLOR[activeRarity] ?? 'rgba(255,255,255,0.2)';
-
-  // Collection progress — how many of the total variants does the player own?
-  const ownedCount = equippedPartName
-    ? variants.filter((v) => isVariantOwned(equippedPartName, v.id)).length
-    : 0;
-  const totalCount = variants.length;
+  const ownedCount = COLORWAY_PALETTE.filter((c) => isOwned(outfitId, c.id)).length;
 
   return (
-    <View style={camoStyles.wrap}>
-      <View style={camoStyles.headerRow}>
-        <Text style={camoStyles.label}>CAMOS</Text>
-        <View style={[camoStyles.activeBadge, { borderColor: activeBadgeColor }]}>
-          <Text style={camoStyles.activeBadgeText}>{activeLabel.toUpperCase()}</Text>
+    <PreviewSafeModal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+      transparent={false}
+    >
+      <View style={cwStyles.container}>
+        {/* Header */}
+        <View style={cwStyles.header}>
+          <Text style={cwStyles.title}>COLORWAYS</Text>
+          <Text style={cwStyles.subtitle}>
+            {ownedCount} / {COLORWAY_PALETTE.length} UNLOCKED
+          </Text>
+          <Pressable
+            onPress={onClose}
+            style={cwStyles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close colorway picker"
+          >
+            <Text style={cwStyles.closeText}>{'×'}</Text>
+          </Pressable>
         </View>
-        <Text style={camoStyles.collectionText}>{ownedCount}/{totalCount}</Text>
-      </View>
-      <View style={camoStyles.grid}>
-        {/* "Default" swatch — resets to base outfit colors */}
-        {(() => {
-          const isActive = !activeVariantId || activeVariantId === '';
-          return (
-            <Pressable
-              onPress={() => onPickOwned('')}
-              style={[
-                camoStyles.swatch,
-                {
-                  borderColor: isActive ? '#ffb347' : 'rgba(255,255,255,0.25)',
-                  borderWidth: isActive ? 2 : 1,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={`Default color${isActive ? ', selected' : ''}`}
-              accessibilityState={{ selected: isActive }}
-            >
-              <View style={[camoStyles.swatchFill, { backgroundColor: '#7f8c8d' }]} />
-              {isActive && <Text style={camoStyles.check}>{'✓'}</Text>}
-            </Pressable>
-          );
-        })()}
 
-        {variants.map((v) => {
-          // A variant is "owned" if the player owns it for ANY part in
-          // their current outfit. Dev mode grants everything.
-          const owned = equippedPartName
-            ? isVariantOwned(equippedPartName, v.id)
-            : false;
-          const isActive = activeVariantId === v.id;
-          const rarityBorder = VARIANT_RARITY_COLOR[v.rarity] ?? 'rgba(255,255,255,0.2)';
-          // Premium rarities (rare+) get a thicker border even when not active
-          const isRarePlus = v.rarity === 'rare' || v.rarity === 'epic' || v.rarity === 'legendary';
+        {/* Character preview */}
+        <View style={cwStyles.previewWrap}>
+          {renderPreview()}
+        </View>
 
-          return (
-            <Pressable
-              key={v.id}
-              onPress={() => (owned ? onPickOwned(v.id) : onPickLocked())}
-              style={[
-                camoStyles.swatch,
-                {
-                  borderColor: isActive ? '#ffb347' : rarityBorder,
-                  borderWidth: isActive ? 2 : (isRarePlus ? 1.5 : 1),
-                  opacity: owned ? 1 : 0.35,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={`${v.label} camo (${v.rarity})${isActive ? ', selected' : ''}${!owned ? ', locked' : ''}`}
-              accessibilityState={{ selected: isActive }}
-            >
-              {v.accent ? (
-                // Duo-chrome: diagonal split swatch for visual punch
-                <View style={camoStyles.splitFill}>
-                  <View style={[camoStyles.splitDiagTop, { backgroundColor: v.color }]} />
-                  <View style={[camoStyles.splitDiagBottom, { backgroundColor: v.accent }]} />
-                </View>
-              ) : (
-                // Solid color
-                <View style={[camoStyles.swatchFill, { backgroundColor: v.color }]} />
-              )}
-              {isActive && <Text style={camoStyles.check}>{'✓'}</Text>}
-              {!owned && (
-                <View style={camoStyles.lockOverlay}>
-                  <Text style={camoStyles.lockIcon}>{'🔒'}</Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
+        {/* Colorway grid — scrollable */}
+        <ScrollView
+          contentContainerStyle={cwStyles.gridWrap}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Default swatch */}
+          {(() => {
+            const isActive = !activeColorwayId || activeColorwayId === '';
+            return (
+              <Pressable
+                onPress={() => onPick('')}
+                style={[
+                  cwStyles.swatch,
+                  {
+                    borderColor: isActive ? '#ffb347' : 'rgba(255,255,255,0.25)',
+                    borderWidth: isActive ? 3 : 1.5,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Default colorway${isActive ? ', selected' : ''}`}
+                accessibilityState={{ selected: isActive }}
+              >
+                <View style={[cwStyles.triStripe, { backgroundColor: '#7f8c8d' }]} />
+                <View style={[cwStyles.triStripe, { backgroundColor: '#95a5a6' }]} />
+                <View style={[cwStyles.triStripe, { backgroundColor: '#bdc3c7' }]} />
+                {isActive && <Text style={cwStyles.check}>{'✓'}</Text>}
+                <Text style={cwStyles.swatchLabel} numberOfLines={1}>DEFAULT</Text>
+              </Pressable>
+            );
+          })()}
+
+          {COLORWAY_PALETTE.map((cw) => {
+            const owned = isOwned(outfitId, cw.id);
+            const isActive = activeColorwayId === cw.id;
+            const rarityBorder = VARIANT_RARITY_COLOR[cw.rarity] ?? 'rgba(255,255,255,0.2)';
+
+            return (
+              <Pressable
+                key={cw.id}
+                onPress={() => (owned ? onPick(cw.id) : onGetFromBags())}
+                style={[
+                  cwStyles.swatch,
+                  {
+                    borderColor: isActive ? '#ffb347' : rarityBorder,
+                    borderWidth: isActive ? 3 : 1.5,
+                    opacity: owned ? 1 : 0.4,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`${cw.name} colorway (${cw.rarity})${isActive ? ', selected' : ''}${!owned ? ', locked' : ''}`}
+                accessibilityState={{ selected: isActive }}
+              >
+                <View style={[cwStyles.triStripe, { backgroundColor: cw.primary }]} />
+                <View style={[cwStyles.triStripe, { backgroundColor: cw.secondary }]} />
+                <View style={[cwStyles.triStripe, { backgroundColor: cw.tertiary }]} />
+                {isActive && <Text style={cwStyles.check}>{'✓'}</Text>}
+                {!owned && (
+                  <View style={cwStyles.lockOverlay}>
+                    <Text style={cwStyles.lockIcon}>{'🔒'}</Text>
+                  </View>
+                )}
+                <Text style={cwStyles.swatchLabel} numberOfLines={1}>
+                  {cw.name.toUpperCase()}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
-    </View>
+    </PreviewSafeModal>
   );
 }
 
-const camoStyles = StyleSheet.create({
-  wrap: {
-    width: '100%',
-    marginBottom: 6,
+const cwStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0a0e27',
+    paddingTop: 36,
   },
-  headerRow: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-    paddingHorizontal: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+    gap: 8,
   },
-  label: {
+  title: {
     fontWeight: '900',
-    fontSize: 8,
-    letterSpacing: 1.2,
-    color: 'rgba(255,255,255,0.55)',
+    fontSize: 20,
+    color: '#ffffff',
+    letterSpacing: 1.6,
   },
-  activeBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  subtitle: {
+    flex: 1,
+    fontWeight: '700',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 0.8,
   },
-  activeBadgeText: {
+  closeBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,140,0,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,140,0.85)',
+  },
+  closeText: {
     fontWeight: '900',
-    fontSize: 7,
-    letterSpacing: 1,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 24,
+    lineHeight: 26,
+    color: '#0a0e27',
+    marginTop: -2,
   },
-  collectionText: {
-    fontWeight: '800',
-    fontSize: 7,
-    letterSpacing: 0.5,
-    color: 'rgba(255,255,255,0.35)',
+  previewWrap: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  grid: {
+  gridWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 5,
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingBottom: 40,
   },
   swatch: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+    width: 64,
+    height: 72,
+    borderRadius: 12,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    flexDirection: 'column',
   },
-  swatchFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  splitFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
-  },
-  splitDiagTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: '50%',
-  },
-  splitDiagBottom: {
-    position: 'absolute',
-    top: '50%',
-    left: 0,
-    right: 0,
-    bottom: 0,
+  triStripe: {
+    flex: 1,
+    width: '100%',
   },
   check: {
+    position: 'absolute',
+    top: 8,
     fontWeight: '900',
-    fontSize: 12,
+    fontSize: 16,
     color: '#ffffff',
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
     zIndex: 1,
   },
   lockOverlay: {
@@ -1361,15 +1602,29 @@ const camoStyles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    borderRadius: 7,
+    bottom: 14,
+    borderRadius: 10,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   lockIcon: {
-    fontSize: 10,
+    fontSize: 16,
+  },
+  swatchLabel: {
+    position: 'absolute',
+    bottom: 1,
+    width: '100%',
+    textAlign: 'center',
+    fontWeight: '900',
+    fontSize: 7,
+    letterSpacing: 0.4,
+    color: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 2,
   },
 });
+
+// camoStyles deleted — camo system merged into colorways
 
 // ─── Manifest filter ────────────────────────────────────────────────
 
@@ -1404,6 +1659,7 @@ function filterManifestForSub(
   speciesFilter: 'All' | SpeciesKey,
   playerSpecies: SpeciesKey,
   isOwned: (name: string) => boolean,
+  equippedPartName?: string | null,
 ): AmgManifestPart[] {
   if (sub === 'species' || sub === 'skin' || sub === 'sliders') return [];
 
@@ -1432,6 +1688,13 @@ function filterManifestForSub(
       return true;
     })
     .sort((a, b) => {
+      // Equipped item always sorts first — Devon 2026-05-25:
+      // "the equipped item should show up first"
+      if (equippedPartName) {
+        const ae = a.name === equippedPartName ? 0 : 1;
+        const be = b.name === equippedPartName ? 0 : 1;
+        if (ae !== be) return ae - be;
+      }
       const ao = isOwned(a.name) ? 0 : 1;
       const bo = isOwned(b.name) ? 0 : 1;
       if (ao !== bo) return ao - bo;
@@ -1546,15 +1809,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 9,
     paddingHorizontal: 14,
     borderRadius: 12,
     borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(10,14,32,0.7)',
   },
   chipText: {
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 0.6,
+    color: 'rgba(255,255,255,0.75)',
+  },
+  chipActive: {
+    borderColor: '#ffb347',
+    backgroundColor: 'rgba(255,140,0,0.22)',
+  },
+  chipTextActive: {
+    color: '#ffffff',
+  },
+  colorwayDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   // VIEW ALL pill at the top of the inline items column. Player taps
   // → opens BrowseAllModal. Styled to read as an obvious CTA (orange
@@ -1662,6 +1945,7 @@ const styles = StyleSheet.create({
   colorLockIcon: {
     fontSize: 9,
   },
+  // (colorway button styles deleted — button moved to item-selection flow)
   // State tiles (loading / error / empty).
   stateTile: {
     width: '100%',
@@ -1678,6 +1962,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.6,
+  },
+});
+
+// ─── Colorway strip styles (inside preview modal) ──────────────────
+const cwStripStyles = StyleSheet.create({
+  wrap: {
+    gap: 6,
+  },
+  label: {
+    fontWeight: '900',
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  row: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  thumb: {
+    width: 52,
+    height: 64,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+  },
+  thumbImg: {
+    width: 52,
+    height: 56,
+  },
+  thumbDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    position: 'absolute',
+    bottom: 3,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.4)',
+  },
+  activeName: {
+    fontWeight: '800',
+    fontSize: 11,
+    color: '#f1c40f',
+    letterSpacing: 0.8,
+    textAlign: 'center',
   },
 });
 
@@ -1764,7 +2094,7 @@ const browseStyles = StyleSheet.create({
     paddingBottom: 40,
   },
   gridCell: {
-    width: '31.5%',
+    width: '31%',
     alignItems: 'center',
   },
   emptyWrap: {
