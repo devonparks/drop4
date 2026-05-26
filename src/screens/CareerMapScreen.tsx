@@ -132,7 +132,9 @@ export function CareerMapScreen({ navigation }: Props) {
       {/* Hero */}
       <View style={styles.hero}>
         <Text style={styles.heroEyebrow}>CAREER MODE</Text>
-        <Text style={styles.heroTitle} accessibilityRole="header">TAKE THE CITY</Text>
+        <Text style={styles.heroTitle} accessibilityRole="header">
+          {completedIds.size >= ALL_CAREER_LEVELS.length ? 'CITY LEGEND' : 'TAKE THE CITY'}
+        </Text>
         <View style={styles.heroStats}>
           <Text style={styles.heroStat}>
             {completedIds.size}
@@ -166,6 +168,23 @@ export function CareerMapScreen({ navigation }: Props) {
         contentContainerStyle={[styles.pathContent, { paddingBottom: 40 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Career completion banner */}
+        {completedIds.size >= ALL_CAREER_LEVELS.length && (
+          <View style={styles.completionBanner}>
+            <LinearGradient
+              colors={['rgba(255,215,0,0.18)', 'rgba(255,140,0,0.06)', 'transparent']}
+              style={styles.completionGradient}
+            >
+              <Text style={styles.completionEmoji}>👑</Text>
+              <Text style={styles.completionTitle}>CAREER COMPLETE!</Text>
+              <Text style={styles.completionSub}>
+                {totalStars}/{ALL_CAREER_LEVELS.length * 3} stars earned.{' '}
+                {totalStars < ALL_CAREER_LEVELS.length * 3 ? 'Replay for 3-star perfection!' : 'Every star collected. Legendary.'}
+              </Text>
+            </LinearGradient>
+          </View>
+        )}
+
         {activeCities.map((city, cityIdx) => {
           const cityLevels = getLevelsForCity(city.id);
           const unlocked = isCityUnlocked(city.id, completedIds);
@@ -223,7 +242,7 @@ export function CareerMapScreen({ navigation }: Props) {
                     {city.tagline}
                   </Text>
 
-                  {/* Progress bar */}
+                  {/* Progress bar + star count */}
                   <View style={styles.zoneProgressRow}>
                     <View style={styles.zoneProgressTrack}>
                       <View
@@ -239,6 +258,11 @@ export function CareerMapScreen({ navigation }: Props) {
                     <Text style={[styles.zoneProgressText, { color: city.themeColor }]}>
                       {stats.completed}/{stats.total}
                     </Text>
+                    {stats.stars > 0 && (
+                      <Text style={styles.zoneStarCount}>
+                        {stats.stars}/{stats.maxStars} ★
+                      </Text>
+                    )}
                   </View>
 
                   {!unlocked && (
@@ -593,6 +617,12 @@ const styles = StyleSheet.create({
     fontWeight: weight.black,
     fontSize: 13,
   },
+  zoneStarCount: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: colors.coinGold,
+  },
   zoneLockOverlay: {
     marginTop: 10,
     alignItems: 'center',
@@ -686,6 +716,40 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: '#ffffff',
     letterSpacing: 0.8,
+  },
+
+  // Career completion
+  completionBanner: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,215,0,0.3)',
+  },
+  completionGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  completionEmoji: {
+    fontSize: 36,
+    marginBottom: 6,
+  },
+  completionTitle: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black,
+    fontSize: 20,
+    color: colors.coinGold,
+    letterSpacing: 2,
+    textShadow: '0px 0px 8px rgba(255,215,0,0.4)',
+  },
+  completionSub: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginTop: 4,
   },
 
   // Coming soon
