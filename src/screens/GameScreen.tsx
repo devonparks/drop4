@@ -608,17 +608,17 @@ export function GameScreen({ navigation }: Props) {
         completeCareerLevel(careerLevelId, starRating, moveCount);
         // Award career reward(s)
         const careerReward = params.careerLevelReward;
-        const grantReward = (r: typeof careerReward) => {
-          if (!r) return;
+        const grantReward = (r: CareerReward) => {
           if (r.type === 'coins' && r.amount) addCoins(r.amount);
           if (r.type === 'board' && r.id) useShopStore.getState().purchaseItem('boards', r.id, 0);
           if (r.type === 'pieces' && r.id) useShopStore.getState().purchaseItem('pieces', r.id, 0);
           if (r.type === 'pet' && r.id) useShopStore.getState().purchasePet(r.id, 0);
+          if (r.type === 'title') useShopStore.getState().unlockCustomTitle(r.name);
+          if (r.type === 'emote' && r.id) useShopStore.getState().purchaseEmote(r.id, 0);
         };
-        grantReward(careerReward);
-        // Grant bonus reward (e.g. pet from boss levels)
         const levelData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
-        if (levelData?.bonusReward) grantReward(levelData.bonusReward as any);
+        if (levelData?.reward) grantReward(levelData.reward);
+        if (levelData?.bonusReward) grantReward(levelData.bonusReward);
         // Track non-coin rewards so the rewards block can celebrate the unlock.
         // Coins are already shown via the dedicated count-up.
         const collected: CareerReward[] = [];
