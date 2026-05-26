@@ -630,7 +630,42 @@ myPlayer pattern).
 - All Pressables have accessibility labels
 - Every haptics.tap() paired with playSound('click')
 
+### Continued Polish (session 2)
+
+**Touch Target Accessibility**
+- KitsSubscreen: hitSlop on color swatches (22x22), skin swatches (23x23),
+  browse/colorway close buttons (38-40px)
+- ExpressionPanel close button (28x28 + 8px hitSlop)
+- DailySpinWheel close button (32x32 + 6px hitSlop)
+- ReplayViewerScreen back button (36x36 + 4px hitSlop)
+
+**Disabled State Feedback**
+- CareerCityScreen: locked level tap now shows "Complete the previous level
+  first" toast + error sound (was silent haptic only)
+- RosterScreen: locked character tap now shows "Unlocks at career level X"
+  toast + error sound (was completely silent). Also added missing
+  playSound('click') to equip handler.
+
+**PressScale Wrapping**
+- ReplayViewerScreen: replay cards now scale on press (0.97)
+- BoardEditorScreen: MY BOARDS cards now scale on press (0.95)
+- CareerMapScreen: level path nodes now scale on press (0.95)
+
+**Text Overflow Prevention**
+- ProfileScreen: opponent names in match history + most-played card
+- OutfitPreviewModal: pack label + species subtitle
+- ReplayViewerScreen: opponent name in replay card
+- MatchHistoryScreen: opponent name in match row
+
+**Keyboard UX**
+- BoardEditorScreen: returnKeyType="done" + onSubmitEditing triggers save
+- LocalPlayScreen: P1 → Next focuses P2, P2 → Done starts the game
+- ShopScreen: removed dead TextInput import
+
+**Misc**
+- LearnScreen: hidden vertical scroll indicator on lesson detail panel
+
 ### Status
 - Drop4 typecheck clean (0 new errors, ~103 pre-existing amg-engine)
 - 43/43 Drop4 tests passing (4 pre-existing amg-engine failures)
-- 3 commits pushed to main: 3cafad3f, 80f49ed0, bc2c46ec
+- 10 commits pushed to main this session
