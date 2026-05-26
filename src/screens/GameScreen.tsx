@@ -1991,13 +1991,15 @@ export function GameScreen({ navigation }: Props) {
                 {isSeriesMode && seriesOver ? (
                   <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
                     onPress={() => navigation.navigate('Play')} />
-                ) : wasCareerLevel && winner === 1 ? (
+                ) : wasCareerLevel && winner === 1 ? (() => {
+                  const nextLvl = ALL_CAREER_LEVELS.find(l => l.id === (params.careerLevelId ?? 0) + 1);
+                  const hasNext = !!nextLvl;
+                  return (
                   <GlossyButton
-                    label="NEXT LEVEL"
-                    icon={'▶'}
+                    label={hasNext ? 'NEXT LEVEL' : 'CAREER MAP'}
+                    icon={hasNext ? '▶' : '🗺️'}
                     variant="green"
                     onPress={() => {
-                      const nextLvl = ALL_CAREER_LEVELS.find(l => l.id === (params.careerLevelId ?? 0) + 1);
                       const nextCity = nextLvl ? CAREER_CITIES.find(c => c.levelIds.includes(nextLvl.id)) : null;
                       if (nextLvl && nextCity) {
                         resetScores();
@@ -2039,7 +2041,8 @@ export function GameScreen({ navigation }: Props) {
                       }
                     }}
                   />
-                ) : (
+                  );
+                })() : (
                   <GlossyButton
                     label={wasCareerLevel ? 'RETRY LEVEL' : isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
                     icon={'🔄'} variant="orange" onPress={handleRematch}
