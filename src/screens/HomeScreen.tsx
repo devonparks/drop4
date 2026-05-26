@@ -29,7 +29,7 @@ import { WelcomeOverlay } from '../components/ui/WelcomeOverlay';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
 import { getTipById } from '../data/tutorials';
 import { haptics } from '../services/haptics';
-import { ALL_CAREER_LEVELS } from '../data/careerLevels';
+import { ALL_CAREER_LEVELS, CAREER_CITIES, getLevelsForCity } from '../data/careerLevels';
 import { BreathingView, SlideReveal, StaggeredEntry } from '../components/animations';
 import { StagePremiumFX } from '../components/effects/StagePremiumFX';
 import { colors } from '../theme/colors';
@@ -413,6 +413,9 @@ function LootBoxRow({
   const nextCareerLevel = ALL_CAREER_LEVELS.find(
     (l) => !careerProgress[l.id]?.completed,
   );
+  const currentCity = nextCareerLevel
+    ? CAREER_CITIES.find(c => getLevelsForCity(c.id).some(l => l.id === nextCareerLevel.id))
+    : null;
 
   return (
     <View style={styles.lootBoxRow}>
@@ -440,8 +443,8 @@ function LootBoxRow({
       <LootCard
         iconSrc={require('../assets/images/ui/tab-career.png')}
         label="CAREER"
-        status={nextCareerLevel ? `LVL ${nextCareerLevel.id}` : 'COMPLETE!'}
-        ready={false}
+        status={nextCareerLevel ? (currentCity?.nickname || `LVL ${nextCareerLevel.id}`) : 'COMPLETE!'}
+        ready={!!nextCareerLevel}
         onPress={onCareerPress}
       />
     </View>
