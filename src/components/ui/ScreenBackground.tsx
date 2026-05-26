@@ -28,7 +28,7 @@ function AnimatedSceneImage({ sceneImage, animated }: { sceneImage: ImageSourceP
     return (
       <Image
         source={sceneImage}
-        style={[styles.sceneImage, animated ? styles.sceneImageAnim : null]}
+        style={[styles.sceneImage, animated ? webAnimStyles.sceneImageAnim : null]}
         resizeMode="cover"
       />
     );
@@ -97,9 +97,9 @@ function LiveNebulaWallpaper({ animated, hue = 0 }: { animated: boolean; hue?: n
     const hueWrap = hue ? ({ filter: `hue-rotate(${hue}deg)` } as any) : null;
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, hueWrap]}>
-        <Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, animated ? styles.nebulaBackAnim : null]} />
-        <Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, animated ? styles.nebulaMidAnim : null]} />
-        <Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, animated ? styles.nebulaNearAnim : null]} />
+        <Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, animated ? webAnimStyles.nebulaBackAnim : null]} />
+        <Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, animated ? webAnimStyles.nebulaMidAnim : null]} />
+        <Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, animated ? webAnimStyles.nebulaNearAnim : null]} />
       </View>
     );
   }
@@ -308,9 +308,9 @@ export function ScreenBackground({
           for the same reason — the painted scene IS the atmosphere. */}
       {Platform.OS === 'web' && !sceneImage && (
         <>
-          <View style={[styles.starField, animated ? styles.starFieldAnim : null]} />
-          <View style={[styles.starFieldSmall1, animated ? styles.starFieldSmall1Anim : null]} />
-          <View style={[styles.starFieldSmall2, animated ? styles.starFieldSmall2Anim : null]} />
+          <View style={[styles.starField, animated ? webAnimStyles.starFieldAnim : null]} />
+          <View style={[styles.starFieldSmall1, animated ? webAnimStyles.starFieldSmall1Anim : null]} />
+          <View style={[styles.starFieldSmall2, animated ? webAnimStyles.starFieldSmall2Anim : null]} />
         </>
       )}
 
@@ -333,6 +333,55 @@ export function ScreenBackground({
   );
 }
 
+const webAnimStyles = Platform.OS === 'web' ? {
+  sceneImageAnim: {
+    animationName: 'drop4SceneDrift',
+    animationDuration: '28s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
+    willChange: 'transform, opacity',
+  } as any,
+  nebulaBackAnim: {
+    animationName: 'drop4NebulaBack',
+    animationDuration: '180s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
+    willChange: 'transform',
+  } as any,
+  nebulaMidAnim: {
+    animationName: 'drop4NebulaMid',
+    animationDuration: '70s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
+    willChange: 'transform, opacity',
+  } as any,
+  nebulaNearAnim: {
+    animationName: 'drop4NebulaNear',
+    animationDuration: '45s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
+    willChange: 'transform, opacity',
+  } as any,
+  starFieldAnim: {
+    animationName: 'drop4BgDriftA',
+    animationDuration: '120s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
+  } as any,
+  starFieldSmall1Anim: {
+    animationName: 'drop4BgDriftB',
+    animationDuration: '85s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
+  } as any,
+  starFieldSmall2Anim: {
+    animationName: 'drop4BgDriftC',
+    animationDuration: '160s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
+  } as any,
+} : {} as Record<string, any>;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -345,13 +394,7 @@ const styles = StyleSheet.create({
     // opacity so the art reads as painted intended.
     opacity: 1,
   },
-  sceneImageAnim: Platform.OS === 'web' ? ({
-    animationName: 'drop4SceneDrift',
-    animationDuration: '28s',
-    animationTimingFunction: 'ease-in-out',
-    animationIterationCount: 'infinite',
-    willChange: 'transform, opacity',
-  } as any) : null,
+  // Web CSS keyframe animations moved to webAnimStyles (outside StyleSheet.create)
   // ── Live nebula wallpaper layers ──────────────────────────────────
   // Each layer is a full-screen Image stacked in absoluteFill. The
   // _Anim variants attach a CSS keyframe animation on web. On native,
@@ -363,13 +406,7 @@ const styles = StyleSheet.create({
     // Deep starfield — fully opaque, it's the base.
     opacity: 1,
   },
-  nebulaBackAnim: Platform.OS === 'web' ? ({
-    animationName: 'drop4NebulaBack',
-    animationDuration: '180s',
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
-    willChange: 'transform',
-  } as any) : null,
+
   nebulaMidStyle: {
     // Magenta + cyan cloud wisps painted on black bg. `screen` blend
     // mode makes black pixels transparent at the compositor level, so
@@ -377,26 +414,14 @@ const styles = StyleSheet.create({
     opacity: 0.75,
     ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
   },
-  nebulaMidAnim: Platform.OS === 'web' ? ({
-    animationName: 'drop4NebulaMid',
-    animationDuration: '70s',
-    animationTimingFunction: 'ease-in-out',
-    animationIterationCount: 'infinite',
-    willChange: 'transform, opacity',
-  } as any) : null,
+
   nebulaNearStyle: {
     // Sparkle dust — bright star flares on black bg. Same screen blend
     // trick so only the stars punch through the clouds below.
     opacity: 0.8,
     ...(Platform.OS === 'web' ? ({ mixBlendMode: 'screen' } as any) : {}),
   },
-  nebulaNearAnim: Platform.OS === 'web' ? ({
-    animationName: 'drop4NebulaNear',
-    animationDuration: '45s',
-    animationTimingFunction: 'ease-in-out',
-    animationIterationCount: 'infinite',
-    willChange: 'transform, opacity',
-  } as any) : null,
+
   // Horizontal edge feather — dark bands fading in from each side so
   // painted scene PNGs that get cropped by `resizeMode: cover` don't
   // show hard horizontal cuts. Also gives every screen a subtle
@@ -426,16 +451,6 @@ const styles = StyleSheet.create({
       backgroundSize: '50px',
     } as any : {}),
   },
-  starFieldAnim: Platform.OS === 'web' ? ({
-    // Diagonal down-right drift; 120s for a full 200px pass. Matches a
-    // very slow parallax that the eye registers as "alive" rather than
-    // "moving." All three layers drift in loosely different directions
-    // to create depth.
-    animationName: 'drop4BgDriftA',
-    animationDuration: '120s',
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
-  } as any) : null,
   starFieldSmall1: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.15,
@@ -444,12 +459,6 @@ const styles = StyleSheet.create({
       backgroundSize: '25px',
     } as any : {}),
   },
-  starFieldSmall1Anim: Platform.OS === 'web' ? ({
-    animationName: 'drop4BgDriftB',
-    animationDuration: '85s',
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
-  } as any) : null,
   starFieldSmall2: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.15,
@@ -458,12 +467,6 @@ const styles = StyleSheet.create({
       backgroundSize: '39px',
     } as any : {}),
   },
-  starFieldSmall2Anim: Platform.OS === 'web' ? ({
-    animationName: 'drop4BgDriftC',
-    animationDuration: '160s',
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
-  } as any) : null,
   // Breathing glow orbs — large soft radial gradients positioned mostly
   // off-screen so only the glow halo reaches the visible area. Was
   // -10% offsets, but the orb body still showed visibly past the
