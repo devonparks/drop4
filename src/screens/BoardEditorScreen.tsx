@@ -178,6 +178,8 @@ export function BoardEditorScreen({ navigation }: Props) {
               placeholder="Board name..."
               placeholderTextColor={colors.textMuted}
               maxLength={20}
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
               accessibilityLabel="Board name"
               accessibilityHint="Name your custom puzzle board, up to 20 characters"
             />

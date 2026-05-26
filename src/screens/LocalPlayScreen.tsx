@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -27,6 +27,7 @@ export function LocalPlayScreen({ navigation }: Props) {
 
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
+  const player2Ref = useRef<TextInput>(null);
 
   const startLocalGame = () => {
     haptics.tap();
@@ -75,6 +76,8 @@ export function LocalPlayScreen({ navigation }: Props) {
                 placeholder="Player 1"
                 placeholderTextColor={colors.textMuted}
                 maxLength={12}
+                returnKeyType="next"
+                onSubmitEditing={() => player2Ref.current?.focus()}
                 accessibilityLabel="Player 1 name"
                 accessibilityHint="Enter the name for the red player"
               />
@@ -98,12 +101,15 @@ export function LocalPlayScreen({ navigation }: Props) {
                 <Text style={styles.dotLabel}>P2</Text>
               </View>
               <TextInput
+                ref={player2Ref}
                 style={styles.nameInput}
                 value={player2Name}
                 onChangeText={setPlayer2Name}
                 placeholder="Player 2"
                 placeholderTextColor={colors.textMuted}
                 maxLength={12}
+                returnKeyType="done"
+                onSubmitEditing={startLocalGame}
                 accessibilityLabel="Player 2 name"
                 accessibilityHint="Enter the name for the yellow player"
               />

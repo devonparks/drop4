@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Dimensions, TextInput, Pressable, ImageSourcePropType } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Dimensions, Pressable, ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
