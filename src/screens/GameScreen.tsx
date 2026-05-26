@@ -624,6 +624,9 @@ export function GameScreen({ navigation }: Props) {
         const pMoves = Math.ceil(moveCount / 2);
         const starRating = pMoves <= th.three ? 3 : pMoves <= th.two ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
+        updateChallenge('career_3', 1);
+        if (starRating === 3) updateChallenge('career_3star', 1);
+        if (lvlData?.isBoss) updateChallenge('career_boss', 1);
         // Award career reward(s)
         const careerReward = params.careerLevelReward;
         const grantReward = (r: CareerReward) => {

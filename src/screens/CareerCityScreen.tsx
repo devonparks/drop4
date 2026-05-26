@@ -551,6 +551,13 @@ function OpponentNode({
           </View>
         )}
 
+        {/* Improvable badge — nudges replays on < 3-star levels */}
+        {isComplete && stars < 3 && (
+          <View style={styles.improveBadge} pointerEvents="none">
+            <Text style={styles.improveBadgeText}>↑</Text>
+          </View>
+        )}
+
         {/* Level-type chip — small badge so players can tell a timed level,
             puzzle, or big-board level apart from a normal match at a glance.
             Boss already has rays/crown treatment so skip the chip there. */}
@@ -937,6 +944,25 @@ const styles = StyleSheet.create({
   },
   nodeTypeChipTextPhase2: {
     color: '#ffd54f',
+  },
+  improveBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,140,0,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#0d1030',
+  },
+  improveBadgeText: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '900',
+    marginTop: -1,
   },
   nodeName: {
     marginTop: 10,

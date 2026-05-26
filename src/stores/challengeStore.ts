@@ -52,6 +52,9 @@ const CHALLENGE_POOL: Omit<Challenge, 'progress' | 'completed'>[] = [
   { id: 'fast_win', title: 'Speed Win', description: 'Win a game in under 10 moves', icon: '⚡', target: 1, reward: 80 },
   { id: 'blitz_win', title: 'Blitz King', description: 'Win a game in under 8 moves', icon: '💨', target: 1, reward: 120 },
   { id: 'career_level', title: 'Career Move', description: 'Complete a career level', icon: '📍', target: 1, reward: 75 },
+  { id: 'career_3', title: 'Career Grind', description: 'Complete 3 career levels', icon: '🗺️', target: 3, reward: 200 },
+  { id: 'career_3star', title: 'Perfect Run', description: 'Earn 3 stars on a career level', icon: '⭐', target: 1, reward: 100 },
+  { id: 'career_boss', title: 'Boss Hunter', description: 'Defeat a career boss', icon: '👑', target: 1, reward: 150 },
   // Social / exploration
   { id: 'play_local', title: 'Social Gamer', description: 'Play a local multiplayer game', icon: '👥', target: 1, reward: 40 },
   { id: 'shop_visit', title: 'Window Shopping', description: 'Visit the shop', icon: '🛍', target: 1, reward: 15 },
