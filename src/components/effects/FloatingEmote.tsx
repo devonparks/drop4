@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,55 +9,31 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
+import { fonts, weight } from '../../theme/typography';
 
 // Map emote IDs to emoji for display (all 30 emotes + idle)
 const EMOTE_EMOJI: Record<string, string> = {
-  // Base
   idle: '😐',
-  // Affection
-  blowkiss: '😘',
-  callme: '🤙',
-  fingerheart: '🫰',
-  hearthands: '🫶',
-  // Angry
-  angry: '😤',
-  tantrum: '🤬',
-  // Celebrate
-  airguitar: '🎸',
-  beatchest: '🦍',
-  clapping: '👏',
-  dab: '🕺',
-  dustshoulder: '😎',
-  fingerguns: '👉',
-  // Dance
-  dancechestpump: '💃',
-  dancetwist: '🪩',
-  dancerunstep: '🏃',
-  // Greet
-  wave: '👋',
-  bow: '🙇',
-  salute: '🫡',
-  // Happy
-  thumbsup: '👍',
-  fistpump: '✊',
-  armsraised: '🙌',
-  // Reproach
-  calmdown: '🤚',
-  shrug: '🤷',
-  // Sad
-  facepalm: '🤦',
-  crying: '😢',
-  thumbsdown: '👎',
-  // Sporty
-  flexbiceps: '💪',
-  boxing: '🥊',
-  // Taunt
-  laughpoint: '🤣',
-  slowclap: '👏',
+  blowkiss: '😘', callme: '🤙', fingerheart: '🫰', hearthands: '🫶',
+  angry: '😤', tantrum: '🤬',
+  airguitar: '🎸', beatchest: '🦍', clapping: '👏', dab: '🕺',
+  dustshoulder: '😎', fingerguns: '👉',
+  dancechestpump: '💃', dancetwist: '🪩', dancerunstep: '🏃',
+  wave: '👋', bow: '🙇', salute: '🫡',
+  thumbsup: '👍', fistpump: '✊', armsraised: '🙌',
+  calmdown: '🤚', shrug: '🤷',
+  facepalm: '🤦', crying: '😢', thumbsdown: '👎',
+  flexbiceps: '💪', boxing: '🥊',
+  laughpoint: '🤣', slowclap: '👏',
 };
 
+// Check if a string is a text phrase (not an emoji)
+const isPhrase = (s: string) => /^[A-Za-z !?]+$/.test(s);
+
 interface FloatingEmoteProps {
-  emoteId: string;
+  emoteId?: string;
+  /** Raw emoji string — use instead of emoteId for quick reactions */
+  rawEmoji?: string;
   /** Which side to show: 'left' for player 1 area, 'right' for player 2 / opponent area */
   side: 'left' | 'right';
   /** Called when the animation finishes so parent can clean up */
@@ -65,33 +41,35 @@ interface FloatingEmoteProps {
 }
 
 /**
- * Shows an emote emoji that fades in, floats upward, then fades out.
- * Total duration ~2 seconds. Positioned near the opponent's avatar area.
+ * Shows an emote/phrase that pops in above the board, floats up, fades out.
+ * Positioned centrally for maximum visibility — not hidden in a corner.
  */
-export function FloatingEmote({ emoteId, side, onDone }: FloatingEmoteProps) {
+export function FloatingEmote({ emoteId, rawEmoji, side, onDone }: FloatingEmoteProps) {
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const scale = useSharedValue(0.5);
+  const translateY = useSharedValue(20);
+  const scale = useSharedValue(0.3);
 
   useEffect(() => {
-    // Fade in + scale up (0-300ms)
-    opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
+    // Pop in → hold → fade out
+    opacity.value = withSequence(
+      withTiming(1, { duration: 180, easing: Easing.out(Easing.ease) }),
+      withDelay(2000,
+        withTiming(0, { duration: 500 }, (finished) => {
+          if (finished && onDone) {
+            runOnJS(onDone)();
+          }
+        })
+      ),
+    );
+
+    // Scale: snap up big then settle
     scale.value = withSequence(
-      withTiming(1.3, { duration: 200, easing: Easing.out(Easing.back(2)) }),
-      withTiming(1, { duration: 150 }),
+      withTiming(1.15, { duration: 180, easing: Easing.out(Easing.back(3)) }),
+      withTiming(1, { duration: 120 }),
     );
 
-    // Float upward over the full duration (3 seconds)
-    translateY.value = withTiming(-60, { duration: 3000, easing: Easing.out(Easing.ease) });
-
-    // Fade out (2400-3000ms), then signal done
-    opacity.value = withDelay(2400,
-      withTiming(0, { duration: 600 }, (finished) => {
-        if (finished && onDone) {
-          runOnJS(onDone)();
-        }
-      })
-    );
+    // Float upward
+    translateY.value = withTiming(-40, { duration: 2700, easing: Easing.out(Easing.ease) });
   }, []);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -102,18 +80,24 @@ export function FloatingEmote({ emoteId, side, onDone }: FloatingEmoteProps) {
     ],
   }));
 
-  const emoji = EMOTE_EMOJI[emoteId] || '😄';
+  const content = rawEmoji || EMOTE_EMOJI[emoteId || ''] || '\u{1F604}';
+  const isText = isPhrase(content);
 
   return (
     <Animated.View
       style={[
         styles.container,
-        side === 'left' ? styles.leftSide : styles.rightSide,
+        side === 'left' ? styles.leftPos : styles.rightPos,
+        isText && styles.phraseContainer,
         animStyle,
       ]}
       pointerEvents="none"
     >
-      <Text style={styles.emoji}>{emoji}</Text>
+      {isText ? (
+        <Text style={styles.phraseText}>{content}</Text>
+      ) : (
+        <Text style={styles.emoji}>{content}</Text>
+      )}
     </Animated.View>
   );
 }
@@ -121,24 +105,46 @@ export function FloatingEmote({ emoteId, side, onDone }: FloatingEmoteProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 10,
-    zIndex: 100,
+    top: '18%',
+    zIndex: 150,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    minWidth: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  leftSide: {
-    left: 20,
+  phraseContainer: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    height: 44,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderColor: 'rgba(255,140,0,0.3)',
   },
-  rightSide: {
-    right: 20,
+  leftPos: {
+    left: '15%',
+  },
+  rightPos: {
+    right: '15%',
   },
   emoji: {
-    fontSize: 32,
+    fontSize: 36,
+  },
+  phraseText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 18,
+    color: '#ffffff',
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(255,140,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
 });

@@ -20,7 +20,7 @@ import { Character3DPortrait } from '../components/3d/Character3DPortrait';
 import { getNpcCustomization } from '../data/npcCustomizations';
 import { PetDisplay } from '../components/ui/PetDisplay';
 import { PETS_ENABLED } from '../data/featureFlags';
-import { FortniteEmoteWheel } from '../components/ui/FortniteEmoteWheel';
+import { ExpressionPanel, TabKey } from '../components/ui/ExpressionPanel';
 import { useGameStore } from '../stores/gameStore';
 import { useShopStore } from '../stores/shopStore';
 import { getAIMove } from '../engine/aiEngine';
@@ -236,9 +236,12 @@ export function GameScreen({ navigation }: Props) {
     }
   }, []);
 
-  // Fortnite-style emote wheel
-  const [emoteWheelOpen, setEmoteWheelOpen] = useState(false);
-  const equippedEmotes = useShopStore(s => s.equippedEmotes);
+  // Expression panel — null = closed, tab key = open to that tab
+  const [expressionPanelTab, setExpressionPanelTab] = useState<TabKey | null>(null);
+  const [myPlayingEmote, setMyPlayingEmote] = useState<string | null>(null);
+  const [myGameIdle, setMyGameIdle] = useState<string | null>(null);
+  const emoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const equippedPet = useShopStore(s => s.equippedPet);
   const equippedBoard = useShopStore(s => s.equipped.board);
   const boardThemeName = BOARD_THEMES.find(b => b.id === equippedBoard)?.name || 'Classic Blue';
@@ -273,6 +276,11 @@ export function GameScreen({ navigation }: Props) {
   const [myEmote, setMyEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const [opponentEmote, setOpponentEmote] = useState<{ emoteId: string; key: number } | null>(null);
   const aiEmoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Quick-reaction bubbles (emoji bar, not emote wheel)
+  const [myReaction, setMyReaction] = useState<{ emoji: string; key: number } | null>(null);
+  const [botReaction, setBotReaction] = useState<{ emoji: string; key: number } | null>(null);
+  const botReactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Start recording replay when game begins + apply preset board + obstacles
   useEffect(() => {
@@ -928,6 +936,33 @@ export function GameScreen({ navigation }: Props) {
     showLastMove(col);
     haptics.drop();
     playSound('drop');
+    // Bot reacts to player moves after a short delay
+    if (currentPlayer === 1 && isVsAi) {
+      const board = useGameStore.getState().board;
+      const connectN = useGameStore.getState().customSettings.connectCount;
+      setTimeout(() => {
+        // Simple threat detection: does player have connectN-1 in a row?
+        let maxRun = 0;
+        for (let c = 0; c < board.length; c++) {
+          for (let r = 0; r < board[c].length; r++) {
+            if (board[c][r] !== 1) continue;
+            for (const [dc, dr] of [[1, 0], [0, 1], [1, 1], [1, -1]] as const) {
+              let run = 1;
+              let nc = c + dc;
+              let nr = r + dr;
+              while (nc >= 0 && nc < board.length && nr >= 0 && nr < board[0].length && board[nc][nr] === 1) {
+                run++; nc += dc; nr += dr;
+              }
+              if (run > maxRun) maxRun = run;
+            }
+          }
+        }
+        if (maxRun >= connectN - 1 && Math.random() < 0.55) {
+          const threats = ['\u{1F624}', '\u{1F630}', '\u{1FAE3}', '\u{1F928}'];
+          setBotReaction({ emoji: threats[Math.floor(Math.random() * threats.length)], key: Date.now() });
+        }
+      }, 500);
+    }
   }, [status, isAiThinking, introDone, currentPlayer, isVsAi, moveCount, params.bossScript, armedPowerPiece, bombsRemaining, rainbowsRemaining, heaviesRemaining]);
 
   const handleShareScore = async () => {
@@ -1098,11 +1133,27 @@ export function GameScreen({ navigation }: Props) {
     }, delay);
   };
 
+  // ── Quick reaction: player taps emoji bar ──
+  const handleReaction = useCallback((emoji: string) => {
+    setMyReaction({ emoji, key: Date.now() });
+    // Bot responds to player reaction ~40% of the time
+    if (isVsAi && Math.random() < 0.4) {
+      const botResponses = ['\u{1F440}', '\u{1F60F}', '\u{1F624}', '\u{1F44F}', '\u{1F60E}', '\u{1F914}'];
+      const pick = botResponses[Math.floor(Math.random() * botResponses.length)];
+      if (botReactionTimerRef.current) clearTimeout(botReactionTimerRef.current);
+      botReactionTimerRef.current = setTimeout(() => {
+        setBotReaction({ emoji: pick, key: Date.now() });
+      }, 800 + Math.random() * 1200);
+    }
+  }, [isVsAi]);
+
   // Cleanup AI emote timer + personality timer on unmount
   useEffect(() => {
     return () => {
       if (aiEmoteTimerRef.current) clearTimeout(aiEmoteTimerRef.current);
       if (aiPersonalityTimerRef.current) clearTimeout(aiPersonalityTimerRef.current);
+      if (botReactionTimerRef.current) clearTimeout(botReactionTimerRef.current);
+      if (emoteTimerRef.current) clearTimeout(emoteTimerRef.current);
     };
   }, []);
 
@@ -1212,6 +1263,9 @@ export function GameScreen({ navigation }: Props) {
 
         {/* Move counter moved to bottom controls (duplicate removed) */}
 
+        {/* ── Flex spacer: pushes board cluster to vertical center ── */}
+        <View style={styles.flexSpacerTop} />
+
         {/* First game encouragement */}
         {showFirstGameMsg && (
           <RNAnimated.View style={[styles.firstGameBanner, { opacity: firstGameFade }]} pointerEvents="none">
@@ -1278,271 +1332,99 @@ export function GameScreen({ navigation }: Props) {
 
         {/* Last move indicator — removed, piece drop is self-evident */}
 
-        {/* Bottom controls */}
-        <View style={styles.controls}>
-          {/* Hint button — 3 free per game, then 10 coins each */}
-          {(() => {
-            const coins = useShopStore.getState().coins;
-            const canAffordHint = freeHintsRemaining > 0 || coins >= 10;
-            const hintLabel = freeHintsRemaining > 0
-              ? `Hint (${freeHintsRemaining})`
-              : coins >= 10
-                ? 'Hint 🪙10'
-                : 'No coins';
-            return (
-              <Pressable
-                onPress={() => {
-                  if (status === 'playing' && !isAiThinking && currentPlayer === 1 && canAffordHint) {
-                    if (freeHintsRemaining > 0) {
-                      setFreeHintsRemaining(prev => prev - 1);
-                    } else {
-                      const spent = useShopStore.getState().spendCoins(10);
-                      if (!spent) return;
-                    }
-                    haptics.achievement?.() ?? haptics.tap();
-                    playSound('achievement');
-                    const bestCol = getAIMove(board, 'hard', customSettings.connectCount);
-                    setHintCol(bestCol);
-                    // Longer visual dwell so players can see the cue.
-                    setTimeout(() => setHintCol(null), 4500);
-                  }
-                }}
-                style={[styles.controlBtn, !canAffordHint && { opacity: 0.4 }]}
-                disabled={!canAffordHint}
-                accessibilityRole="button"
-                accessibilityLabel={hintLabel}
-                accessibilityState={{ disabled: !canAffordHint }}
-              >
-                <Image
-                  source={require('../assets/images/ui/action-hint.png')}
-                  style={styles.controlIconImg}
-                  resizeMode="contain"
-                />
-                <Text style={styles.controlLabel}>{hintLabel}</Text>
-              </Pressable>
-            );
-          })()}
+        {/* ── Below-board 3-column layout: [Player] [Center UI] [Opponent] ── */}
+        {status === 'playing' && (
+          <View style={styles.belowBoard}>
+            {/* Left: Player character */}
+            <View style={styles.charColumn}>
+              <Character3DPortrait width={140} height={300} showFloor={false} animationId={myPlayingEmote || myGameIdle} />
+            </View>
 
-          {/* Skip booster (career overhaul phase 1) — 1 free per match;
-              when the player taps it during the AI's turn we cancel the
-              pending move and flip currentPlayer back. Only surfaced
-              for VS-AI matches (skipping a human in local play would be
-              broken UX). Disabled when status isn't 'playing' or when
-              it isn't the AI's turn — visually present but greyed so
-              players can see it exists before they need it. */}
-          {isVsAi && (() => {
-            const gems = useShopStore.getState().gems;
-            // 5 gems for a paid skip after the free one is used. Drop
-            // boxes seed extra skips post-launch (out of scope for
-            // phase 1).
-            const SKIP_GEM_COST = 5;
-            const isAiTurn = currentPlayer === 2 && status === 'playing';
-            const canPay = skipsRemaining > 0 || gems >= SKIP_GEM_COST;
-            const enabled = isAiTurn && canPay;
-            const skipLabel = skipsRemaining > 0
-              ? `Skip (${skipsRemaining})`
-              : gems >= SKIP_GEM_COST
-                ? `Skip 💎${SKIP_GEM_COST}`
-                : 'Skip';
-            return (
+            {/* Center: Expression + Surrender (+ power pieces in career) */}
+            <View style={styles.centerColumn}>
               <Pressable
-                onPress={() => {
-                  if (!enabled) return;
-                  if (skipsRemaining > 0) {
-                    setSkipsRemaining(prev => prev - 1);
-                  } else {
-                    const ok = useShopStore.getState().spendGems(SKIP_GEM_COST);
-                    if (!ok) return;
-                  }
-                  // Cancel the pending AI move + flip player so the
-                  // useEffect that triggers AI sees currentPlayer===1
-                  // and stays inert. setAiThinking(false) clears the
-                  // "Thinking..." status indicator too.
-                  if (aiTimerRef.current) {
-                    clearTimeout(aiTimerRef.current);
-                    aiTimerRef.current = null;
-                  }
-                  useGameStore.setState({ currentPlayer: 1, isAiThinking: false });
-                  haptics.win?.() ?? haptics.tap();
-                  playSound('whoosh');
-                }}
-                style={[styles.controlBtn, !enabled && { opacity: 0.4 }]}
-                disabled={!enabled}
+                onPress={() => { haptics.tap(); setExpressionPanelTab('emojis'); }}
+                style={styles.categoryBtn}
                 accessibilityRole="button"
-                accessibilityLabel={skipLabel}
-                accessibilityHint={isAiTurn ? 'Skip the opponent’s turn' : 'Available during opponent’s turn'}
-                accessibilityState={{ disabled: !enabled }}
+                accessibilityLabel="Open emojis"
               >
-                <Image
-                  source={require('../assets/images/ui/action-undo.png')}
-                  style={[styles.controlIconImg, { transform: [{ scaleX: -1 }] }]}
-                  resizeMode="contain"
-                />
-                <Text style={styles.controlLabel}>{skipLabel}</Text>
+                <Text style={styles.categoryIcon}>😊</Text>
+                <Text style={styles.categoryLabel}>Emojis</Text>
               </Pressable>
-            );
-          })()}
 
-          {/* Phase 2 power pieces — career-only, unlocked progressively
-              by chapter bosses. Bomb (Brooklyn) clears a 3×3 around
-              the landing cell. Rainbow (Venice) counts as either color
-              for win detection. Heavy (Harlem) pushes adjacent
-              opponent pieces down one row on impact. Each piece arms a
-              single-use mode; only one can be armed at a time
-              (auto-disarms when another is tapped). Visual gold border
-              when armed so the player knows what's about to happen. */}
-          {(() => {
-            const isCareer = params.careerLevelId !== undefined;
-            if (!isCareer || !isVsAi) return null;
-            const isPlayerTurn = currentPlayer === 1 && status === 'playing' && !isAiThinking;
-            const careerStore = useCareerStore.getState();
-            const pieces: Array<{
-              id: 'bomb' | 'rainbow' | 'heavy';
-              icon: string;
-              label: string;
-              color: string;
-              remaining: number;
-              unlocked: boolean;
-            }> = [
-              {
-                id: 'bomb',
-                icon: '💣',
-                label: 'Bomb',
-                color: '#ff4081',
-                remaining: bombsRemaining,
-                unlocked: careerStore.isPowerPieceUnlocked('bomb'),
-              },
-              {
-                id: 'rainbow',
-                icon: '🌈',
-                label: 'Rainbow',
-                color: '#9b59b6',
-                remaining: rainbowsRemaining,
-                unlocked: careerStore.isPowerPieceUnlocked('rainbow'),
-              },
-              {
-                id: 'heavy',
-                icon: '🪨',
-                label: 'Heavy',
-                color: '#a8a8b8',
-                remaining: heaviesRemaining,
-                unlocked: careerStore.isPowerPieceUnlocked('heavy'),
-              },
-            ];
-            return (
-              <>
-                {pieces.filter(p => p.unlocked).map((p) => {
+              <Pressable
+                onPress={() => { haptics.tap(); setExpressionPanelTab('phrases'); }}
+                style={styles.categoryBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Open phrases"
+              >
+                <Text style={styles.categoryIcon}>💬</Text>
+                <Text style={styles.categoryLabel}>Phrases</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => { haptics.tap(); setExpressionPanelTab('emotes'); }}
+                style={styles.categoryBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Open emotes"
+              >
+                <Text style={styles.categoryIcon}>🕺</Text>
+                <Text style={styles.categoryLabel}>Emotes</Text>
+              </Pressable>
+
+              {/* ── Power pieces (career only) ── */}
+              {(() => {
+                const isCareer = params.careerLevelId !== undefined;
+                if (!isCareer || !isVsAi) return null;
+                const isPlayerTurn = currentPlayer === 1 && status === 'playing' && !isAiThinking;
+                const careerStore = useCareerStore.getState();
+                const pieces: Array<{ id: 'bomb' | 'rainbow' | 'heavy'; icon: string; label: string; color: string; remaining: number; unlocked: boolean }> = [
+                  { id: 'bomb', icon: '💣', label: 'Bomb', color: '#ff4081', remaining: bombsRemaining, unlocked: careerStore.isPowerPieceUnlocked('bomb') },
+                  { id: 'rainbow', icon: '🌈', label: 'Rainbow', color: '#9b59b6', remaining: rainbowsRemaining, unlocked: careerStore.isPowerPieceUnlocked('rainbow') },
+                  { id: 'heavy', icon: '🪨', label: 'Heavy', color: '#a8a8b8', remaining: heaviesRemaining, unlocked: careerStore.isPowerPieceUnlocked('heavy') },
+                ];
+                return pieces.filter(p => p.unlocked).map((p) => {
                   const isArmed = armedPowerPiece === p.id;
                   const enabled = p.remaining > 0 && isPlayerTurn;
-                  const label = isArmed
-                    ? 'TAP COL'
-                    : p.remaining > 0
-                      ? `${p.label} (${p.remaining})`
-                      : p.label;
+                  const label = isArmed ? 'TAP COL' : `${p.label} (${p.remaining})`;
                   return (
                     <Pressable
                       key={p.id}
-                      onPress={() => {
-                        if (!enabled) return;
-                        setArmedPowerPiece(prev => (prev === p.id ? null : p.id));
-                        haptics.tap();
-                        playSound('click');
-                      }}
-                      style={[
-                        styles.controlBtn,
-                        !enabled && { opacity: 0.4 },
-                        isArmed && { borderColor: p.color, borderWidth: 2, borderRadius: 8 },
-                      ]}
+                      onPress={() => { if (!enabled) return; setArmedPowerPiece(prev => (prev === p.id ? null : p.id)); haptics.tap(); playSound('click'); }}
+                      style={[styles.actionBtn, !enabled && styles.actionBtnDisabled, isArmed && { borderColor: p.color, borderWidth: 2 }]}
                       disabled={!enabled}
                       accessibilityRole="button"
-                      accessibilityLabel={isArmed ? `${p.label} armed — tap a column to use` : label}
+                      accessibilityLabel={label}
                       accessibilityState={{ disabled: !enabled, selected: isArmed }}
                     >
-                      <Text style={[styles.controlIconImg, { fontSize: 26, textAlign: 'center' }]}>{p.icon}</Text>
-                      <Text style={[styles.controlLabel, isArmed && { color: p.color }]}>{label}</Text>
+                      <Text style={{ fontSize: 16 }}>{p.icon}</Text>
+                      <Text style={[styles.actionBtnLabel, isArmed && { color: p.color }]}>{label}</Text>
                     </Pressable>
                   );
-                })}
-              </>
-            );
-          })()}
+                });
+              })()}
 
-          {/* Move counter */}
-          <View style={styles.moveCounter}>
-            <Text style={styles.moveText}>Move {Math.ceil((moveCount + 1) / 2)}</Text>
-          </View>
+              {/* ── Surrender ── */}
+              <Pressable
+                onPress={() => { haptics.tap(); playSound('click'); setQuitConfirmVisible(true); }}
+                style={styles.surrenderBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Surrender"
+              >
+                <Text style={styles.surrenderIcon}>🏳️</Text>
+                <Text style={styles.surrenderLabel}>Surrender</Text>
+              </Pressable>
+            </View>
 
-          {/* Undo button — only available on Easy difficulty */}
-          {difficulty === 'easy' && (
-            <Pressable
-              onPress={() => {
-                if (undoMove()) {
-                  haptics.tap();
-                  playSound('swoosh');
-                }
-              }}
-              style={styles.controlBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Undo last move"
-            >
-              <Image
-                source={require('../assets/images/ui/action-undo.png')}
-                style={styles.controlIconImg}
-                resizeMode="contain"
+            {/* Right: Opponent character */}
+            <View style={styles.charColumn}>
+              <Character3DPortrait
+                width={140} height={300} showFloor={false}
+                customization={isVsAi ? getNpcCustomization(params.opponentName || difficulty) : undefined}
               />
-              <Text style={styles.controlLabel}>Undo</Text>
-            </Pressable>
-          )}
-
-          {/* Resign button */}
-          <Pressable
-            onPress={handleBack}
-            style={styles.controlBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Quit game"
-          >
-            <Image
-              source={require('../assets/images/ui/action-quit.png')}
-              style={styles.controlIconImg}
-              resizeMode="contain"
-            />
-            <Text style={styles.resignLabel}>Quit</Text>
-          </Pressable>
-        </View>
-
-        {/* Round EMOTE button — opens Fortnite-style wheel */}
-        <Pressable
-          onPress={() => {
-            haptics.tap();
-            playSound('click');
-            setEmoteWheelOpen(true);
-          }}
-          style={styles.emoteWheelTrigger}
-          accessibilityRole="button"
-          accessibilityLabel="Open emote wheel"
-        >
-          <LinearGradient
-            colors={['rgba(255,140,0,0.3)', 'rgba(255,100,0,0.12)']}
-            style={styles.emoteWheelTriggerGradient}
-          >
-            <Image
-              source={require('../assets/images/ui/action-emote.png')}
-              style={styles.emoteWheelTriggerImg}
-              resizeMode="contain"
-            />
-          </LinearGradient>
-        </Pressable>
-
-        {/* Fortnite-style radial emote wheel */}
-        <FortniteEmoteWheel
-          visible={emoteWheelOpen}
-          equippedEmotes={equippedEmotes as any}
-          onSelect={(emoteId) => {
-            setMyEmote({ emoteId, key: Date.now() });
-            triggerAiEmoteReaction(emoteId);
-          }}
-          onClose={() => setEmoteWheelOpen(false)}
-        />
+            </View>
+          </View>
+        )}
 
         {/* My Chat Bubble — shows above the board on my side */}
         {myChatBubble && (
@@ -1588,6 +1470,71 @@ export function GameScreen({ navigation }: Props) {
           />
         )}
 
+        {/* Quick-reaction bubbles (from reaction bar) */}
+        {myReaction && (
+          <FloatingEmote
+            key={myReaction.key}
+            rawEmoji={myReaction.emoji}
+            side="left"
+            onDone={() => setMyReaction(null)}
+          />
+        )}
+        {botReaction && (
+          <FloatingEmote
+            key={botReaction.key}
+            rawEmoji={botReaction.emoji}
+            side="right"
+            onDone={() => setBotReaction(null)}
+          />
+        )}
+
+        {/* ── Expression panel (3-tab: emojis/phrases/emotes) ── */}
+        {expressionPanelTab != null && status === 'playing' && (
+          <ExpressionPanel
+            initialTab={expressionPanelTab}
+            onEmoji={(emoji) => {
+              setMyReaction({ emoji, key: Date.now() });
+              if (isVsAi && Math.random() < 0.35) {
+                const picks = ['😤', '👀', '😎', '🔥', '💀'];
+                const p = picks[Math.floor(Math.random() * picks.length)];
+                if (botReactionTimerRef.current) clearTimeout(botReactionTimerRef.current);
+                botReactionTimerRef.current = setTimeout(() => {
+                  setBotReaction({ emoji: p, key: Date.now() });
+                }, 600 + Math.random() * 1400);
+              }
+            }}
+            onPhrase={(phrase) => {
+              setMyReaction({ emoji: phrase, key: Date.now() });
+              if (isVsAi && Math.random() < 0.35) {
+                const picks = ['GG', 'LOL', 'Nice!', 'Wow', '😤'];
+                const p = picks[Math.floor(Math.random() * picks.length)];
+                if (botReactionTimerRef.current) clearTimeout(botReactionTimerRef.current);
+                botReactionTimerRef.current = setTimeout(() => {
+                  setBotReaction({ emoji: p, key: Date.now() });
+                }, 600 + Math.random() * 1400);
+              }
+            }}
+            onEmote={(emoteId) => {
+              setMyPlayingEmote(emoteId);
+              if (emoteTimerRef.current) clearTimeout(emoteTimerRef.current);
+              emoteTimerRef.current = setTimeout(() => setMyPlayingEmote(null), 3000);
+              if (isVsAi && Math.random() < 0.4) {
+                const botEmotes = ['emote_clap', 'emote_shake_fist', 'emote_thumbs_down', 'emote_dab'];
+                const pick = botEmotes[Math.floor(Math.random() * botEmotes.length)];
+                if (botReactionTimerRef.current) clearTimeout(botReactionTimerRef.current);
+                botReactionTimerRef.current = setTimeout(() => {
+                  setBotReaction({ emoji: '🕺', key: Date.now() });
+                }, 800 + Math.random() * 1200);
+              }
+            }}
+            onIdle={(idleId) => {
+              setMyGameIdle(idleId);
+              setMyPlayingEmote(null);
+            }}
+            onClose={() => setExpressionPanelTab(null)}
+          />
+        )}
+
         {/* Confetti on victory */}
         <ConfettiOverlay visible={showConfetti} onDone={() => setShowConfetti(false)} />
 
@@ -1611,49 +1558,21 @@ export function GameScreen({ navigation }: Props) {
         {/* ========== GAME OVER OVERLAY — Basketball Stars style ========== */}
         <PreviewSafeModal visible={status === 'won' || status === 'draw'} transparent animationType="none">
           <Animated.View entering={FadeIn.duration(300)} style={styles.overlay}>
-            {/* Painted hero trophy — Flux-generated gold cup with sunburst.
-                Sits behind the celebration banner, zooms in from center
-                on win, fades as the game-over card slides up to take over. */}
-            {status === 'won' && winner === 1 && (
-              <Animated.View
-                entering={FadeIn.duration(500).delay(100)}
-                style={styles.winTrophyHero}
-                pointerEvents="none"
-              >
-                <Image
-                  source={require('../assets/images/ui/particle-win-trophy.png')}
-                  style={StyleSheet.absoluteFill as any}
-                  resizeMode="contain"
-                />
-              </Animated.View>
-            )}
-            {/* Win celebration variety banner */}
-            {celebrationText && status === 'won' && winner === 1 && !showFirstWin && (
-              <Animated.View entering={FadeIn.duration(400)} style={styles.celebrationBanner} pointerEvents="none">
-                <Text style={styles.celebrationText}>{celebrationText}</Text>
-              </Animated.View>
-            )}
-            {/* First Win golden banner */}
-            {showFirstWin && (
-              <RNAnimated.View style={[styles.firstWinBanner, { opacity: firstWinOpacity }]} pointerEvents="none">
-                <Text style={styles.firstWinText}>FIRST WIN!</Text>
-              </RNAnimated.View>
-            )}
             <SlideReveal from="bottom" delay={100}>
-            <Animated.View style={styles.goCard}>
-             <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+            <View style={styles.goFullScreen}>
 
-              {/* Top: Mode label — color-coded by mode so career/vs-AI/local have distinct identities */}
-              <View style={[styles.goModeRow,
-                wasCareerLevel
-                  ? { backgroundColor: 'rgba(241,196,15,0.12)', borderBottomColor: 'rgba(241,196,15,0.3)' }
-                  : isVsAi
-                  ? { backgroundColor: 'rgba(155,89,182,0.1)', borderBottomColor: 'rgba(155,89,182,0.25)' }
-                  : { backgroundColor: 'rgba(26,188,156,0.1)', borderBottomColor: 'rgba(26,188,156,0.25)' },
-              ]}>
-                <Text style={[styles.goModeText,
+              {/* ── Big result headline at the top ── */}
+              <View style={styles.goHeadlineZone}>
+                <Text style={[styles.goHeadline,
+                  status === 'draw' ? { color: '#3498db' }
+                    : winner === 1 ? { color: colors.coinGold }
+                    : { color: '#e74c3c' },
+                ]}>
+                  {status === 'draw' ? 'DRAW' : winner === 1 ? 'VICTORY' : 'DEFEAT'}
+                </Text>
+                <Text style={[styles.goSubheadline,
                   wasCareerLevel ? { color: '#f1c40f' } : isVsAi ? { color: '#b06cc7' } : { color: colors.teal },
-                ]} accessibilityRole="header">
+                ]}>
                   {wasCareerLevel
                     ? `LEVEL ${params.careerLevelId} — CAREER`
                     : isSeriesMode
@@ -1664,59 +1583,44 @@ export function GameScreen({ navigation }: Props) {
                 </Text>
               </View>
 
-              {/* ---- Characters side by side with WINNER banner ---- */}
-              <View style={styles.goCharRow}>
-                {/* Player 1 side */}
-                <View style={styles.goCharSide}>
-                  {status === 'won' && winner === 1 && (
-                    <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
-                  )}
-                  <View style={styles.goAvatarWrap}>
+              {/* ── Hero zone: characters side-by-side ── */}
+              <View style={styles.goHeroZone}>
+                <View style={styles.goCharRow}>
+                  {/* Player 1 side */}
+                  <View style={styles.goCharSide}>
+                    {status === 'won' && winner === 1 && (
+                      <LinearGradient colors={['rgba(255,215,0,0.3)', 'transparent']} style={styles.goWinnerGlow} />
+                    )}
                     <Character3DPortrait
-                      width={140} height={180} showFloor={false}
+                      width={155} height={340} showFloor={false}
                       animationId={status === 'won' && winner === 1 ? 'emote_dab' : 'idle_base'}
                       animationLoop={status !== 'won' || winner !== 1}
                     />
-                    {/* Level badge */}
-                    <View style={styles.goLevelBadge}>
-                      <Text style={styles.goLevelText}>{level}</Text>
-                    </View>
+                    <Text style={[styles.goCharName, status === 'won' && winner === 1 && styles.goCharNameWinner]} numberOfLines={1}>{p1Name}</Text>
                   </View>
-                  <Text style={styles.goCharName} numberOfLines={1}>{p1Name}</Text>
-                  {PETS_ENABLED && equippedPet && (
-                    <PetDisplay petId={equippedPet} size={40} style={{ marginTop: 2 }} />
-                  )}
-                  {status === 'won' && winner === 1 && (
-                    <View style={styles.goWinnerBanner}>
-                      <Text style={styles.goWinnerText}>WINNER</Text>
-                    </View>
-                  )}
-                </View>
 
-                {/* Center score */}
-                <View style={styles.goCenterScore}>
-                  <Text style={styles.goScoreBig}>{scores.player1}</Text>
-                  <View style={styles.goScoreDivider}>
-                    <View style={styles.goScoreLine} />
-                    <Text style={styles.goScoreVs}>VS</Text>
-                    <View style={styles.goScoreLine} />
+                  {/* Center divider — series score or VS */}
+                  <View style={styles.goCenterScore}>
+                    {isSeriesMode ? (
+                      <>
+                        <Text style={styles.goScoreBig}>{scores.player1}</Text>
+                        <View style={styles.goScoreDivider}>
+                          <View style={styles.goScoreLine} />
+                        </View>
+                        <Text style={styles.goScoreBig}>{scores.player2}</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.goCenterVs}>VS</Text>
+                    )}
                   </View>
-                  <Text style={styles.goScoreBig}>{scores.player2}</Text>
-                  {status === 'draw' && (
-                    <View style={styles.goDrawBadge}>
-                      <Text style={styles.goDrawText}>DRAW</Text>
-                    </View>
-                  )}
-                </View>
 
-                {/* Player 2 / Opponent side */}
-                <View style={styles.goCharSide}>
-                  {status === 'won' && winner === 2 && (
-                    <LinearGradient colors={['rgba(255,215,0,0.25)', 'rgba(255,170,0,0.05)']} style={styles.goWinnerGlow} />
-                  )}
-                  <View style={styles.goAvatarWrap}>
+                  {/* Player 2 / Opponent side */}
+                  <View style={styles.goCharSide}>
+                    {status === 'won' && winner === 2 && (
+                      <LinearGradient colors={['rgba(255,215,0,0.3)', 'transparent']} style={styles.goWinnerGlow} />
+                    )}
                     <Character3DPortrait
-                      width={140} height={180} showFloor={false}
+                      width={155} height={340} showFloor={false}
                       customization={isVsAi ? getNpcCustomization(params.opponentName || difficulty) : undefined}
                       animationId={
                         status === 'won' && winner === 2
@@ -1727,455 +1631,163 @@ export function GameScreen({ navigation }: Props) {
                       }
                       animationLoop={status !== 'won'}
                     />
-                    <View style={[styles.goLevelBadge, { backgroundColor: colors.surfaceLight }]}>
-                      <Text style={styles.goLevelText}>
-                        {isVsAi ? (difficulty === 'easy' ? 5 : difficulty === 'medium' ? 16 : 30) : level}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.goCharName} numberOfLines={1}>{p2Name}</Text>
-                  {isVsAi && (
-                    <Text style={styles.goDiffStars}>
-                      {difficulty === 'easy' ? '⭐' : difficulty === 'medium' ? '⭐⭐' : '⭐⭐⭐'}
-                    </Text>
-                  )}
-                  {status === 'won' && winner === 2 && (
-                    <View style={styles.goWinnerBanner}>
-                      <Text style={styles.goWinnerText}>WINNER</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              {/* ---- Stats comparison bars ---- */}
-              <View style={styles.goStatsBlock}>
-                {/* Moves Used */}
-                <View style={styles.goStatItem}>
-                  <View style={styles.goStatHeader}>
-                    <Text style={styles.goStatVal}>{Math.ceil(moveCount / 2)}</Text>
-                    <Text style={styles.goStatLabel}>MOVES</Text>
-                    <Text style={styles.goStatVal}>{Math.floor(moveCount / 2)}</Text>
-                  </View>
-                  <View style={styles.goBarRow}>
-                    <View style={styles.goBarTrack}>
-                      <View style={[styles.goBarFillLeft, { width: `${Math.min((Math.ceil(moveCount / 2) / Math.max(moveCount, 1)) * 100, 100)}%` }]} />
-                    </View>
-                    <View style={styles.goBarTrack}>
-                      <View style={[styles.goBarFillRight, { width: `${Math.min((Math.floor(moveCount / 2) / Math.max(moveCount, 1)) * 100, 100)}%` }]} />
-                    </View>
+                    <Text style={[styles.goCharName, status === 'won' && winner === 2 && styles.goCharNameWinner]} numberOfLines={1}>{p2Name}</Text>
                   </View>
                 </View>
+              </View>{/* close goHeroZone */}
 
-                {/* Streak summary — single line: current + best */}
-                <View style={styles.goStreakRow}>
-                  <Text style={styles.goStreakLabel}>STREAK</Text>
-                  <Text style={[styles.goStreakValue, winStreak > 0 && { color: colors.orange }]}>
-                    {winStreak > 0 ? `🔥 ${winStreak}` : '0'}
-                  </Text>
-                  <Text style={styles.goStreakDivider}>·</Text>
-                  <Text style={styles.goStreakLabel}>BEST</Text>
-                  <Text style={styles.goStreakValue}>{bestStreak}</Text>
-                </View>
-              </View>
+              {/* ── Bottom zone: rewards + buttons ── */}
+              <View style={styles.goBottomZone}>
 
-              {/* New Personal Best indicator */}
-              {status === 'won' && winner === 1 && personalBest !== null && moveCount < personalBest && (
-                <View style={styles.goPersonalBest}>
-                  <Text style={styles.goPersonalBestText} accessibilityRole="header">NEW PERSONAL BEST!</Text>
-                  <Text style={styles.goPersonalBestSub}>{moveCount} moves (prev: {personalBest})</Text>
-                </View>
-              )}
-
-              {/* Game Speed Badge */}
-              {(() => {
-                const speed = moveCount <= 8 ? { label: 'BLITZ', color: '#e74c3c', emoji: '\u26A1' }
-                  : moveCount <= 14 ? { label: 'QUICK', color: colors.orange, emoji: '\uD83D\uDE80' }
-                  : moveCount <= 24 ? { label: 'STEADY', color: colors.teal, emoji: '\u23F1\uFE0F' }
-                  : { label: 'MARATHON', color: '#9b59b6', emoji: '\uD83C\uDFC3' };
-                return (
-                  <View style={[styles.goSpeedBadge, { borderColor: `${speed.color}30` }]}>
-                    <Text style={styles.goSpeedEmoji}>{speed.emoji}</Text>
-                    <Text style={[styles.goSpeedLabel, { color: speed.color }]}>{speed.label}</Text>
-                    <Text style={styles.goSpeedMoves}>{moveCount} moves</Text>
-                  </View>
-                );
-              })()}
-
-              {/* ---- Replay Highlight: Winning Move ---- */}
-              {status === 'won' && (() => {
-                const replayMoves = useReplayStore.getState().currentMoves;
-                const lastMove = replayMoves.length > 0 ? replayMoves[replayMoves.length - 1] : null;
-                if (!lastMove) return null;
-                const winnerIsPlayer = winner === 1;
-                const moveLabel = winnerIsPlayer ? 'Your winning move' : `${p2Name} won with`;
-                const moveIcon = winnerIsPlayer ? '\uD83C\uDFAF' : '\uD83D\uDCA1';
-                return (
-                  <View style={styles.goReplayHighlight}>
-                    <Text style={styles.goReplayIcon}>{moveIcon}</Text>
-                    <View style={styles.goReplayTextWrap}>
-                      <Text style={[styles.goReplayLabel, !winnerIsPlayer && { color: colors.textSecondary }]}>{moveLabel}</Text>
-                      <Text style={[styles.goReplayValue, !winnerIsPlayer && { color: colors.textSecondary }]}>
-                        Column {lastMove.col + 1}, Move {Math.ceil((lastMove.moveNumber + 1) / 2)}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })()}
-
-              {/* Career star rating — hero element for career wins, shown before coins */}
-              {wasCareerLevel && status === 'won' && winner === 1 && (() => {
-                const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
-                const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
-                return (
-                  <View style={styles.goCareerStarHero}>
-                    <AnimatedStarRating earned={earnedStars} size={40} delay={200} />
-                    <Text style={styles.goCareerStarVerdict}>{verdict}</Text>
-                  </View>
-                );
-              })()}
-
-              {/* First Win of the Day banner */}
-              {isFirstWinOfDay && status === 'won' && winner === 1 && (
-                <View style={styles.goFirstWinDay}>
-                  <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
-                  <View style={styles.goFirstWinDayTextWrap}>
-                    <Text style={styles.goFirstWinDayTitle} accessibilityRole="header">FIRST WIN OF THE DAY!</Text>
-                    <Text style={styles.goFirstWinDaySub}>2x XP earned this game</Text>
-                  </View>
-                  <Text style={styles.goFirstWinDayIcon}>{'\u2B50'}</Text>
-                </View>
-              )}
-
-              {/* ---- Rewards — clean consolidated view ---- */}
-              <View style={styles.goRewardsBlock}>
-                {/* Big total coins earned — count-up animation rolls
-                    from 0 → totalCoinsEarned in ~800ms cubic-easeOut for
-                    a slot-machine dopamine hit at match-end. */}
-                {status === 'won' && winner === 1 && totalCoinsEarned > 0 && (
-                  <Shimmer color="rgba(255,215,0,0.25)" duration={2800}>
-                    <View style={styles.goTotalCoins}>
-                      <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                      <CountUp
-                        value={totalCoinsEarned}
-                        duration={900}
-                        prefix="+"
-                        style={styles.goTotalCoinsAmount}
-                      />
-                    </View>
-                  </Shimmer>
-                )}
-                {status === 'draw' && (
-                  <Shimmer color="rgba(255,215,0,0.18)" duration={3200}>
-                    <View style={styles.goTotalCoins}>
-                      <Text style={styles.goTotalCoinsIcon}>🪙</Text>
-                      <CountUp
-                        value={Math.round(10 * getStreakMultiplier())}
-                        duration={700}
-                        prefix="+"
-                        style={styles.goTotalCoinsAmount}
-                      />
-                    </View>
-                  </Shimmer>
-                )}
-                {/* XP gained — every match earns XP so the player always
-                    sees progress, even on a loss. Reinforces "every game
-                    counts" and keeps the loss screen from feeling empty. */}
-                {xpEarned > 0 && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(176,108,199,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>⭐</Text>
-                    <CountUp
-                      value={xpEarned}
-                      duration={900}
-                      prefix="+"
-                      suffix=" XP"
-                      style={[styles.goEventText, { color: '#b06cc7' }]}
-                    />
-                  </View>
-                )}
-                {/* Notable events — max 3, only the most exciting */}
-                {didLevelUp && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(155,89,182,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>🎉</Text>
-                    <Text style={[styles.goEventText, { color: '#b06cc7' }]}>Level Up! Now Lv {level}</Text>
-                  </View>
-                )}
-                {streakReward && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(255,140,0,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>🔥</Text>
-                    <Text style={[styles.goEventText, { color: colors.orange }]}>{streakReward.milestone} Win Streak! +{streakReward.coins} bonus</Text>
-                  </View>
-                )}
-                {completedChallengeName && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(26,188,156,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>🎯</Text>
-                    <Text style={[styles.goEventText, { color: colors.teal }]}>Challenge: {completedChallengeName}</Text>
-                  </View>
-                )}
-                {/* Career star verdict is now shown as a hero block above rewards — removed from here */}
-                {/* Career part unlock celebration — fires when a career win
-                    grants a board / pieces / pet / emote / title (non-coin
-                    rewards). The reward itself was already granted server-side
-                    in the win path; this surfaces the unlock so the player
-                    sees what they earned beyond the coin total. */}
-                {wasCareerLevel && unlockedCareerRewards.map((r, i) => {
-                  const meta: Record<string, { icon: string; label: string }> = {
-                    pet:    { icon: '🐶', label: 'NEW PET UNLOCKED' },
-                    board:  { icon: '🎯', label: 'NEW BOARD UNLOCKED' },
-                    pieces: { icon: '🎨', label: 'NEW PIECES UNLOCKED' },
-                    emote:  { icon: '💃', label: 'NEW EMOTE UNLOCKED' },
-                    title:  { icon: '🎖️', label: 'NEW TITLE EARNED' },
-                  };
-                  const m = meta[r.type] || { icon: '🎁', label: 'NEW UNLOCK' };
-                  return (
-                    <View key={`career-unlock-${i}`} style={[styles.goEventRow, { borderColor: 'rgba(76,175,80,0.4)', backgroundColor: 'rgba(76,175,80,0.08)' }]}>
-                      <Text style={styles.goEventIcon}>{m.icon}</Text>
-                      <Text style={[styles.goEventText, { color: '#4caf50' }]}>{m.label}</Text>
-                    </View>
-                  );
-                })}
-                {status === 'won' && winner === 2 && streakBrokenAt !== null && (
-                  <View style={[styles.goEventRow, { borderColor: 'rgba(231,76,60,0.3)' }]}>
-                    <Text style={styles.goEventIcon}>💔</Text>
-                    <Text style={[styles.goEventText, { color: colors.pieceRed }]}>{streakBrokenAt} win streak broken</Text>
-                  </View>
-                )}
-                {/* Game count milestone celebration */}
-                {milestoneCelebration && (
-                  <View style={[styles.goRewardChip, { borderColor: 'rgba(241,196,15,0.5)', backgroundColor: 'rgba(241,196,15,0.1)' }]}>
-                    <Text style={styles.goRewardIcon}>{'\uD83C\uDFC6'}</Text>
-                    <Text style={[styles.goRewardAmount, { color: '#f1c40f', fontSize: 10 }]}>{milestoneCelebration}</Text>
-                  </View>
-                )}
-                {/* Loot box progress — show how many wins until next box */}
-                {status === 'won' && winner === 1 && (() => {
-                  const winsUntilBox = 3 - (totalWins % 3);
-                  if (winsUntilBox === 3) {
-                    return (
-                      <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.4)', backgroundColor: 'rgba(155,89,182,0.1)' }]}>
-                        <Text style={styles.goRewardIcon}>{'\uD83D\uDCE6'}</Text>
-                        <Text style={[styles.goRewardAmount, { color: colors.purple, fontSize: 10 }]}>LOOT BOX{'\n'}EARNED!</Text>
+                {/* Rewards strip — clean pill row */}
+                <View style={styles.goRewardsStrip}>
+                  {status === 'won' && winner === 1 && totalCoinsEarned > 0 && (
+                    <Shimmer color="rgba(255,215,0,0.25)" duration={2800}>
+                      <View style={styles.goRewardPill}>
+                        <Text style={styles.goRewardPillIcon}>{'🪙'}</Text>
+                        <CountUp value={totalCoinsEarned} duration={900} prefix="+" style={styles.goRewardPillAmount} />
                       </View>
-                    );
-                  }
+                    </Shimmer>
+                  )}
+                  {status === 'draw' && (
+                    <Shimmer color="rgba(255,215,0,0.18)" duration={3200}>
+                      <View style={styles.goRewardPill}>
+                        <Text style={styles.goRewardPillIcon}>{'🪙'}</Text>
+                        <CountUp value={Math.round(10 * getStreakMultiplier())} duration={700} prefix="+" style={styles.goRewardPillAmount} />
+                      </View>
+                    </Shimmer>
+                  )}
+                  {xpEarned > 0 && (
+                    <View style={styles.goRewardPill}>
+                      <Text style={styles.goRewardPillIcon}>{'⭐'}</Text>
+                      <CountUp value={xpEarned} duration={900} prefix="+" suffix=" XP" style={[styles.goRewardPillAmount, { color: '#b06cc7' }]} />
+                    </View>
+                  )}
+                  {winStreak > 0 && (
+                    <View style={styles.goRewardPill}>
+                      <Text style={styles.goRewardPillIcon}>{'🔥'}</Text>
+                      <Text style={[styles.goRewardPillAmount, { color: colors.orange }]}>{winStreak}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Career star rating */}
+                {wasCareerLevel && status === 'won' && winner === 1 && (() => {
+                  const earnedStars = moveCount < 15 ? 3 : moveCount < 25 ? 2 : 1;
+                  const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
                   return (
-                    <View style={[styles.goRewardChip, { borderColor: 'rgba(155,89,182,0.2)', backgroundColor: 'rgba(155,89,182,0.04)' }]}>
-                      <Text style={styles.goRewardIcon}>{'\uD83D\uDCE6'}</Text>
-                      <Text style={[styles.goRewardAmount, { color: 'rgba(155,89,182,0.7)', fontSize: 10 }]}>Win {winsUntilBox}{'\n'}more!</Text>
-                      <Text style={[styles.goRewardDesc, { color: colors.textMuted }]}>Loot Box</Text>
+                    <View style={styles.goCareerStarCompact}>
+                      <AnimatedStarRating earned={earnedStars} size={32} delay={200} />
+                      <Text style={styles.goCareerStarVerdict}>{verdict}</Text>
                     </View>
                   );
                 })()}
-              </View>
 
-              {/* Double Coins — UI-only ad concept */}
-              {status === 'won' && winner === 1 && !doubleCoinsUsed && (
-                <PressScale
-                  scaleTo={0.96}
-                  style={styles.doubleCoinsBtn}
-                  onPress={() => {
-                    const reward = COIN_REWARDS[difficulty];
-                    const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
-                    const total = Math.round((reward + streakBonus) * dailyStreakMultiplier);
-                    addCoins(total);
-                    setDoubleCoinsUsed(true);
-                    haptics.win();
-                    playSound('coin');
-                    setShowCoinBurst(true);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Watch ad to double coin reward"
-                >
-                  <View style={styles.doubleCoinsAdBadge}>
-                    <Text style={styles.doubleCoinsAdText}>AD</Text>
+                {/* Notable events */}
+                {didLevelUp && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🎉'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: '#b06cc7' }]}>Level Up! Lv {level}</Text>
                   </View>
-                  <Text style={styles.doubleCoinsBtnIcon}>🪙🪙</Text>
-                  <View style={styles.doubleCoinsBtnTextWrap}>
-                    <Text style={styles.doubleCoinsBtnTitle}>DOUBLE COINS</Text>
-                    <Text style={styles.doubleCoinsBtnSub}>Watch ad to double your reward!</Text>
-                  </View>
-                </PressScale>
-              )}
-              {doubleCoinsUsed && status === 'won' && winner === 1 && (
-                <View style={[styles.doubleCoinsBtn, { opacity: 0.5, borderColor: 'rgba(46,204,113,0.4)' }]}>
-                  <Text style={styles.doubleCoinsBtnIcon}>✅</Text>
-                  <Text style={[styles.doubleCoinsBtnTitle, { color: colors.green }]}>COINS DOUBLED!</Text>
-                </View>
-              )}
-
-              {/* Comeback coins for losing streaks */}
-              {comebackCoins !== null && status === 'won' ? null : comebackCoins !== null && (
-                <View style={styles.goComebackBanner}>
-                  <Text style={styles.goComebackIcon}>💪</Text>
-                  <View style={styles.goComebackTextWrap}>
-                    <Text style={styles.goComebackTitle} accessibilityRole="header">COMEBACK BONUS</Text>
-                    <Text style={styles.goComebackSub}>+{comebackCoins} coins — don't give up!</Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Motivational quote */}
-              <View style={styles.goChatBubble}>
-                <Text style={styles.goChatText}>
-                  {gameOverQuote || 'Good game!'}
-                </Text>
-              </View>
-
-              {/* ---- Action Buttons ---- */}
-              <View style={styles.goButtons}>
-                {isSeriesMode && seriesOver ? (
-                  <>
-                    {/* Series complete banner */}
-                    <View style={styles.seriesCompleteRow}>
-                      <Text style={styles.seriesCompleteTitle} accessibilityRole="header">SERIES COMPLETE</Text>
-                      <Text style={[
-                        styles.seriesCompleteResult,
-                        { color: scores.player1 >= seriesWinsNeeded ? colors.coinGold : scores.player2 >= seriesWinsNeeded ? '#e74c3c' : colors.teal },
-                      ]}>
-                        {scores.player1 >= seriesWinsNeeded ? '🏆 YOU WIN THE SERIES!' : scores.player2 >= seriesWinsNeeded ? '💀 YOU LOSE THE SERIES' : '🤝 SERIES TIED'}
-                      </Text>
-                      <Text style={styles.seriesScoreDisplay}>{scores.player1} — {scores.player2}</Text>
-                    </View>
-                    <GlossyButton
-                      label="NEW GAME"
-                      icon="🎮"
-                      variant="green"
-                      onPress={() => navigation.navigate('Play')}
-                    />
-                    <GlossyButton
-                      label="HOME"
-                      icon="🏠"
-                      variant="navy"
-                      onPress={handleGoHome}
-                      style={{ marginTop: 8 }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <GlossyButton
-                      label={wasCareerLevel ? 'RETRY LEVEL' : isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
-                      icon="🔄"
-                      variant="orange"
-                      onPress={handleRematch}
-                    />
-                    {/* Quick difficulty switch for AI matches — hide in series mode */}
-                    {isVsAi && !wasCareerLevel && !isSeriesMode && (
-                      <View style={styles.goDiffSwitchRow}>
-                        {(['easy', 'medium', 'hard'] as const).map((d) => {
-                          const isActive = d === difficulty;
-                          const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : colors.pieceRed;
-                          return (
-                            <PressScale
-                              key={d}
-                              scaleTo={0.92}
-                              style={[
-                                styles.goDiffBtn,
-                                isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` },
-                              ]}
-                              onPress={() => {
-                                if (!isActive) {
-                                  playSound('click');
-                                  // Reset state and start new game with the selected difficulty
-                                  setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
-                                  setShowConfetti(false);
-                                  setWasCareerLevel(false);
-                                  setFreeHintsRemaining(3);
-                                  setSkipsRemaining(1);
-                                  setBombsRemaining(1);
-                                  setRainbowsRemaining(1);
-                                  setHeaviesRemaining(1);
-                                  setArmedPowerPiece(null);
-                                  setDidLevelUp(false);
-                                  setStreakReward(null);
-                                  setCompletedChallengeName(null);
-                                  setStreakBrokenAt(null);
-                                  setDailyStreakMultiplier(1);
-                                  setDoubleCoinsUsed(false);
-                                  setIsFirstWinOfDay(false);
-                                  setXpEarned(0);
-                                  setTotalCoinsEarned(0);
-                                  newGame(d, isVsAi);
-                                }
-                              }}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Switch to ${d} difficulty`}
-                              accessibilityState={{ selected: isActive }}
-                            >
-                              <Text style={[
-                                styles.goDiffBtnText,
-                                { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
-                                isActive && { fontWeight: '800' as any },
-                              ]}>
-                                {d.toUpperCase()}
-                              </Text>
-                            </PressScale>
-                          );
-                        })}
-                      </View>
-                    )}
-                    {wasCareerLevel ? (
-                      <GlossyButton
-                        label="CAREER MAP"
-                        icon="🗺️"
-                        variant="green"
-                        onPress={() => navigation.navigate('CareerMap' as any)}
-                        style={{ marginTop: 8 }}
-                      />
-                    ) : (
-                      <GlossyButton
-                        label="NEW GAME"
-                        icon="🎮"
-                        variant="green"
-                        onPress={() => navigation.navigate('Play')}
-                        style={{ marginTop: 8 }}
-                      />
-                    )}
-                    <GlossyButton
-                      label="HOME"
-                      icon="🏠"
-                      variant="navy"
-                      onPress={handleGoHome}
-                      style={{ marginTop: 8 }}
-                    />
-                  </>
                 )}
-                {/* Share Score */}
-                <PressScale
-                  scaleTo={0.95}
-                  style={styles.shareButton}
-                  onPress={handleShareScore}
-                  accessibilityRole="button"
-                  accessibilityLabel={shareCopied ? 'Score copied to clipboard' : 'Share score'}
-                >
-                  <Text style={styles.shareButtonText}>
-                    {shareCopied ? 'Copied!' : '\u{1F4E4} Share'}
-                  </Text>
-                </PressScale>
+                {wasCareerLevel && unlockedCareerRewards.length > 0 && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🎁'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: '#4caf50' }]}>
+                      {unlockedCareerRewards.length} New Unlock{unlockedCareerRewards.length > 1 ? 's' : ''}!
+                    </Text>
+                  </View>
+                )}
 
-                {/* Quick Actions */}
-                <View style={styles.quickActionsRow}>
-                  <PressScale
-                    scaleTo={0.93}
-                    style={styles.quickActionLink}
-                    onPress={() => { playSound('click'); navigation.navigate('Stats' as any); }}
-                    accessibilityRole="link"
-                    accessibilityLabel="View stats"
-                  >
-                    <Text style={styles.quickActionText}>View Stats</Text>
-                  </PressScale>
-                  <Text style={styles.quickActionDot}>·</Text>
-                  <PressScale
-                    scaleTo={0.93}
-                    style={styles.quickActionLink}
-                    onPress={() => { playSound('click'); navigation.navigate('MainTabs', { screen: 'Shop' } as any); }}
-                    accessibilityRole="link"
-                    accessibilityLabel="Open shop"
-                  >
-                    <Text style={styles.quickActionText}>Shop</Text>
-                  </PressScale>
+                {/* Series complete */}
+                {isSeriesMode && seriesOver && (
+                  <View style={styles.seriesCompleteCompact}>
+                    <Text style={[styles.seriesCompleteResult, {
+                      color: scores.player1 >= seriesWinsNeeded ? colors.coinGold
+                        : scores.player2 >= seriesWinsNeeded ? '#e74c3c' : colors.teal,
+                    }]}>
+                      {scores.player1 >= seriesWinsNeeded ? '🏆 SERIES WIN!'
+                        : scores.player2 >= seriesWinsNeeded ? '💀 SERIES LOSS'
+                        : '🤝 SERIES TIED'}
+                    </Text>
+                    <Text style={styles.seriesScoreDisplay}>{scores.player1} — {scores.player2}</Text>
+                  </View>
+                )}
+
+                {/* Primary CTA */}
+                {isSeriesMode && seriesOver ? (
+                  <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
+                    onPress={() => navigation.navigate('Play')} />
+                ) : (
+                  <GlossyButton
+                    label={wasCareerLevel ? 'RETRY LEVEL' : isSeriesMode ? `NEXT GAME (${seriesGame + 1}/${totalGames})` : 'REMATCH'}
+                    icon={'🔄'} variant="orange" onPress={handleRematch}
+                  />
+                )}
+
+                {/* Secondary buttons */}
+                <View style={styles.goSecondaryRow}>
+                  {isSeriesMode && seriesOver ? (
+                    <GlossyButton label="HOME" icon={'🏠'} variant="navy"
+                      onPress={handleGoHome} style={{ flex: 1 }} />
+                  ) : (
+                    <>
+                      {wasCareerLevel ? (
+                        <GlossyButton label="CAREER MAP" icon={'🗺️'} variant="green"
+                          onPress={() => navigation.navigate('CareerMap' as any)} style={{ flex: 1 }} />
+                      ) : (
+                        <GlossyButton label="NEW GAME" icon={'🎮'} variant="green"
+                          onPress={() => navigation.navigate('Play')} style={{ flex: 1 }} />
+                      )}
+                      <GlossyButton label="HOME" icon={'🏠'} variant="navy"
+                        onPress={handleGoHome} style={{ flex: 1 }} />
+                    </>
+                  )}
                 </View>
-              </View>
-             </ScrollView>
-            </Animated.View>
+
+                {/* Difficulty quick-switch — AI only, non-career */}
+                {isVsAi && !wasCareerLevel && !isSeriesMode && (
+                  <View style={styles.goDiffSwitchRow}>
+                    {(['easy', 'medium', 'hard'] as const).map((d) => {
+                      const isActive = d === difficulty;
+                      const diffColor = d === 'easy' ? colors.green : d === 'medium' ? colors.orange : colors.pieceRed;
+                      return (
+                        <PressScale key={d} scaleTo={0.92}
+                          style={[styles.goDiffBtn, isActive && { borderColor: `${diffColor}60`, backgroundColor: `${diffColor}18` }]}
+                          onPress={() => {
+                            if (!isActive) {
+                              playSound('click');
+                              setSeriesGame(prev => prev < totalGames ? prev + 1 : 1);
+                              setShowConfetti(false); setWasCareerLevel(false);
+                              setFreeHintsRemaining(3); setSkipsRemaining(1);
+                              setBombsRemaining(1); setRainbowsRemaining(1); setHeaviesRemaining(1);
+                              setArmedPowerPiece(null); setDidLevelUp(false);
+                              setStreakReward(null); setCompletedChallengeName(null);
+                              setStreakBrokenAt(null); setDailyStreakMultiplier(1);
+                              setDoubleCoinsUsed(false); setIsFirstWinOfDay(false);
+                              setXpEarned(0); setTotalCoinsEarned(0);
+                              newGame(d, isVsAi);
+                            }
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Switch to ${d} difficulty`}
+                          accessibilityState={{ selected: isActive }}
+                        >
+                          <Text style={[styles.goDiffBtnText,
+                            { color: isActive ? diffColor : 'rgba(255,255,255,0.4)' },
+                            isActive && { fontWeight: '800' as any },
+                          ]}>
+                            {d.toUpperCase()}
+                          </Text>
+                        </PressScale>
+                      );
+                    })}
+                  </View>
+                )}
+
+              </View>{/* close goBottomZone */}
+
+            </View>{/* close goFullScreen */}
             </SlideReveal>
           </Animated.View>
         </PreviewSafeModal>
@@ -2229,6 +1841,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  flexSpacerTop: {
+    flex: 0.15,
+    minHeight: 2,
+  },
+  flexSpacerBottom: {
+    flex: 0.15,
+    minHeight: 2,
+  },
   backButton: {
     position: 'absolute',
     top: 4,
@@ -2254,8 +1874,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 12,
-    marginBottom: 4,
-    marginTop: 28,
+    marginBottom: 0,
+    marginTop: 40,
   },
   firstGameBanner: {
     alignSelf: 'center',
@@ -2393,31 +2013,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 6,
+    marginTop: 2,
+    marginBottom: 0,
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
-  },
-  controlBtn: {
-    alignItems: 'center',
-    paddingHorizontal: 6,
-  },
-  // Flux-painted action icon (hint/undo/quit) — replaces the emoji glyph
-  // inside the HUD control buttons. Same footprint so the buttons don't
-  // resize.
-  controlIconImg: {
-    width: 18,
-    height: 18,
-  },
-  controlLabel: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 1,
   },
   resignLabel: {
     fontFamily: fonts.body,
@@ -2496,65 +2099,240 @@ const styles = StyleSheet.create({
     color: '#1a1200',
     letterSpacing: 0.8,
   },
-  moveCounter: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  moveText: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 11,
-    color: 'rgba(168,178,212,0.6)',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  // Round EMOTE wheel trigger button
-  emoteWheelTrigger: {
-    position: 'absolute',
-    bottom: 120,
-    right: 12,
-    borderRadius: 28,
-    overflow: 'hidden',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 20,
-  },
-  emoteWheelTriggerGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  // ======== Below-board 3-column layout ========
+  belowBoard: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,140,0,0.4)',
+    width: '100%',
+    flex: 1,
+    paddingHorizontal: 4,
+    marginTop: 2,
   },
-  // Painted emote bubble icon for the floating emote wheel trigger in the
-  // bottom-right of the game screen. Slightly bigger than the text emoji
-  // so the painted bevel reads inside the 48px trigger circle.
-  emoteWheelTriggerImg: {
-    width: 36,
+  charColumn: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  centerColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    width: 120,
+  },
+  // ── Expression category buttons (Emojis / Phrases / Emotes) ──
+  categoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
     height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 6,
   },
-  // ======== Basketball Stars-style Game Over ========
+  categoryIcon: {
+    fontSize: 16,
+  },
+  categoryLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 0.5,
+  },
+  // ── Power piece buttons (career only) ──
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,140,0,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,0,0.2)',
+    gap: 5,
+  },
+  actionBtnDisabled: {
+    opacity: 0.35,
+  },
+  actionBtnLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: '#ff8c00',
+    letterSpacing: 0.3,
+  },
+  // ── Surrender button ──
+  surrenderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,60,60,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,60,60,0.2)',
+    gap: 6,
+  },
+  surrenderIcon: {
+    fontSize: 14,
+  },
+  surrenderLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    color: 'rgba(255,100,100,0.7)',
+    letterSpacing: 0.3,
+  },
+  // ======== Premium Game Over — clean hierarchy, big result ========
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(5,5,15,0.98)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Painted win-screen trophy hero. Scales to roughly 70% of screen width
-  // at the top of the overlay; the game-over card slides in below it and
-  // pushes it upward visually.
-  winTrophyHero: {
-    position: 'absolute',
-    top: '2%',
-    alignSelf: 'center',
-    width: 320,
-    height: 320,
+  goFullScreen: {
+    flex: 1,
+    width: '100%',
+    paddingTop: 16,
+    paddingBottom: 10,
   },
+  goHeadlineZone: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 2,
+  },
+  goHeadline: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 38,
+    color: '#ffffff',
+    letterSpacing: 6,
+    textAlign: 'center',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 24,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+  },
+  goSubheadline: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    letterSpacing: 2.5,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    opacity: 0.8,
+  },
+  goModeLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 11,
+    letterSpacing: 2.5,
+    textAlign: 'center',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  goHeroZone: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  goNameBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+  },
+  goBottomZone: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 8,
+  },
+  goRewardsStrip: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 6,
+  },
+  goRewardPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  goRewardPillIcon: {
+    fontSize: 16,
+  },
+  goRewardPillAmount: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 16,
+    color: colors.coinGold,
+  },
+  goCareerStarCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(241,196,15,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,196,15,0.3)',
+  },
+  goEventCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  goEventCompactText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    letterSpacing: 0.5,
+  },
+  seriesCompleteCompact: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 2,
+  },
+  goSecondaryRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  goLinksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  goLinkText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.medium as any,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.35)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  goLinkDot: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.2)',
+  },
+  // winTrophyHero removed — characters are the hero elements now
   celebrationBanner: {
     position: 'absolute',
     top: '8%',
@@ -2644,9 +2422,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 2,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   goCharSide: {
     flex: 1,
@@ -2655,11 +2433,12 @@ const styles = StyleSheet.create({
   },
   goWinnerGlow: {
     position: 'absolute',
-    top: -8,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    borderRadius: 16,
+    top: -12,
+    left: -8,
+    right: -8,
+    bottom: -8,
+    borderRadius: 20,
+    opacity: 0.7,
   },
   goAvatarWrap: {
     position: 'relative',
@@ -2685,45 +2464,69 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   goCharName: {
-    fontFamily: fonts.body,
-    fontWeight: weight.semibold,
-    fontSize: 12,
-    color: '#ffffff',
-    marginTop: 4,
-    maxWidth: 90,
-    textAlign: 'center',
-  },
-  goWinnerBanner: {
-    marginTop: 6,
-    backgroundColor: 'rgba(255,215,0,0.15)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.35)',
-  },
-  goWinnerText: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 14,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    maxWidth: 120,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  goCharNameWinner: {
     color: colors.coinGold,
-    letterSpacing: 2,
     textShadowColor: 'rgba(255,215,0,0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
+  goCenterVs: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.bold,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.25)',
+    letterSpacing: 2,
+  },
+  goWinnerBanner: {
+    marginTop: 4,
+    backgroundColor: 'rgba(255,215,0,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,215,0,0.5)',
+  },
+  goWinnerText: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 16,
+    color: colors.coinGold,
+    letterSpacing: 3,
+    textShadowColor: 'rgba(255,215,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
   // Center score
   goCenterScore: {
     alignItems: 'center',
-    paddingHorizontal: 8,
-    minWidth: 80,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    minWidth: 50,
   },
   goScoreBig: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 36,
+    fontSize: 28,
     color: '#ffffff',
-    lineHeight: 40,
+    lineHeight: 32,
+  },
+  goResultLabel: {
+    fontFamily: fonts.heading,
+    fontWeight: weight.black as any,
+    fontSize: 22,
+    color: '#ffffff',
+    letterSpacing: 4,
+    textAlign: 'center',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
   goScoreDivider: {
     flexDirection: 'row',
@@ -2820,9 +2623,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.05)',
   },
@@ -2863,9 +2666,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(241, 196, 15, 0.35)',
     borderRadius: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 14,
-    marginVertical: 6,
+    marginVertical: 4,
     gap: 8,
   },
   doubleCoinsAdBadge: {
@@ -2997,8 +2800,8 @@ const styles = StyleSheet.create({
   // Buttons
   goButtons: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 4,
+    paddingBottom: 12,
+    paddingTop: 2,
   },
   shareButton: {
     alignSelf: 'center',
@@ -3077,16 +2880,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 8,
+    gap: 6,
+    paddingVertical: 6,
   },
   goTotalCoinsIcon: {
-    fontSize: 24,
+    fontSize: 20,
   },
   goTotalCoinsAmount: {
     fontFamily: fonts.heading,
     fontWeight: weight.bold,
-    fontSize: 28,
+    fontSize: 24,
     color: colors.coinGold,
     letterSpacing: 1,
     textShadowColor: 'rgba(255,215,0,0.5)',
@@ -3136,10 +2939,10 @@ const styles = StyleSheet.create({
   // Hero career star block — shown above rewards, replaces buried row
   goCareerStarHero: {
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     marginHorizontal: 12,
-    marginTop: 10,
+    marginTop: 6,
     borderRadius: 14,
     backgroundColor: 'rgba(241,196,15,0.08)',
     borderWidth: 1,
@@ -3161,9 +2964,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginTop: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 14,
+    marginTop: 2,
+    marginHorizontal: 16,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 10,
     borderWidth: 1,
