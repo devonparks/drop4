@@ -44,7 +44,7 @@ import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { PowerPieceFX } from '../components/effects/PowerPieceFX';
 import { ChatBubble } from '../components/effects/ChatBubble';
-import { ALL_CAREER_LEVELS, CAREER_CITIES, type CareerReward } from '../data/careerLevels';
+import { ALL_CAREER_LEVELS, CAREER_CITIES, CAREER_RATINGS, type CareerReward } from '../data/careerLevels';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
@@ -1957,8 +1957,41 @@ export function GameScreen({ navigation }: Props) {
                     onPress={() => {
                       const nextLvl = ALL_CAREER_LEVELS.find(l => l.id === (params.careerLevelId ?? 0) + 1);
                       const nextCity = nextLvl ? CAREER_CITIES.find(c => c.levelIds.includes(nextLvl.id)) : null;
-                      if (nextCity) {
-                        navigation.navigate('CareerCity' as any, { cityId: nextCity.id });
+                      if (nextLvl && nextCity) {
+                        resetScores();
+                        newGame(nextLvl.difficulty, true, {
+                          rows: nextLvl.settings.rows,
+                          cols: nextLvl.settings.cols,
+                          connectCount: nextLvl.settings.connectCount,
+                          timerSeconds: nextLvl.settings.timerSeconds || 0,
+                          startingPlayer: (nextLvl.settings.playerGoesFirst === false ? 2 : 1) as 1 | 2,
+                        });
+                        navigation.navigate('Matchup', {
+                          mode: 'career',
+                          difficulty: nextLvl.difficulty,
+                          opponentName: nextLvl.opponent,
+                          opponentLevel: CAREER_RATINGS[nextLvl.id],
+                          opponentTitle: nextLvl.opponentPersonality,
+                          courtName: nextLvl.isBoss
+                            ? `BOSS · ${nextCity.nickname.toUpperCase()}`
+                            : nextCity.nickname.toUpperCase(),
+                          careerLevelId: nextLvl.id,
+                          careerLevelReward: nextLvl.reward
+                            ? { type: nextLvl.reward.type, amount: nextLvl.reward.amount, id: nextLvl.reward.id }
+                            : undefined,
+                          careerChapter: nextLvl.chapter,
+                          connectCount: nextLvl.settings.connectCount,
+                          boardSize: nextLvl.settings.rows && nextLvl.settings.cols
+                            ? `${nextLvl.settings.rows}x${nextLvl.settings.cols}`
+                            : undefined,
+                          timerSeconds: nextLvl.settings.timerSeconds,
+                          presetBoard: nextLvl.settings.presetBoard as any,
+                          movesLimit: nextLvl.settings.movesLimit,
+                          rewardMultiplier: nextLvl.settings.rewardMultiplier,
+                          obstacleCells: nextLvl.settings.obstacleCells,
+                          levelType: nextLvl.type,
+                          bossScript: nextLvl.settings.bossScript,
+                        });
                       } else {
                         navigation.navigate('CareerMap' as any);
                       }
