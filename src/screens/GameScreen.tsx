@@ -593,6 +593,7 @@ export function GameScreen({ navigation }: Props) {
       updateChallenge('win_5', 1);
       updateChallenge('play_5', 1);
       updateChallenge('play_10', 1);
+      { const d = new Date(); d.setHours(0,0,0,0); const first = useMatchHistoryStore.getState().matches.filter(m => m.timestamp >= d.getTime() && m.mode === matchMode).length === 1; if (first) updateChallenge('play_2_modes', 1); }
       if (difficulty === 'easy') { updateChallenge('win_easy', 1); updateChallenge('win_3_easy', 1); }
       if (difficulty === 'medium') updateChallenge('win_medium', 1);
       if (difficulty === 'hard') { updateChallenge('win_hard', 1); updateChallenge('win_2_hard', 1); }
@@ -629,6 +630,8 @@ export function GameScreen({ navigation }: Props) {
         completeCareerLevel(careerLevelId, starRating, moveCount);
         updateChallenge('career_3', 1);
         if (starRating === 3) updateChallenge('career_3star', 1);
+        if (starRating === 3) updateChallenge('career_2_3star', 1);
+        if (starRating > oldStars && oldStars > 0) updateChallenge('career_star_improve', 1);
         if (lvlData?.isBoss) updateChallenge('career_boss', 1);
         // Award career reward(s)
         const careerReward = params.careerLevelReward;
@@ -762,6 +765,7 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'loss', opponent: lossOpponent, difficulty, moves: moveCount, coinsEarned: 0, mode: lossMode });
       updateChallenge('play_5', 1);
       updateChallenge('play_10', 1);
+      { const d = new Date(); d.setHours(0,0,0,0); const first = useMatchHistoryStore.getState().matches.filter(m => m.timestamp >= d.getTime() && m.mode === lossMode).length === 1; if (first) updateChallenge('play_2_modes', 1); }
       // Break win streak challenges on loss
       resetChallenge('win_streak_2');
       resetChallenge('win_streak_3');
@@ -823,6 +827,7 @@ export function GameScreen({ navigation }: Props) {
       addMatch({ result: 'draw', opponent: drawOpponent, difficulty, moves: moveCount, coinsEarned: drawReward, mode: drawMode });
       updateChallenge('play_5', 1);
       updateChallenge('play_10', 1);
+      { const d = new Date(); d.setHours(0,0,0,0); const first = useMatchHistoryStore.getState().matches.filter(m => m.timestamp >= d.getTime() && m.mode === drawMode).length === 1; if (first) updateChallenge('play_2_modes', 1); }
       resetChallenge('win_streak_2'); // Draw also breaks the streak
       resetChallenge('win_streak_3');
       // Season XP on draw — detect tier-up
@@ -958,6 +963,7 @@ export function GameScreen({ navigation }: Props) {
         setActivePowerFX('bomb');
         haptics.heavy();
         playSound('whoosh');
+        updateChallenge('use_power_piece', 1);
         return;
       }
       setArmedPowerPiece(null);
@@ -970,6 +976,7 @@ export function GameScreen({ navigation }: Props) {
         setActivePowerFX('rainbow');
         haptics.win?.() ?? haptics.tap();
         playSound('drop');
+        updateChallenge('use_power_piece', 1);
         return;
       }
       setArmedPowerPiece(null);
@@ -982,6 +989,7 @@ export function GameScreen({ navigation }: Props) {
         setActivePowerFX('heavy');
         haptics.heavy();
         playSound('drop');
+        updateChallenge('use_power_piece', 1);
         return;
       }
       setArmedPowerPiece(null);

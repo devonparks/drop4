@@ -55,10 +55,16 @@ const CHALLENGE_POOL: Omit<Challenge, 'progress' | 'completed'>[] = [
   { id: 'career_3', title: 'Career Grind', description: 'Complete 3 career levels', icon: '🗺️', target: 3, reward: 200 },
   { id: 'career_3star', title: 'Perfect Run', description: 'Earn 3 stars on a career level', icon: '⭐', target: 1, reward: 100 },
   { id: 'career_boss', title: 'Boss Hunter', description: 'Defeat a career boss', icon: '👑', target: 1, reward: 150 },
+  // Career depth
+  { id: 'career_star_improve', title: 'Star Climber', description: 'Improve stars on a career level', icon: '⬆️', target: 1, reward: 100 },
+  { id: 'career_2_3star', title: 'Gold Standard', description: 'Earn 3 stars on 2 career levels', icon: '🌟', target: 2, reward: 175 },
+  { id: 'use_power_piece', title: 'Power Play', description: 'Use a power piece in career', icon: '💣', target: 1, reward: 60 },
   // Social / exploration
   { id: 'play_local', title: 'Social Gamer', description: 'Play a local multiplayer game', icon: '👥', target: 1, reward: 40 },
   { id: 'shop_visit', title: 'Window Shopping', description: 'Visit the shop', icon: '🛍', target: 1, reward: 15 },
   { id: 'try_custom', title: 'Remix', description: 'Play a custom game mode', icon: '🔧', target: 1, reward: 40 },
+  // Variety play
+  { id: 'play_2_modes', title: 'Mode Mixer', description: 'Play 2 different game modes', icon: '🔀', target: 2, reward: 60 },
   // Camo / customization
   { id: 'equip_camo', title: 'Fresh Paint', description: 'Equip a camo colorway', icon: '🎨', target: 1, reward: 30 },
   { id: 'equip_camo_3', title: 'Color Swap', description: 'Try 3 different camos', icon: '🌈', target: 3, reward: 75 },
