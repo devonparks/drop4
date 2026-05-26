@@ -1264,7 +1264,7 @@ export function GameScreen({ navigation }: Props) {
                 </Text>
               );
             })()}
-            {/* Live star tracker for career levels */}
+            {/* Live star tracker + move counter for career levels */}
             {params.careerLevelId != null && status === 'playing' && (() => {
               const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
               const th = cl?.starThresholds ?? { three: 14, two: 24 };
@@ -1272,6 +1272,7 @@ export function GameScreen({ navigation }: Props) {
               const projected = playerMoves <= th.three ? 3 : playerMoves <= th.two ? 2 : 1;
               return (
                 <View style={styles.starTracker}>
+                  <Text style={styles.moveCountLabel}>{playerMoves} moves</Text>
                   {[1, 2, 3].map(i => (
                     <Text key={i} style={[styles.starTrackerStar, { color: i <= projected ? '#ffd700' : 'rgba(255,255,255,0.2)' }]}>★</Text>
                   ))}
@@ -2086,9 +2087,17 @@ const styles = StyleSheet.create({
   },
   starTracker: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 4,
     marginTop: 2,
+  },
+  moveCountLabel: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    marginRight: 2,
   },
   starTrackerStar: {
     fontSize: 14,
