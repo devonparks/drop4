@@ -1738,6 +1738,14 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {isFirstWinOfDay && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'☀️'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: '#ffd54f' }]}>
+                      First Win of the Day — 2× XP!
+                    </Text>
+                  </View>
+                )}
 
                 {/* Series complete */}
                 {isSeriesMode && seriesOver && (
