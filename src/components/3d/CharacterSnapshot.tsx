@@ -151,7 +151,7 @@ export function CharacterSnapshot({ width, height, customization, bypassCache, s
           showFloor={false}
         />
       </ViewShot>
-      <View style={styles.spinnerOverlay} pointerEvents="none">
+      <View style={[styles.spinnerOverlay, { pointerEvents: 'none' }]}>
         <ActivityIndicator color={colors.orange} />
       </View>
     </View>

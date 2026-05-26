@@ -129,7 +129,7 @@ interface Props {
 
 export function LiveBackground3D({ discCount = 8, opacity = 0.55 }: Props) {
   return (
-    <View pointerEvents="none" style={[styles.container, { opacity }]}>
+    <View style={[styles.container, { opacity, pointerEvents: 'none' }]}>
       <Canvas
         camera={{ position: [0, 0, 0], fov: 55 }}
         gl={{ antialias: true, alpha: true }}

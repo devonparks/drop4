@@ -44,8 +44,7 @@ export function PreviewSafeModal({
     if (!visible) return null;
     return (
       <View
-        style={[styles.webOverlay, webZIndex != null && { zIndex: webZIndex } as any]}
-        pointerEvents="box-none"
+        style={[styles.webOverlay, webZIndex != null && { zIndex: webZIndex } as any, { pointerEvents: 'box-none' }]}
       >
         {children}
       </View>

@@ -101,8 +101,8 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
     <View style={{ width: size, height: h, position: 'relative' }}>
       {/* Halo behind the chest */}
       <View
-        pointerEvents="none"
         style={{
+          pointerEvents: 'none',
           position: 'absolute',
           left: -size * 0.08,
           right: -size * 0.08,
@@ -276,8 +276,8 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
       {/* Top sparkle (diamond/gold tiers only) */}
       {(tier === 'diamond' || tier === 'gold') && (
         <View
-          pointerEvents="none"
           style={{
+            pointerEvents: 'none',
             position: 'absolute',
             left: size * 0.5 - 3,
             top: h * 0.02,

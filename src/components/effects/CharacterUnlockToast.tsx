@@ -74,7 +74,7 @@ export function CharacterUnlockToast() {
   }
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={[styles.container, { pointerEvents: 'box-none' }]}>
       <Animated.View entering={SlideInRight.springify()} exiting={FadeOut}>
         <Pressable
           onPress={() => setActiveId(null)}

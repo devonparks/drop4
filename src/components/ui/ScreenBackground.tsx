@@ -96,7 +96,7 @@ function LiveNebulaWallpaper({ animated, hue = 0 }: { animated: boolean; hue?: n
     // magenta/cyan palette; any other value shifts the entire stack.
     const hueWrap = hue ? ({ filter: `hue-rotate(${hue}deg)` } as any) : null;
     return (
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, hueWrap]}>
+      <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }, hueWrap]}>
         <Image source={NEBULA_BACK} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaBackStyle, animated ? webAnimStyles.nebulaBackAnim : null]} />
         <Image source={NEBULA_MID} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaMidStyle, animated ? webAnimStyles.nebulaMidAnim : null]} />
         <Image source={NEBULA_NEAR} resizeMode="cover" style={[styles.nebulaLayer, styles.nebulaNearStyle, animated ? webAnimStyles.nebulaNearAnim : null]} />
@@ -282,17 +282,17 @@ export function ScreenBackground({
           the home screen reads as a quiet, premium backdrop instead of
           a 9-layer animated nebula competing with the character. */}
       {liveWallpaper ? (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
           <LiveNebulaWallpaper animated={animated} hue={nebulaHue} />
-          <View pointerEvents="none" style={styles.sceneEdgeFeather} />
+          <View style={[styles.sceneEdgeFeather, { pointerEvents: 'none' }]} />
         </View>
       ) : sceneImage && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
           <AnimatedSceneImage
             sceneImage={sceneImage}
             animated={animated}
           />
-          <View pointerEvents="none" style={styles.sceneEdgeFeather} />
+          <View style={[styles.sceneEdgeFeather, { pointerEvents: 'none' }]} />
         </View>
       )}
 
@@ -320,8 +320,8 @@ export function ScreenBackground({
           was washing every screen with a neon-grape cast). */}
       {animated && !sceneImage && (
         <>
-          <Animated.View pointerEvents="none" style={[styles.orbA, orbAStyle]} />
-          <Animated.View pointerEvents="none" style={[styles.orbB, orbBStyle]} />
+          <Animated.View style={[styles.orbA, orbAStyle, { pointerEvents: 'none' }]} />
+          <Animated.View style={[styles.orbB, orbBStyle, { pointerEvents: 'none' }]} />
         </>
       )}
 

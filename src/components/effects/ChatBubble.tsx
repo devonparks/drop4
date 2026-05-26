@@ -68,8 +68,8 @@ export function ChatBubble({ text, senderName, side, visible, onDone }: ChatBubb
         styles.container,
         side === 'left' ? styles.leftSide : styles.rightSide,
         animStyle,
+        { pointerEvents: 'none' },
       ]}
-      pointerEvents="none"
     >
       {/* Sender name */}
       <Text style={[styles.senderName, side === 'right' && styles.senderNameRight]}>

@@ -372,8 +372,8 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red',
           style={[
             styles.grid,
             !gravityDown && { transform: [{ scaleY: -1 }] },
+            { pointerEvents: 'none' },
           ]}
-          pointerEvents="none"
         >
           {Array.from({ length: ROWS }).map((_, row) => (
             <View key={row} style={styles.row}>
@@ -435,7 +435,7 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red',
         </View>
 
         {/* Column touch targets (invisible, overlay on top) */}
-        <View style={styles.touchLayer} pointerEvents={disabled ? 'none' : 'auto'}>
+        <View style={[styles.touchLayer, { pointerEvents: disabled ? 'none' : 'auto' }]}>
           {Array.from({ length: COLS }).map((_, col) => (
             <Pressable
               key={col}

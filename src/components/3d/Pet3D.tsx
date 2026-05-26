@@ -235,7 +235,7 @@ export function Pet3D({
       </Canvas>
       </Animated.View>
       {!loaded && (
-        <View style={styles.overlay} pointerEvents="none">
+        <View style={[styles.overlay, { pointerEvents: 'none' }]}>
           <ActivityIndicator color={themeColors.orange} />
         </View>
       )}

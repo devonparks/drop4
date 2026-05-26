@@ -180,7 +180,7 @@ export function MilestoneToast() {
             {/* Painted sunburst backdrop — sits behind the hero character/pet
                 at 70% opacity. Flux-generated, gives the milestone moment a
                 theatrical "you did it!" celebration feel. */}
-            <View pointerEvents="none" style={styles.burstBg}>
+            <View style={[styles.burstBg, { pointerEvents: 'none' }]}>
               <Image
                 source={require('../../assets/images/ui/level-up-burst.png')}
                 style={styles.burstImg}

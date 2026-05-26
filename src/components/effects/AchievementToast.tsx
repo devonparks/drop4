@@ -32,7 +32,7 @@ export function AchievementToast({ name, icon = '🏆', visible, onDone }: Achie
   if (!show) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { pointerEvents: 'none' }]}>
       <Animated.View
         entering={SlideInRight.springify()}
         exiting={FadeOut}

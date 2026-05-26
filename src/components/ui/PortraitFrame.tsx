@@ -80,9 +80,9 @@ export function PortraitFrame({
     <View style={{ width: size, height: size, position: 'relative' }}>
       {/* Outer halo — soft colored glow behind everything */}
       <View
-        pointerEvents="none"
         style={[
           styles.outerHalo,
+          { pointerEvents: 'none' },
           {
             width: size * 1.25,
             height: size * 1.25,
@@ -174,8 +174,7 @@ export function PortraitFrame({
             colors={['rgba(255,255,255,0.16)', 'transparent']}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.7 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
           />
         </View>
       </View>

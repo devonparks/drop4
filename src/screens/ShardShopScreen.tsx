@@ -199,11 +199,10 @@ export function ShardShopScreen() {
             <StaggeredEntry index={0} delay={30}>
               <View style={styles.eduCard}>
                 <LinearGradient
-                  pointerEvents="none"
                   colors={['rgba(155,89,182,0.15)', 'rgba(155,89,182,0.04)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
+                  style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
                 />
                 <Text style={styles.eduTitle}>HOW SHARDS WORK</Text>
                 <View style={styles.eduStep}>

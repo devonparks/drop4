@@ -94,7 +94,7 @@ export function CoinBurst({ visible, amount, onDone }: CoinBurstProps) {
   };
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { pointerEvents: 'none' }]}>
       {particles.map(p => (
         <CoinParticle
           key={p.id}

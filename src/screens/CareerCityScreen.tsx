@@ -135,7 +135,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
       )}
       {/* Soft dark overlay so the painted scene recedes behind the
           opponent nodes / labels — pure darken, no color tint. */}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(5,8,20,0.35)' }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(5,8,20,0.35)', pointerEvents: 'none' }]} />
 
       {/* ─── Header ─── */}
       <StaggeredEntry index={0} delay={60}>
@@ -213,8 +213,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
       <View style={[styles.bottomHud, { paddingBottom: Math.max(12, insets.bottom) }]}>
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.9)']}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
         />
         {/* Calm-pass: 4 HUD buttons unified to ONE shared style — translucent
             dark navy circle with a thin warm-amber border. Was previously 4
@@ -455,8 +454,8 @@ function OpponentNode({
       {/* Pulse halo for NEXT node */}
       {isNext && (
         <Animated.View
-          pointerEvents="none"
           style={{
+            pointerEvents: 'none',
             position: 'absolute',
             top: 0,
             width: size,
@@ -512,7 +511,7 @@ function OpponentNode({
 
         {/* Boss rays */}
         {level.isBoss && !isLocked && (
-          <View pointerEvents="none" style={styles.bossRays}>
+          <View style={[styles.bossRays, { pointerEvents: 'none' }]}>
             {[0, 60, 120, 180, 240, 300].map((deg) => (
               <View
                 key={deg}
@@ -567,7 +566,7 @@ function OpponentNode({
           if (!icon) return null;
           const isPhase2 = level.type === 'jeopardy' || level.type === 'moves_limit' || level.type === 'obstacle';
           return (
-            <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2]} pointerEvents="none">
+            <View style={[styles.nodeTypeChip, isPhase2 && styles.nodeTypeChipPhase2, { pointerEvents: 'none' }]}>
               <Text style={[styles.nodeTypeChipText, isPhase2 && styles.nodeTypeChipTextPhase2]}>{icon}</Text>
             </View>
           );

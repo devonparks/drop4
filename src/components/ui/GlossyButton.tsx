@@ -137,7 +137,7 @@ export function GlossyButton({
             Stars chest cards). Only applied when bgImage is set since
             plain color buttons already have the glossy gradient edges. */}
         {bgImage && (
-          <View pointerEvents="none" style={styles.goldRim} />
+          <View style={[styles.goldRim, { pointerEvents: 'none' }]} />
         )}
         <View style={styles.content}>
           {iconImage ? (

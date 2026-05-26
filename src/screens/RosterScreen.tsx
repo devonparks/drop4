@@ -158,8 +158,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
             colors={['transparent', 'rgba(255,255,255,0.12)', 'transparent']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0.8 }}
-            style={styles.foilShimmer}
-            pointerEvents="none"
+            style={[styles.foilShimmer, { pointerEvents: 'none' }]}
           />
         )}
 
@@ -201,8 +200,7 @@ function CharacterCard({ character, isUnlocked, isEquipped, onEquip }: CardProps
           colors={['transparent', tierStyle.frameGradient[1] + 'ee', tierStyle.frameGradient[2]]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
-          style={styles.nameBanner}
-          pointerEvents="none"
+          style={[styles.nameBanner, { pointerEvents: 'none' }]}
         />
 
         {/* Name + title */}

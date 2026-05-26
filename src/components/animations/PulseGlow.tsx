@@ -77,9 +77,9 @@ export function PulseGlow({
   return (
     <View style={[{ alignItems: 'center', justifyContent: 'center' }, style]}>
       <Animated.View
-        pointerEvents="none"
         style={[
           {
+            pointerEvents: 'none',
             position: 'absolute',
             width: size * 1.6,
             height: size * 1.6,

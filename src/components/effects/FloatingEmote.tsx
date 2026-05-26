@@ -90,8 +90,8 @@ export function FloatingEmote({ emoteId, rawEmoji, side, onDone }: FloatingEmote
         side === 'left' ? styles.leftPos : styles.rightPos,
         isText && styles.phraseContainer,
         animStyle,
+        { pointerEvents: 'none' },
       ]}
-      pointerEvents="none"
     >
       {isText ? (
         <Text style={styles.phraseText}>{content}</Text>

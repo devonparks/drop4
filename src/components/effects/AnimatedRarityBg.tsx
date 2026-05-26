@@ -201,7 +201,7 @@ export function AnimatedRarityBg({ rarity, width, height, borderRadius = 0, styl
   ], [p]);
 
   return (
-    <View style={[{ width, height, borderRadius, backgroundColor: p.base, overflow: 'hidden' }, style]} pointerEvents="none">
+    <View style={[{ width, height, borderRadius, backgroundColor: p.base, overflow: 'hidden', pointerEvents: 'none' }, style]}>
       <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
         <View style={{ width: width * 0.75, height: height * 0.75, borderRadius: Math.max(width, height) * 0.4, backgroundColor: p.centerGlow }} />
       </View>
@@ -209,7 +209,7 @@ export function AnimatedRarityBg({ rarity, width, height, borderRadius = 0, styl
       <Sweep w={width} h={height} color={p.shimmer} />
       {dots.map((d, i) => <Dot key={i} {...d} w={width} h={height} />)}
       <LinearGradient colors={[`${p.base}99`, 'transparent', `${p.base}66`]}
-        style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" />
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
     </View>
   );
 }

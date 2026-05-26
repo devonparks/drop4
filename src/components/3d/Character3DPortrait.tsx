@@ -231,7 +231,7 @@ export function Character3DPortrait({
       </Animated.View>
 
       {!loaded && (
-        <View style={styles.loadingOverlay} pointerEvents="none">
+        <View style={[styles.loadingOverlay, { pointerEvents: 'none' }]}>
           {/* Adaptive loading state — Audit fix 2026-05-05 PM:
               "Loading character…" text was overlapping the small
               avatar circles in the GameScreen header (Player and

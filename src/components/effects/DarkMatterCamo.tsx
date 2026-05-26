@@ -507,8 +507,8 @@ export function DarkMatterCamo({
           overflow: 'hidden',
         },
         style,
+        { pointerEvents: 'none' },
       ]}
-      pointerEvents="none"
     >
       {/* Subtle radial-ish base glow in centre */}
       <View
@@ -563,10 +563,9 @@ export function DarkMatterCamo({
       {/* Top vignette overlay for depth */}
       <LinearGradient
         colors={['rgba(10,5,24,0.6)', 'transparent', 'rgba(10,5,24,0.4)']}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        pointerEvents="none"
       />
     </View>
   );

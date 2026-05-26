@@ -93,8 +93,8 @@ export function TutorialTooltip({ tip, visible, onDismiss }: TutorialTooltipProp
       style={[
         styles.overlay,
         { opacity: fadeAnim },
+        { pointerEvents: 'box-none' },
       ]}
-      pointerEvents="box-none"
     >
       <Animated.View
         style={[

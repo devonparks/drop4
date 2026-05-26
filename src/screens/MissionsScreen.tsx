@@ -83,7 +83,7 @@ function MilestonesBody() {
 function SubTabSwitcher({ tab, onChange }: { tab: MissionsTab; onChange: (t: MissionsTab) => void }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.switchWrap, { top: insets.top + 6 }]} pointerEvents="box-none">
+    <View style={[styles.switchWrap, { top: insets.top + 6, pointerEvents: 'box-none' }]}>
       {(['daily', 'milestones'] as MissionsTab[]).map((key) => (
         <PressScale
           key={key}

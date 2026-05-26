@@ -340,8 +340,8 @@ export function PremiumBoardThumbnail({
 
       {/* ─── 7. Vignette edge darkening ─── */}
       <View
-        pointerEvents="none"
         style={{
+          pointerEvents: 'none',
           ...StyleSheet.absoluteFillObject,
           borderWidth: 8,
           borderColor: 'rgba(0,0,0,0.25)',

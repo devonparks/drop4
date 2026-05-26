@@ -113,7 +113,7 @@ export function LevelIntroCard({ icon, label, rule, tint, onComplete }: LevelInt
   }));
 
   return (
-    <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="auto">
+    <Animated.View style={[styles.overlay, overlayStyle, { pointerEvents: 'auto' }]}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={handleSkip}
@@ -134,11 +134,8 @@ export function LevelIntroCard({ icon, label, rule, tint, onComplete }: LevelInt
             borderColor: tint,
             shadowColor: tint,
           } as any,
+          { pointerEvents: 'none' },
         ]}
-        // Card itself doesn't pass taps through — the Pressable
-        // backdrop handles skip. Stops accidental column-taps from
-        // landing during the intro.
-        pointerEvents="none"
       >
         <LinearGradient
           colors={[`${tint}30`, `${tint}10`, 'transparent']}

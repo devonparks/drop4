@@ -177,7 +177,7 @@ export function CareerMapScreen({ navigation }: Props) {
                       gets its own atmospheric identity. Locked cities
                       render at lower opacity to read as muted. */}
                   {CITY_ART[city.id] && (
-                    <View pointerEvents="none" style={styles.zoneArtLayer}>
+                    <View style={[styles.zoneArtLayer, { pointerEvents: 'none' }]}>
                       <Image
                         source={CITY_ART[city.id]}
                         style={[styles.zoneArtImg, { opacity: unlocked ? 0.55 : 0.2 }]}
@@ -395,10 +395,10 @@ function PathNode({ level, levelNumber, isComplete, isNext, isLocked, stars, cit
     <View style={[styles.node, { borderColor: nodeColor, backgroundColor: bgColor }]}>
       {isNext && (
         <Animated.View
-          pointerEvents="none"
           style={[
             styles.nodePulse,
             {
+              pointerEvents: 'none',
               borderColor: city.themeColor,
               transform: [{ scale: ringScale }],
               opacity: ringOpacity,

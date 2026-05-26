@@ -62,7 +62,7 @@ function TabIcon({ iconKey, label, focused, badgeCount }: { iconKey: keyof typeo
       {/* Focused glow ring — a soft orange halo behind the active tab
           icon so the selected tab reads unmistakably. Only renders
           when focused so inactive tabs stay visually quiet. */}
-      {focused && <View pointerEvents="none" style={styles.tabFocusGlow} />}
+      {focused && <View style={[styles.tabFocusGlow, { pointerEvents: 'none' }]} />}
       <Image
         source={iconSource}
         style={[styles.tabIconImg, !focused && styles.tabIconImgInactive]}
@@ -150,7 +150,7 @@ const TAB_META: Record<string, { iconKey: keyof typeof TAB_ICON_SOURCES; label: 
 // built in to the underlying tab-view, not something we wired here.
 function BottomTabBar({ state, navigation }: MaterialTopTabBarProps) {
   return (
-    <View style={styles.tabBar} pointerEvents="box-none">
+    <View style={[styles.tabBar, { pointerEvents: 'box-none' }]}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const meta = TAB_META[route.name];

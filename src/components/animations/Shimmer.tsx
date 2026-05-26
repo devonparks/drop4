@@ -62,10 +62,9 @@ export function Shimmer({
     <View style={[{ overflow: 'hidden', position: 'relative' }, style]}>
       {children}
       <Animated.View
-        pointerEvents="none"
         style={[
           StyleSheet.absoluteFill,
-          { width: `${bandWidth}%` },
+          { width: `${bandWidth}%`, pointerEvents: 'none' },
           shimmerStyle,
         ]}
       >

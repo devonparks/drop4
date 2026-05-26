@@ -81,8 +81,8 @@ function Ember({ config, containerWidth }: { config: EmberConfig; containerWidth
 
   return (
     <Animated.View
-      pointerEvents="none"
       style={{
+        pointerEvents: 'none',
         position: 'absolute',
         left: config.left * containerWidth - config.size / 2,
         bottom: config.startBottom * 100,
@@ -158,9 +158,9 @@ function Shimmer() {
 
   return (
     <Animated.View
-      pointerEvents="none"
       style={[
         styles.shimmer,
+        { pointerEvents: 'none' },
         {
           transform: [
             {
@@ -180,7 +180,7 @@ function Shimmer() {
 
 export function StagePremiumFX({ width }: { width: number }) {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       <Shimmer />
       {EMBERS.map((cfg, i) => (
         <Ember key={i} config={cfg} containerWidth={width} />

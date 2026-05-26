@@ -83,7 +83,7 @@ export function ConfettiOverlay({ visible, onDone }: ConfettiOverlayProps) {
   if (!show) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { pointerEvents: 'none' }]}>
       {Array.from({ length: CONFETTI_COUNT }).map((_, i) => (
         <ConfettiPiece key={i} index={i} delay={Math.random() * 500} />
       ))}

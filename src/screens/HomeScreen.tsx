@@ -197,7 +197,7 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
   if (!stateForRender) return null;
 
   return (
-    <View style={{ width: 520, height: 620 }} pointerEvents="none">
+    <View style={{ width: 520, height: 620, pointerEvents: 'none' }}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
         <Canvas
           // frameloop="always" — demand mode was causing r3f native to intercept
@@ -252,7 +252,7 @@ function Character3DWrapper({ activeEmoteId, rotationY }: { activeEmoteId: strin
           player something to look at instead of a blank stage during
           that ~3-5 s window. Cached on subsequent mounts. */}
       {!loaded && !stalled && (
-        <View style={styles.characterLoadingOverlay} pointerEvents="none">
+        <View style={[styles.characterLoadingOverlay, { pointerEvents: 'none' }]}>
           <ActivityIndicator color={colors.orange} size="large" />
         </View>
       )}
@@ -315,7 +315,7 @@ function DriftingWatermark() {
 
   const REPEAT_STR = 'DROP4   DROP4   DROP4   DROP4   DROP4   DROP4';
   return (
-    <View pointerEvents="none" style={watermarkStyles.layer}>
+    <View style={[watermarkStyles.layer, { pointerEvents: 'none' }]}>
       <Animated.Text
         numberOfLines={1}
         style={[
@@ -774,14 +774,13 @@ export function HomeScreen() {
       <LinearGradient
         colors={['#1a2244', '#0c1129', '#080a1e']}
         locations={[0, 0.55, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
       {Platform.OS === 'web' && (
         <View
-          pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
+            { pointerEvents: 'none' },
             ({
               backgroundImage:
                 'radial-gradient(circle at center, rgba(255,200,120,0.08) 1px, transparent 1.6px)',
@@ -854,8 +853,7 @@ export function HomeScreen() {
             />
             <LinearGradient
               colors={['rgba(255,140,0,0.25)', 'rgba(255,80,0,0.15)', 'rgba(255,40,0,0.1)']}
-              style={styles.sideBtnCircle}
-              pointerEvents="none"
+              style={[styles.sideBtnCircle, { pointerEvents: 'none' }]}
             >
               <Image
                 source={require('../assets/images/ui/side-btn-emotes.png')}
@@ -863,7 +861,7 @@ export function HomeScreen() {
                 resizeMode="contain"
               />
             </LinearGradient>
-            <Text style={styles.sideBtnLabel} pointerEvents="none">Emotes</Text>
+            <Text style={[styles.sideBtnLabel, { pointerEvents: 'none' }]}>Emotes</Text>
           </View>
 
           {/* Character on stage.
@@ -880,7 +878,7 @@ export function HomeScreen() {
                 purchasable bg themes are added (Cleveland skyline, cosmic
                 stadium, neon arena, etc). Sits on top of the bg layers
                 but behind the 3D character + particles. */}
-            <View style={styles.characterSpotlight} pointerEvents="none" />
+            <View style={[styles.characterSpotlight, { pointerEvents: 'none' }]} />
             <StageSparkles />
             <StagePremiumFX width={400} />
 
@@ -953,8 +951,7 @@ export function HomeScreen() {
             />
             <LinearGradient
               colors={['rgba(80,140,255,0.25)', 'rgba(60,100,255,0.15)', 'rgba(40,80,255,0.1)']}
-              style={styles.sideBtnCircle}
-              pointerEvents="none"
+              style={[styles.sideBtnCircle, { pointerEvents: 'none' }]}
             >
               <Image
                 source={require('../assets/images/ui/side-btn-idles.png')}
@@ -962,7 +959,7 @@ export function HomeScreen() {
                 resizeMode="contain"
               />
             </LinearGradient>
-            <Text style={styles.sideBtnLabel} pointerEvents="none">Idles</Text>
+            <Text style={[styles.sideBtnLabel, { pointerEvents: 'none' }]}>Idles</Text>
           </View>
         </View>
         </StaggeredEntry>
@@ -1019,8 +1016,7 @@ export function HomeScreen() {
               </Animated.View>
               {showPetHeart && (
                 <Animated.Text
-                  style={[styles.petHeart, { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }] }]}
-                  pointerEvents="none"
+                  style={[styles.petHeart, { opacity: heartOpacity, transform: [{ translateY: heartTranslateY }], pointerEvents: 'none' }]}
                 >{'❤️'}</Animated.Text>
               )}
             </Pressable>
@@ -1081,8 +1077,8 @@ export function HomeScreen() {
             style={[
               styles.levelUpOverlay,
               { opacity: levelUpOpacity, transform: [{ scale: levelUpScale }] },
+              { pointerEvents: 'none' },
             ]}
-            pointerEvents="none"
           >
             <Text style={styles.levelUpEmoji}>🎉</Text>
             <Text style={styles.levelUpTitle}>LEVEL UP!</Text>

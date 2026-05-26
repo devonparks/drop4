@@ -1054,7 +1054,7 @@ export function ShopScreen() {
               {/* Painted atmospheric banner — sits behind the whole deals
                   strip at ~28% opacity so cards pop while the backdrop
                   adds depth. Generated via fal.ai Flux, bg kept full. */}
-              <View pointerEvents="none" style={s.dealsBannerBg}>
+              <View style={[s.dealsBannerBg, { pointerEvents: 'none' }]}>
                 <Image
                   source={require('../assets/images/ui/featured-banner.png')}
                   style={s.dealsBannerImg}
@@ -1170,11 +1170,10 @@ export function ShopScreen() {
                   Web-only because expo-linear-gradient with horizontal
                   start/end works there; on native we leave it off. */}
               <LinearGradient
-                pointerEvents="none"
                 colors={['rgba(10,14,32,0)', 'rgba(10,14,32,0.85)']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
-                style={s.dealsScrollFade}
+                style={[s.dealsScrollFade, { pointerEvents: 'none' }]}
               />
               </View>
             </View>
@@ -1385,8 +1384,7 @@ export function ShopScreen() {
       {equipToast && (
         <Animated.View
           entering={FadeIn.duration(160)}
-          style={s.equipToast}
-          pointerEvents="none"
+          style={[s.equipToast, { pointerEvents: 'none' }]}
         >
           <Text style={s.equipToastText}>{equipToast.label}</Text>
         </Animated.View>

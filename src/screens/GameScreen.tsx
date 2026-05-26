@@ -1268,7 +1268,7 @@ export function GameScreen({ navigation }: Props) {
 
         {/* First game encouragement */}
         {showFirstGameMsg && (
-          <RNAnimated.View style={[styles.firstGameBanner, { opacity: firstGameFade }]} pointerEvents="none">
+          <RNAnimated.View style={[styles.firstGameBanner, { opacity: firstGameFade, pointerEvents: 'none' }]}>
             <Text style={styles.firstGameText}>Your first game! Don't worry {'\u2014'} Easy Bot will go easy on you {'\uD83D\uDE0A'}</Text>
           </RNAnimated.View>
         )}
