@@ -730,7 +730,7 @@ export function GameScreen({ navigation }: Props) {
     }
     if (status === 'won' && winner === 2 && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
-      // Detect broken streak (preStreakRef captured while game was playing)
+      if (params.careerLevelId) setWasCareerLevel(true);
       if (preStreakRef.current >= 3) {
         setStreakBrokenAt(preStreakRef.current);
       }
@@ -791,6 +791,7 @@ export function GameScreen({ navigation }: Props) {
     }
     if (status === 'draw' && !hasAwardedRef.current) {
       hasAwardedRef.current = true;
+      if (params.careerLevelId) setWasCareerLevel(true);
       const drawMultiplier = getStreakMultiplier();
       const drawReward = Math.round(10 * drawMultiplier);
       addCoins(drawReward);
