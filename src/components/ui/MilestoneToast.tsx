@@ -33,9 +33,11 @@ import { usePetStore } from '../../stores/petStore';
 import { useShopStore } from '../../stores/shopStore';
 import { PETS_ENABLED } from '../../data/featureFlags';
 import { useMilestoneStore } from '../../stores/milestoneStore';
+import { useCareerStore } from '../../stores/careerStore';
 import {
   getNewlyEarnedMilestones,
   type CollectionMilestone,
+  type CareerSnapshot,
 } from '../../data/collectionMilestones';
 import { haptics } from '../../services/haptics';
 import { playSound } from '../../services/audio';
@@ -79,13 +81,29 @@ export function MilestoneToast() {
   const addCoins = useShopStore((s) => s.addCoins);
 
   const uniqueCamoCount = useMemo(() => countUniqueCamos(ownedPartVariants), [ownedPartVariants]);
+  const careerProgress = useCareerStore((s) => s.progress);
+
+  const careerSnapshot: CareerSnapshot = useMemo(() => {
+    const entries = Object.entries(careerProgress);
+    let totalStars = 0;
+    let completedCount = 0;
+    const completedLevelIds: number[] = [];
+    for (const [id, p] of entries) {
+      totalStars += p.stars;
+      if (p.completed) {
+        completedCount++;
+        completedLevelIds.push(Number(id));
+      }
+    }
+    return { totalStars, completedCount, completedLevelIds };
+  }, [careerProgress]);
 
   const [queue, setQueue] = useState<CollectionMilestone[]>([]);
   const [active, setActive] = useState<CollectionMilestone | null>(null);
 
   const earned = useMemo(
-    () => getNewlyEarnedMilestones(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount),
-    [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount],
+    () => getNewlyEarnedMilestones(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount, careerSnapshot),
+    [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount, careerSnapshot],
   );
 
   // When newly-earned milestones appear, append to queue

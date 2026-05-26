@@ -33,6 +33,13 @@ export interface CollectionMilestone {
   uniqueSpeciesCount?: number;
   /** Alternative: number of unique camo variants owned (across all parts) */
   anyCamosTotal?: number;
+  // ── Career milestones ──
+  /** Total career stars earned (sum across all levels) */
+  careerStarsTotal?: number;
+  /** Number of career levels completed */
+  careerLevelsCompleted?: number;
+  /** Specific career level ID that must be completed (boss defeats) */
+  careerBossDefeated?: number;
   // Reward
   reward: {
     type: MilestoneRewardType;
@@ -40,6 +47,13 @@ export interface CollectionMilestone {
     icon: string;
     value: string | number;
   };
+}
+
+/** Snapshot of career progress passed into milestone evaluation. */
+export interface CareerSnapshot {
+  totalStars: number;
+  completedCount: number;
+  completedLevelIds: number[];
 }
 
 const COLLECTION_MILESTONES: CollectionMilestone[] = [
@@ -196,6 +210,110 @@ const COLLECTION_MILESTONES: CollectionMilestone[] = [
     anyPetsTotal: 16,
     reward: { type: 'title', name: 'Pack Leader', icon: '\u{1F43A}', value: 'pack_leader' },
   },
+
+  // ── Career milestones ──────────────────────────────────────────────
+
+  // Named boss defeats
+  {
+    id: 'boss_tommy',
+    name: 'King of the Rec',
+    description: 'Defeat Tommy Blacktop in Brooklyn',
+    requiredCount: 1,
+    careerBossDefeated: 12,
+    reward: { type: 'title', name: 'Street King', icon: '\u{1F451}', value: 'street_king' },
+  },
+  {
+    id: 'boss_sal',
+    name: 'Canal Runner',
+    description: 'Defeat Sal Canal in Venice Beach',
+    requiredCount: 1,
+    careerBossDefeated: 24,
+    reward: { type: 'title', name: 'Canal Runner', icon: '\u{1F30A}', value: 'canal_runner' },
+  },
+  {
+    id: 'boss_warden',
+    name: 'Uptown Takeover',
+    description: 'Defeat The Warden in Harlem',
+    requiredCount: 1,
+    careerBossDefeated: 36,
+    reward: { type: 'title', name: 'Uptown Boss', icon: '\u{1F525}', value: 'uptown_boss' },
+  },
+  {
+    id: 'career_all_power',
+    name: 'Full Arsenal',
+    description: 'Unlock all 3 power pieces (Bomb, Rainbow, Heavy)',
+    requiredCount: 3,
+    careerBossDefeated: -1, // special: checked via completedLevelIds containing 12+24+36
+    reward: { type: 'title', name: 'Arsenal', icon: '\u{1F4A3}', value: 'arsenal' },
+  },
+
+  // Career star totals
+  {
+    id: 'career_stars_50',
+    name: 'Rising Star',
+    description: 'Earn 50 career stars',
+    requiredCount: 50,
+    careerStarsTotal: 50,
+    reward: { type: 'coins', name: '2,500 Coins', icon: '\u{2B50}', value: 2500 },
+  },
+  {
+    id: 'career_stars_150',
+    name: 'Star Collector',
+    description: 'Earn 150 career stars',
+    requiredCount: 150,
+    careerStarsTotal: 150,
+    reward: { type: 'coins', name: '5,000 Coins', icon: '\u{1F31F}', value: 5000 },
+  },
+  {
+    id: 'career_stars_300',
+    name: 'Constellation',
+    description: 'Earn 300 career stars',
+    requiredCount: 300,
+    careerStarsTotal: 300,
+    reward: { type: 'title', name: 'Star Player', icon: '\u{1FA90}', value: 'star_player' },
+  },
+  {
+    id: 'career_stars_540',
+    name: 'Perfect Career',
+    description: '3-star every career level (540 stars)',
+    requiredCount: 540,
+    careerStarsTotal: 540,
+    reward: { type: 'title', name: 'Perfectionist', icon: '\u{1F48E}', value: 'perfectionist' },
+  },
+
+  // Level completion totals
+  {
+    id: 'career_25',
+    name: 'Getting Started',
+    description: 'Complete 25 career levels',
+    requiredCount: 25,
+    careerLevelsCompleted: 25,
+    reward: { type: 'coins', name: '1,000 Coins', icon: '\u{1F3C3}', value: 1000 },
+  },
+  {
+    id: 'career_50',
+    name: 'Halfway There',
+    description: 'Complete 50 career levels',
+    requiredCount: 50,
+    careerLevelsCompleted: 50,
+    reward: { type: 'coins', name: '2,500 Coins', icon: '\u{1F3C3}', value: 2500 },
+  },
+  {
+    id: 'career_100',
+    name: 'Journeyman',
+    description: 'Complete 100 career levels',
+    requiredCount: 100,
+    careerLevelsCompleted: 100,
+    reward: { type: 'title', name: 'Journeyman', icon: '\u{1F6E4}️', value: 'journeyman' },
+  },
+  {
+    id: 'career_180',
+    name: 'Career Legend',
+    description: 'Complete all 180 career levels',
+    requiredCount: 180,
+    careerLevelsCompleted: 180,
+    reward: { type: 'title', name: 'Career Legend', icon: '\u{1F3C6}', value: 'career_legend' },
+  },
 ];
 
 /**
@@ -228,15 +346,16 @@ export function getNewlyEarnedMilestones(
   ownedPets: string[],
   claimedIds: string[],
   uniqueCamoCount = 0,
+  career?: CareerSnapshot,
 ): CollectionMilestone[] {
   const earned: CollectionMilestone[] = [];
   const ownedSet = new Set(ownedOutfits);
   const petSet = new Set(ownedPets);
+  const completedSet = new Set(career?.completedLevelIds ?? []);
 
   // Precompute species count
   const speciesOwned = new Set<string>();
   for (const oid of ownedOutfits) {
-    // Outfit IDs look like "human_modern_civilians_03" — first token is species
     const firstToken = oid.split('_')[0];
     if (['human', 'elves', 'goblin', 'skeleton', 'zombie'].includes(firstToken)) {
       speciesOwned.add(firstToken);
@@ -248,7 +367,17 @@ export function getNewlyEarnedMilestones(
 
     let qualifies = false;
 
-    if (m.packSlug) {
+    if (m.careerBossDefeated !== undefined) {
+      if (m.id === 'career_all_power') {
+        qualifies = [12, 24, 36].every((id) => completedSet.has(id));
+      } else {
+        qualifies = completedSet.has(m.careerBossDefeated);
+      }
+    } else if (m.careerStarsTotal !== undefined) {
+      qualifies = (career?.totalStars ?? 0) >= m.careerStarsTotal;
+    } else if (m.careerLevelsCompleted !== undefined) {
+      qualifies = (career?.completedCount ?? 0) >= m.careerLevelsCompleted;
+    } else if (m.packSlug) {
       const pack = PACKS.find((p) => p.pack === m.packSlug);
       if (pack) {
         const countInPack = pack.outfitIds.filter((id) => ownedSet.has(id)).length;
@@ -316,8 +445,10 @@ export function getMilestoneProgressList(
   ownedPets: string[],
   claimedIds: string[],
   uniqueCamoCount = 0,
+  career?: CareerSnapshot,
 ): MilestoneProgress[] {
   const ownedSet = new Set(ownedOutfits);
+  const completedSet = new Set(career?.completedLevelIds ?? []);
 
   const speciesOwned = new Set<string>();
   for (const oid of ownedOutfits) {
@@ -331,8 +462,17 @@ export function getMilestoneProgressList(
     let current = 0;
     const required = m.requiredCount;
 
-    if (m.id === 'apocalypse_complete') {
-      // Two-pack special case mirrored from getNewlyEarnedMilestones
+    if (m.careerBossDefeated !== undefined) {
+      if (m.id === 'career_all_power') {
+        current = [12, 24, 36].filter((id) => completedSet.has(id)).length;
+      } else {
+        current = completedSet.has(m.careerBossDefeated) ? 1 : 0;
+      }
+    } else if (m.careerStarsTotal !== undefined) {
+      current = career?.totalStars ?? 0;
+    } else if (m.careerLevelsCompleted !== undefined) {
+      current = career?.completedCount ?? 0;
+    } else if (m.id === 'apocalypse_complete') {
       const outlaws = PACKS.find((p) => p.pack === 'apocalypse_outlaws');
       const survivors = PACKS.find((p) => p.pack === 'apocalypse_survivor');
       current =

@@ -5,7 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCharacterStore, countUniqueCamos } from '../../stores/characterStore';
 import { usePetStore } from '../../stores/petStore';
 import { useMilestoneStore } from '../../stores/milestoneStore';
-import { getMilestoneProgressList, type MilestoneProgress } from '../../data/collectionMilestones';
+import { useCareerStore } from '../../stores/careerStore';
+import { getMilestoneProgressList, type MilestoneProgress, type CareerSnapshot } from '../../data/collectionMilestones';
 import { PETS_ENABLED } from '../../data/featureFlags';
 import { StaggeredEntry } from '../animations';
 import { colors } from '../../theme/colors';
@@ -32,11 +33,27 @@ export function MilestonesList() {
   const ownedPartVariants = useCharacterStore((s) => s.ownedPartVariants);
   const ownedPets = usePetStore((s) => s.ownedPets);
   const claimedIds = useMilestoneStore((s) => s.claimedIds);
+  const careerProgress = useCareerStore((s) => s.progress);
 
   const uniqueCamoCount = useMemo(() => countUniqueCamos(ownedPartVariants), [ownedPartVariants]);
 
+  const careerSnapshot: CareerSnapshot = useMemo(() => {
+    const entries = Object.entries(careerProgress);
+    let totalStars = 0;
+    let completedCount = 0;
+    const completedLevelIds: number[] = [];
+    for (const [id, p] of entries) {
+      totalStars += p.stars;
+      if (p.completed) {
+        completedCount++;
+        completedLevelIds.push(Number(id));
+      }
+    }
+    return { totalStars, completedCount, completedLevelIds };
+  }, [careerProgress]);
+
   const { earnedUnclaimed, inProgress, claimed, notStarted, total, claimedCount } = useMemo(() => {
-    const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount);
+    const list = getMilestoneProgressList(ownedOutfits, ownedPets, claimedIds, uniqueCamoCount, careerSnapshot);
     const earnedUnclaimed: MilestoneProgress[] = [];
     const inProgress: MilestoneProgress[] = [];
     const claimed: MilestoneProgress[] = [];
@@ -56,7 +73,7 @@ export function MilestonesList() {
       total: list.length,
       claimedCount: list.filter((p) => p.claimed).length,
     };
-  }, [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount]);
+  }, [ownedOutfits, ownedPets, claimedIds, uniqueCamoCount, careerSnapshot]);
 
   return (
     <Animated.View entering={FadeIn.duration(220)}>
@@ -73,8 +90,8 @@ export function MilestonesList() {
           </Text>
           <Text style={styles.summaryHint}>
             {PETS_ENABLED
-              ? 'Complete packs, collect camos, or hit cosmetic goals to unlock exclusive titles + rewards.'
-              : 'Complete packs, collect camos, or hit cosmetic goals to unlock exclusive titles + rewards.'}
+              ? 'Dominate career mode, complete packs, or collect camos to unlock exclusive titles + rewards.'
+              : 'Dominate career mode, complete packs, or collect camos to unlock exclusive titles + rewards.'}
           </Text>
         </LinearGradient>
       </View>
