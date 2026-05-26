@@ -607,7 +607,8 @@ export function GameScreen({ navigation }: Props) {
         setWasCareerLevel(true);
         const lvlData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
         const th = lvlData?.starThresholds ?? { three: 14, two: 24 };
-        const starRating = moveCount <= th.three ? 3 : moveCount <= th.two ? 2 : 1;
+        const pMoves = Math.ceil(moveCount / 2);
+        const starRating = pMoves <= th.three ? 3 : pMoves <= th.two ? 2 : 1;
         completeCareerLevel(careerLevelId, starRating, moveCount);
         // Award career reward(s)
         const careerReward = params.careerLevelReward;
@@ -713,7 +714,7 @@ export function GameScreen({ navigation }: Props) {
         if (!params.careerLevelId) return 0;
         const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
         const t = cl?.starThresholds ?? { three: 14, two: 24 };
-        return moveCount <= t.three ? 3 : moveCount <= t.two ? 2 : 1;
+        return playerMoveCount <= t.three ? 3 : playerMoveCount <= t.two ? 2 : 1;
       })();
       const wasLosingInSeries = scores.player2 > scores.player1;
       if (playerMoveCount <= 8) {
@@ -1741,12 +1742,19 @@ export function GameScreen({ navigation }: Props) {
                 {wasCareerLevel && status === 'won' && winner === 1 && (() => {
                   const cl = ALL_CAREER_LEVELS.find(l => l.id === params.careerLevelId);
                   const t = cl?.starThresholds ?? { three: 14, two: 24 };
-                  const earnedStars = moveCount <= t.three ? 3 : moveCount <= t.two ? 2 : 1;
+                  const playerMoves = Math.ceil(moveCount / 2);
+                  const earnedStars = playerMoves <= t.three ? 3 : playerMoves <= t.two ? 2 : 1;
                   const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
+                  const nearMiss = earnedStars === 2 && playerMoves <= t.three + 2
+                    ? `${playerMoves - t.three} move${playerMoves - t.three === 1 ? '' : 's'} from 3 stars!`
+                    : earnedStars === 1 && playerMoves <= t.two + 2
+                    ? `${playerMoves - t.two} move${playerMoves - t.two === 1 ? '' : 's'} from 2 stars!`
+                    : null;
                   return (
                     <View style={styles.goCareerStarCompact}>
                       <AnimatedStarRating earned={earnedStars} size={32} delay={200} />
                       <Text style={styles.goCareerStarVerdict}>{verdict}</Text>
+                      {nearMiss && <Text style={styles.goNearMiss}>{nearMiss}</Text>}
                     </View>
                   );
                 })()}
@@ -3075,6 +3083,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginTop: 10,
     textShadow: '0px 0px 10px rgba(255,215,0,0.5)',
+  },
+  goNearMiss: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: '#ffab40',
+    marginTop: 4,
+    letterSpacing: 0.5,
   },
   goStreakRow: {
     flexDirection: 'row',
