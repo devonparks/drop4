@@ -1859,10 +1859,24 @@ export function GameScreen({ navigation }: Props) {
                     jeopardy: 'High stakes = aggressive play. Force the AI to react to you.',
                   };
                   const tip = tipMap[cl?.type ?? ''] ?? 'Control the center, build diagonal threats, and never leave the AI an open 3.';
+                  const careerStore = useCareerStore.getState();
+                  const unusedPieces: string[] = [];
+                  if (bombsRemaining > 0 && careerStore.isPowerPieceUnlocked('bomb')) unusedPieces.push('💣 Bomb');
+                  if (rainbowsRemaining > 0 && careerStore.isPowerPieceUnlocked('rainbow')) unusedPieces.push('🌈 Rainbow');
+                  if (heaviesRemaining > 0 && careerStore.isPowerPieceUnlocked('heavy')) unusedPieces.push('🪨 Heavy');
                   return (
-                    <View style={styles.goCareerLossTip}>
-                      <Text style={styles.goCareerLossTipText}>{tip}</Text>
-                    </View>
+                    <>
+                      <View style={styles.goCareerLossTip}>
+                        <Text style={styles.goCareerLossTipText}>{tip}</Text>
+                      </View>
+                      {unusedPieces.length > 0 && (
+                        <View style={styles.goCareerLossTip}>
+                          <Text style={styles.goCareerLossTipText}>
+                            You had {unusedPieces.join(' + ')} unused — try them on the retry!
+                          </Text>
+                        </View>
+                      )}
+                    </>
                   );
                 })()}
 
