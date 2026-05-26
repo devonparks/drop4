@@ -10,7 +10,7 @@ import { useShopStore } from '../stores/shopStore';
 import { useGameStore, Cell } from '../stores/gameStore';
 import { haptics } from '../services/haptics';
 import { playSound } from '../services/audio';
-import { StaggeredEntry } from '../components/animations';
+import { PressScale, StaggeredEntry } from '../components/animations';
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -195,16 +195,17 @@ export function BoardEditorScreen({ navigation }: Props) {
             <Text style={styles.myBoardsTitle} accessibilityRole="header">MY BOARDS ({myBoards.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.myBoardsScroll}>
               {myBoards.map(board => (
-                <Pressable
+                <PressScale
                   key={board.id}
-                  onPress={() => { haptics.tap(); playSound('click'); loadBoard(board); }}
-                  style={styles.boardCard}
+                  onPress={() => { playSound('click'); loadBoard(board); }}
+                  scaleTo={0.95}
+                  containerStyle={styles.boardCard}
                   accessibilityRole="button"
                   accessibilityLabel={`Load board ${board.name}, ${board.cols} by ${board.rows}`}
                 >
                   <Text style={styles.boardCardName}>{board.name}</Text>
                   <Text style={styles.boardCardInfo}>{board.cols}x{board.rows}</Text>
-                </Pressable>
+                </PressScale>
               ))}
             </ScrollView>
           </View>

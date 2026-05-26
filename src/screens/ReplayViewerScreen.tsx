@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import { ScreenBackground } from '../components/ui/ScreenBackground';
+import { PressScale } from '../components/animations/PressScale';
 import { StaggeredEntry } from '../components/animations/StaggeredEntry';
 import { TopBar } from '../components/ui/TopBar';
 import { useReplayStore, Replay, ReplayMove } from '../stores/replayStore';
@@ -68,9 +69,10 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
   const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
   return (
-    <Pressable
-      onPress={() => { haptics.tap(); playSound('click'); onWatch(); }}
-      style={rStyles.replayCard}
+    <PressScale
+      onPress={() => { playSound('click'); onWatch(); }}
+      scaleTo={0.97}
+      containerStyle={rStyles.replayCard}
       accessibilityRole="button"
       accessibilityLabel={`Watch replay vs ${replay.opponent}, ${resultLabels[replay.result]}, ${replay.totalMoves} moves`}
     >
@@ -100,7 +102,7 @@ function ReplayCard({ replay, onWatch, onToggleStar, onDelete }: {
           <Text style={rStyles.deleteIcon}>🗑</Text>
         </Pressable>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 
