@@ -98,6 +98,8 @@ export function CareerCityScreen({ navigation, route }: Props) {
   }
 
   const completedCount = levels.filter((l) => progress[l.id]?.completed).length;
+  const cityStars = levels.reduce((sum, l) => sum + (progress[l.id]?.stars ?? 0), 0);
+  const maxStars = levels.length * 3;
 
   const handleNodePress = (level: CareerLevel) => {
     // Gate: only tappable if all prior levels in this city are completed,
@@ -161,10 +163,17 @@ export function CareerCityScreen({ navigation, route }: Props) {
             {city.name}, <Text style={styles.headerState}>{city.state}</Text>
           </Text>
         </View>
-        <View style={[styles.progressChip, { borderColor: city.themeColor }]}>
-          <Text style={[styles.progressChipText, { color: city.themeColor }]}>
-            {completedCount}/{levels.length}
-          </Text>
+        <View style={styles.headerChips}>
+          <View style={[styles.progressChip, { borderColor: city.themeColor }]}>
+            <Text style={[styles.progressChipText, { color: city.themeColor }]}>
+              {completedCount}/{levels.length}
+            </Text>
+          </View>
+          <View style={[styles.progressChip, { borderColor: '#f1c40f' }]}>
+            <Text style={[styles.progressChipText, { color: '#f1c40f' }]}>
+              ⭐ {cityStars}/{maxStars}
+            </Text>
+          </View>
         </View>
       </View>
       </StaggeredEntry>
@@ -792,6 +801,11 @@ const styles = StyleSheet.create({
   headerState: {
     fontWeight: weight.bold,
     color: colors.coinGold,
+  },
+  headerChips: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 4,
   },
   progressChip: {
     paddingHorizontal: 10,
