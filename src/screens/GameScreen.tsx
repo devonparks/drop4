@@ -1722,6 +1722,22 @@ export function GameScreen({ navigation }: Props) {
                     </Text>
                   </View>
                 )}
+                {comebackCoins && comebackCoins > 0 && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'💪'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.coinGold }]}>
+                      Comeback Bonus: +{comebackCoins} 🪙
+                    </Text>
+                  </View>
+                )}
+                {milestoneCelebration && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🏆'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.goldLight }]}>
+                      {milestoneCelebration}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Series complete */}
                 {isSeriesMode && seriesOver && (
