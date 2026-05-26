@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Share, Alert, ScrollView, Platform, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Switch, Share, ScrollView, Platform, Image, ImageSourcePropType } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -114,6 +114,8 @@ export function SettingsScreen({ navigation }: Props) {
   // showing a confirm. Switched to the styled ConfirmDialog so the
   // confirm renders consistently across web + native.
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
+  const [restoreDialogVisible, setRestoreDialogVisible] = useState(false);
+  const [licensesDialogVisible, setLicensesDialogVisible] = useState(false);
 
   return (
     <ScreenBackground>
@@ -242,14 +244,11 @@ export function SettingsScreen({ navigation }: Props) {
           }} />
           <SettingLink label="Restore Purchases" icon="🔄" onPress={() => {
             haptics.tap();
+            playSound('click');
             // Stubbed: in v1 release this will call StoreKit restore.
             // For now, show a friendly confirmation so reviewers see the
             // required button exists and responds.
-            Alert.alert(
-              'Restore Purchases',
-              'No previous purchases to restore. This button will fetch any non-consumable items you\'ve bought when the store is live.',
-              [{ text: 'OK' }],
-            );
+            setRestoreDialogVisible(true);
           }} />
         </View>
         </StaggeredEntry>
@@ -284,10 +283,11 @@ export function SettingsScreen({ navigation }: Props) {
           {Platform.OS !== 'web' && (
             <SettingLink label="Open Source Licenses" icon="📜" onPress={() => {
               haptics.tap();
+              playSound('click');
               try {
                 ReactNativeLegal.launchLicenseListScreen('Open Source Licenses');
               } catch (e) {
-                Alert.alert('Licenses', 'Unavailable in this build. Rebuild the app after `expo prebuild` to enable.');
+                setLicensesDialogVisible(true);
               }
             }} />
           )}
@@ -442,6 +442,24 @@ export function SettingsScreen({ navigation }: Props) {
           haptics.tap();
         }}
         onCancel={() => setResetConfirmVisible(false)}
+      />
+      <ConfirmDialog
+        visible={restoreDialogVisible}
+        title="Restore Purchases"
+        message="No previous purchases to restore. This button will fetch any non-consumable items you've bought when the store is live."
+        confirmLabel="OK"
+        confirmOnly
+        onConfirm={() => setRestoreDialogVisible(false)}
+        onCancel={() => setRestoreDialogVisible(false)}
+      />
+      <ConfirmDialog
+        visible={licensesDialogVisible}
+        title="Licenses"
+        message="Unavailable in this build. Rebuild the app after expo prebuild to enable."
+        confirmLabel="OK"
+        confirmOnly
+        onConfirm={() => setLicensesDialogVisible(false)}
+        onCancel={() => setLicensesDialogVisible(false)}
       />
     </ScreenBackground>
   );
