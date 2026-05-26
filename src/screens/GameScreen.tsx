@@ -42,6 +42,7 @@ import { ConfettiOverlay } from '../components/effects/ConfettiOverlay';
 import { AchievementToast } from '../components/effects/AchievementToast';
 import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { CoinBurst } from '../components/effects/CoinBurst';
+import { PowerPieceFX } from '../components/effects/PowerPieceFX';
 import { ChatBubble } from '../components/effects/ChatBubble';
 import { ALL_CAREER_LEVELS, type CareerReward } from '../data/careerLevels';
 import { useTutorialStore } from '../stores/tutorialStore';
@@ -154,6 +155,7 @@ export function GameScreen({ navigation }: Props) {
   const [turnTimer, setTurnTimer] = useState(customSettings?.timerSeconds || 0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinBurst, setShowCoinBurst] = useState(false);
+  const [activePowerFX, setActivePowerFX] = useState<'bomb' | 'rainbow' | 'heavy' | null>(null);
   const [showFirstWin, setShowFirstWin] = useState(false);
   const firstWinOpacity = useRef(new RNAnimated.Value(0)).current;
 
@@ -908,6 +910,7 @@ export function GameScreen({ navigation }: Props) {
         setBombsRemaining(prev => prev - 1);
         setArmedPowerPiece(null);
         showLastMove(col);
+        setActivePowerFX('bomb');
         haptics.heavy();
         playSound('whoosh');
         return;
@@ -919,6 +922,7 @@ export function GameScreen({ navigation }: Props) {
         setRainbowsRemaining(prev => prev - 1);
         setArmedPowerPiece(null);
         showLastMove(col);
+        setActivePowerFX('rainbow');
         haptics.win?.() ?? haptics.tap();
         playSound('drop');
         return;
@@ -930,6 +934,7 @@ export function GameScreen({ navigation }: Props) {
         setHeaviesRemaining(prev => prev - 1);
         setArmedPowerPiece(null);
         showLastMove(col);
+        setActivePowerFX('heavy');
         haptics.heavy();
         playSound('drop');
         return;
@@ -1348,6 +1353,9 @@ export function GameScreen({ navigation }: Props) {
             currentPlayerColor={currentPlayer === 1 ? 'red' : 'yellow'}
             gravityDown={gravityDown}
           />
+          {activePowerFX && (
+            <PowerPieceFX type={activePowerFX} visible onDone={() => setActivePowerFX(null)} />
+          )}
         </RNAnimated.View>
 
         {/* Last move indicator — removed, piece drop is self-evident */}
