@@ -89,11 +89,15 @@ export function PlayScreen({ navigation }: Props) {
   const careerProgress = useCareerStore(s => s.progress);
   const careerResume = useMemo(() => {
     const nextLevel = ALL_CAREER_LEVELS.find(l => !careerProgress[l.id]?.completed);
-    if (!nextLevel) return null;
-    const city = CAREER_CITIES.find(c => c.levelIds.includes(nextLevel.id));
     const completedCount = Object.values(careerProgress).filter(p => p.completed).length;
     const totalStars = Object.values(careerProgress).reduce((s, p) => s + p.stars, 0);
-    return { level: nextLevel, cityName: city?.nickname ?? city?.name ?? '', completedCount, totalStars };
+    const maxStars = ALL_CAREER_LEVELS.length * 3;
+    if (!nextLevel) {
+      if (totalStars < maxStars) return { complete: true as const, totalStars, maxStars, completedCount };
+      return null;
+    }
+    const city = CAREER_CITIES.find(c => c.levelIds.includes(nextLevel.id));
+    return { complete: false as const, level: nextLevel, cityName: city?.nickname ?? city?.name ?? '', completedCount, totalStars };
   }, [careerProgress]);
 
   // Streak / daily multiplier
@@ -124,7 +128,7 @@ export function PlayScreen({ navigation }: Props) {
 
         <View style={styles.mainContent}>
           {/* Continue Career CTA */}
-          {careerResume && (
+          {careerResume && !careerResume.complete && (
             <StaggeredEntry index={0} delay={60}>
             <PressScale
               scaleTo={0.97}
@@ -148,6 +152,34 @@ export function PlayScreen({ navigation }: Props) {
               </View>
               <View style={styles.careerCtaRight}>
                 <Text style={styles.careerCtaStars}>{careerResume.totalStars} ★</Text>
+                <Text style={styles.careerCtaArrow}>›</Text>
+              </View>
+            </PressScale>
+            </StaggeredEntry>
+          )}
+
+          {/* Replay for stars CTA — career complete but not all 3-star */}
+          {careerResume?.complete && (
+            <StaggeredEntry index={0} delay={60}>
+            <PressScale
+              scaleTo={0.97}
+              onPress={() => navigation.navigate('CareerMap' as any)}
+              style={[styles.careerCta, { borderColor: 'rgba(255,215,0,0.3)' }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Replay career for stars: ${careerResume.totalStars} of ${careerResume.maxStars} stars`}
+            >
+              <LinearGradient
+                colors={['rgba(255,215,0,0.12)', 'rgba(255,215,0,0.03)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.careerCtaLeft}>
+                <Text style={[styles.careerCtaKicker, { color: colors.coinGold }]}>CAREER COMPLETE</Text>
+                <Text style={styles.careerCtaTitle} numberOfLines={1}>Replay for 3-star perfection</Text>
+              </View>
+              <View style={styles.careerCtaRight}>
+                <Text style={styles.careerCtaStars}>{careerResume.totalStars}/{careerResume.maxStars} ★</Text>
                 <Text style={styles.careerCtaArrow}>›</Text>
               </View>
             </PressScale>

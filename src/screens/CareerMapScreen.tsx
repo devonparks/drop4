@@ -384,9 +384,9 @@ export function CareerMapScreen({ navigation }: Props) {
             style={styles.comingSoonGradient}
           >
             <Text style={styles.comingSoonEmoji}>🔮</Text>
-            <Text style={styles.comingSoonTitle} accessibilityRole="header">MORE CITIES COMING</Text>
+            <Text style={styles.comingSoonTitle} accessibilityRole="header">THE JOURNEY CONTINUES</Text>
             <Text style={styles.comingSoonSub}>
-              Chicago · Detroit · Oakland · Compton · Miami · ???
+              New cities, new bosses, new rules. Stay tuned.
             </Text>
           </LinearGradient>
         </View>
