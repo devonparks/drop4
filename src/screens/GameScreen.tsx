@@ -276,6 +276,7 @@ export function GameScreen({ navigation }: Props) {
   // Turn indicator pulse
   const turnPulseAnim = useRef(new RNAnimated.Value(1)).current;
   const [wasCareerLevel, setWasCareerLevel] = useState(false);
+  const [prevCareerStars, setPrevCareerStars] = useState(0);
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Emote display — player and opponent/AI
@@ -619,6 +620,8 @@ export function GameScreen({ navigation }: Props) {
       const careerLevelId = params.careerLevelId;
       if (careerLevelId) {
         setWasCareerLevel(true);
+        const oldStars = useCareerStore.getState().progress[careerLevelId]?.stars ?? 0;
+        setPrevCareerStars(oldStars);
         const lvlData = ALL_CAREER_LEVELS.find(l => l.id === careerLevelId);
         const th = lvlData?.starThresholds ?? { three: 14, two: 24 };
         const pMoves = Math.ceil(moveCount / 2);
@@ -1803,17 +1806,41 @@ export function GameScreen({ navigation }: Props) {
                   const t = cl?.starThresholds ?? { three: 14, two: 24 };
                   const playerMoves = Math.ceil(moveCount / 2);
                   const earnedStars = playerMoves <= t.three ? 3 : playerMoves <= t.two ? 2 : 1;
-                  const verdict = earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
-                  const nearMiss = earnedStars === 2 && playerMoves <= t.three + 2
+                  const improved = prevCareerStars > 0 && earnedStars > prevCareerStars;
+                  const verdict = improved
+                    ? 'STARS IMPROVED!'
+                    : earnedStars === 3 ? 'PERFECT CLEAR' : earnedStars === 2 ? 'GREAT CLEAR' : 'LEVEL CLEARED';
+                  const nearMiss = !improved && earnedStars === 2 && playerMoves <= t.three + 2
                     ? `${playerMoves - t.three} move${playerMoves - t.three === 1 ? '' : 's'} from 3 stars!`
-                    : earnedStars === 1 && playerMoves <= t.two + 2
+                    : !improved && earnedStars === 1 && playerMoves <= t.two + 2
                     ? `${playerMoves - t.two} move${playerMoves - t.two === 1 ? '' : 's'} from 2 stars!`
                     : null;
                   return (
                     <View style={styles.goCareerStarCompact}>
                       <AnimatedStarRating earned={earnedStars} size={32} delay={200} />
-                      <Text style={styles.goCareerStarVerdict}>{verdict}</Text>
+                      <Text style={[styles.goCareerStarVerdict, improved && { color: colors.coinGold }]}>{verdict}</Text>
+                      {improved && (
+                        <Text style={styles.goImprovedFrom}>{'★'.repeat(prevCareerStars)} → {'★'.repeat(earnedStars)}</Text>
+                      )}
                       {nearMiss && <Text style={styles.goNearMiss}>{nearMiss}</Text>}
+                    </View>
+                  );
+                })()}
+
+                {/* Career city progress after win */}
+                {wasCareerLevel && status === 'won' && winner === 1 && (() => {
+                  const city = CAREER_CITIES.find(c => c.levelIds.includes(params.careerLevelId ?? 0));
+                  if (!city) return null;
+                  const cityProgress = useCareerStore.getState().progress;
+                  const done = city.levelIds.filter(id => cityProgress[id]?.completed).length;
+                  return (
+                    <View style={styles.goCityProgress}>
+                      <Text style={styles.goCityProgressText}>
+                        {done}/{city.levelIds.length} in {city.nickname}
+                      </Text>
+                      <View style={styles.goCityProgressTrack}>
+                        <View style={[styles.goCityProgressFill, { width: `${(done / city.levelIds.length) * 100}%`, backgroundColor: city.themeColor }]} />
+                      </View>
                     </View>
                   );
                 })()}
@@ -3221,6 +3248,38 @@ const styles = StyleSheet.create({
     color: '#ffab40',
     marginTop: 4,
     letterSpacing: 0.5,
+  },
+  goImprovedFrom: {
+    fontFamily: fonts.body,
+    fontWeight: weight.bold,
+    fontSize: 13,
+    color: colors.coinGold,
+    marginTop: 2,
+    letterSpacing: 1,
+  },
+  goCityProgress: {
+    marginTop: 6,
+    alignItems: 'center',
+    gap: 4,
+    width: '60%',
+  },
+  goCityProgressText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.semibold,
+    fontSize: 11,
+    color: 'rgba(200,220,255,0.55)',
+    letterSpacing: 0.5,
+  },
+  goCityProgressTrack: {
+    width: '100%',
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  goCityProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   goCareerLossTip: {
     marginTop: 8,
