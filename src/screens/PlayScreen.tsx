@@ -13,6 +13,7 @@ import { ALL_CAREER_LEVELS, CAREER_CITIES, CITY_BY_ID } from '../data/careerLeve
 import { colors } from '../theme/colors';
 import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
+import { useDailyRewardStore, getStreakMultiplier } from '../stores/dailyRewardStore';
 import { StaggeredEntry, PressScale } from '../components/animations';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -95,6 +96,10 @@ export function PlayScreen({ navigation }: Props) {
     return { level: nextLevel, cityName: city?.nickname ?? city?.name ?? '', completedCount, totalStars };
   }, [careerProgress]);
 
+  // Streak / daily multiplier
+  const currentStreak = useDailyRewardStore(s => s.currentStreak);
+  const streakMultiplier = getStreakMultiplier();
+
   // Tip of the day — changes each time the screen is visited
   const [tip, setTip] = useState(getRandomTip);
   useEffect(() => { setTip(getRandomTip()); }, []);
@@ -161,6 +166,13 @@ export function PlayScreen({ navigation }: Props) {
               ? `${stats.winRate}% win rate · ${stats.totalGames} game${stats.totalGames !== 1 ? 's' : ''}`
               : 'Choose your difficulty'}
           </Text>
+
+          {/* Streak multiplier indicator */}
+          {currentStreak > 0 && (
+            <Text style={styles.streakLine}>
+              {currentStreak} day streak{streakMultiplier > 1 ? ` · ${streakMultiplier}× coins` : ''}
+            </Text>
+          )}
 
           {/* Smart difficulty suggestion */}
           {difficultySuggestion && (
@@ -245,6 +257,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body, fontWeight: weight.semibold,
     fontSize: 13, color: 'rgba(200,220,255,0.55)',
     letterSpacing: 0.5, textAlign: 'center',
+  },
+  streakLine: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 12, color: colors.coinGold,
+    letterSpacing: 0.3, textAlign: 'center',
   },
   suggestionInline: {
     fontFamily: fonts.body, fontWeight: weight.bold,

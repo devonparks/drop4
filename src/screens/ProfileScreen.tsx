@@ -322,6 +322,13 @@ export function ProfileScreen() {
         <Text style={styles.sectionTitle} accessibilityRole="header">DAILY GOALS</Text>
         <View style={styles.dailyGoalsCard}>
           <View style={styles.dailyGoalRow}>
+            <Text style={styles.dailyGoalIcon}>🔥</Text>
+            <Text style={styles.dailyGoalLabel}>Login streak</Text>
+            <Text style={[styles.dailyGoalValue, currentStreak >= 2 && { color: colors.coinGold }]}>
+              {currentStreak} day{currentStreak !== 1 ? 's' : ''}
+            </Text>
+          </View>
+          <View style={styles.dailyGoalRow}>
             <Text style={styles.dailyGoalIcon}>🎮</Text>
             <Text style={styles.dailyGoalLabel}>Games played today</Text>
             <Text style={[styles.dailyGoalValue, dailyGoals.gamesToday > 0 && { color: colors.green }]}>
