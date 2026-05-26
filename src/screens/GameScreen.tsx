@@ -44,7 +44,7 @@ import { FloatingEmote } from '../components/effects/FloatingEmote';
 import { CoinBurst } from '../components/effects/CoinBurst';
 import { PowerPieceFX } from '../components/effects/PowerPieceFX';
 import { ChatBubble } from '../components/effects/ChatBubble';
-import { ALL_CAREER_LEVELS, type CareerReward } from '../data/careerLevels';
+import { ALL_CAREER_LEVELS, CAREER_CITIES, type CareerReward } from '../data/careerLevels';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { getStreakMultiplier } from '../stores/dailyRewardStore';
 import { TutorialTooltip } from '../components/ui/TutorialTooltip';
@@ -1927,7 +1927,15 @@ export function GameScreen({ navigation }: Props) {
                     label="NEXT LEVEL"
                     icon={'▶'}
                     variant="green"
-                    onPress={() => navigation.navigate('CareerMap' as any)}
+                    onPress={() => {
+                      const nextLvl = ALL_CAREER_LEVELS.find(l => l.id === (params.careerLevelId ?? 0) + 1);
+                      const nextCity = nextLvl ? CAREER_CITIES.find(c => c.levelIds.includes(nextLvl.id)) : null;
+                      if (nextCity) {
+                        navigation.navigate('CareerCity' as any, { cityId: nextCity.id });
+                      } else {
+                        navigation.navigate('CareerMap' as any);
+                      }
+                    }}
                   />
                 ) : (
                   <GlossyButton
