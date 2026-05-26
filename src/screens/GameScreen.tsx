@@ -157,6 +157,7 @@ export function GameScreen({ navigation }: Props) {
   const [showCoinBurst, setShowCoinBurst] = useState(false);
   const [activePowerFX, setActivePowerFX] = useState<'bomb' | 'rainbow' | 'heavy' | null>(null);
   const [gravityFlipFlash, setGravityFlipFlash] = useState(false);
+  const [tommyParityHint, setTommyParityHint] = useState<string | null>(null);
   const gravityFlashScale = useRef(new RNAnimated.Value(0)).current;
   const gravityFlashOpacity = useRef(new RNAnimated.Value(0)).current;
   const [showFirstWin, setShowFirstWin] = useState(false);
@@ -931,6 +932,9 @@ export function GameScreen({ navigation }: Props) {
       if (col % 2 !== turn % 2) {
         haptics.error();
         playSound('error');
+        const needed = turn % 2 === 0 ? 'EVEN' : 'ODD';
+        setTommyParityHint(`${needed} columns only!`);
+        setTimeout(() => setTommyParityHint(null), 1200);
         return;
       }
     }
@@ -1414,6 +1418,11 @@ export function GameScreen({ navigation }: Props) {
             <RNAnimated.View style={[styles.gravityFlashOverlay, { opacity: gravityFlashOpacity, transform: [{ scale: gravityFlashScale }] }]} pointerEvents="none">
               <Text style={styles.gravityFlashText}>{gravityDown ? '⬇️ GRAVITY FLIP!' : '⬆️ GRAVITY FLIP!'}</Text>
             </RNAnimated.View>
+          )}
+          {tommyParityHint && (
+            <Animated.View entering={FadeIn.duration(150)} style={styles.parityHintOverlay} pointerEvents="none">
+              <Text style={styles.parityHintText}>{tommyParityHint}</Text>
+            </Animated.View>
           )}
         </RNAnimated.View>
 
@@ -2126,6 +2135,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 99,
+  },
+  parityHintOverlay: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 99,
+  },
+  parityHintText: {
+    fontFamily: fonts.body,
+    fontWeight: weight.black as any,
+    fontSize: 13,
+    color: '#ff8c42',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+    letterSpacing: 1,
   },
   gravityFlashText: {
     fontFamily: fonts.heading,
