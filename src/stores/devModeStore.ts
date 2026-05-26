@@ -36,6 +36,7 @@ import { PETS, type PetId } from '../data/petRegistry';
 import { HUMAN_EMOTES } from '../data/animationRegistry';
 import { ALL_TINT_COLORS } from '../data/colorRegistry';
 import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
+import { COLORWAY_PALETTE } from '../data/outfitColorways';
 import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
 
 // ─── Store shape ────────────────────────────────────────────────────
@@ -127,12 +128,27 @@ function grantEverything(): void {
     }
   }
 
+  // ── Outfit Colorways (per-outfit color presets) ──
+  const { COLORWAY_PALETTE } = require('../data/outfitColorways');
+  const batchColorways: Record<string, string[]> = { ...char.ownedOutfitColorways };
+  for (const outfitId of Object.keys(OUTFITS)) {
+    const existing = new Set(batchColorways[outfitId] ?? []);
+    for (const cw of COLORWAY_PALETTE) existing.add(cw.id);
+    batchColorways[outfitId] = Array.from(existing);
+  }
+  useCharacterStore.setState({ ownedOutfitColorways: batchColorways });
+
   // ── Part Variants (CoD-camo system — every part × every color) ──
   // Batch-build the full ownedPartVariants map in one pass to avoid
   // thousands of individual Zustand updates + AsyncStorage writes.
+  // Includes both DEFAULT_PALETTE (per-part material variants) AND
+  // COLORWAY_PALETTE (outfit colorway tints) — each part × colorway
+  // is a separate collectible Devon wants in the grid.
   const nonDefaultVariantIds = DEFAULT_PALETTE
     .filter((v) => v.id !== '')
     .map((v) => v.id);
+  const colorwayVariantIds = COLORWAY_PALETTE.map((c: { id: string }) => c.id);
+  const allVariantIds = [...nonDefaultVariantIds, ...colorwayVariantIds];
   const batchVariants: Record<string, string[]> = { ...char.ownedPartVariants };
   for (const id of Object.keys(OUTFITS)) {
     const bodyParts = buildAmgBodyForOutfit(id);
@@ -141,7 +157,7 @@ function grantEverything(): void {
     );
     for (const partName of partNames) {
       const existing = new Set(batchVariants[partName] ?? []);
-      for (const vid of nonDefaultVariantIds) existing.add(vid);
+      for (const vid of allVariantIds) existing.add(vid);
       batchVariants[partName] = Array.from(existing);
     }
   }

@@ -31,12 +31,13 @@ const PIECE_SIZE = CELL_SIZE - 6;
 export { BOARD_WIDTH, CELL_SIZE };
 
 // Individual animated piece
-function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
+function AnimatedPiece({ player, isNew, row = 0, delay = 0, p1Skin, p2Skin }: {
   player: 1 | 2;
   isNew: boolean;
   row?: number;
   delay?: number;
-  skinColors?: PieceSkinVisuals;
+  p1Skin?: PieceSkinVisuals;
+  p2Skin?: PieceSkinVisuals;
 }) {
   // Drop distance is proportional to the row — pieces near the top travel less
   // row 0 = top of board, row 5 = bottom. We drop from above the board.
@@ -72,7 +73,8 @@ function AnimatedPiece({ player, isNew, row = 0, delay = 0, skinColors }: {
     ],
   }));
 
-  const skin = skinColors || PIECE_SKIN_VISUALS.classic;
+  // Each player uses their OWN equipped skin — your drip, your pieces
+  const skin = player === 1 ? (p1Skin || PIECE_SKIN_VISUALS.classic) : (p2Skin || PIECE_SKIN_VISUALS.classic);
   const pc = player === 1 ? skin.p1 : skin.p2;
   const pieceColor = pc.main;
   const darkColor = pc.dark;
@@ -280,7 +282,9 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red',
   const equippedBoard = useShopStore(s => s.equipped.board);
   const equippedPieces = useShopStore(s => s.equipped.pieces);
   const theme: BoardThemeVisuals = BOARD_THEME_VISUALS[equippedBoard] || BOARD_THEME_VISUALS.default;
-  const pieceSkin: PieceSkinVisuals = PIECE_SKIN_VISUALS[equippedPieces] || PIECE_SKIN_VISUALS.classic;
+  // YOUR skin on YOUR pieces, opponent always gets classic
+  const p1Skin: PieceSkinVisuals = PIECE_SKIN_VISUALS[equippedPieces] || PIECE_SKIN_VISUALS.classic;
+  const p2Skin: PieceSkinVisuals = PIECE_SKIN_VISUALS.classic;
 
   const board = useGameStore(s => s.board);
   const winCells = useGameStore(s => s.winCells);
@@ -405,14 +409,15 @@ export function GameBoard({ onColumnPress, disabled, currentPlayerColor = 'red',
                           player={cell}
                           isNew={isNew}
                           row={row}
-                          skinColors={pieceSkin}
+                          p1Skin={p1Skin}
+                          p2Skin={p2Skin}
                         />
                       )}
                       {/* Ghost piece preview — pulsing */}
                       {isGhost && (
                         <GhostPiecePulse
                           color={currentPlayerColor === 'red'
-                            ? pieceSkin.p1.main : pieceSkin.p2.main}
+                            ? p1Skin.p1.main : p2Skin.p2.main}
                         />
                       )}
                     </View>

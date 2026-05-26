@@ -148,7 +148,7 @@ export interface MakeOpts {
   skinColor?: string;
   hairColor?: string;
   /** Legacy part codes ('10TORS', '17HIPS') → hex. Translated into the
-   *  matching SidekickColorProperty ('Outfit 01 Primary' etc.). */
+   *  matching SidekickColorProperty ('Tops', 'Bottoms', etc.). */
   outfitColors?: Record<string, string>;
 }
 

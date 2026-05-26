@@ -329,12 +329,7 @@ export function MatchupScreen({ navigation }: Props) {
             style={styles.playerSide}
           >
             <View style={styles.characterWrap}>
-              <LinearGradient
-                colors={['rgba(255,140,0,0.15)', 'rgba(255,140,0,0.03)', 'transparent']}
-                style={styles.characterGlow}
-              >
-                <Character3DPortrait width={180} height={220} showFloor={false} />
-              </LinearGradient>
+              <Character3DPortrait width={180} height={420} showFloor={false} />
             </View>
 
             {/* Level badge */}
@@ -400,15 +395,10 @@ export function MatchupScreen({ navigation }: Props) {
               style={styles.playerSide}
             >
               <View style={styles.characterWrap}>
-                <LinearGradient
-                  colors={['rgba(80,140,255,0.15)', 'rgba(80,140,255,0.03)', 'transparent']}
-                  style={styles.characterGlow}
-                >
-                  <Character3DPortrait
-                      width={180} height={220} showFloor={false}
-                      customization={getNpcCustomization(opponentName || params.difficulty)}
-                    />
-                </LinearGradient>
+                <Character3DPortrait
+                    width={180} height={420} showFloor={false}
+                    customization={getNpcCustomization(opponentName || params.difficulty)}
+                  />
               </View>
 
               {/* Level badge */}
@@ -481,8 +471,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingTop: 50,
-    paddingBottom: 30,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
 
   // Halftone dot pattern (web only)
@@ -604,9 +594,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   characterGlow: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -684,10 +671,10 @@ const styles = StyleSheet.create({
   },
   // Silhouette placeholder
   silhouette: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    width: 140,
+    height: 320,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
@@ -705,15 +692,15 @@ const styles = StyleSheet.create({
   vsCenter: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 140,
+    width: 80,
     zIndex: 2,
   },
   // Painted Flux VS clash — chunky 3D block letters with explosive
   // starburst backdrop. Bigger than the old 68pt text so the hero clash
   // moment reads with real weight.
   vsClashImg: {
-    width: 140,
-    height: 140,
+    width: 90,
+    height: 90,
   },
   // Searching state
   searchingWrap: {
@@ -767,8 +754,8 @@ const styles = StyleSheet.create({
   },
   // ── Bottom area ──
   bottomArea: {
-    paddingHorizontal: 40,
-    gap: 10,
+    paddingHorizontal: 30,
+    gap: 8,
     zIndex: 1,
   },
   waitingBtn: {

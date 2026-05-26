@@ -22,7 +22,7 @@ Premium Connect 4 mobile game built with React Native + Expo. First game in the 
 - **AMG Engine** (`@amg/character-runtime` + `@amg/character-creator`) is the single source of truth for character rendering across every screen.
 - `CompositeCharacter` from `@amg/character-runtime` is the only renderer. Per-slot Sidekick part GLBs are streamed from the R2 CDN (`https://pub-8953453f2512408f9c58656d4ea4e681.r2.dev`); the manifest + ~17 parts are dedup-cached by `loader/glb.ts`.
 - Every character is a `CharacterState` — species + per-slot equipped part names + colors + blendshapes. The store field is `characterStore.amgCharacter`.
-- Runtime material swaps for `Skin 01` / `Hair 01` / `Outfit 01 Primary/Secondary/Tertiary` SidekickColorProperty names.
+- Runtime material swaps for `Skin 01` / `Hair 01` / `Tops` / `Bottoms` / `Shoes` / `Hat` SidekickColorProperty names.
 - **Animation:** `state.animation` is a relative path under `animations/` (e.g. `emotes/emote_dab.glb`). Paths starting with `emotes/` play once and clamp; everything else loops. Idles cycle through `DEFAULT_IDLE_LIST` when `state.animation` is null.
 - **Skeleton rebinding + track path stripping** lives in `packages/character-runtime/src/scene/skeleton.ts` and `animation.ts` — do NOT regress this. The Synty Humanoid bone names are load-bearing.
 

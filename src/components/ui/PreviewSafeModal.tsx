@@ -26,7 +26,11 @@ import { Modal, View, Platform, StyleSheet, ModalProps } from 'react-native';
  */
 export interface PreviewSafeModalProps extends Pick<ModalProps,
   'visible' | 'onRequestClose' | 'transparent' | 'animationType' | 'children'
-> {}
+> {
+  /** Override the web overlay's z-index (default 1000). Use when stacking
+   *  multiple PreviewSafeModals (e.g. part preview on top of browse-all). */
+  webZIndex?: number;
+}
 
 export function PreviewSafeModal({
   visible,
@@ -34,17 +38,15 @@ export function PreviewSafeModal({
   transparent,
   animationType,
   children,
+  webZIndex,
 }: PreviewSafeModalProps) {
   if (Platform.OS === 'web') {
     if (!visible) return null;
-    // Web preview: render an inline overlay anchored to the closest
-    // position:relative ancestor. PhoneFrame.screen is now relative
-    // (added in this commit) so the modal stays inside the simulated
-    // phone instead of escaping to a stale React Navigation screen
-    // ancestor. zIndex 1000 keeps us above HomeScreen popups but under
-    // any future app-level toast stack (which uses zIndex >1000).
     return (
-      <View style={styles.webOverlay} pointerEvents="box-none">
+      <View
+        style={[styles.webOverlay, webZIndex != null && { zIndex: webZIndex } as any]}
+        pointerEvents="box-none"
+      >
         {children}
       </View>
     );
