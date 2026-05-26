@@ -188,6 +188,7 @@ export function GameScreen({ navigation }: Props) {
   const [doubleCoinsUsed, setDoubleCoinsUsed] = useState(false);
   const [gameOverQuote, setGameOverQuote] = useState('');
   const [isFirstWinOfDay, setIsFirstWinOfDay] = useState(false);
+  const [isNewBestStreak, setIsNewBestStreak] = useState(false);
 
   // Comeback mechanic — pity coins after losing streak
   const [comebackCoins, setComebackCoins] = useState<number | null>(null);
@@ -557,7 +558,9 @@ export function GameScreen({ navigation }: Props) {
       // actual balance growth. Delta = coins_after - coins_before.
       const coinsAtWin = useShopStore.getState().coins;
       const reward = COIN_REWARDS[difficulty];
-      const streakBonus = Math.min(useGameStore.getState().winStreak * 10, 50);
+      const winStreakNow = useGameStore.getState().winStreak;
+      const streakBonus = Math.min(winStreakNow * 10, 50);
+      if (winStreakNow > 1 && winStreakNow === useGameStore.getState().bestStreak) setIsNewBestStreak(true);
       const dailyMultiplier = getStreakMultiplier();
       // Jeopardy levels pay N× coins — this is the carrot for the higher
       // difficulty / connect count. The multiplier only applies to the BASE
@@ -1090,6 +1093,7 @@ export function GameScreen({ navigation }: Props) {
     setDailyStreakMultiplier(1);
     setDoubleCoinsUsed(false);
     setIsFirstWinOfDay(false);
+    setIsNewBestStreak(false);
     setComebackCoins(null);
     setXpEarned(0);
     setTotalCoinsEarned(0);
@@ -1968,6 +1972,14 @@ export function GameScreen({ navigation }: Props) {
                     <Text style={{ fontSize: 14 }}>{'☀️'}</Text>
                     <Text style={[styles.goEventCompactText, { color: '#ffd54f' }]}>
                       First Win of the Day — 2× XP!
+                    </Text>
+                  </View>
+                )}
+                {isNewBestStreak && (
+                  <View style={styles.goEventCompact}>
+                    <Text style={{ fontSize: 14 }}>{'🔥'}</Text>
+                    <Text style={[styles.goEventCompactText, { color: colors.orange }]}>
+                      NEW BEST STREAK: {winStreak} wins!
                     </Text>
                   </View>
                 )}
