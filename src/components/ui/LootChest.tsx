@@ -99,7 +99,11 @@ export function LootChest({ tier, size = 80 }: LootChestProps) {
   const gemSize = h * 0.16;
 
   return (
-    <View style={{ width: size, height: h, position: 'relative' }}>
+    <View
+      style={{ width: size, height: h, position: 'relative' }}
+      accessibilityRole="image"
+      accessibilityLabel={`${tier} loot chest`}
+    >
       {/* Halo behind the chest */}
       <View
         style={{

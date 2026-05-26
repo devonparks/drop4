@@ -125,11 +125,16 @@ export function WelcomeBackPopup() {
             end={{ x: 0.5, y: 1 }}
           />
 
-          <Text style={styles.kicker}>WE MISSED YOU</Text>
+          <Text style={styles.kicker} accessibilityRole="text">WE MISSED YOU</Text>
           <Text style={styles.title} accessibilityRole="header">Welcome Back!</Text>
           <Text style={styles.subtitle}>You were away for {daysAwayLabel}.</Text>
 
-          <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.rewardBlock}>
+          <Animated.View
+            entering={FadeInDown.delay(300).duration(400)}
+            style={styles.rewardBlock}
+            accessibilityRole="summary"
+            accessibilityLabel={`Welcome back reward: ${WELCOME_BACK_COINS.toLocaleString()} coins and ${WELCOME_BACK_GEMS} gem`}
+          >
             <View style={styles.rewardRow}>
               <Text style={styles.rewardEmoji}>🪙</Text>
               <Text style={styles.rewardAmount}>+{WELCOME_BACK_COINS.toLocaleString()}</Text>

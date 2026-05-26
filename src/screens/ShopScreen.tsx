@@ -1083,9 +1083,14 @@ export function ShopScreen() {
                 icon={'\u{1F3AC}'}
                 title="Watch Ad"
                 subtitle="+200 coins"
-                buttonLabel="WATCH"
-                buttonColor={['#3498db', '#2471a3']}
-                onPress={() => haptics.tap()}
+                buttonLabel="SOON"
+                buttonColor={['#555', '#444']}
+                badge="COMING SOON"
+                onPress={() => {
+                  haptics.tap();
+                  playSound('click');
+                  setEquipToast({ label: 'Ads coming soon!' });
+                }}
               />
               {/* Featured Today — 4 deterministic picks that rotate at midnight.
                   See src/data/shopRotation.ts for the seeded selection logic. */}
@@ -1153,8 +1158,19 @@ export function ShopScreen() {
                       pulseBadge={deal.badge.includes('HOT') && !isOwned}
                       onPress={() => {
                         haptics.tap();
-                        if (isOutfit && !isOwned) {
+                        playSound('click');
+                        if (isOwned) {
+                          setEquipToast({ label: 'Already in your locker!' });
+                          return;
+                        }
+                        if (isOutfit) {
                           setOutfitPreview({ ...deal.item, price: deal.discountedPrice });
+                        } else if (deal.category === 'emote') {
+                          handleEmotePress(deal.item);
+                        } else if (deal.category === 'pet') {
+                          // Route to shard-unlock / LootBox via existing pet handler
+                          const petEntry = PETS.find(p => p.id === deal.item.id);
+                          if (petEntry) handlePetPress(petEntry);
                         }
                       }}
                     />

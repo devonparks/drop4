@@ -15,6 +15,8 @@ import { fonts, weight } from '../theme/typography';
 import { getRandomTip } from '../data/tips';
 import { useDailyRewardStore, getStreakMultiplier } from '../stores/dailyRewardStore';
 import { StaggeredEntry, PressScale } from '../components/animations';
+import { haptics } from '../services/haptics';
+import { playSound } from '../services/audio';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = {
@@ -133,6 +135,8 @@ export function PlayScreen({ navigation }: Props) {
             <PressScale
               scaleTo={0.97}
               onPress={() => {
+                haptics.tap();
+                playSound('click');
                 const city = CAREER_CITIES.find(c => c.levelIds.includes(careerResume.level.id));
                 if (city) navigation.navigate('CareerCity', { cityId: city.id });
               }}
@@ -163,7 +167,7 @@ export function PlayScreen({ navigation }: Props) {
             <StaggeredEntry index={0} delay={60}>
             <PressScale
               scaleTo={0.97}
-              onPress={() => navigation.navigate('CareerMap' as any)}
+              onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('CareerMap' as any); }}
               style={[styles.careerCta, { borderColor: 'rgba(255,215,0,0.3)' }]}
               accessibilityRole="button"
               accessibilityLabel={`Replay career for stars: ${careerResume.totalStars} of ${careerResume.maxStars} stars`}

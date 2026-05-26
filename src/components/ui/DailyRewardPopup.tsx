@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated as RNAnimated } from 'react-native';
 import { PreviewSafeModal } from './PreviewSafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import Animated, { SlideInDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GlossyButton } from './GlossyButton';
 import { useDailyRewardStore, type DailyReward } from '../../stores/dailyRewardStore';
@@ -155,27 +155,36 @@ export function DailyRewardPopup() {
     };
   }, []);
 
+  const [claimed, setClaimed] = useState(false);
+
   const handleClaim = () => {
-    const claimed = claimReward();
-    if (claimed) {
-      if (claimed.type === 'coins') addCoins(claimed.amount);
-      if (claimed.type === 'gems') addGems(claimed.amount);
-      if (claimed.type === 'lootbox') addBox(claimed.day === 7 ? 'gold_box' : 'bronze_box');
+    const result = claimReward();
+    if (result) {
+      if (result.type === 'coins') addCoins(result.amount);
+      if (result.type === 'gems') addGems(result.amount);
+      if (result.type === 'lootbox') addBox(result.day === 7 ? 'gold_box' : 'bronze_box');
       // New reward types from the escalating streak system
-      if (claimed.type === 'outfit' && claimed.unlockId) {
-        useCharacterStore.getState().unlockOutfit(claimed.unlockId);
+      if (result.type === 'outfit' && result.unlockId) {
+        useCharacterStore.getState().unlockOutfit(result.unlockId);
       }
-      if (claimed.type === 'pet' && claimed.unlockId) {
-        usePetStore.getState().unlockPet(claimed.unlockId as any);
+      if (result.type === 'pet' && result.unlockId) {
+        usePetStore.getState().unlockPet(result.unlockId as any);
       }
-      if (claimed.type === 'emote' && claimed.unlockId) {
+      if (result.type === 'emote' && result.unlockId) {
         // Add to owned emotes without charging
-        useShopStore.getState().purchaseEmote(claimed.unlockId, 0);
+        useShopStore.getState().purchaseEmote(result.unlockId, 0);
       }
       // title rewards handled by the PlayerTitle system later
       haptics.win();
       playSound('coin');
     }
+    // Show "Claimed!" state for 1.2s so player sees the reward land
+    setClaimed(true);
+    setTimeout(() => setVisible(false), 1200);
+  };
+
+  const handleDismiss = () => {
+    playSound('click');
     setVisible(false);
   };
 
@@ -201,6 +210,16 @@ export function DailyRewardPopup() {
         {/* Confetti on premium reward days (outfit/pet/title/emote/lootbox) */}
         {isPremiumReward && <ConfettiOverlay visible />}
         <Animated.View entering={SlideInDown.springify().damping(12)} style={styles.card}>
+          {/* Close / dismiss button — top right corner */}
+          <Pressable
+            onPress={handleDismiss}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close daily reward"
+            hitSlop={12}
+          >
+            <Text style={styles.closeBtnText}>✕</Text>
+          </Pressable>
           <LinearGradient
             colors={isPremiumReward
               ? ['rgba(255,180,40,0.28)', 'rgba(255,100,0,0.1)', 'transparent']
@@ -256,7 +275,13 @@ export function DailyRewardPopup() {
             })}
           </View>
           <View style={styles.claimBtnWrap}>
-            <GlossyButton label="CLAIM REWARD" variant="orange" onPress={handleClaim} />
+            {claimed ? (
+              <Animated.View entering={FadeIn.duration(300)} style={styles.claimedBadge}>
+                <Text style={styles.claimedText}>✓ CLAIMED!</Text>
+              </Animated.View>
+            ) : (
+              <GlossyButton label="CLAIM REWARD" variant="orange" onPress={handleClaim} />
+            )}
           </View>
         </Animated.View>
       </View>
@@ -354,5 +379,27 @@ const styles = StyleSheet.create({
   claimBtnWrap: {
     width: '100%', marginTop: 4,
     boxShadow: '0px 4px 16px rgba(255,140,0,0.5)', elevation: 8,
+  },
+  closeBtn: {
+    position: 'absolute', top: 10, right: 10, zIndex: 10,
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  closeBtnText: {
+    fontFamily: fonts.body, fontWeight: weight.bold,
+    fontSize: 14, color: 'rgba(255,255,255,0.45)',
+    lineHeight: 16,
+  },
+  claimedBadge: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 14, borderRadius: 16,
+    backgroundColor: 'rgba(39,174,61,0.2)',
+    borderWidth: 1.5, borderColor: 'rgba(39,174,61,0.5)',
+  },
+  claimedText: {
+    fontFamily: fonts.heading, fontWeight: weight.black,
+    fontSize: 18, color: colors.green, letterSpacing: 2,
   },
 });

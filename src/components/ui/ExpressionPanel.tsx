@@ -4,6 +4,7 @@ import { useShopStore } from '../../stores/shopStore';
 import { ALL_EMOJIS, ALL_PHRASES, EmojiItem, PhraseItem } from '../../data/expressionCatalog';
 import { HUMAN_EMOTES, HUMAN_IDLES } from '../../data/animationRegistry';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { fonts, weight } from '../../theme/typography';
 
 export type TabKey = 'emojis' | 'phrases' | 'emotes' | 'idles';
@@ -82,9 +83,11 @@ export function ExpressionPanel({
       if (coins < item.price) return;
       purchaseEmoji(item.id, item.price);
       haptics.tap();
+      playSound('coin');
       return; // Just buy, don't fire
     }
     haptics.tap();
+    playSound('click');
     onEmoji(item.id);
     fireCooldown();
   }, [cooldown, isEmojiOwned, coins, purchaseEmoji, onEmoji, fireCooldown]);
@@ -95,9 +98,11 @@ export function ExpressionPanel({
       if (coins < item.price) return;
       purchasePhrase(item.id, item.price);
       haptics.tap();
+      playSound('coin');
       return;
     }
     haptics.tap();
+    playSound('click');
     onPhrase(item.id);
     fireCooldown();
   }, [cooldown, isPhraseOwned, coins, purchasePhrase, onPhrase, fireCooldown]);
@@ -108,9 +113,11 @@ export function ExpressionPanel({
       if (coins < (price ?? 0)) return;
       purchaseEmote(emoteId, price ?? 0);
       haptics.tap();
+      playSound('coin');
       return;
     }
     haptics.tap();
+    playSound('click');
     onEmote(emoteId);
     fireCooldown();
   }, [cooldown, isEmoteOwned, coins, purchaseEmote, onEmote, fireCooldown]);
@@ -133,7 +140,7 @@ export function ExpressionPanel({
           {TABS.map(t => (
             <Pressable
               key={t.key}
-              onPress={() => { haptics.tap(); setActiveTab(t.key); }}
+              onPress={() => { haptics.tap(); playSound('click'); setActiveTab(t.key); }}
               style={[styles.tab, activeTab === t.key && styles.tabActive]}
               accessibilityRole="tab"
               accessibilityLabel={t.label}
@@ -229,6 +236,7 @@ export function ExpressionPanel({
                 key={idle.id}
                 onPress={() => {
                   haptics.tap();
+                  playSound('click');
                   onIdle(idle.id);
                 }}
                 style={styles.emoteCell}

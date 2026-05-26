@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Share, Alert, ScrollView, Platform, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Switch, Share, Alert, ScrollView, Platform, Image, ImageSourcePropType } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { StaggeredEntry } from '../components/animations';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -334,18 +334,22 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.dangerDivider} />
         <Text style={styles.dangerTitle} accessibilityRole="header">DANGER ZONE</Text>
         <View style={styles.dangerSection}>
-          <Pressable onPress={() => {
-            haptics.error();
-            setResetConfirmVisible(true);
-          }}
-          style={styles.dangerRow}
-          accessibilityRole="button"
-          accessibilityLabel="Reset all progress"
-          accessibilityHint="Permanently erases coins, gems, levels, career, and all game data">
+          <PressScale
+            onPress={() => {
+              haptics.error();
+              playSound('error');
+              setResetConfirmVisible(true);
+            }}
+            scaleTo={0.96}
+            containerStyle={styles.dangerRow}
+            accessibilityRole="button"
+            accessibilityLabel="Reset all progress"
+            accessibilityHint="Permanently erases coins, gems, levels, career, and all game data"
+          >
             <Text style={styles.settingIcon}>🗑️</Text>
             <Text style={styles.dangerLabel}>Reset All Progress</Text>
             <Text style={styles.dangerChevron}>›</Text>
-          </Pressable>
+          </PressScale>
           <Text style={styles.dangerHint}>
             Permanently erases coins, gems, levels, career, ranked stats, and all game data.
           </Text>
@@ -354,11 +358,17 @@ export function SettingsScreen({ navigation }: Props) {
 
         {/* Version */}
         <View style={styles.footer}>
-          <Pressable onPress={handleVersionTap}>
+          <PressScale
+            onPress={handleVersionTap}
+            scaleTo={0.96}
+            accessibilityRole="button"
+            accessibilityLabel="App version"
+            accessibilityHint="Triple-tap to toggle dev mode"
+          >
             <Text style={[styles.versionBadge, devModeEnabled && { borderColor: 'rgba(46,204,113,0.4)', color: '#2ecc71' }]}>
               {devModeEnabled ? '🔓 DROP4 v1.0.0-DEV' : 'DROP4 v1.0.0'}
             </Text>
-          </Pressable>
+          </PressScale>
           <Text style={styles.copyright}>Created by Devon Parks</Text>
           <Text style={styles.copyright}>AMG Studios © 2026</Text>
           {!devModeEnabled && (

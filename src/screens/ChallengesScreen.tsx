@@ -378,8 +378,8 @@ export function ChallengesScreen() {
     if (allComplete && !bonusClaimed) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
-          Animated.timing(glowAnim, { toValue: 0, duration: 1000, useNativeDriver: false }),
+          Animated.timing(glowAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0, duration: 1000, useNativeDriver: true }),
         ])
       ).start();
     }
@@ -542,19 +542,20 @@ export function ChallengesScreen() {
                   </View>
                   <View style={styles.cardRight}>
                     {canClaim ? (
-                      <Pressable
-                        onPress={() => handleClaimWeekly('wins20', 1000)}
-                        {...(Platform.OS === 'web'
-                          ? ({ onClick: () => handleClaimWeekly('wins20', 1000) } as any)
-                          : {})}
-                        style={styles.claimBtnSmall}
+                      <PulseGlow color="#9b59b6" size={36} active={canClaim}>
+                      <PressScale
+                        onPress={() => { haptics.tap(); playSound('click'); handleClaimWeekly('wins20', 1000); }}
+                        scaleTo={0.93}
                         accessibilityRole="button"
                         accessibilityLabel="Claim weekly reward, 1000 coins for winning 20 games"
                       >
+                        <View style={styles.claimBtnSmall}>
                         <LinearGradient colors={['#9b59b6', '#7d4192', '#5a2d70']} style={styles.claimBtnGradient}>
                           <Text style={styles.claimBtnText}>CLAIM</Text>
                         </LinearGradient>
-                      </Pressable>
+                        </View>
+                      </PressScale>
+                      </PulseGlow>
                     ) : claimed ? (
                       <View style={styles.doneBadge}>
                         <Text style={styles.doneBadgeCheck}>✓</Text>
@@ -607,19 +608,20 @@ export function ChallengesScreen() {
                   </View>
                   <View style={styles.cardRight}>
                     {canClaim ? (
-                      <Pressable
-                        onPress={() => handleClaimWeekly('career5', 2000)}
-                        {...(Platform.OS === 'web'
-                          ? ({ onClick: () => handleClaimWeekly('career5', 2000) } as any)
-                          : {})}
-                        style={styles.claimBtnSmall}
+                      <PulseGlow color="#e84393" size={36} active={canClaim}>
+                      <PressScale
+                        onPress={() => { haptics.tap(); playSound('click'); handleClaimWeekly('career5', 2000); }}
+                        scaleTo={0.93}
                         accessibilityRole="button"
                         accessibilityLabel="Claim weekly reward, 2000 coins for completing 5 career levels"
                       >
+                        <View style={styles.claimBtnSmall}>
                         <LinearGradient colors={['#e84393', '#c23076', '#8e1f54']} style={styles.claimBtnGradient}>
                           <Text style={styles.claimBtnText}>CLAIM</Text>
                         </LinearGradient>
-                      </Pressable>
+                        </View>
+                      </PressScale>
+                      </PulseGlow>
                     ) : claimed ? (
                       <View style={styles.doneBadge}>
                         <Text style={styles.doneBadgeCheck}>✓</Text>
@@ -672,19 +674,20 @@ export function ChallengesScreen() {
                   </View>
                   <View style={styles.cardRight}>
                     {canClaim ? (
-                      <Pressable
-                        onPress={() => handleClaimWeekly('stars30', 1500)}
-                        {...(Platform.OS === 'web'
-                          ? ({ onClick: () => handleClaimWeekly('stars30', 1500) } as any)
-                          : {})}
-                        style={styles.claimBtnSmall}
+                      <PulseGlow color="#f1c40f" size={36} active={canClaim}>
+                      <PressScale
+                        onPress={() => { haptics.tap(); playSound('click'); handleClaimWeekly('stars30', 1500); }}
+                        scaleTo={0.93}
                         accessibilityRole="button"
                         accessibilityLabel="Claim weekly reward, 1500 coins for earning 30 career stars"
                       >
+                        <View style={styles.claimBtnSmall}>
                         <LinearGradient colors={['#f1c40f', '#d4ac0d', '#b7950b']} style={styles.claimBtnGradient}>
                           <Text style={styles.claimBtnText}>CLAIM</Text>
                         </LinearGradient>
-                      </Pressable>
+                        </View>
+                      </PressScale>
+                      </PulseGlow>
                     ) : claimed ? (
                       <View style={styles.doneBadge}>
                         <Text style={styles.doneBadgeCheck}>✓</Text>

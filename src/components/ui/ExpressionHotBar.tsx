@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { haptics } from '../../services/haptics';
+import { playSound } from '../../services/audio';
 import { fonts, weight } from '../../theme/typography';
 
 /** Detect if a string is a text phrase (not emoji) */
@@ -29,6 +30,7 @@ export function ExpressionHotBar({ favorites, onSelect, onExpand, disabled }: Ex
   const fire = useCallback((item: string) => {
     if (cooldown || disabled) return;
     haptics.tap();
+    playSound('click');
     setLastPressed(item);
     setCooldown(true);
     onSelect(item);
@@ -75,7 +77,7 @@ export function ExpressionHotBar({ favorites, onSelect, onExpand, disabled }: Ex
 
       {/* Expand button */}
       <Pressable
-        onPress={onExpand}
+        onPress={() => { haptics.tap(); playSound('click'); onExpand(); }}
         style={styles.expandBtn}
         accessibilityRole="button"
         accessibilityLabel="Open expression panel"

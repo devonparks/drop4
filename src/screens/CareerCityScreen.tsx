@@ -231,7 +231,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
             that fought the cinematic bg. Now they read as a single chrome
             row, supporting the painted scene rather than competing with it. */}
         <PressScale
-          onPress={() => { playSound('click'); navigation.goBack(); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.goBack(); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -245,7 +245,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         </PressScale>
 
         <PressScale
-          onPress={() => { playSound('click'); navigation.navigate('Roster'); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.navigate('Roster'); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"
@@ -260,6 +260,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
 
         <PressScale
           onPress={() => {
+            haptics.tap();
             playSound('click');
             // AmgCreator route deleted 2026-05-23 — character editing
             // lives in the Customize tab's KITS subscreen now. Route to
@@ -279,7 +280,7 @@ export function CareerCityScreen({ navigation, route }: Props) {
         </PressScale>
 
         <PressScale
-          onPress={() => { playSound('click'); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
+          onPress={() => { haptics.tap(); playSound('click'); navigation.getParent()?.navigate('MainTabs', { screen: 'Shop' } as any); }}
           style={styles.hudBtn}
           hitSlop={6}
           accessibilityRole="button"

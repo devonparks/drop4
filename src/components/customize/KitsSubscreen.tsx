@@ -192,6 +192,7 @@ export function KitsSubscreen({ onClose }: Props) {
   // — camo system killed, colorways only
   const equippedOutfitId = useCharacterStore((s) => s.equippedOutfitId);
   const equippedOutfitColorway = useCharacterStore((s) => s.equippedOutfitColorway);
+  const equippedSlotColorway = useCharacterStore((s) => s.equippedSlotColorway);
   const isOutfitColorwayOwned = useCharacterStore((s) => s.isOutfitColorwayOwned);
   const equipOutfitColorway = useCharacterStore((s) => s.equipOutfitColorway);
   const ownedBoxes = useLootBoxStore((s) => s.ownedBoxes);
@@ -501,8 +502,11 @@ export function KitsSubscreen({ onClose }: Props) {
             // Outfit colorway tint — if this is the equipped part AND the
             // player has a non-default outfit colorway active, tint the card
             // so it visually matches the character's current color scheme.
-            const activeColorway = isThisEquipped && equippedOutfitColorway
-              ? COLORWAY_PALETTE.find((c) => c.id === equippedOutfitColorway)
+            // Per-slot colorway: read the colorway for THIS specific slot
+            const slotColorwayMap: Record<string, string> = { tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes' };
+            const thisSlotCwId = equippedSlotColorway[slotColorwayMap[currentSubId] ?? ''] ?? '';
+            const activeColorway = isThisEquipped && thisSlotCwId
+              ? COLORWAY_PALETTE.find((c) => c.id === thisSlotCwId)
               : undefined;
             // Outfit cards: use the equipped colorway render if active,
             // otherwise fall back to the 'midnight' default render so
@@ -611,22 +615,28 @@ export function KitsSubscreen({ onClose }: Props) {
           adapter={drop4CosmeticAdapter}
           currentCharacter={amgCharacter}
           renderCharacterPreview={(swappedCharacter, opts) => {
-            // Apply colorway colors to the preview character so tapping
-            // a colorway thumb in the strip immediately updates the 3D
-            // model's material colors (Tops/Bottoms/Shoes).
+            // Apply colorway color to the preview character — per-slot so
+            // only the item being previewed changes color, not the whole outfit.
             let previewChar = swappedCharacter as CharacterState;
             if (previewColorway) {
               const preset = COLORWAY_BY_ID[previewColorway];
               if (preset) {
-                previewChar = {
-                  ...previewChar,
-                  colors: {
-                    ...(previewChar.colors ?? {}),
-                    'Tops': preset.primary,
-                    'Bottoms': preset.secondary,
-                    'Shoes': preset.tertiary,
-                  },
+                const slotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
+                  tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes',
                 };
+                const targetSlot = slotMap[currentSubId];
+                if (targetSlot) {
+                  const colorForSlot = targetSlot === 'Tops' ? preset.primary
+                    : targetSlot === 'Bottoms' ? preset.secondary
+                    : preset.tertiary;
+                  previewChar = {
+                    ...previewChar,
+                    colors: {
+                      ...(previewChar.colors ?? {}),
+                      [targetSlot]: colorForSlot,
+                    },
+                  };
+                }
               }
             }
             return (
@@ -686,7 +696,10 @@ export function KitsSubscreen({ onClose }: Props) {
                     }
                   }
                   if (previewColorway) {
-                    equipOutfitColorway(previewColorway);
+                    const cwSlotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
+                      tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes',
+                    };
+                    equipOutfitColorway(previewColorway, cwSlotMap[currentSubId]);
                   }
                   useChallengeStore.getState().updateProgress('equip_camo', 1);
                   useChallengeStore.getState().updateProgress('equip_camo_3', 1);
@@ -769,13 +782,26 @@ export function KitsSubscreen({ onClose }: Props) {
       <ColorwayPickerModal
         visible={colorwayPickerOpen}
         onClose={() => setColorwayPickerOpen(false)}
-        activeColorwayId={equippedOutfitColorway}
+        activeColorwayId={
+          // Per-slot: show the colorway active for THIS slot, not the global one
+          (() => {
+            const slotMap: Record<string, string> = { tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes' };
+            const slot = slotMap[currentSubId];
+            return slot ? (equippedSlotColorway[slot] ?? '') : equippedOutfitColorway;
+          })()
+        }
         outfitId={equippedOutfitId}
         isOwned={isOutfitColorwayOwned}
         onPick={(colorwayId) => {
           haptics.win();
           playSound('click');
-          equipOutfitColorway(colorwayId);
+          // Per-slot colorway: only change the color for the current sub
+          const slotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
+            tops: 'Tops',
+            pants: 'Bottoms',
+            shoes: 'Shoes',
+          };
+          equipOutfitColorway(colorwayId, slotMap[currentSubId]);
         }}
         onGetFromBags={() => {
           haptics.tap();
@@ -1037,11 +1063,16 @@ function BrowseAllModal({
       transparent={false}
     >
       <View style={browseStyles.container}>
-        {/* Header — title + close. */}
+        {/* Header — title + count badge + close. */}
         <View style={browseStyles.header}>
           <Text style={browseStyles.title} numberOfLines={1}>
             {title.toUpperCase()}
           </Text>
+          <View style={browseStyles.headerBadge}>
+            <Text style={browseStyles.headerBadgeText}>
+              {items.filter((p) => isOwned(p.name)).length}/{items.length}
+            </Text>
+          </View>
           <Pressable
             onPress={() => {
               haptics.tap();
@@ -1134,6 +1165,7 @@ function BrowseAllModal({
 
         {/* Grid — 3-col responsive layout. Scrolls vertically. */}
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={browseStyles.grid}
           showsVerticalScrollIndicator={false}
         >
@@ -1444,6 +1476,7 @@ function ColorwayPickerModal({
 
         {/* Colorway grid — scrollable */}
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={cwStyles.gridWrap}
           showsVerticalScrollIndicator={false}
         >
@@ -1856,6 +1889,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginBottom: 6,
+    ...(Platform.OS === 'web' ? {
+      position: 'sticky' as any,
+      top: 0,
+      zIndex: 10,
+      backdropFilter: 'blur(8px)',
+    } : {}),
   },
   viewAllText: {
     fontWeight: '900',
@@ -2027,13 +2066,24 @@ const browseStyles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
+    gap: 8,
   },
   title: {
-    flex: 1,
     fontWeight: '900',
     fontSize: 22,
     color: '#ffffff',
     letterSpacing: 1.6,
+  },
+  headerBadge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerBadgeText: {
+    fontWeight: '800',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.6,
   },
   closeBtn: {
     width: 40,
@@ -2094,6 +2144,11 @@ const browseStyles = StyleSheet.create({
   gridCell: {
     width: '31%',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    paddingBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   emptyWrap: {
     width: '100%',

@@ -43,23 +43,26 @@ function SparkleParticle({ color, size, left, bottom, delay }: {
   const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const fadeLoop = Animated.loop(
+    // Single unified loop — fade + drift run in parallel, then the
+    // translateY resets ONLY after the particle is fully invisible
+    // (opacity = 0). Two separate loops drifted and caused a visible
+    // snap-back mid-fade.
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
-        Animated.timing(opacity, { toValue: 0.8, duration: 1200, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0, duration: 1200, useNativeDriver: true }),
-      ])
-    );
-    const driftLoop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(translateY, { toValue: -18, duration: 2400, useNativeDriver: true }),
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.8, duration: 1200, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 1200, useNativeDriver: true }),
+          ]),
+          Animated.timing(translateY, { toValue: -18, duration: 2400, useNativeDriver: true }),
+        ]),
+        // Reset drift while invisible
         Animated.timing(translateY, { toValue: 0, duration: 0, useNativeDriver: true }),
       ])
     );
-    fadeLoop.start();
-    driftLoop.start();
-    return () => { fadeLoop.stop(); driftLoop.stop(); };
+    loop.start();
+    return () => loop.stop();
   }, []);
 
   return (
@@ -654,6 +657,10 @@ export function HomeScreen() {
   // horizontal motion beyond a small threshold — vertical taps fall
   // through to the inner Pressable.
   const [characterRotationY, setCharacterRotationY] = useState(0);
+  // Keep current rotation in a ref so PanResponder callbacks can read it
+  // without being recreated on every state change (was causing gesture stutter).
+  const rotationRef = useRef(0);
+  rotationRef.current = characterRotationY;
   const dragStartRotationRef = useRef(0);
   const characterPanResponder = useMemo(
     () =>
@@ -661,7 +668,7 @@ export function HomeScreen() {
         onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (_evt, g) => Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
         onPanResponderGrant: () => {
-          dragStartRotationRef.current = characterRotationY;
+          dragStartRotationRef.current = rotationRef.current;
         },
         onPanResponderMove: (_evt, g) => {
           // ~1° per pixel feels natural. Full screen swipe ≈ one full spin.
@@ -669,7 +676,7 @@ export function HomeScreen() {
         },
         onPanResponderTerminationRequest: () => false,
       }),
-    [characterRotationY],
+    [], // Stable — reads refs, not state
   );
 
   // Show tutorial on first visit — defer if welcome was just dismissed (< 5 min ago)

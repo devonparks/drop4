@@ -106,8 +106,15 @@ interface CharacterStoreState {
    *  Key = outfitId, value = array of owned colorway preset ids. */
   ownedOutfitColorways: Record<string, string[]>;
 
-  /** Currently-equipped outfit colorway id. Empty string = default. */
+  /** Currently-equipped outfit colorway id. Empty string = default.
+   *  @deprecated — use equippedSlotColorway for per-slot tracking. Kept
+   *  for backward compat with any code that reads the global colorway. */
   equippedOutfitColorway: string;
+
+  /** Per-slot colorway tracking. Keys are 'Tops' | 'Bottoms' | 'Shoes',
+   *  values are colorway preset ids (empty string = default). Lets the
+   *  player wear different colorways on different outfit pieces. */
+  equippedSlotColorway: Record<string, string>;
 
   // ── Actions ──
   setAmgCharacter: (next: AmgCharacterState) => void;
@@ -156,8 +163,10 @@ interface CharacterStoreState {
   unlockOutfitColorway: (outfitId: string, colorwayId: string) => void;
   /** True when the player owns this (outfit, colorway) combo. */
   isOutfitColorwayOwned: (outfitId: string, colorwayId: string) => boolean;
-  /** Apply a colorway to the current outfit — sets Tops/Bottoms/Shoes. */
-  equipOutfitColorway: (colorwayId: string) => void;
+  /** Apply a colorway to the current outfit. When `targetSlot` is given,
+   *  only that slot's color is changed (per-item colorway). Without it,
+   *  all three outfit slots are updated (whole-outfit colorway). */
+  equipOutfitColorway: (colorwayId: string, targetSlot?: 'Tops' | 'Bottoms' | 'Shoes') => void;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -176,6 +185,7 @@ interface PersistedCharacter {
   ownedTintColors?: string[];
   ownedOutfitColorways?: Record<string, string[]>;
   equippedOutfitColorway?: string;
+  equippedSlotColorway?: Record<string, string>;
   /** Legacy field — pre-Path-A migration. Read once on load to recover the
    *  player's last-equipped outfit; never written. After the first load
    *  the migrated value lives in `equippedOutfitId`. */
@@ -227,6 +237,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
   ownedTintColors: [],
   ownedOutfitColorways: {},
   equippedOutfitColorway: '',
+  equippedSlotColorway: {},
 
   setAmgCharacter: (next) => set({ amgCharacter: next }),
 
@@ -410,15 +421,32 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     return !!list && list.includes(colorwayId);
   },
 
-  equipOutfitColorway: (colorwayId) => set((s) => {
+  equipOutfitColorway: (colorwayId, targetSlot?) => set((s) => {
     const current = s.amgCharacter as unknown as CharacterState | null;
     if (!current) return { equippedOutfitColorway: colorwayId };
+
+    const prevPerSlot = s.equippedSlotColorway;
 
     // Default colorway — restore species defaults
     if (!colorwayId || colorwayId === '') {
       const species = (current as any).species ?? 'Human';
       const defaults = DEFAULT_COLORS_BY_SPECIES[species as keyof typeof DEFAULT_COLORS_BY_SPECIES]
         ?? DEFAULT_COLORS_BY_SPECIES.Human;
+
+      // Per-slot reset: only restore the targeted slot's default
+      if (targetSlot) {
+        const colors = {
+          ...(current.colors ?? {}),
+          [targetSlot]: defaults[targetSlot as keyof typeof defaults],
+        };
+        return {
+          amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+          equippedOutfitColorway: '',
+          equippedSlotColorway: { ...prevPerSlot, [targetSlot]: '' },
+        };
+      }
+
+      // Full reset: restore all three slots
       const colors = {
         ...(current.colors ?? {}),
         'Tops': defaults['Tops'],
@@ -428,6 +456,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
       return {
         amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
         equippedOutfitColorway: '',
+        equippedSlotColorway: { 'Tops': '', 'Bottoms': '', 'Shoes': '' },
       };
     }
 
@@ -435,6 +464,23 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     const preset = COLORWAY_BY_ID[colorwayId];
     if (!preset) return { equippedOutfitColorway: colorwayId };
 
+    // Per-slot colorway: only change the targeted slot's color
+    if (targetSlot) {
+      const colorForSlot = targetSlot === 'Tops' ? preset.primary
+        : targetSlot === 'Bottoms' ? preset.secondary
+        : preset.tertiary;
+      const colors = {
+        ...(current.colors ?? {}),
+        [targetSlot]: colorForSlot,
+      };
+      return {
+        amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
+        equippedOutfitColorway: colorwayId,
+        equippedSlotColorway: { ...prevPerSlot, [targetSlot]: colorwayId },
+      };
+    }
+
+    // Full outfit colorway: update all three slots
     const colors = {
       ...(current.colors ?? {}),
       'Tops': preset.primary,
@@ -445,6 +491,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
     return {
       amgCharacter: { ...current, colors } as unknown as AmgCharacterState,
       equippedOutfitColorway: colorwayId,
+      equippedSlotColorway: { 'Tops': colorwayId, 'Bottoms': colorwayId, 'Shoes': colorwayId },
     };
   }),
 
@@ -547,6 +594,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
         ownedTintColors: saved.ownedTintColors ?? [],
         ownedOutfitColorways: saved.ownedOutfitColorways ?? {},
         equippedOutfitColorway: saved.equippedOutfitColorway ?? '',
+        equippedSlotColorway: saved.equippedSlotColorway ?? {},
       });
     }
   },
@@ -567,5 +615,6 @@ useCharacterStore.subscribe((state) => {
     ownedTintColors: state.ownedTintColors,
     ownedOutfitColorways: state.ownedOutfitColorways,
     equippedOutfitColorway: state.equippedOutfitColorway,
+    equippedSlotColorway: state.equippedSlotColorway,
   });
 });

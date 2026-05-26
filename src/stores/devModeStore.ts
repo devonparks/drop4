@@ -176,8 +176,10 @@ function grantEverything(): void {
   useLootBoxStore.getState().addShards('epic', 1000);
   useLootBoxStore.getState().addShards('legendary', 1000);
 
-  // eslint-disable-next-line no-console
-  console.log('[devMode] 🔓 ALL CONTENT UNLOCKED — dev mode active');
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log('[devMode] ALL CONTENT UNLOCKED — dev mode active');
+  }
 }
 
 // ─── Store ──────────────────────────────────────────────────────────
@@ -189,8 +191,10 @@ export const useDevModeStore = create<DevModeState>((set, get) => ({
     const next = !get().enabled;
     set({ enabled: next });
     if (next) grantEverything();
-    // eslint-disable-next-line no-console
-    console.log(`[devMode] ${next ? '🔓 ENABLED' : '🔒 DISABLED'}`);
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`[devMode] ${next ? 'ENABLED' : 'DISABLED'}`);
+    }
   },
 
   enable: () => {
@@ -219,7 +223,9 @@ if (typeof globalThis !== 'undefined') {
   (globalThis as any).enableDevMode = () => useDevModeStore.getState().enable();
   (globalThis as any).disableDevMode = () => {
     useDevModeStore.setState({ enabled: false });
-    // eslint-disable-next-line no-console
-    console.log('[devMode] 🔒 DISABLED');
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('[devMode] DISABLED');
+    }
   };
 }

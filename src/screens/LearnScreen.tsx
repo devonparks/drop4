@@ -253,7 +253,7 @@ export function LearnScreen({ navigation }: Props) {
             return (
               <StaggeredEntry key={lesson.id} index={i}>
               <PressScale
-                onPress={() => { playSound('click'); setSelected(lesson); }}
+                onPress={() => { haptics.tap(); playSound('click'); setSelected(lesson); }}
                 scaleTo={0.97}
                 accessibilityRole="button"
                 accessibilityLabel={`${lesson.title} lesson, ${lesson.difficulty}${isMastered ? ', mastered' : ''}`}
