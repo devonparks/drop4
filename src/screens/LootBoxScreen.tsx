@@ -207,7 +207,6 @@ function BoxOpeningScreen({ box, onReveal, onCancel }: {
       {...(Platform.OS === 'web'
         ? ({ onClick: handleTap } as any)
         : {})}
-      accessibilityRole="button"
       accessibilityLabel={`Tap to open ${box.name}`}
       accessibilityHint="Tap three times to reveal the reward"
     >
