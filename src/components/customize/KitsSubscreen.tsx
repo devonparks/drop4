@@ -688,6 +688,8 @@ export function KitsSubscreen({ onClose }: Props) {
                   if (previewColorway) {
                     equipOutfitColorway(previewColorway);
                   }
+                  useChallengeStore.getState().updateProgress('equip_camo', 1);
+                  useChallengeStore.getState().updateProgress('equip_camo_3', 1);
                   closePreview();
                 }
               : undefined
