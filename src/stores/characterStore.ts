@@ -26,7 +26,8 @@ import { buildAmgBodyForOutfit } from '../data/npcCustomizations';
 import { STARTER_TINT_COLORS } from '../data/colorRegistry';
 import { DEFAULT_PALETTE } from '@amg/cosmetic-ui';
 import { DEFAULT_COLORS_BY_SPECIES } from '@amg/character-runtime/types';
-import { COLORWAY_BY_ID } from '../data/outfitColorways';
+import { getColorwayById } from '../data/outfitColorways';
+import { colorwayColorForSlot } from '../data/drop4Categories';
 
 // AMG character state in the store stays loosely typed (Record<string,
 // unknown>) so the store doesn't take a hard import dep on the runtime
@@ -166,7 +167,7 @@ interface CharacterStoreState {
   /** Apply a colorway to the current outfit. When `targetSlot` is given,
    *  only that slot's color is changed (per-item colorway). Without it,
    *  all three outfit slots are updated (whole-outfit colorway). */
-  equipOutfitColorway: (colorwayId: string, targetSlot?: 'Tops' | 'Bottoms' | 'Shoes') => void;
+  equipOutfitColorway: (colorwayId: string, targetSlot?: string) => void;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -449,14 +450,12 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
       };
     }
 
-    // Look up the colorway preset
-    const preset = COLORWAY_BY_ID[colorwayId];
+    // Look up the colorway preset (outfit or hair palette)
+    const preset = getColorwayById(colorwayId);
     if (!preset) return {};
 
     // Per-slot colorway: ONLY change the targeted slot's color
-    const colorForSlot = targetSlot === 'Tops' ? preset.primary
-      : targetSlot === 'Bottoms' ? preset.secondary
-      : preset.tertiary;
+    const colorForSlot = colorwayColorForSlot(targetSlot, preset);
     const colors = {
       ...(current.colors ?? {}),
       [targetSlot]: colorForSlot,

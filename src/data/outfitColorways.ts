@@ -16,7 +16,7 @@
  * automatically gets all colorways. A content update can drop 15 new
  * colorways across every outfit in one batch.
  *
- * ~129 human outfits x 30 presets = ~3,870 collectible items.
+ * ~129 human outfits x 29 presets = ~3,741 collectible items.
  */
 
 import { OUTFITS, type OutfitId } from './outfitRegistry';
@@ -73,7 +73,7 @@ export function isColorwayDropId(id: string): boolean {
 // This is the ONLY outfit color system — the old per-part "camo"
 // variants were merged into this per-outfit colorway palette.
 //
-// ~129 human outfits × 30 presets = ~3,870 collectible items.
+// ~129 human outfits × 29 presets = ~3,741 collectible items.
 
 export const COLORWAY_PALETTE: ColorwayPreset[] = [
   // ── Common (8) — everyday neutrals & basics ──
@@ -103,21 +103,75 @@ export const COLORWAY_PALETTE: ColorwayPreset[] = [
   { id: 'arctic',    name: 'Arctic',       primary: '#caf0f8', secondary: '#90e0ef', tertiary: '#48cae4', rarity: 'epic' },
   { id: 'varsity',   name: 'Varsity',      primary: '#1a3060', secondary: '#e67e22', tertiary: '#1a3060', rarity: 'epic' },
   { id: 'flamingo',  name: 'Flamingo',     primary: '#ff69b4', secondary: '#fff0f5', tertiary: '#ff1493', rarity: 'epic' },
-  { id: 'toxic',     name: 'Toxic',        primary: '#39ff14', secondary: '#1a1a1a', tertiary: '#00ff41', rarity: 'epic' },
+  { id: 'toxic',     name: 'Toxic',        primary: '#7cff00', secondary: '#1a1a1a', tertiary: '#00ff41', rarity: 'epic' },
   { id: 'frozen',    name: 'Frozen',       primary: '#a0d2db', secondary: '#e0f7fa', tertiary: '#80cbc4', rarity: 'epic' },
 
-  // ── Legendary (6) — ultra-flex ──
+  // ── Legendary (5) — ultra-flex ──
   { id: 'gold_rush', name: 'Gold Rush',    primary: '#ffd700', secondary: '#daa520', tertiary: '#b8860b', rarity: 'legendary' },
-  { id: 'shadow',    name: 'Shadow',       primary: '#0d0d0d', secondary: '#ff073a', tertiary: '#0d0d0d', rarity: 'legendary' },
-  { id: 'holo',      name: 'Holographic',  primary: '#c084fc', secondary: '#67e8f9', tertiary: '#fbbf24', rarity: 'legendary' },
+  { id: 'shadow',    name: 'Shadow',       primary: '#1c0808', secondary: '#ff073a', tertiary: '#0d0d0d', rarity: 'legendary' },
   { id: 'chrome',    name: 'Chrome',       primary: '#c0c0c0', secondary: '#e8e8e8', tertiary: '#a0a0a0', rarity: 'legendary' },
-  { id: 'obsidian',  name: 'Obsidian',     primary: '#0d0d0d', secondary: '#4a0080', tertiary: '#1a0033', rarity: 'legendary' },
+  { id: 'obsidian',  name: 'Obsidian',     primary: '#10001f', secondary: '#4a0080', tertiary: '#1a0033', rarity: 'legendary' },
   { id: 'diamond',   name: 'Diamond',      primary: '#b9f2ff', secondary: '#e0f7fa', tertiary: '#ffffff', rarity: 'legendary' },
 ];
 
-/** Quick lookup by colorway id. */
+/** Quick lookup by colorway id (outfit palette). */
 export const COLORWAY_BY_ID: Record<string, ColorwayPreset> = {};
 for (const c of COLORWAY_PALETTE) COLORWAY_BY_ID[c.id] = c;
+
+// ─── Hair Color Palette ──────────────────────────────────────────────
+// Solid-color palette for hair / beard / brows. These are single-tint
+// colors (primary = secondary = tertiary) so the swatch renders as one
+// solid block. Curated to look natural + a few fantasy colors.
+//
+// Hair → 'Hair 01', Beard → 'FacialHair 01', Brows → 'Eyebrow 01'.
+// Each sub tints independently. FacialHair/Eyebrow fall back to
+// Hair 01 when not explicitly set (so by default they still match).
+//
+// 16 colors: 2 starters + 4 common + 4 rare + 4 epic + 2 legendary.
+
+function solidPreset(
+  id: string,
+  name: string,
+  hex: string,
+  rarity: ColorwayRarity,
+): ColorwayPreset {
+  return { id, name, primary: hex, secondary: hex, tertiary: hex, rarity };
+}
+
+export const HAIR_COLORWAY_PALETTE: ColorwayPreset[] = [
+  // ── Natural tones (common) ──
+  solidPreset('midnight_black', 'Midnight Black', '#1a1a2e', 'common'),
+  solidPreset('dark_brown',     'Dark Brown',     '#3d2914', 'common'),
+  solidPreset('chestnut',       'Chestnut',       '#6b4423', 'common'),
+  solidPreset('light_brown',    'Light Brown',    '#8b6340', 'common'),
+  solidPreset('sandy_blonde',   'Sandy Blonde',   '#c4956a', 'common'),
+  solidPreset('golden_blonde',  'Golden Blonde',  '#deb887', 'common'),
+
+  // ── Statement tones (rare) ──
+  solidPreset('platinum',       'Platinum',       '#f0e68c', 'rare'),
+  solidPreset('silver',         'Silver',         '#e8e8e8', 'rare'),
+  solidPreset('auburn',         'Auburn',         '#8b2020', 'rare'),
+  solidPreset('crimson_hair',   'Crimson',        '#cc3333', 'rare'),
+
+  // ── Fantasy colors (epic) ──
+  solidPreset('rose',           'Rose',           '#ff6b6b', 'epic'),
+  solidPreset('ocean_blue',     'Ocean Blue',     '#4a69bd', 'epic'),
+  solidPreset('violet',         'Violet',         '#6c5ce7', 'epic'),
+  solidPreset('emerald',        'Emerald',        '#2ecc71', 'epic'),
+
+  // ── Ultra-rare (legendary) ──
+  solidPreset('fire_orange',    'Fire Orange',    '#e67e22', 'legendary'),
+  solidPreset('ghost_gray',     'Ghost Gray',     '#95a5a6', 'legendary'),
+];
+
+/** Quick lookup by colorway id (hair palette). */
+export const HAIR_COLORWAY_BY_ID: Record<string, ColorwayPreset> = {};
+for (const c of HAIR_COLORWAY_PALETTE) HAIR_COLORWAY_BY_ID[c.id] = c;
+
+/** Combined lookup — checks outfit palette first, then hair palette. */
+export function getColorwayById(id: string): ColorwayPreset | undefined {
+  return COLORWAY_BY_ID[id] ?? HAIR_COLORWAY_BY_ID[id];
+}
 
 // ─── Eligible outfits ─────────────────────────────────────────────────
 // Only human outfits get colorways in v1. Skeleton/zombie/goblin/elf

@@ -17,7 +17,8 @@ const RENDER_BASE_URL = 'http://localhost:9099';
 // filenames (render pipeline was built before palette IDs were finalized).
 const PALETTE_TO_RENDER_ID: Record<string, string> = {
   frozen: 'storm',
-  holo: 'carbon',
+  // holo→carbon removed: carbon render uses wrong colors (dark grey, not holographic purple/cyan/gold).
+  // Holographic falls back to color-bar swatch until re-rendered in Unity.
 };
 
 // Hero part code → render subfolder. Only hero slots have renders;

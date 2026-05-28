@@ -11,7 +11,7 @@
 //   · skin     → 12-swatch skin-tone picker (rewrites
 //                amgCharacter.colors['Skin 01'])
 //   · owned    → flat 2-col grid of every owned part across buckets
-//   · hair / face / tops / pants / shoes / hats / accessories →
+//   · hair / face / tops / pants / shoes / hats / face / back / belt / armor →
 //                2-col AmgPartCard grid filtered by SlotBucket
 //
 // Tap on a part card → opens the engine's AmgPartPreviewModal with
@@ -36,7 +36,7 @@ import {
   subcategoryForPart,
   type TopBucket,
 } from '../../data/partSubcategories';
-import { KITS_SUB_SLOTS, HERO_SLOTS } from '../../data/drop4Categories';
+import { KITS_SUB_SLOTS, HERO_SLOTS, COLORWAY_MATERIAL_MAP, colorwayColorForSlot } from '../../data/drop4Categories';
 import { packPrefixFromPartName } from '../../data/amgPartPricing';
 import { variantFromPartName } from '@amg/cosmetic-ui';
 import {
@@ -58,6 +58,8 @@ import {
 import {
   COLORWAY_PALETTE,
   COLORWAY_BY_ID,
+  HAIR_COLORWAY_PALETTE,
+  getColorwayById,
   type ColorwayPreset,
 } from '../../data/outfitColorways';
 import { haptics } from '../../services/haptics';
@@ -96,7 +98,7 @@ const BODY_PRESETS: { label: string; blendshapes: BlendshapeState }[] = [
 
 // ── Unlockable tint color mapping ────────────────────────────────────
 // Maps KitsSubId → TintSlot so the swatch row knows which colors to
-// render. Hair and Beard share the same slot (both tint 'Hair 01').
+// render. Hair/Beard/Brows each have independent color properties.
 // Subs without a tint slot (species, skin, hats, etc.) get no swatches.
 
 const KITS_SUB_TO_TINT_SLOT: Partial<Record<KitsSubId, TintSlot>> = {
@@ -107,9 +109,25 @@ const KITS_SUB_TO_TINT_SLOT: Partial<Record<KitsSubId, TintSlot>> = {
   shoes:     'shoes',
 };
 
-/** Outfit subs that show the colorway button — player picks the outfit
- *  piece first, then chooses a colorway from a proper picker modal. */
-const OUTFIT_COLORWAY_SUBS: Set<KitsSubId> = new Set(['tops', 'pants', 'shoes']);
+/** Subs that show the colorway picker modal — player picks the item
+ *  first, then chooses a colorway from a proper picker modal.
+ *  Every slot-mapped sub gets colorways; only the inline editors
+ *  (species / skin / sliders) are excluded. */
+const OUTFIT_COLORWAY_SUBS: Set<KitsSubId> = new Set([
+  'hairstyle', 'beard', 'brows',
+  'tops', 'pants', 'shoes',
+  'hats', 'face', 'back', 'belt', 'armor',
+]);
+
+/** Subs that use the solid-color hair palette instead of the tri-color
+ *  outfit palette. Each has its own material property (Hair 01 /
+ *  FacialHair 01 / Eyebrow 01) so they can be colored independently. */
+const HAIR_COLOR_SUBS: Set<KitsSubId> = new Set(['hairstyle', 'beard', 'brows']);
+
+/** Returns the right colorway palette for a given sub. */
+function paletteForSub(sub: KitsSubId): ColorwayPreset[] {
+  return HAIR_COLOR_SUBS.has(sub) ? HAIR_COLORWAY_PALETTE : COLORWAY_PALETTE;
+}
 
 /** Rarity-keyed border + glow colors for the camo variant picker.
  *  Matches the lootbox reveal screen's tier treatments. */
@@ -266,7 +284,7 @@ export function KitsSubscreen({ onClose }: Props) {
   // Colorway picker modal — opens after equipping an outfit piece or
   // when the player taps the COLORWAYS button. Shows the character
   // preview + large colorway swatches for the equipped outfit.
-  const [colorwayPickerOpen, setColorwayPickerOpen] = useState(false);
+
 
   // VIEW ALL modal — full-screen browser with proper-sized chips and a
   // multi-column grid. The 110-px narrow right column couldn't fit a
@@ -503,20 +521,17 @@ export function KitsSubscreen({ onClose }: Props) {
             // player has a non-default outfit colorway active, tint the card
             // so it visually matches the character's current color scheme.
             // Per-slot colorway: read the colorway for THIS specific slot
-            const slotColorwayMap: Record<string, string> = { tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes' };
-            const thisSlotCwId = equippedSlotColorway[slotColorwayMap[currentSubId] ?? ''] ?? '';
+            const thisMatProp = COLORWAY_MATERIAL_MAP[currentSubId] ?? '';
+            const thisSlotCwId = equippedSlotColorway[thisMatProp] ?? '';
             const activeColorway = isThisEquipped && thisSlotCwId
-              ? COLORWAY_PALETTE.find((c) => c.id === thisSlotCwId)
+              ? getColorwayById(thisSlotCwId)
               : undefined;
-            // Outfit cards: use the equipped colorway render if active,
-            // otherwise fall back to the 'midnight' default render so
-            // every outfit card shows the new pre-rendered thumbnails
-            // instead of the old flat-color bundled PNGs.
-            const cwThumb = isOutfitSub
-              ? (activeColorway
-                  ? getColorwayThumbUri(p.name, activeColorway.id)
-                  : getColorwayThumbUri(p.name, 'midnight')
-                ) ?? undefined
+            // Outfit cards: show the colorway's pre-rendered thumbnail
+            // only when a colorway is active on the equipped item. When
+            // DEFAULT (no colorway), let the adapter chain handle the
+            // thumbnail so it matches the character's actual designed look.
+            const cwThumb = isOutfitSub && activeColorway
+              ? getColorwayThumbUri(p.name, activeColorway.id) ?? undefined
               : undefined;
             const cropZone = cwThumb ? SUB_TO_CROP[currentSubId] : undefined;
             return (
@@ -532,14 +547,6 @@ export function KitsSubscreen({ onClose }: Props) {
                 adapter={drop4CosmeticAdapter}
                 size="compact"
                 onEquip={(name) => {
-                  // If tapping an already-equipped outfit piece, go
-                  // straight to colorway picker (Devon 2026-05-25:
-                  // "select item → then colorways"). For non-outfit
-                  // subs or non-equipped items, open the normal preview.
-                  if (isOutfitSub && parts?.[heroSlot] === name) {
-                    setColorwayPickerOpen(true);
-                    return;
-                  }
                   setPreviewPart({ name, slot: p.slot });
                 }}
                 onBuy={(name) => setPreviewPart({ name, slot: p.slot })}
@@ -603,47 +610,104 @@ export function KitsSubscreen({ onClose }: Props) {
         })()}
       />
 
-      <PreviewSafeModal
-        visible={previewPart !== null}
-        onRequestClose={closePreview}
-        webZIndex={1100}
-      >
-        <AmgPartPreviewModal
-          visible={previewPart !== null}
-          partName={previewPart?.name ?? null}
-          slot={previewPart?.slot ?? null}
-          adapter={drop4CosmeticAdapter}
-          currentCharacter={amgCharacter}
-          renderCharacterPreview={(swappedCharacter, opts) => {
-            // Apply colorway color to the preview character — per-slot so
-            // only the item being previewed changes color, not the whole outfit.
-            let previewChar = swappedCharacter as CharacterState;
-            if (previewColorway) {
-              const preset = COLORWAY_BY_ID[previewColorway];
-              if (preset) {
-                const slotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
-                  tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes',
-                };
-                const targetSlot = slotMap[currentSubId];
-                if (targetSlot) {
-                  const colorForSlot = targetSlot === 'Tops' ? preset.primary
-                    : targetSlot === 'Bottoms' ? preset.secondary
-                    : preset.tertiary;
-                  previewChar = {
-                    ...previewChar,
-                    colors: {
-                      ...(previewChar.colors ?? {}),
-                      [targetSlot]: colorForSlot,
-                    },
-                  };
-                }
-              }
+      {/* ── Outfit preview: unified colorway picker (character left, swatches right) ── */}
+      {previewPart && OUTFIT_COLORWAY_SUBS.has(currentSubId) && (
+        <PreviewSafeModal
+          visible
+          onRequestClose={closePreview}
+          webZIndex={1100}
+        >
+          <OutfitColorwayModal
+            partName={previewPart.name}
+            slot={previewPart.slot}
+            subId={currentSubId}
+            isOwned={previewIsOwned}
+            isEquipped={isCurrentlyEquipped}
+            activeColorwayId={(() => {
+              const matProp = COLORWAY_MATERIAL_MAP[currentSubId];
+              return isCurrentlyEquipped && matProp
+                ? (equippedSlotColorway[matProp] ?? '')
+                : '';
+            })()}
+            previewColorway={previewColorway}
+            onColorwayChange={(id) => {
+              haptics.tap();
+              playSound('click');
+              setPreviewColorway(id);
+            }}
+            adapter={drop4CosmeticAdapter}
+            amgCharacter={amgCharacter as unknown as CharacterState}
+            isColorwayOwned={
+              // Hair colors are free when you own the item — the item
+              // itself is the collectible, not each color variant.
+              HAIR_COLOR_SUBS.has(currentSubId)
+                ? () => true
+                : isOutfitColorwayOwned
             }
-            return (
+            outfitId={equippedOutfitId}
+            onClose={closePreview}
+            onEquip={
+              previewIsOwned
+                ? () => {
+                    haptics.win();
+                    playSound('click');
+                    const variant = variantFromPartName(previewPart.name);
+                    equipPartVariant(previewPart.slot, previewPart.name, variant);
+                    const heroConfig = HERO_SLOTS[currentSubId];
+                    if (heroConfig && manifest) {
+                      const pack = packPrefixFromPartName(previewPart.name);
+                      const species = (amgCharacter as any)?.species ?? 'Human';
+                      for (const companionSlot of heroConfig.companions) {
+                        const match = manifest.find(
+                          (p) =>
+                            p.slot === companionSlot &&
+                            p.species === species &&
+                            packPrefixFromPartName(p.name) === pack &&
+                            variantFromPartName(p.name) === variant,
+                        );
+                        if (match) {
+                          equipPartVariant(companionSlot, match.name, variant);
+                        }
+                      }
+                    }
+                    if (previewColorway) {
+                      const matProp = COLORWAY_MATERIAL_MAP[currentSubId];
+                      if (matProp) equipOutfitColorway(previewColorway, matProp);
+                    }
+                    useChallengeStore.getState().updateProgress('equip_camo', 1);
+                    useChallengeStore.getState().updateProgress('equip_camo_3', 1);
+                    closePreview();
+                  }
+                : undefined
+            }
+            onBuy={() => {
+              haptics.tap();
+              playSound('click');
+              closePreview();
+              navigation.navigate('LootBox' as never);
+            }}
+          />
+        </PreviewSafeModal>
+      )}
+
+      {/* ── Non-outfit preview (hair, face, etc.) ── */}
+      {previewPart && !OUTFIT_COLORWAY_SUBS.has(currentSubId) && (
+        <PreviewSafeModal
+          visible
+          onRequestClose={closePreview}
+          webZIndex={1100}
+        >
+          <AmgPartPreviewModal
+            visible
+            partName={previewPart.name}
+            slot={previewPart.slot}
+            adapter={drop4CosmeticAdapter}
+            currentCharacter={amgCharacter}
+            renderCharacterPreview={(swappedCharacter, opts) => (
               <Character3DPortrait
                 width={opts.width}
                 height={opts.height}
-                customization={previewChar}
+                customization={swappedCharacter as CharacterState}
                 cameraPreset={
                   opts.slot === 'Hair' || opts.slot === 'FacialHair' ||
                   opts.slot === 'EyebrowLeft' || opts.slot === 'EyebrowRight' ||
@@ -653,171 +717,66 @@ export function KitsSubscreen({ onClose }: Props) {
                 }
                 showFloor={false}
               />
-            );
-          }}
-          onClose={closePreview}
-          isCurrentlyEquipped={isCurrentlyEquipped}
-          onUnequip={
-            isCurrentlyEquipped && previewPart
-              ? () => {
-                  haptics.win();
-                  playSound('click');
-                  const heroConfig = HERO_SLOTS[currentSubId];
-                  unequipSlot(
-                    previewPart.slot,
-                    heroConfig?.companions,
-                  );
-                  closePreview();
-                }
-              : undefined
-          }
-          onEquip={
-            previewIsOwned && previewPart
-              ? () => {
-                  haptics.win();
-                  playSound('click');
-                  const variant = variantFromPartName(previewPart.name);
-                  equipPartVariant(previewPart.slot, previewPart.name, variant);
-                  const heroConfig = HERO_SLOTS[currentSubId];
-                  if (heroConfig && manifest) {
-                    const pack = packPrefixFromPartName(previewPart.name);
-                    const species = (amgCharacter as any)?.species ?? 'Human';
-                    for (const companionSlot of heroConfig.companions) {
-                      const match = manifest.find(
-                        (p) =>
-                          p.slot === companionSlot &&
-                          p.species === species &&
-                          packPrefixFromPartName(p.name) === pack &&
-                          variantFromPartName(p.name) === variant,
-                      );
-                      if (match) {
-                        equipPartVariant(companionSlot, match.name, variant);
+            )}
+            onClose={closePreview}
+            isCurrentlyEquipped={isCurrentlyEquipped}
+            onUnequip={
+              isCurrentlyEquipped
+                ? () => {
+                    haptics.win();
+                    playSound('click');
+                    const heroConfig = HERO_SLOTS[currentSubId];
+                    unequipSlot(previewPart.slot, heroConfig?.companions);
+                    closePreview();
+                  }
+                : undefined
+            }
+            onEquip={
+              previewIsOwned
+                ? () => {
+                    haptics.win();
+                    playSound('click');
+                    const variant = variantFromPartName(previewPart.name);
+                    equipPartVariant(previewPart.slot, previewPart.name, variant);
+                    const heroConfig = HERO_SLOTS[currentSubId];
+                    if (heroConfig && manifest) {
+                      const pack = packPrefixFromPartName(previewPart.name);
+                      const species = (amgCharacter as any)?.species ?? 'Human';
+                      for (const companionSlot of heroConfig.companions) {
+                        const match = manifest.find(
+                          (p) =>
+                            p.slot === companionSlot &&
+                            p.species === species &&
+                            packPrefixFromPartName(p.name) === pack &&
+                            variantFromPartName(p.name) === variant,
+                        );
+                        if (match) {
+                          equipPartVariant(companionSlot, match.name, variant);
+                        }
                       }
                     }
+                    closePreview();
                   }
-                  if (previewColorway) {
-                    const cwSlotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
-                      tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes',
-                    };
-                    equipOutfitColorway(previewColorway, cwSlotMap[currentSubId]);
+                : undefined
+            }
+            lockedActionLabel={!previewIsOwned ? 'GET FROM BAGS' : undefined}
+            onBuy={
+              !previewIsOwned
+                ? () => {
+                    haptics.tap();
+                    playSound('click');
+                    closePreview();
+                    navigation.navigate('LootBox' as never);
                   }
-                  useChallengeStore.getState().updateProgress('equip_camo', 1);
-                  useChallengeStore.getState().updateProgress('equip_camo_3', 1);
-                  closePreview();
-                }
-              : undefined
-          }
-          lockedActionLabel={!previewIsOwned ? 'GET FROM BAGS' : undefined}
-          onBuy={
-            !previewIsOwned
-              ? () => {
-                  haptics.tap();
-                  playSound('click');
-                  closePreview();
-                  navigation.navigate('LootBox' as never);
-                }
-              : undefined
-          }
-          renderColorwayStrip={
-            previewPart && OUTFIT_COLORWAY_SUBS.has(currentSubId)
-              ? () => (
-                  <View style={cwStripStyles.wrap}>
-                    <Text style={cwStripStyles.label}>COLORWAYS</Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={cwStripStyles.row}
-                    >
-                      {COLORWAY_PALETTE.map((cw) => {
-                        const thumb = getColorwayThumbUri(previewPart.name, cw.id);
-                        if (!thumb) return null;
-                        const isActive = previewColorway === cw.id;
-                        const rarityBorder = RARITY_BORDER[cw.rarity] ?? 'rgba(255,255,255,0.2)';
-                        return (
-                          <Pressable
-                            key={cw.id}
-                            onPress={() => {
-                              haptics.tap();
-                              playSound('click');
-                              setPreviewColorway(isActive ? null : cw.id);
-                            }}
-                            style={[
-                              cwStripStyles.thumb,
-                              {
-                                borderColor: isActive ? '#f1c40f' : rarityBorder,
-                                borderWidth: isActive ? 2.5 : 1.5,
-                              },
-                            ]}
-                            accessibilityRole="button"
-                            accessibilityLabel={`${cw.name} colorway`}
-                            accessibilityState={{ selected: isActive }}
-                          >
-                            <Image
-                              source={thumb}
-                              style={cwStripStyles.thumbImg}
-                              resizeMode="cover"
-                              accessibilityIgnoresInvertColors
-                            />
-                            <View style={[cwStripStyles.thumbDot, { backgroundColor: cw.primary }]} />
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
-                    {previewColorway && (
-                      <Text style={cwStripStyles.activeName}>
-                        {COLORWAY_PALETTE.find((c) => c.id === previewColorway)?.name ?? ''}
-                      </Text>
-                    )}
-                  </View>
-                )
-              : undefined
-          }
-          hooks={{
-            playClick: () => playSound('click'),
-            playWhoosh: () => playSound('click'),
-          }}
-        />
-      </PreviewSafeModal>
-
-      <ColorwayPickerModal
-        visible={colorwayPickerOpen}
-        onClose={() => setColorwayPickerOpen(false)}
-        activeColorwayId={
-          // Per-slot: show the colorway active for THIS slot, not the global one
-          (() => {
-            const slotMap: Record<string, string> = { tops: 'Tops', pants: 'Bottoms', shoes: 'Shoes' };
-            const slot = slotMap[currentSubId];
-            return slot ? (equippedSlotColorway[slot] ?? '') : equippedOutfitColorway;
-          })()
-        }
-        outfitId={equippedOutfitId}
-        isOwned={isOutfitColorwayOwned}
-        onPick={(colorwayId) => {
-          haptics.win();
-          playSound('click');
-          // Per-slot colorway: only change the color for the current sub
-          const slotMap: Record<string, 'Tops' | 'Bottoms' | 'Shoes'> = {
-            tops: 'Tops',
-            pants: 'Bottoms',
-            shoes: 'Shoes',
-          };
-          equipOutfitColorway(colorwayId, slotMap[currentSubId]);
-        }}
-        onGetFromBags={() => {
-          haptics.tap();
-          playSound('click');
-          setColorwayPickerOpen(false);
-          navigation.navigate('LootBox' as never);
-        }}
-        renderPreview={() => (
-          <Character3DPortrait
-            width={200}
-            height={280}
-            cameraPreset="body"
-            showFloor={false}
+                : undefined
+            }
+            hooks={{
+              playClick: () => playSound('click'),
+              playWhoosh: () => playSound('click'),
+            }}
           />
-        )}
-      />
+        </PreviewSafeModal>
+      )}
     </View>
   );
 }
@@ -994,9 +953,12 @@ function SubSubcatChips({
 // changes here persist when the modal closes.
 // Sub → body crop zone for full-body mannequin renders.
 const SUB_TO_CROP: Partial<Record<KitsSubId, 'torso' | 'hips' | 'feet' | 'head'>> = {
-  tops: 'torso',
-  pants: 'hips',
-  hats: 'head',
+  hairstyle: 'head',
+  beard:     'head',
+  brows:     'head',
+  tops:      'torso',
+  pants:     'hips',
+  hats:      'head',
 };
 
 function BrowseAllModal({
@@ -1046,7 +1008,7 @@ function BrowseAllModal({
 
   // Active colorway preset (cached for the render pass).
   const activeColorway = useMemo(
-    () => colorwayFilter ? COLORWAY_PALETTE.find((c) => c.id === colorwayFilter) : undefined,
+    () => colorwayFilter ? getColorwayById(colorwayFilter) : undefined,
     [colorwayFilter],
   );
 
@@ -1187,11 +1149,12 @@ function BrowseAllModal({
                 ? isPartVariantOwned(p.name, colorwayFilter)
                 : isOwned(p.name);
               const isOutfit = OUTFIT_COLORWAY_SUBS.has(subId);
+              // Show colorway thumbnail only when a colorway filter is active
+              // in BrowseAll; otherwise let the adapter chain show the
+              // default outfit thumbnail (matches the designed look).
               const cwThumb = colorwayFilter
                 ? getColorwayThumbUri(p.name, colorwayFilter) ?? undefined
-                : isOutfit
-                  ? getColorwayThumbUri(p.name, 'midnight') ?? undefined
-                  : undefined;
+                : undefined;
               const cropZone = cwThumb ? SUB_TO_CROP[subId] : undefined;
               return (
                 <View key={p.name} style={browseStyles.gridCell}>
@@ -1427,163 +1390,281 @@ function UnlockableColorRow({
 // changed the same 3 material properties). Camos are killed; colorways
 // are the one unified outfit color system now.
 
-function ColorwayPickerModal({
-  visible,
-  onClose,
-  activeColorwayId,
-  outfitId,
+/**
+ * Unified outfit colorway picker — mirrors the Kits layout:
+ * big character preview on the left, scrollable colorway swatches on
+ * the right. Used for both "equip new piece" and "change colorway on
+ * already-equipped piece" flows.
+ */
+function OutfitColorwayModal({
+  partName,
+  slot,
+  subId,
   isOwned,
-  onPick,
-  onGetFromBags,
-  renderPreview,
+  isEquipped,
+  activeColorwayId,
+  previewColorway,
+  onColorwayChange,
+  adapter,
+  amgCharacter,
+  isColorwayOwned,
+  outfitId,
+  onClose,
+  onEquip,
+  onBuy,
 }: {
-  visible: boolean;
-  onClose: () => void;
+  partName: string;
+  slot: string;
+  subId: KitsSubId;
+  isOwned: boolean;
+  isEquipped: boolean;
   activeColorwayId: string;
+  previewColorway: string | null;
+  onColorwayChange: (id: string | null) => void;
+  adapter: typeof drop4CosmeticAdapter;
+  amgCharacter: CharacterState;
+  isColorwayOwned: (outfitId: string, colorwayId: string) => boolean;
   outfitId: string;
-  isOwned: (outfitId: string, colorwayId: string) => boolean;
-  onPick: (colorwayId: string) => void;
-  onGetFromBags: () => void;
-  renderPreview: () => React.ReactNode;
+  onClose: () => void;
+  onEquip?: () => void;
+  onBuy: () => void;
 }) {
-  const ownedCount = COLORWAY_PALETTE.filter((c) => isOwned(outfitId, c.id)).length;
+  const displayName = adapter.getPartDisplayName?.(partName)
+    ?? adapter.getPackDisplayName?.(partName)
+    ?? partName;
+
+  // The colorway shown as "selected" — preview takes priority over
+  // the persisted active colorway, so tapping swatches gives instant
+  // visual feedback before the player commits with WEAR.
+  const effectiveColorway = previewColorway ?? activeColorwayId;
+  const isDefault = !effectiveColorway || effectiveColorway === '';
+
+  // Build the preview character with the selected outfit + colorway.
+  const previewChar = useMemo(() => {
+    let char = { ...amgCharacter };
+    // Swap the previewed part into the character.
+    if (!isEquipped) {
+      char = {
+        ...char,
+        parts: { ...(char.parts ?? {}), [slot]: partName },
+      };
+    }
+    // Apply colorway color to the preview.
+    if (effectiveColorway) {
+      const preset = getColorwayById(effectiveColorway);
+      if (preset) {
+        const matProp = COLORWAY_MATERIAL_MAP[subId];
+        if (matProp) {
+          char = {
+            ...char,
+            colors: { ...(char.colors ?? {}), [matProp]: colorwayColorForSlot(matProp, preset) },
+          };
+        }
+      }
+    }
+    return char;
+  }, [amgCharacter, isEquipped, slot, partName, effectiveColorway, subId]);
+
+  const palette = paletteForSub(subId);
+  const isHairSub = HAIR_COLOR_SUBS.has(subId);
+  const ownedCount = palette.filter((c) => isColorwayOwned(outfitId, c.id)).length;
 
   return (
-    <PreviewSafeModal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      transparent={false}
-    >
-      <View style={cwStyles.container}>
+    <View style={ocStyles.container}>
+      {/* ── Left: character preview ── */}
+      <View style={ocStyles.previewColumn}>
+        <Character3DPortrait
+          width={240}
+          height={500}
+          customization={previewChar}
+          cameraPreset={
+            subId === 'hairstyle' || subId === 'beard' || subId === 'brows'
+              ? 'face'
+              : 'body'
+          }
+          showFloor={false}
+        />
+      </View>
+
+      {/* ── Right: header + swatches + actions ── */}
+      <View style={ocStyles.rightColumn}>
         {/* Header */}
-        <View style={cwStyles.header}>
-          <Text style={cwStyles.title}>COLORWAYS</Text>
-          <Text style={cwStyles.subtitle}>
-            {ownedCount} / {COLORWAY_PALETTE.length} UNLOCKED
-          </Text>
+        <View style={ocStyles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={ocStyles.title} numberOfLines={1}>{displayName}</Text>
+            <Text style={ocStyles.subtitle}>
+              {ownedCount} / {palette.length} {isHairSub ? 'COLORS' : 'COLORWAYS'}
+            </Text>
+          </View>
           <Pressable
             onPress={onClose}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            style={cwStyles.closeBtn}
+            style={ocStyles.closeBtn}
             accessibilityRole="button"
-            accessibilityLabel="Close colorway picker"
+            accessibilityLabel="Close"
           >
-            <Text style={cwStyles.closeText}>{'×'}</Text>
+            <Text style={ocStyles.closeText}>{'×'}</Text>
           </Pressable>
         </View>
 
-        {/* Character preview */}
-        <View style={cwStyles.previewWrap}>
-          {renderPreview()}
-        </View>
-
-        {/* Colorway grid — scrollable */}
+        {/* Swatch grid */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={cwStyles.gridWrap}
+          contentContainerStyle={ocStyles.gridWrap}
           showsVerticalScrollIndicator={false}
         >
-          {/* Default swatch */}
-          {(() => {
-            const isActive = !activeColorwayId || activeColorwayId === '';
-            return (
-              <Pressable
-                onPress={() => onPick('')}
-                style={[
-                  cwStyles.swatch,
-                  {
-                    borderColor: isActive ? '#ffb347' : 'rgba(255,255,255,0.25)',
-                    borderWidth: isActive ? 3 : 1.5,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Default colorway${isActive ? ', selected' : ''}`}
-                accessibilityState={{ selected: isActive }}
-              >
-                <View style={[cwStyles.triStripe, { backgroundColor: '#7f8c8d' }]} />
-                <View style={[cwStyles.triStripe, { backgroundColor: '#95a5a6' }]} />
-                <View style={[cwStyles.triStripe, { backgroundColor: '#bdc3c7' }]} />
-                {isActive && <Text style={cwStyles.check}>{'✓'}</Text>}
-                <Text style={cwStyles.swatchLabel} numberOfLines={1}>DEFAULT</Text>
-              </Pressable>
-            );
-          })()}
+          {/* Original / default swatch */}
+          <Pressable
+            onPress={() => onColorwayChange(null)}
+            style={[
+              ocStyles.swatch,
+              {
+                borderColor: isDefault ? '#ffb347' : 'rgba(255,255,255,0.25)',
+                borderWidth: isDefault ? 2.5 : 1.5,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Original colorway${isDefault ? ', selected' : ''}`}
+            accessibilityState={{ selected: isDefault }}
+          >
+            <View style={ocStyles.defaultFill}>
+              <Text style={ocStyles.defaultIcon}>{'↩'}</Text>
+              <Text style={ocStyles.defaultText}>ORIGINAL</Text>
+            </View>
+            {isDefault && <Text style={ocStyles.check}>{'✓'}</Text>}
+          </Pressable>
 
-          {COLORWAY_PALETTE.map((cw) => {
-            const owned = isOwned(outfitId, cw.id);
-            const isActive = activeColorwayId === cw.id;
+          {palette.map((cw) => {
+            const owned = isColorwayOwned(outfitId, cw.id);
+            const isActive = effectiveColorway === cw.id;
             const rarityBorder = VARIANT_RARITY_COLOR[cw.rarity] ?? 'rgba(255,255,255,0.2)';
-
+            const isSolid = cw.primary === cw.secondary && cw.secondary === cw.tertiary;
             return (
               <Pressable
                 key={cw.id}
-                onPress={() => (owned ? onPick(cw.id) : onGetFromBags())}
+                onPress={() => (owned ? onColorwayChange(cw.id) : onBuy())}
                 style={[
-                  cwStyles.swatch,
+                  ocStyles.swatch,
                   {
                     borderColor: isActive ? '#ffb347' : rarityBorder,
-                    borderWidth: isActive ? 3 : 1.5,
+                    borderWidth: isActive ? 2.5 : 1.5,
                     opacity: owned ? 1 : 0.4,
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`${cw.name} colorway (${cw.rarity})${isActive ? ', selected' : ''}${!owned ? ', locked' : ''}`}
+                accessibilityLabel={`${cw.name} (${cw.rarity})${isActive ? ', selected' : ''}${!owned ? ', locked' : ''}`}
                 accessibilityState={{ selected: isActive }}
               >
-                <View style={[cwStyles.triStripe, { backgroundColor: cw.primary }]} />
-                <View style={[cwStyles.triStripe, { backgroundColor: cw.secondary }]} />
-                <View style={[cwStyles.triStripe, { backgroundColor: cw.tertiary }]} />
-                {isActive && <Text style={cwStyles.check}>{'✓'}</Text>}
-                {!owned && (
-                  <View style={cwStyles.lockOverlay}>
-                    <Text style={cwStyles.lockIcon}>{'🔒'}</Text>
+                {/* Thumbnail render from Unity pipeline, or color fallback */}
+                {(() => {
+                  const src = getColorwayThumbUri(partName, cw.id);
+                  if (src) {
+                    return (
+                      <Image source={src} style={ocStyles.thumbImg} resizeMode="cover" />
+                    );
+                  }
+                  // Solid-color fallback (hair) vs tri-color fallback (outfits)
+                  return isSolid ? (
+                    <View style={[ocStyles.thumbFallback, { backgroundColor: cw.primary }]} />
+                  ) : (
+                    <View style={ocStyles.thumbFallback}>
+                      <View style={[ocStyles.triStripe, { backgroundColor: cw.primary }]} />
+                      <View style={[ocStyles.triStripe, { backgroundColor: cw.secondary }]} />
+                      <View style={[ocStyles.triStripe, { backgroundColor: cw.tertiary }]} />
+                    </View>
+                  );
+                })()}
+                {/* Color bar — solid for hair, tri-color for outfits */}
+                {isSolid ? (
+                  <View style={[ocStyles.colorBar, { backgroundColor: cw.primary }]} />
+                ) : (
+                  <View style={ocStyles.colorBar}>
+                    <View style={[ocStyles.colorBarSeg, { backgroundColor: cw.primary }]} />
+                    <View style={[ocStyles.colorBarSeg, { backgroundColor: cw.secondary }]} />
+                    <View style={[ocStyles.colorBarSeg, { backgroundColor: cw.tertiary }]} />
                   </View>
                 )}
-                <Text style={cwStyles.swatchLabel} numberOfLines={1}>
+                {isActive && <Text style={ocStyles.check}>{'✓'}</Text>}
+                {!owned && (
+                  <View style={ocStyles.lockOverlay}>
+                    <Text style={ocStyles.lockIcon}>{'🔒'}</Text>
+                  </View>
+                )}
+                <Text style={ocStyles.swatchLabel} numberOfLines={1}>
                   {cw.name.toUpperCase()}
                 </Text>
               </Pressable>
             );
           })}
         </ScrollView>
+
+        {/* Action buttons */}
+        <View style={ocStyles.actions}>
+          <Pressable onPress={onClose} style={ocStyles.cancelBtn}>
+            <Text style={ocStyles.cancelText}>CANCEL</Text>
+          </Pressable>
+          <Pressable
+            onPress={isOwned ? onEquip : onBuy}
+            style={[ocStyles.wearBtn, !isOwned && { backgroundColor: '#7f8c8d' }]}
+          >
+            <Text style={ocStyles.wearText}>
+              {isOwned ? (isEquipped ? 'APPLY' : 'WEAR') : 'GET FROM BAGS'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </PreviewSafeModal>
+    </View>
   );
 }
 
-const cwStyles = StyleSheet.create({
+// ── OutfitColorwayModal styles ──────────────────────────────────────
+// Two-column layout mirroring the Kits screen: character left, swatches right.
+const ocStyles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: '#0a0e27',
+  },
+  // ── Left column: character preview ──
+  previewColumn: {
+    width: '55%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 20,
+  },
+  // ── Right column: header + swatches + buttons ──
+  rightColumn: {
+    width: '45%',
     paddingTop: 36,
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.06)',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    alignItems: 'flex-start',
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
-    gap: 8,
+    gap: 6,
   },
   title: {
     fontWeight: '900',
-    fontSize: 20,
+    fontSize: 14,
     color: '#ffffff',
-    letterSpacing: 1.6,
+    letterSpacing: 1,
   },
   subtitle: {
-    flex: 1,
     fontWeight: '700',
-    fontSize: 11,
+    fontSize: 10,
     color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
+    marginTop: 2,
   },
   closeBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,140,0,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1592,44 +1673,78 @@ const cwStyles = StyleSheet.create({
   },
   closeText: {
     fontWeight: '900',
-    fontSize: 24,
-    lineHeight: 26,
+    fontSize: 20,
+    lineHeight: 22,
     color: '#0a0e27',
-    marginTop: -2,
-  },
-  previewWrap: {
-    height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: -1,
   },
   gridWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    paddingBottom: 40,
+    justifyContent: 'flex-start',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    paddingBottom: 16,
   },
   swatch: {
-    width: 64,
-    height: 72,
-    borderRadius: 12,
+    width: 70,
+    height: 90,
+    borderRadius: 10,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     flexDirection: 'column',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  defaultFill: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 8,
+    gap: 2,
+  },
+  defaultIcon: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  defaultText: {
+    fontWeight: '900',
+    fontSize: 8,
+    letterSpacing: 0.8,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  thumbImg: {
+    flex: 1,
+    width: '100%',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  thumbFallback: {
+    flex: 1,
+    width: '100%',
+    flexDirection: 'column' as const,
   },
   triStripe: {
     flex: 1,
     width: '100%',
   },
+  colorBar: {
+    flexDirection: 'row' as const,
+    width: '100%',
+    height: 8,
+  },
+  colorBarSeg: {
+    flex: 1,
+  },
   check: {
     position: 'absolute',
-    top: 8,
+    top: 6,
     fontWeight: '900',
-    fontSize: 16,
+    fontSize: 14,
     color: '#ffffff',
     textShadow: '0px 1px 3px rgba(0,0,0,0.7)',
     zIndex: 1,
@@ -1640,12 +1755,12 @@ const cwStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   lockIcon: {
-    fontSize: 16,
+    fontSize: 14,
   },
   swatchLabel: {
     position: 'absolute',
@@ -1653,11 +1768,52 @@ const cwStyles = StyleSheet.create({
     width: '100%',
     textAlign: 'center',
     fontWeight: '900',
-    fontSize: 7,
-    letterSpacing: 0.4,
+    fontSize: 6,
+    letterSpacing: 0.3,
     color: 'rgba(255,255,255,0.7)',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingVertical: 2,
+    paddingVertical: 1,
+  },
+  // ── Action buttons ──
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  cancelBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  cancelText: {
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  wearBtn: {
+    flex: 2,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,140,0,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,210,140,0.85)',
+  },
+  wearText: {
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: 1.4,
+    color: '#0a0e27',
   },
 });
 
@@ -1667,7 +1823,7 @@ const cwStyles = StyleSheet.create({
 
 // Resolve the Synty slot allowlist for a given sub. Custom Drop4 subs
 // (hairstyle / beard / brows) come from KITS_SUB_SLOTS; the rest
-// (tops / pants / shoes / hats / accessories) defer to the engine's
+// (tops / pants / shoes / hats) defer to the engine's
 // DEFAULT_SLOT_BUCKETS map. Returns null for inline-editor subs.
 function slotsForSub(sub: KitsSubId): string[] | null {
   const custom = KITS_SUB_SLOTS[sub];
@@ -1684,7 +1840,7 @@ function subSubcatsFor(sub: KitsSubId): string[] | null {
   if (sub === 'hairstyle') return ['All', 'Short', 'Medium', 'Long', 'Buzzed', 'Styled', 'Other'];
   if (sub === 'beard')     return ['All', 'Beards', 'Stubble', 'Sideburns', 'Other'];
   if (sub === 'brows')     return null;
-  if (sub === 'tops' || sub === 'pants' || sub === 'shoes' || sub === 'hats' || sub === 'accessories') {
+  if (sub === 'tops' || sub === 'pants' || sub === 'shoes' || sub === 'hats') {
     return subcategoriesForBucket(sub as TopBucket);
   }
   return null;
@@ -2003,52 +2159,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.6,
-  },
-});
-
-// ─── Colorway strip styles (inside preview modal) ──────────────────
-const cwStripStyles = StyleSheet.create({
-  wrap: {
-    gap: 6,
-  },
-  label: {
-    fontWeight: '900',
-    fontSize: 10,
-    letterSpacing: 1.4,
-    color: 'rgba(255,255,255,0.55)',
-  },
-  row: {
-    gap: 8,
-    paddingVertical: 2,
-  },
-  thumb: {
-    width: 52,
-    height: 64,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    alignItems: 'center',
-  },
-  thumbImg: {
-    width: 52,
-    height: 56,
-  },
-  thumbDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    position: 'absolute',
-    bottom: 3,
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.4)',
-  },
-  activeName: {
-    fontWeight: '800',
-    fontSize: 11,
-    color: '#f1c40f',
-    letterSpacing: 0.8,
-    textAlign: 'center',
   },
 });
 

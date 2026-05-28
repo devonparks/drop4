@@ -7,15 +7,6 @@ const config = getDefaultConfig(__dirname);
 config.resolver.assetExts.push('glb', 'gltf', 'bin');
 
 // ── amg-engine monorepo integration ──────────────────────────────────
-// amg-engine lives outside Drop4 so its packages (character-runtime,
-// character-creator) can be shared with every AMG game. Metro needs
-// both sides configured:
-//   1. watchFolders: tell Metro to watch the amg-engine tree for
-//      hot reload on edits to shared code.
-//   2. extraNodeModules: alias `@amg/*` to the local package sources
-//      so `import { CompositeCharacter } from '@amg/character-runtime'`
-//      resolves to amg-engine/packages/character-runtime/src.
-// ─────────────────────────────────────────────────────────────────────
 const amgEngineRoot = path.resolve(__dirname, '..', 'amg-engine');
 
 config.watchFolders = [
@@ -35,15 +26,32 @@ config.resolver.extraNodeModules = {
   '@amg/iap': path.join(amgEngineRoot, 'packages', 'iap'),
 };
 
-// Metro walks up from the importing file looking for node_modules.
-// amg-engine/node_modules intentionally does NOT contain react/three/
-// @react-three/fiber/react-native — those must come from Drop4's copy
-// so we get exactly one React dispatcher (duplicates trigger the
-// "Cannot read properties of null (reading 'useState')" crash).
-// Drop4's node_modules comes first in this fallback list.
 config.resolver.nodeModulesPaths = [
   path.join(__dirname, 'node_modules'),
   path.join(amgEngineRoot, 'node_modules'),
 ];
+
+// ── Metro 0.83 + @types/* resolver fix ──────────────────────────────
+// Metro 0.83's resolver resolves package names through @types/* as
+// part of its TypeScript integration. @types/* packages (react, three,
+// etc.) ship with main:"" (empty string) which triggers an
+// InvalidPackageError. Fix: block @types/* from the resolution chain
+// entirely — they're TypeScript declarations, not runtime code.
+// Also disable unstable_enablePackageExports to avoid conditional
+// export condition-matching failures (Expo 54 ships with empty
+// conditionNames which can't match "default", "import", "require").
+config.resolver.unstable_enablePackageExports = false;
+
+// Block @types packages from Metro's module resolution. They're only
+// needed by tsc, never by the runtime bundler.
+const origBlockList = config.resolver.blockList;
+const typesBlockPattern = /node_modules[\\/]@types[\\/].*/;
+if (origBlockList instanceof RegExp) {
+  config.resolver.blockList = [origBlockList, typesBlockPattern];
+} else if (Array.isArray(origBlockList)) {
+  config.resolver.blockList = [...origBlockList, typesBlockPattern];
+} else {
+  config.resolver.blockList = [typesBlockPattern];
+}
 
 module.exports = config;

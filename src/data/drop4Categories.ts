@@ -26,7 +26,7 @@
 //   HAIR              Hair / Beard / Brows
 //   BODY              Species / Skin / Shape
 //   OUTFITS           Tops / Pants / Shoes
-//   ADDONS            Hats / Extras
+//   ADDONS            Hats / Face / Back / Belt / Armor
 //
 // Inline-editor subs (no part grid — render their own UI):
 //   · species  — 5-tile species picker
@@ -37,8 +37,10 @@
 //   · hairstyle    → ['Hair']
 //   · beard        → ['FacialHair']
 //   · brows        → ['EyebrowLeft', 'EyebrowRight']
-//   · tops / pants / shoes / hats / accessories →
+//   · tops / pants / shoes / hats →
 //     DEFAULT_SLOT_BUCKETS lookup by sub id
+//   · face / back / belt / armor →
+//     KITS_SUB_SLOTS explicit slot lists
 //
 // OWNED tier was dropped — players browse owned items via per-bucket
 // owned-first sort, and the global "all-owned" view wasn't pulling its
@@ -86,7 +88,7 @@ export const DROP4_HUB_CATEGORIES: Drop4HubCategory[] = [
 /** Internal — the union of Tier-2 IDs the KITS subscreen recognises.
  *  Inline editors: species / skin / sliders.
  *  Slot-mapped grids: hairstyle / beard / brows / tops / pants / shoes /
- *  hats / accessories. */
+ *  hats / face / back / belt / armor. */
 export type KitsSubId =
   | 'species'
   | 'skin'
@@ -98,7 +100,10 @@ export type KitsSubId =
   | 'pants'
   | 'shoes'
   | 'hats'
-  | 'accessories';
+  | 'face'
+  | 'back'
+  | 'belt'
+  | 'armor';
 
 /** Per-sub slot allowlist for the slot-mapped subs. Drop4 chose to
  *  surface Hair / Beard / Brows as separate tier-2 entries instead of
@@ -110,15 +115,59 @@ export const KITS_SUB_SLOTS: Partial<Record<KitsSubId, string[]>> = {
   hairstyle: ['Hair'],
   beard:     ['FacialHair'],
   brows:     ['EyebrowLeft', 'EyebrowRight'],
+  face:      ['AttachmentFace'],
+  back:      ['AttachmentBack'],
+  belt:      ['AttachmentHipsFront', 'AttachmentHipsBack', 'AttachmentHipsLeft', 'AttachmentHipsRight'],
+  armor:     ['AttachmentShoulderLeft', 'AttachmentShoulderRight', 'AttachmentElbowLeft', 'AttachmentElbowRight', 'AttachmentKneeLeft', 'AttachmentKneeRight'],
 };
 
 /** Hero-slot mapping for multi-slot buckets. Only the hero slot shows
  *  in the grid; companion slots auto-equip from the same pack+variant. */
 export const HERO_SLOTS: Record<string, { hero: string; companions: string[] }> = {
-  tops:  { hero: 'Torso',     companions: ['ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight'] },
-  pants: { hero: 'Hips',      companions: ['LegLeft', 'LegRight'] },
-  shoes: { hero: 'FootRight', companions: ['FootLeft'] },
+  hairstyle: { hero: 'Hair',           companions: [] },
+  beard:     { hero: 'FacialHair',     companions: [] },
+  brows:     { hero: 'EyebrowLeft',    companions: ['EyebrowRight'] },
+  tops:      { hero: 'Torso',          companions: ['ArmUpperLeft', 'ArmUpperRight', 'ArmLowerLeft', 'ArmLowerRight', 'HandLeft', 'HandRight'] },
+  pants:     { hero: 'Hips',           companions: ['LegLeft', 'LegRight'] },
+  shoes:     { hero: 'FootRight',      companions: ['FootLeft'] },
+  hats:      { hero: 'AttachmentHead', companions: [] },
+  face:      { hero: 'AttachmentFace', companions: [] },
+  back:      { hero: 'AttachmentBack', companions: [] },
+  // belt & armor: no hero — all slots shown in grid independently.
+  // Hip items are distinct per-slot (belt ≠ holster ≠ quiver).
+  // Armor items span 3 body zones — no single hero makes sense.
 };
+
+/** Maps each KitsSubId → the SidekickColorProperty the colorway tints.
+ *  Every slot-mapped sub gets a colorway picker; inline-editor subs
+ *  (species / skin / sliders) don't appear here.
+ *  Hair → 'Hair 01', Beard → 'FacialHair 01', Brows → 'Eyebrow 01'.
+ *  FacialHair/Eyebrow fall back to Hair 01 if not explicitly set. */
+export const COLORWAY_MATERIAL_MAP: Partial<Record<KitsSubId, string>> = {
+  hairstyle:   'Hair 01',
+  beard:       'FacialHair 01',   // independent from scalp hair
+  brows:       'Eyebrow 01',      // independent from scalp hair
+  tops:        'Tops',
+  pants:       'Bottoms',
+  shoes:       'Shoes',
+  hats:        'Hat',
+  face:        'Hat',   // all attachments share Hat tint channel
+  back:        'Hat',
+  belt:        'Hat',
+  armor:       'Hat',
+};
+
+/** Which preset color (primary / secondary / tertiary) to apply per
+ *  material property. Coordinated so a single colorway pick on different
+ *  slots produces a cohesive outfit. */
+export function colorwayColorForSlot(
+  slot: string,
+  preset: { primary: string; secondary: string; tertiary: string },
+): string {
+  if (slot === 'Bottoms') return preset.secondary;
+  if (slot === 'Shoes')   return preset.tertiary;
+  return preset.primary;   // Tops, Hair 01, Hat, etc. all use primary
+}
 
 export const KITS_TIERS: TierConfig[] = [
   {
@@ -164,8 +213,11 @@ export const KITS_TIERS: TierConfig[] = [
     accent: '#f1c40f',
     cameraPreset: 'body',
     subcategories: [
-      { id: 'hats'        satisfies KitsSubId, label: 'Hats',   glyph: '\u{1F3A9}' },
-      { id: 'accessories' satisfies KitsSubId, label: 'Extras', glyph: '\u{1F392}' },
+      { id: 'hats'  satisfies KitsSubId, label: 'Hats',      glyph: '\u{1F9E2}',      cameraPreset: 'face' },
+      { id: 'face'  satisfies KitsSubId, label: 'Face',      glyph: '\u{1F576}\u{FE0F}', cameraPreset: 'face' },
+      { id: 'back'  satisfies KitsSubId, label: 'Back',      glyph: '\u{1F392}' },
+      { id: 'belt'  satisfies KitsSubId, label: 'Belt',      glyph: '\u{1F5E1}\u{FE0F}' },
+      { id: 'armor' satisfies KitsSubId, label: 'Armor',     glyph: '\u{1F6E1}\u{FE0F}' },
     ],
   },
 ];
