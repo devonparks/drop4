@@ -621,6 +621,7 @@ export function KitsSubscreen({ onClose }: Props) {
             partName={previewPart.name}
             slot={previewPart.slot}
             subId={currentSubId}
+            manifest={manifest}
             isOwned={previewIsOwned}
             isEquipped={isCurrentlyEquipped}
             activeColorwayId={(() => {
@@ -1400,6 +1401,7 @@ function OutfitColorwayModal({
   partName,
   slot,
   subId,
+  manifest,
   isOwned,
   isEquipped,
   activeColorwayId,
@@ -1416,6 +1418,7 @@ function OutfitColorwayModal({
   partName: string;
   slot: string;
   subId: KitsSubId;
+  manifest: AmgManifestPart[] | null;
   isOwned: boolean;
   isEquipped: boolean;
   activeColorwayId: string;
@@ -1442,11 +1445,30 @@ function OutfitColorwayModal({
   // Build the preview character with the selected outfit + colorway.
   const previewChar = useMemo(() => {
     let char = { ...amgCharacter };
-    // Swap the previewed part into the character.
+    // Swap the previewed part AND its companion parts into the character.
+    // Without companions, previewing pants only swaps Hips but keeps the
+    // old LegLeft/LegRight — character looks like they're wearing shorts.
     if (!isEquipped) {
+      const newParts: Record<string, string> = { [slot]: partName };
+      const heroConfig = HERO_SLOTS[subId];
+      if (heroConfig && manifest) {
+        const pack = packPrefixFromPartName(partName);
+        const variant = variantFromPartName(partName);
+        const species = (amgCharacter as any)?.species ?? 'Human';
+        for (const companionSlot of heroConfig.companions) {
+          const match = manifest.find(
+            (p) =>
+              p.slot === companionSlot &&
+              p.species === species &&
+              packPrefixFromPartName(p.name) === pack &&
+              variantFromPartName(p.name) === variant,
+          );
+          if (match) newParts[companionSlot] = match.name;
+        }
+      }
       char = {
         ...char,
-        parts: { ...(char.parts ?? {}), [slot]: partName },
+        parts: { ...(char.parts ?? {}), ...newParts },
       };
     }
     // Apply colorway color to the preview.
@@ -1463,7 +1485,7 @@ function OutfitColorwayModal({
       }
     }
     return char;
-  }, [amgCharacter, isEquipped, slot, partName, effectiveColorway, subId]);
+  }, [amgCharacter, isEquipped, slot, partName, effectiveColorway, subId, manifest]);
 
   const palette = paletteForSub(subId);
   const isHairSub = HAIR_COLOR_SUBS.has(subId);

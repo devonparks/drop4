@@ -141,20 +141,23 @@ export const HERO_SLOTS: Record<string, { hero: string; companions: string[] }> 
 /** Maps each KitsSubId → the SidekickColorProperty the colorway tints.
  *  Every slot-mapped sub gets a colorway picker; inline-editor subs
  *  (species / skin / sliders) don't appear here.
- *  Hair → 'Hair 01', Beard → 'FacialHair 01', Brows → 'Eyebrow 01'.
- *  FacialHair/Eyebrow fall back to Hair 01 if not explicitly set. */
+ *
+ *  Each sub writes to its OWN color key so the player can set
+ *  independent colorways on every item. Previously addons all shared
+ *  'Hat' and stepping on each other (same bug as the old Hair 01
+ *  sharing). Now: hats → 'Hat', face → 'Face Attachment', etc. */
 export const COLORWAY_MATERIAL_MAP: Partial<Record<KitsSubId, string>> = {
   hairstyle:   'Hair 01',
-  beard:       'FacialHair 01',   // independent from scalp hair
-  brows:       'Eyebrow 01',      // independent from scalp hair
+  beard:       'FacialHair 01',
+  brows:       'Eyebrow 01',
   tops:        'Tops',
   pants:       'Bottoms',
   shoes:       'Shoes',
   hats:        'Hat',
-  face:        'Hat',   // all attachments share Hat tint channel
-  back:        'Hat',
-  belt:        'Hat',
-  armor:       'Hat',
+  face:        'Face Attachment',
+  back:        'Back Attachment',
+  belt:        'Belt Attachment',
+  armor:       'Armor Attachment',
 };
 
 /** Which preset color (primary / secondary / tertiary) to apply per
